@@ -1,15 +1,5 @@
 #include "typedef.hpp"
 
-#include <raylib.h>
-
-#include <cmath>
-#include <algorithm>
-#include <random>
-
-#include "point.hpp"
-#include "line.hpp"
-#include "path.hpp"
-
 constexpr cstr GAME_TITLE = "Bleakdepth";
 constexpr cstr GAME_VERSION = "0.0.1";
 
@@ -98,17 +88,17 @@ constexpr i32 MAP_CENTER_Z = MAP_DEPTH / 2;
 
 constexpr i32 MAP_BORDER_SIZE = 2;
 
-static std::vector<bool> SOLID{ MAP_VOLUME, false, std::allocator<bool>{ } };
-static std::vector<bool> OPAQUE{ MAP_VOLUME, false, std::allocator<bool>{ } };
-
-static std::vector<bool> EXPLORED{ MAP_VOLUME, false, std::allocator<bool>{ } };
-static std::vector<bool> VISIBLE{ MAP_VOLUME, false, std::allocator<bool>{ } };
-static std::vector<bool> LIT{ MAP_VOLUME, false, std::allocator<bool>{ } };
-
-static std::vector<bool> BLOODY{ MAP_VOLUME, false, std::allocator<bool>{ } };
+static vec<bool> SOLID{ MAP_VOLUME, false, std::allocator<bool>{ } };
+static vec<bool> OPAQUE{ MAP_VOLUME, false, std::allocator<bool>{ } };
+static vec<bool> EXPLORED{ MAP_VOLUME, false, std::allocator<bool>{ } };
+static vec<bool> VISIBLE{ MAP_VOLUME, false, std::allocator<bool>{ } };
 
 constexpr i32 HORIZONTAL_TAB_SIZE = 4;
 constexpr i32 VERTICAL_TAB_SIZE = 4;
+
+struct Texture;
+
+typedef Texture Texture2D;
 
 static Texture2D* UI_GLYPHS = nullptr;
 static Texture2D* GAME_GLYPHS = nullptr;
@@ -167,6 +157,14 @@ static std::mt19937 RNG{ std::random_device{ }() };
 static std::uniform_int_distribution<i32> MAP_X_DIST{ MAP_ORIGIN_X, MAP_EXTENT_X };
 static std::uniform_int_distribution<i32> MAP_Y_DIST{ MAP_ORIGIN_Y, MAP_EXTENT_Y };
 
+static usize GetIndex(cref<Point> p) { return p.x + (usize)p.y * MAP_WIDTH; }
+static usize GetIndex(i32 x, i32 y) { return x + (usize)y * MAP_WIDTH; }
+
+static bool IsSolid(cref<Point> p) { return SOLID[GetIndex(p)]; }
+static bool IsSolid(i32 x, i32 y) { return SOLID[GetIndex(x, y)]; }
+
+struct Octant { i32 x, dx, y, dy; };
+
 static constexpr Octant OCTANTS[]
 {
 	Octant{  0,  1,  1,  0 },
@@ -179,12 +177,6 @@ static constexpr Octant OCTANTS[]
 	Octant{  1,  0,  0, -1 }
 };
 
-static usize GetIndex(cref<Point> p) { return p.x + (usize)p.y * MAP_WIDTH; }
-static usize GetIndex(i32 x, i32 y) { return x + (usize)y * MAP_WIDTH; }
-
-static bool IsSolid(cref<Point> p) { return SOLID[GetIndex(p)]; }
-static bool IsSolid(i32 x, i32 y) { return SOLID[GetIndex(x, y)]; }
-
 static Point FindOpen()
 {
 	Point result;
@@ -195,8 +187,7 @@ static Point FindOpen()
 	{
 		++iterations;
 		result = { MAP_X_DIST(RNG), MAP_Y_DIST(RNG) };
-	}
-	while (IsSolid(result) && iterations < MAP_VOLUME);
+	} while (IsSolid(result) && iterations < MAP_VOLUME);
 
 	if (iterations >= MAP_VOLUME)
 	{
@@ -207,9 +198,7 @@ static Point FindOpen()
 	return result;
 }
 
-static bool IsBorder(cref<Point> p);
-
-static void ShadowCast(cref<Point> origin, ref<std::vector<Point>> fov, f32 row, f32 start, f32 end, cref<Octant> octant, f32 radius)
+static void ShadowCast(cref<Point> origin, ref<vec<Point>> fov, i32 row, f32 start, f32 end, cref<Octant> octant, f32 radius)
 {
 	f32 newStart = 0;
 
@@ -229,12 +218,12 @@ static void ShadowCast(cref<Point> origin, ref<std::vector<Point>> fov, f32 row,
 			f32 leftSlope = (deltaX - 0.5f) / (deltaY + 0.5f);
 			f32 rightSlope = (deltaX + 0.5f) / (deltaY - 0.5f);
 
-			if (IsBorder(position) || start < rightSlope)
+			if (!IsBorder(position) || start < rightSlope)
 				continue;
 			if (end > leftSlope)
 				break;
-			
-			f32 deltaRadius = std::hypotf(deltaX, deltaY);
+
+			f32 deltaRadius = std::sqrtf(deltaX + deltaY);
 
 			if (deltaRadius <= radius)
 				fov.push_back(position);
@@ -255,7 +244,7 @@ static void ShadowCast(cref<Point> origin, ref<std::vector<Point>> fov, f32 row,
 			{
 				blocked = true;
 
-				ShadowCast(origin, fov, (int)distance + 1.0f, start, leftSlope, octant, radius);
+				ShadowCast(origin, fov, (int)distance + 1, start, leftSlope, octant, radius);
 
 				newStart = rightSlope;
 			}
@@ -263,9 +252,28 @@ static void ShadowCast(cref<Point> origin, ref<std::vector<Point>> fov, f32 row,
 	}
 }
 
-static std::vector<Point> CalculateFOV(cref<Point> origin, f32 viewDistance)
+static void ShadowCast(cref<Point> origin, ref<vec<Point>> fov, i32 row, f32 start, f32 end, cref<Octant> octant, f32 radius, f32 angle, f32 span)
 {
-	std::vector<Point> fov{};
+	i32 x{ 0 }, y{ 0 };
+
+	for (f32 i{ 1.0f }; i <= radius; i += 0.5f)
+	{
+		x = static_cast<i32>(origin.x + (i * octant.x));
+		y = static_cast<i32>(origin.y + (i * octant.y));
+
+		if (x < MAP_ORIGIN_X || x > MAP_EXTENT_X || y < MAP_ORIGIN_Y || y > MAP_EXTENT_Y)
+			break;
+
+		fov.push_back({ x, y });
+
+		if (IsSolid(x, y))
+			break;
+	}
+}
+
+static vec<Point> CalculateFOV(cref<Point> origin, f32 viewDistance)
+{
+	vec<Point> fov{};
 
 	viewDistance = std::max(1.0f, viewDistance);
 
@@ -279,42 +287,10 @@ static std::vector<Point> CalculateFOV(cref<Point> origin, f32 viewDistance)
 	return fov;
 }
 
-static void Reveal()
-{
-	for (usize i{ 0 }; i < MAP_VOLUME; ++i)
-		VISIBLE[i] = true;
-}
-
-static void Reveal(cref<std::vector<Point>> fov)
-{
-	for (auto& pos : fov)
-		VISIBLE[GetIndex(pos)] = true;
-}
-
-static void Reveal(cref<Rect> area)
-{
-	for (i32 j{ area.y }; j < area.y + area.h; ++j)
-		for (i32 i{ area.x }; i < area.x + area.w; ++i)
-			VISIBLE[GetIndex(i, j)] = true;
-}
-
 static void Obscure()
 {
 	for (usize i{ 0 }; i < MAP_VOLUME; ++i)
 		VISIBLE[i] = false;
-}
-
-static void Obscure(cref<std::vector<Point>> fov)
-{
-	for (auto& pos : fov)
-		VISIBLE[GetIndex(pos)] = false;
-}
-
-static void Obscure(cref<Rect> area)
-{
-	for (i32 j{ area.y }; j < area.y + area.h; ++j)
-		for (i32 i{ area.x }; i < area.x + area.w; ++i)
-			VISIBLE[GetIndex(i, j)] = false;
 }
 
 static constexpr bool IsPointInsideWindow(i32 x, i32 y) { return x >= 0 && x < WINDOW_WIDTH && y >= 0 && y < WINDOW_HEIGHT; }
@@ -365,7 +341,7 @@ static Vector2 CalculateStringSize(cref<string> s)
 		return { 0, 0 };
 
 	i32 maxWidth = 0;
-	
+
 	i32 width = 0;
 	i32 height = 0;
 
@@ -439,27 +415,27 @@ static void DrawGlyphs(cref<string> glyphs, i32 x, i32 y, Color color, bool ui =
 
 		switch (glyph)
 		{
-			case '\0':
-				return;
-			case '\n':
-				carriage_x = 0;
-				++carriage_y;
-				continue;
+		case '\0':
+			return;
+		case '\n':
+			carriage_x = 0;
+			++carriage_y;
+			continue;
 
-			case '\t':
-				rem = carriage_x % HORIZONTAL_TAB_SIZE;
-				carriage_x += rem != 0 ? rem : HORIZONTAL_TAB_SIZE;
-				continue;
+		case '\t':
+			rem = carriage_x % HORIZONTAL_TAB_SIZE;
+			carriage_x += rem != 0 ? rem : HORIZONTAL_TAB_SIZE;
+			continue;
 
-			case '\v':
-				rem = carriage_y % VERTICAL_TAB_SIZE;
-				carriage_y += rem != 0 ? rem : VERTICAL_TAB_SIZE;
-				continue;
+		case '\v':
+			rem = carriage_y % VERTICAL_TAB_SIZE;
+			carriage_y += rem != 0 ? rem : VERTICAL_TAB_SIZE;
+			continue;
 
-			default:
-				DrawGlyph(glyph, x + carriage_x, y + carriage_y, color, ui, nx, ny);
-				carriage_x++;
-				continue;
+		default:
+			DrawGlyph(glyph, x + carriage_x, y + carriage_y, color, ui, nx, ny);
+			carriage_x++;
+			continue;
 		}
 	}
 }
@@ -494,7 +470,7 @@ static void DrawMessages(cref<que<string>> queue, Color color = WHITE)
 
 		++i;
 	}
-	
+
 	if (duplicates > 0)
 	{
 		DrawGlyphs("\tx " + std::to_string(duplicates + 1), UI_GRID_ORIGIN_X + 1, i * 2, color, true);
@@ -703,7 +679,7 @@ static void UpdatePlayer()
 
 		Obscure();
 
-		for (auto& pos : CalculateFOV({ PLAYER_X, PLAYER_Y }, 8.0f))
+		for (auto& pos : CalculateFOV({ PLAYER_X, PLAYER_Y }, 10.0f))
 		{
 			usize index = GetIndex(pos);
 
@@ -787,7 +763,7 @@ static void GenerateNoise()
 
 static void SmoothNoise()
 {
-	std::vector<bool> temp{ SOLID };
+	vec<bool> temp{ SOLID };
 
 	for (i32 j{ 1 }; j < MAP_EXTENT_Y; ++j)
 	{
@@ -825,7 +801,7 @@ static void SmoothNoise()
 
 static void SmoothNoise(usize iterations)
 {
-	std::vector<bool> temp{ SOLID };
+	vec<bool> temp{ SOLID };
 
 	for (int iter{ 0 }; iter < iterations; ++iter)
 	{
@@ -833,14 +809,6 @@ static void SmoothNoise(usize iterations)
 		{
 			for (i32 i{ 1 }; i < MAP_WIDTH - 1; ++i)
 			{
-				usize index = GetIndex(i, j);
-
-				if (IsBorder(i, j))
-				{
-					SOLID[index] = true;
-					continue;
-				}
-
 				i32 count{ 0 };
 
 				for (i32 y{ -1 }; y <= 1; ++y)
@@ -851,6 +819,8 @@ static void SmoothNoise(usize iterations)
 							++count;
 					}
 				}
+
+				usize index = GetIndex(i, j);
 
 				if (count > 4)
 					SOLID[index] = true;
@@ -863,12 +833,6 @@ static void SmoothNoise(usize iterations)
 	}
 }
 
-static void GenerateOpacity()
-{
-	for (usize i{ 0 }; i < MAP_VOLUME; ++i)
-		OPAQUE[i] = SOLID[i];
-}
-
 static void GenerateCaverns()
 {
 	GenerateNoise();
@@ -879,13 +843,12 @@ static void GenerateCaverns()
 int main(void)
 {
 	InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT + 12, fmt::format("{} v{}", GAME_TITLE, GAME_VERSION).c_str());
-	//SetWindowState(FLAG_WINDOW_UNDECORATED);
+	SetWindowState(FLAG_WINDOW_UNDECORATED);
 
 	SetTargetFPS(60);
 	HideCursor();
 
 	GenerateCaverns();
-	GenerateOpacity();
 
 	Point startingPosition = FindOpen();
 
@@ -900,22 +863,11 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 
-	Obscure();
-
-	for (auto& pos : CalculateFOV({ PLAYER_X, PLAYER_Y }, 8.0f))
-	{
-		usize index = GetIndex(pos);
-
-		EXPLORED[index] = true;
-		VISIBLE[index] = true;
-	}
-
 	UI_GLYPHS = new Texture2D(LoadTexture("Assets/glyphs_8x8.png"));
 	GAME_GLYPHS = new Texture2D(LoadTexture("Assets/glyphs_12x12.png"));
 
 	CURSOR = new Texture2D(LoadTexture("Assets/cursor.png"));
 
-	LAST_INPUT_TIME = GetTime();
 	LAST_EPOCH_TIME = GetTime();
 
 	while (!WindowShouldClose())
