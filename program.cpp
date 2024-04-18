@@ -2,102 +2,105 @@
 
 #include <raylib.h>
 
+#include <cmath>
+#include <algorithm>
+
 constexpr cstr GAME_TITLE = "Bleakdepth";
 constexpr cstr GAME_VERSION = "0.0.1";
 
-constexpr u32 WINDOW_WIDTH = 1280;
-constexpr u32 WINDOW_HEIGHT = 480;
+constexpr i32 WINDOW_WIDTH = 1280;
+constexpr i32 WINDOW_HEIGHT = 480;
 
 constexpr f32 WINDOW_ASPECT_RATIO = static_cast<f32>(WINDOW_WIDTH) / static_cast<f32>(WINDOW_HEIGHT);
 
-constexpr u32 WINDOW_ORIGIN_X = 0;
-constexpr u32 WINDOW_ORIGIN_Y = 0;
+constexpr i32 WINDOW_ORIGIN_X = 0;
+constexpr i32 WINDOW_ORIGIN_Y = 0;
 
-constexpr u32 WINDOW_EXTENT_X = WINDOW_WIDTH - 1;
-constexpr u32 WINDOW_EXTENT_Y = WINDOW_HEIGHT - 1;
+constexpr i32 WINDOW_EXTENT_X = WINDOW_WIDTH - 1;
+constexpr i32 WINDOW_EXTENT_Y = WINDOW_HEIGHT - 1;
 
-constexpr u32 WINDOW_CENTER_X = WINDOW_WIDTH / 2;
-constexpr u32 WINDOW_CENTER_Y = WINDOW_HEIGHT / 2;
+constexpr i32 WINDOW_CENTER_X = WINDOW_WIDTH / 2;
+constexpr i32 WINDOW_CENTER_Y = WINDOW_HEIGHT / 2;
 
-constexpr u32 UI_WIDTH = 320;
-constexpr u32 UI_HEIGHT = WINDOW_HEIGHT;
+constexpr i32 UI_WIDTH = 320;
+constexpr i32 UI_HEIGHT = WINDOW_HEIGHT;
 
-constexpr u32 UI_ORIGIN_X = WINDOW_WIDTH - UI_WIDTH;
-constexpr u32 UI_ORIGIN_Y = 0;
+constexpr i32 UI_ORIGIN_X = WINDOW_WIDTH - UI_WIDTH;
+constexpr i32 UI_ORIGIN_Y = 0;
 
-constexpr u32 UI_EXTENT_X = WINDOW_WIDTH - 1;
-constexpr u32 UI_EXTENT_Y = WINDOW_HEIGHT - 1;
+constexpr i32 UI_EXTENT_X = WINDOW_WIDTH - 1;
+constexpr i32 UI_EXTENT_Y = WINDOW_HEIGHT - 1;
 
-constexpr u32 UI_CENTER_X = UI_ORIGIN_X + UI_WIDTH / 2;
-constexpr u32 UI_CENTER_Y = WINDOW_CENTER_Y;
+constexpr i32 UI_CENTER_X = UI_ORIGIN_X + UI_WIDTH / 2;
+constexpr i32 UI_CENTER_Y = WINDOW_CENTER_Y;
 
-constexpr u32 GAME_WIDTH = WINDOW_WIDTH - UI_WIDTH;
-constexpr u32 GAME_HEIGHT = WINDOW_HEIGHT;
+constexpr i32 GAME_WIDTH = WINDOW_WIDTH - UI_WIDTH;
+constexpr i32 GAME_HEIGHT = WINDOW_HEIGHT;
 
-constexpr u32 GAME_CENTER_X = GAME_WIDTH / 2;
-constexpr u32 GAME_CENTER_Y = WINDOW_CENTER_Y;
+constexpr i32 GAME_CENTER_X = GAME_WIDTH / 2;
+constexpr i32 GAME_CENTER_Y = WINDOW_CENTER_Y;
 
-constexpr u32 CELL_WIDTH = 12;
-constexpr u32 CELL_HEIGHT = 12;
+constexpr i32 CELL_WIDTH = 12;
+constexpr i32 CELL_HEIGHT = 12;
 
-constexpr u32 UI_CELL_WIDTH = 8;
-constexpr u32 UI_CELL_HEIGHT = 8;
+constexpr i32 UI_CELL_WIDTH = 8;
+constexpr i32 UI_CELL_HEIGHT = 8;
 
-constexpr u32 UI_GRID_WIDTH = UI_WIDTH / UI_CELL_WIDTH;
-constexpr u32 UI_GRID_HEIGHT = UI_HEIGHT / UI_CELL_HEIGHT;
+constexpr i32 UI_GRID_WIDTH = UI_WIDTH / UI_CELL_WIDTH;
+constexpr i32 UI_GRID_HEIGHT = UI_HEIGHT / UI_CELL_HEIGHT;
 
-constexpr u32 UI_GRID_ORIGIN_X = UI_ORIGIN_X / UI_CELL_WIDTH;
-constexpr u32 UI_GRID_ORIGIN_Y = 0;
+constexpr i32 UI_GRID_ORIGIN_X = UI_ORIGIN_X / UI_CELL_WIDTH;
+constexpr i32 UI_GRID_ORIGIN_Y = 0;
 
-constexpr u32 UI_GRID_EXTENT_X = UI_GRID_ORIGIN_X + UI_GRID_WIDTH - 1;
-constexpr u32 UI_GRID_EXTENT_Y = UI_GRID_HEIGHT - 1;
+constexpr i32 UI_GRID_EXTENT_X = UI_GRID_ORIGIN_X + UI_GRID_WIDTH - 1;
+constexpr i32 UI_GRID_EXTENT_Y = UI_GRID_HEIGHT - 1;
 
-constexpr u32 UI_GRID_CENTER_X = UI_GRID_ORIGIN_X + UI_GRID_WIDTH / 2;
-constexpr u32 UI_GRID_CENTER_Y = UI_GRID_HEIGHT / 2;
+constexpr i32 UI_GRID_CENTER_X = UI_GRID_ORIGIN_X + UI_GRID_WIDTH / 2;
+constexpr i32 UI_GRID_CENTER_Y = UI_GRID_HEIGHT / 2;
 
-constexpr u32 GRID_WIDTH = GAME_WIDTH / CELL_WIDTH;
-constexpr u32 GRID_HEIGHT = GAME_HEIGHT / CELL_HEIGHT;
+constexpr i32 GRID_WIDTH = GAME_WIDTH / CELL_WIDTH;
+constexpr i32 GRID_HEIGHT = GAME_HEIGHT / CELL_HEIGHT;
 
-constexpr u32 GRID_ORIGIN_X = 0;
-constexpr u32 GRID_ORIGIN_Y = 0;
+constexpr i32 GRID_ORIGIN_X = 0;
+constexpr i32 GRID_ORIGIN_Y = 0;
 
-constexpr u32 GRID_EXTENT_X = GRID_WIDTH - 1;
-constexpr u32 GRID_EXTENT_Y = GRID_HEIGHT - 1;
+constexpr i32 GRID_EXTENT_X = GRID_WIDTH - 1;
+constexpr i32 GRID_EXTENT_Y = GRID_HEIGHT - 1;
 
-constexpr u32 GRID_CENTER_X = GRID_WIDTH / 2;
-constexpr u32 GRID_CENTER_Y = GRID_HEIGHT / 2;
+constexpr i32 GRID_CENTER_X = GRID_WIDTH / 2;
+constexpr i32 GRID_CENTER_Y = GRID_HEIGHT / 2;
 
 constexpr usize GRID_SIZE = GRID_WIDTH * GRID_HEIGHT;
 
-constexpr u32 MAP_WIDTH = 256;
-constexpr u32 MAP_HEIGHT = 256;
-constexpr u32 MAP_DEPTH = 1;
+constexpr i32 MAP_WIDTH = 256;
+constexpr i32 MAP_HEIGHT = 256;
+constexpr i32 MAP_DEPTH = 1;
 
 constexpr usize MAP_AREA = MAP_WIDTH * MAP_HEIGHT;
 constexpr usize MAP_VOLUME = MAP_WIDTH * MAP_HEIGHT * MAP_DEPTH;
 
-constexpr u32 MAP_ORIGIN_X = 0;
-constexpr u32 MAP_ORIGIN_Y = 0;
-constexpr u32 MAP_ORIGIN_Z = 0;
+constexpr i32 MAP_ORIGIN_X = 0;
+constexpr i32 MAP_ORIGIN_Y = 0;
+constexpr i32 MAP_ORIGIN_Z = 0;
 
-constexpr u32 MAP_EXTENT_X = MAP_WIDTH - 1;
-constexpr u32 MAP_EXTENT_Y = MAP_HEIGHT - 1;
-constexpr u32 MAP_EXTENT_Z = MAP_DEPTH - 1;
+constexpr i32 MAP_EXTENT_X = MAP_WIDTH - 1;
+constexpr i32 MAP_EXTENT_Y = MAP_HEIGHT - 1;
+constexpr i32 MAP_EXTENT_Z = MAP_DEPTH - 1;
 
-constexpr u32 MAP_CENTER_X = MAP_WIDTH / 2;
-constexpr u32 MAP_CENTER_Y = MAP_HEIGHT / 2;
-constexpr u32 MAP_CENTER_Z = MAP_DEPTH / 2;
+constexpr i32 MAP_CENTER_X = MAP_WIDTH / 2;
+constexpr i32 MAP_CENTER_Y = MAP_HEIGHT / 2;
+constexpr i32 MAP_CENTER_Z = MAP_DEPTH / 2;
 
-constexpr u32 HORIZONTAL_TAB_SIZE = 4;
-constexpr u32 VERTICAL_TAB_SIZE = 4;
+constexpr i32 HORIZONTAL_TAB_SIZE = 4;
+constexpr i32 VERTICAL_TAB_SIZE = 4;
 
-static constexpr bool IsPointInsideWindow(u32 x, u32 y) { return x >= 0 && x < WINDOW_WIDTH && y >= 0 && y < WINDOW_HEIGHT; }
+static constexpr bool IsPointInsideWindow(i32 x, i32 y) { return x >= 0 && x < WINDOW_WIDTH && y >= 0 && y < WINDOW_HEIGHT; }
 
-static constexpr bool IsPointInsideUI(u32 x, u32 y) { return x >= UI_ORIGIN_X && x < WINDOW_WIDTH && y >= 0 && y < WINDOW_HEIGHT; }
-static constexpr bool IsPointInsideGame(u32 x, u32 y) { return x >= 0 && x < GAME_WIDTH && y >= 0 && y < GAME_HEIGHT; }
+static constexpr bool IsPointInsideUI(i32 x, i32 y) { return x >= UI_ORIGIN_X && x < WINDOW_WIDTH && y >= 0 && y < WINDOW_HEIGHT; }
+static constexpr bool IsPointInsideGame(i32 x, i32 y) { return x >= 0 && x < GAME_WIDTH && y >= 0 && y < GAME_HEIGHT; }
 
-static constexpr u32 SelectCellWidth(bool ui) { return ui ? UI_CELL_WIDTH : CELL_WIDTH; }
-static constexpr u32 SelectCellHeight(bool ui) { return ui ? UI_CELL_HEIGHT : CELL_HEIGHT; }
+static constexpr i32 SelectCellWidth(bool ui) { return ui ? UI_CELL_WIDTH : CELL_WIDTH; }
+static constexpr i32 SelectCellHeight(bool ui) { return ui ? UI_CELL_HEIGHT : CELL_HEIGHT; }
 
 static Vector2 UnflattenIndex(u8 index)
 {
@@ -113,8 +116,8 @@ static Rectangle CalculateGridRectangle(u8 index, bool ui = false)
 {
 	Vector2 position = UnflattenIndex(index);
 
-	u32 w = SelectCellWidth(ui);
-	u32 h = SelectCellHeight(ui);
+	i32 w = SelectCellWidth(ui);
+	i32 h = SelectCellHeight(ui);
 
 	return Rectangle{ position.x * w, position.y * h, (f32)w, (f32)h };
 }
@@ -124,7 +127,7 @@ static Texture2D* GAME_GLYPHS = nullptr;
 
 static Texture2D* CURSOR = nullptr;
 
-static void DrawGlyph(u8 index, u32 x, u32 y, Color color, bool ui = false, u32 nx = 0, u32 ny = 0)
+static void DrawGlyph(u8 index, i32 x, i32 y, Color color, bool ui = false, i32 nx = 0, i32 ny = 0)
 {
 	DrawTextureRec
 	(
@@ -143,14 +146,14 @@ static Vector2 CalculateStringSize(cref<string> s)
 	if (s == "")
 		return { 0, 0 };
 
-	u32 maxWidth = 0;
+	i32 maxWidth = 0;
 	
-	u32 width = 0;
-	u32 height = 0;
+	i32 width = 0;
+	i32 height = 0;
 
 	for (auto& c : s)
 	{
-		u32 rem{};
+		i32 rem{};
 
 		switch (c)
 		{
@@ -185,19 +188,19 @@ static Vector2 CalculateStringSize(cref<string> s)
 	return { (f32)maxWidth, (f32)height };
 }
 
-static void DrawGlyphs(cref<string> glyphs, u32 x, u32 y, Color color, bool ui = false, u32 nx = 0, u32 ny = 0, bool truncate = true, bool wrap = false)
+static void DrawGlyphs(cref<string> glyphs, i32 x, i32 y, Color color, bool ui = false, i32 nx = 0, i32 ny = 0, bool truncate = true, bool wrap = false)
 {
 	if (glyphs == "")
 		return;
 
 	Vector2 size = CalculateStringSize(glyphs);
 
-	u32 carriage_x = 0;
-	u32 carriage_y = 0;
+	i32 carriage_x = 0;
+	i32 carriage_y = 0;
 
 	for (auto& glyph : glyphs)
 	{
-		u32 rem{};
+		i32 rem{};
 
 		if (carriage_x >= (ui ? UI_GRID_WIDTH : GRID_WIDTH) - 5)
 		{
@@ -285,14 +288,14 @@ static void DrawMessages(cref<que<string>> queue, Color color = WHITE)
 static bool showErrors = false;
 #endif
 
-static u32 MOUSE_X = 0;
-static u32 MOUSE_Y = 0;
+static i32 MOUSE_X = 0;
+static i32 MOUSE_Y = 0;
 
-static u32 CURSOR_X = 0;
-static u32 CURSOR_Y = 0;
+static i32 CURSOR_X = 0;
+static i32 CURSOR_Y = 0;
 
-static u32 UI_CURSOR_X = 0;
-static u32 UI_CURSOR_Y = 0;
+static i32 UI_CURSOR_X = 0;
+static i32 UI_CURSOR_Y = 0;
 
 static bool CURSOR_INSIDE_WINDOW = false;
 
@@ -303,8 +306,8 @@ static void UpdateCursor()
 {
 	Vector2 rawMousePos = GetMousePosition();
 
-	MOUSE_X = (u32)rawMousePos.x;
-	MOUSE_Y = (u32)rawMousePos.y;
+	MOUSE_X = (i32)rawMousePos.x;
+	MOUSE_Y = (i32)rawMousePos.y;
 
 	CURSOR_X = MOUSE_X / CELL_WIDTH;
 	CURSOR_Y = MOUSE_Y / CELL_HEIGHT;
@@ -318,20 +321,41 @@ static void UpdateCursor()
 	CURSOR_INSIDE_UI = IsPointInsideUI(MOUSE_X, MOUSE_Y);
 }
 
-static u32 CAMERA_X = 0;
-static u32 CAMERA_Y = 0;
+static i32 PLAYER_X = 0;
+static i32 PLAYER_Y = 0;
 
-static u32 MAP_CURSOR_X = 0;
-static u32 MAP_CURSOR_Y = 0;
+static void UpdatePlayer()
+{
+	if (IsKeyDown(KEY_W) && PLAYER_Y > MAP_ORIGIN_Y) --PLAYER_Y;
+	if (IsKeyDown(KEY_S) && PLAYER_Y < MAP_EXTENT_Y) ++PLAYER_Y;
+	if (IsKeyDown(KEY_D) && PLAYER_X < MAP_EXTENT_X) ++PLAYER_X;
+	if (IsKeyDown(KEY_A) && PLAYER_X > MAP_ORIGIN_X) --PLAYER_X;
+}
+
+static i32 CAMERA_X = 0;
+static i32 CAMERA_Y = 0;
+
+static i32 MAP_CURSOR_X = 0;
+static i32 MAP_CURSOR_Y = 0;
 
 static bool CURSOR_INSIDE_MAP = false;
 
+static bool CAMERA_LOCKED = false;
+
 static void UpdateCamera()
 {
-	if (IsKeyDown(KEY_UP) && CAMERA_Y > MAP_ORIGIN_Y) CAMERA_Y -= 1;
-	if (IsKeyDown(KEY_DOWN) && CAMERA_Y < MAP_EXTENT_Y - GRID_EXTENT_Y) CAMERA_Y += 1;
-	if (IsKeyDown(KEY_RIGHT) && CAMERA_X < MAP_EXTENT_X - GRID_EXTENT_X) CAMERA_X += 1;
-	if (IsKeyDown(KEY_LEFT) && CAMERA_X > MAP_ORIGIN_X) CAMERA_X -= 1;
+	if (!CAMERA_LOCKED)
+	{
+		if (IsKeyDown(KEY_UP) && CAMERA_Y > MAP_ORIGIN_Y) CAMERA_Y -= 1;
+		if (IsKeyDown(KEY_DOWN) && CAMERA_Y < MAP_EXTENT_Y - GRID_EXTENT_Y) CAMERA_Y += 1;
+		if (IsKeyDown(KEY_RIGHT) && CAMERA_X < MAP_EXTENT_X - GRID_EXTENT_X) CAMERA_X += 1;
+		if (IsKeyDown(KEY_LEFT) && CAMERA_X > MAP_ORIGIN_X) CAMERA_X -= 1;
+	}
+	else
+	{
+		CAMERA_X = std::clamp(PLAYER_X - GRID_CENTER_X, MAP_ORIGIN_X, MAP_EXTENT_X - GRID_EXTENT_X);
+		CAMERA_Y = std::clamp(PLAYER_Y - GRID_CENTER_Y, MAP_ORIGIN_Y, MAP_EXTENT_Y - GRID_EXTENT_Y);
+	}
 
 	MAP_CURSOR_X = CAMERA_X + CURSOR_X;
 	MAP_CURSOR_Y = CAMERA_Y + CURSOR_Y;
@@ -341,12 +365,23 @@ static void UpdateCamera()
 
 static vec<bool> SOLIDS{ MAP_VOLUME, false, std::allocator<bool>{ } };
 
+static f64 FREQUENCY = 1.0;
+static f64 AMPLITUDE = 0.5;
+static f64 PHASE = 1.0;
+
+static f64 SINE_VALUE = 0.0;
+
+static void UpdateSineWave(f64 time)
+{
+	SINE_VALUE = AMPLITUDE * (PHASE + std::sin(2.0 * PI * FREQUENCY * time));
+}
+
 int main(void)
 {
 	InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT + 12, fmt::format("{} v{}", GAME_TITLE, GAME_VERSION).c_str());
 	SetWindowState(FLAG_WINDOW_UNDECORATED);
 
-	SetTargetFPS(30);
+	SetTargetFPS(60);
 	HideCursor();
 
 	UI_GLYPHS = new Texture2D(LoadTexture("Assets/glyphs_8x8.png"));
@@ -364,11 +399,15 @@ int main(void)
 
 	while (!WindowShouldClose())
 	{
-		prune_messages();
-		prune_errors();
+		Prune(MESSAGES, MAX_MESSAGES);
+		Prune(ERRORS, MAX_ERRORS);
+
+		UpdatePlayer();
 
 		UpdateCursor();
 		UpdateCamera();
+
+		UpdateSineWave(GetTime());
 
 		BeginDrawing();
 
@@ -394,7 +433,7 @@ int main(void)
 			{
 				if (UI_CURSOR_Y % 2 != 0)
 				{
-					u32 messagePos = UI_CURSOR_Y / 2;
+					i32 messagePos = UI_CURSOR_Y / 2;
 #ifndef NDEBUG
 					if (messagePos < (showErrors ? ERRORS.size() : MESSAGES.size()))
 #else
@@ -421,9 +460,9 @@ int main(void)
 			}
 		}
 
-		for (u32 j{ CAMERA_Y }; j < CAMERA_Y + GRID_HEIGHT; ++j)
+		for (i32 j{ CAMERA_Y }; j < CAMERA_Y + GRID_HEIGHT; ++j)
 		{
-			for (u32 i{ CAMERA_X }; i < CAMERA_X + GRID_WIDTH; ++i)
+			for (i32 i{ CAMERA_X }; i < CAMERA_X + GRID_WIDTH; ++i)
 			{
 				if (i >= MAP_ORIGIN_X && i <= MAP_EXTENT_X && j >= MAP_ORIGIN_Y && j <= MAP_EXTENT_Y)
 				{
@@ -434,8 +473,11 @@ int main(void)
 			}
 		}
 
+		if (PLAYER_X >= CAMERA_X && PLAYER_X < CAMERA_X + GRID_WIDTH && PLAYER_Y >= CAMERA_Y && PLAYER_Y < CAMERA_Y + GRID_HEIGHT)
+			DrawGlyph('@', PLAYER_X - CAMERA_X, PLAYER_Y - CAMERA_Y, GREEN, false);
+
 		if (CURSOR_INSIDE_GAME && CURSOR_INSIDE_MAP)
-			DrawRectangleLines(CURSOR_X * CELL_WIDTH, CURSOR_Y * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT, { 255, 215, 0, 128 });
+			DrawRectangleLines(CURSOR_X * CELL_WIDTH - 1, CURSOR_Y * CELL_HEIGHT - 1, CELL_WIDTH + 2, CELL_HEIGHT + 2, { 255, 215, 0, (u8)(255 * SINE_VALUE) });
 		else DrawTexture(*CURSOR, MOUSE_X, MOUSE_Y, WHITE);
 
 		DrawRectangleLinesEx({ 0, 0, GAME_WIDTH, GAME_HEIGHT }, 1, WHITE);
@@ -447,7 +489,7 @@ int main(void)
 #ifndef NDEBUG
 		string fps_text = fmt::format("FPS: {}", GetFPS());
 
-		DrawGlyphs(fps_text.c_str(), UI_GRID_EXTENT_X - (u32)fps_text.length(), UI_GRID_EXTENT_Y + 1, GREEN, true, 2, 1);
+		DrawGlyphs(fps_text.c_str(), UI_GRID_EXTENT_X - (i32)fps_text.length(), UI_GRID_EXTENT_Y + 1, GREEN, true, 2, 1);
 #endif
 
 		EndDrawing();

@@ -84,17 +84,88 @@ static usize MAX_ERRORS = 30;
 void log(cstr message) { MESSAGES.emplace(message); }
 void log(cref<string> message) { MESSAGES.emplace(message); }
 
-void prune_message() { if (MESSAGES.size() > MAX_MESSAGES) MESSAGES.pop(); }
-void prune_messages() { while (MESSAGES.size() > MAX_MESSAGES) MESSAGES.pop(); }
+static void Prune(ref<que<string>> queue, usize count) { while (queue.size() > count) queue.pop(); }
 
 #include <fmt/core.h>
 
 void log(cstr message, cstr file, usize line) { ERRORS.emplace(fmt::format("[{}]: \"{}\" ({}): {}", __TIME__, file, line, message)); }
 void log(cref<string> message, cstr file, usize line) { ERRORS.emplace(fmt::format("[{}]: \"{}\" ({}): {}", __TIME__, file, line, message)); }
 
-void prune_error() { if (ERRORS.size() > MAX_ERRORS) ERRORS.pop(); }
-void prune_errors() { while (ERRORS.size() > MAX_ERRORS) ERRORS.pop(); }
+struct Point { i32 x, y; };
 
-#include <cmath>
+static vec<Point> BresenhamLine(Point start, cref<Point> end)
+{
+	vec<Point> result;
 
-template<typename T> T clamp(cref<T> value, cref<T> min, cref<T> max) { return std::min(std::max(value, min), max); }
+	i32 dx = abs(end.x - start.x);
+	i32 dy = abs(end.y - start.y);
+
+	i32 sx = start.x < end.x ? 1 : -1;
+	i32 sy = start.y < end.y ? 1 : -1;
+
+	i32 err = dx - dy;
+
+	while (true)
+	{
+		result.push_back({ start.x, start.y });
+
+		if (start.x == end.x && start.y == end.y) break;
+
+		i32 e2 = 2 * err;
+
+		if (e2 > -dy)
+		{
+			err -= dy;
+			start.x += sx;
+		}
+
+		if (e2 < dx)
+		{
+			err += dx;
+			start.y += sy;
+		}
+	}
+
+	return result;
+}
+
+static vec<Point> PixelPerfectLine(cref<vec<Point>> path)
+{
+	if (path.size() < 2) return vec<Point>(path);
+
+	vec<Point> result;
+	usize counter{ 0 };
+
+	while (counter < path.size())
+	{
+		if (counter > 0 && counter + 1 < path.size() && (path[counter - 1].x == path[counter].x || path[counter - 1].y == path[counter].y) && (path[counter + 1].x == path[counter].x || path[counter + 1].y == path[counter].y) && path[counter - 1].x != path[counter + 1].x && path[counter - 1].y != path[counter + 1].y)
+		{
+			++counter;
+		}
+
+		result.push_back(path[counter]);
+		++counter;
+	}
+
+	return result;
+}
+
+static vec<Point> PathToDirections(cref<vec<Point>> path)
+{
+	vec<Point> result;
+
+	for (usize i = 1; i < path.size(); ++i)
+	{
+		Point direction{ path[i].x - path[i - 1].x, path[i].y - path[i - 1].y };
+
+		if (direction.x < 0) direction.x = -1;
+		else if (direction.x > 0) direction.x = 1;
+
+		if (direction.y < 0) direction.y = -1;
+		else if (direction.y > 0) direction.y = 1;
+
+		result.push_back(direction);
+	}
+
+	return result;
+}
