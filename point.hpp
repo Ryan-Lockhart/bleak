@@ -37,6 +37,8 @@ struct Point
 		return *this;
 	}
 
+	constexpr usize size() const noexcept { return (usize)x * y; }
+
 	constexpr bool operator==(cref<Point> other) const noexcept { return x == other.x && y == other.y; }
 	constexpr bool operator!=(cref<Point> other) const noexcept { return x != other.x || y != other.y; }
 

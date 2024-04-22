@@ -48,9 +48,3 @@ typedef ptr<char> str;
 typedef cptr<char> cstr;
 
 #define __FILE_NAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-
-
-
-struct Rect { i32 x, y, w, h; };
-
-struct Octant { i32 x, dx, y, dy; };

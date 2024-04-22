@@ -1,11 +1,13 @@
 #include "typedef.hpp"
 
 #include <raylib.h>
+#include <fmt/format.h>
 
 #include <cmath>
 #include <algorithm>
 #include <random>
 
+#include "log.hpp"
 #include "point.hpp"
 #include "line.hpp"
 #include "path.hpp"
@@ -107,6 +109,9 @@ static std::vector<bool> LIT{ MAP_VOLUME, false, std::allocator<bool>{ } };
 
 static std::vector<bool> BLOODY{ MAP_VOLUME, false, std::allocator<bool>{ } };
 
+static Log MESSAGES;
+static Log ERRORS;
+
 constexpr i32 HORIZONTAL_TAB_SIZE = 4;
 constexpr i32 VERTICAL_TAB_SIZE = 4;
 
@@ -147,14 +152,6 @@ static i32 MAP_CURSOR_Y = 0;
 static bool CURSOR_INSIDE_MAP = false;
 
 static bool CAMERA_LOCKED = true;
-
-static usize CURRENT_EPOCH = 0;
-static f64 LAST_EPOCH_TIME = 0.0;
-constexpr f64 MIN_EPOCH_INTERVAL = 0.25;
-
-static usize INPUT_COUNT = 0;
-static f64 LAST_INPUT_TIME = 0.0;
-constexpr f64 MIN_INPUT_INTERVAL = 0.05;
 
 static f64 FREQUENCY = 1.0;
 static f64 AMPLITUDE = 0.5;
@@ -200,7 +197,7 @@ static Point FindOpen()
 
 	if (iterations >= MAP_VOLUME)
 	{
-		log("Failed to find an open space.", __FILE__, __LINE__);
+		ERRORS.log("Failed to find an open space.", __TIME__, __FILE__, __LINE__);
 		return { -1, -1 };
 	};
 
@@ -359,7 +356,7 @@ static void DrawGlyph(u8 index, i32 x, i32 y, Color color, bool ui = false, i32 
 	);
 }
 
-static Vector2 CalculateStringSize(cref<string> s)
+static Vector2 CalculateStringSize(cref<std::string> s)
 {
 	if (s == "")
 		return { 0, 0 };
@@ -406,7 +403,7 @@ static Vector2 CalculateStringSize(cref<string> s)
 	return { (f32)maxWidth, (f32)height };
 }
 
-static void DrawGlyphs(cref<string> glyphs, i32 x, i32 y, Color color, bool ui = false, i32 nx = 0, i32 ny = 0, bool truncate = true, bool wrap = false)
+static void DrawGlyphs(cref<std::string> glyphs, i32 x, i32 y, Color color, bool ui = false, i32 nx = 0, i32 ny = 0, bool truncate = true, bool wrap = false)
 {
 	if (glyphs == "")
 		return;
@@ -464,20 +461,17 @@ static void DrawGlyphs(cref<string> glyphs, i32 x, i32 y, Color color, bool ui =
 	}
 }
 
-static void DrawMessages(cref<que<string>> queue, Color color = WHITE)
+static void DrawMessages(cref<Log> log, Color color = WHITE)
 {
-	que<string> messages{ queue };
-
 	int i{ 0 };
 
-	string last{ "" };
+	std::string last{ "" };
 	int duplicates{ 0 };
 
-	while (messages.size() > 0)
+	for (auto& message : log)
 	{
-		if (messages.front() == last)
+		if (message == last)
 		{
-			messages.pop();
 			++duplicates;
 			continue;
 		}
@@ -487,11 +481,9 @@ static void DrawMessages(cref<que<string>> queue, Color color = WHITE)
 			duplicates = 0;
 		}
 
-		last = messages.front();
+		last = message;
 
-		DrawGlyphs(">: " + messages.front(), UI_GRID_ORIGIN_X + 1, i * 2 + 1, color, true);
-		messages.pop();
-
+		DrawGlyphs(">: " + message, UI_GRID_ORIGIN_X + 1, i * 2 + 1, color, true);
 		++i;
 	}
 	
@@ -545,7 +537,7 @@ static void UpdateCursor()
 	CURSOR_INSIDE_UI = IsPointInsideUI(MOUSE_X, MOUSE_Y);
 }
 
-static string GetCardinalDirection(i32 x, i32 y)
+static std::string GetCardinalDirection(i32 x, i32 y)
 {
 	if (x == 0 && y == -1) return "north";
 	if (x == 1 && y == -1) return "northeast";
@@ -557,105 +549,6 @@ static string GetCardinalDirection(i32 x, i32 y)
 	if (x == -1 && y == -1) return "northwest";
 
 	return "nowhere";
-}
-
-static bool AnyKeyPressed()
-{
-	for (int i{ 0 }; i < KEY_KB_MENU; ++i)
-	{
-		if (IsKeyPressed((KeyboardKey)i))
-			return true;
-	}
-}
-
-static bool AnyKeyReleased()
-{
-	for (int i{ 0 }; i < KEY_KB_MENU; ++i)
-	{
-		if (IsKeyReleased((KeyboardKey)i))
-			return true;
-	}
-}
-
-static bool AnyKeyDown()
-{
-	for (int i{ 0 }; i < KEY_KB_MENU; ++i)
-	{
-		if (IsKeyDown((KeyboardKey)i))
-			return true;
-	}
-}
-
-template<typename... Keys, typename = KeyboardKey>
-static bool AreKeysDown(Keys... keys)
-{
-	for (KeyboardKey key : { keys... })
-	{
-		if (!IsKeyDown(key))
-			return false;
-	}
-
-	return true;
-}
-
-template<typename... Keys, typename = KeyboardKey>
-static bool AreKeysPressed(Keys... keys)
-{
-	for (KeyboardKey key : { keys... })
-	{
-		if (!IsKeyPressed(key))
-			return false;
-	}
-
-	return true;
-}
-
-template<typename... Keys, typename = KeyboardKey>
-static bool AreKeysReleased(Keys... keys)
-{
-	for (KeyboardKey key : { keys... })
-	{
-		if (!IsKeyReleased(key))
-			return false;
-	}
-
-	return true;
-}
-
-template<typename... Keys, typename = KeyboardKey>
-static bool AnyKeysDown(Keys... keys)
-{
-	for (KeyboardKey key : { keys... })
-	{
-		if (IsKeyDown(key))
-			return true;
-	}
-
-	return false;
-}
-
-template<typename... Keys, typename = KeyboardKey>
-static bool AnyKeysPressed(Keys... keys)
-{
-	for (KeyboardKey key : { keys... })
-	{
-		if (IsKeyPressed(key))
-			return true;
-	}
-
-	return false;
-}
-
-template<typename... Keys, typename = KeyboardKey>
-static bool AnyKeysReleased(Keys... keys)
-{
-	for (KeyboardKey key : { keys... })
-	{
-		if (IsKeyReleased(key))
-			return true;
-	}
-
-	return false;
 }
 
 static void UpdatePlayer()
@@ -673,7 +566,8 @@ static void UpdatePlayer()
 		RecordInput();
 		RecordEpoch();
 
-		log("You wait.");
+		MESSAGES.log("You wait.");
+		MESSAGES.log("");
 		return;
 	}
 
@@ -962,9 +856,9 @@ int main(void)
 #endif
 					{
 #ifndef NDEBUG
-						que<string> messages{ SHOW_ERRORS ? ERRORS : MESSAGES };
+						que<std::string> messages{ SHOW_ERRORS ? ERRORS : MESSAGES };
 #else
-						que<string> messages{ MESSAGES };
+						que<std::string> messages{ MESSAGES };
 #endif
 						while (messagePos != 0)
 						{
@@ -1016,7 +910,7 @@ int main(void)
 		DrawRectangleLinesEx({ UI_ORIGIN_X, WINDOW_EXTENT_Y, UI_WIDTH, 12 }, 1, WHITE);
 
 #ifndef NDEBUG
-		string fps_text = fmt::format("FPS: {}", GetFPS());
+		std::std::string fps_text = fmt::format("FPS: {}", GetFPS());
 
 		DrawGlyphs(fps_text.c_str(), UI_GRID_EXTENT_X - (i32)fps_text.length(), UI_GRID_EXTENT_Y + 1, GREEN, true, 2, 1);
 #endif
