@@ -1,16 +1,26 @@
 #include "typedef.hpp"
 
-#include <raylib.h>
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 #include <cmath>
 #include <algorithm>
 #include <random>
 
 #include "log.hpp"
+#include "keyboard.hpp"
+#include "mouse.hpp"
+
 #include "point.hpp"
+#include "rect.hpp"
+#include "octant.hpp"
+
 #include "line.hpp"
 #include "path.hpp"
+
+#include "timer.hpp"
+#include "atlas.hpp"
+
+#include <SDL2/SDL.h>
 
 constexpr cstr GAME_TITLE = "Bleakdepth";
 constexpr cstr GAME_VERSION = "0.0.1";
@@ -115,10 +125,10 @@ static Log ERRORS;
 constexpr i32 HORIZONTAL_TAB_SIZE = 4;
 constexpr i32 VERTICAL_TAB_SIZE = 4;
 
-static Texture2D* UI_GLYPHS = nullptr;
-static Texture2D* GAME_GLYPHS = nullptr;
+static Atlas GAME_GLYPHS{ "Assets\\glyphs_16x16.png", { 16, 16 } };
+static Atlas UI_GLYPHS{ "Assets\\glyphs_8x8.png", { 16, 16 } };
 
-static Texture2D* CURSOR = nullptr;
+static SDL_Texture* CURSOR{ nullptr };
 
 #ifndef NDEBUG
 static bool SHOW_ERRORS = false;
@@ -176,6 +186,9 @@ static constexpr Octant OCTANTS[]
 	Octant{  1,  0,  0, -1 }
 };
 
+static Timer INPUT_TIMER{ 0.25 };
+static Timer EPOCH_TIMER{ 1.00 };
+
 static usize GetIndex(cref<Point> p) { return p.x + (usize)p.y * MAP_WIDTH; }
 static usize GetIndex(i32 x, i32 y) { return x + (usize)y * MAP_WIDTH; }
 
@@ -197,7 +210,7 @@ static Point FindOpen()
 
 	if (iterations >= MAP_VOLUME)
 	{
-		ERRORS.log("Failed to find an open space.", __TIME__, __FILE__, __LINE__);
+		ERRORS.debug("Failed to find an open space.", __TIME__, __FILE__, __LINE__);
 		return { -1, -1 };
 	};
 
@@ -344,7 +357,7 @@ static Rectangle CalculateGridRectangle(u8 index, bool ui = false)
 
 static void DrawGlyph(u8 index, i32 x, i32 y, Color color, bool ui = false, i32 nx = 0, i32 ny = 0)
 {
-	DrawTextureRec
+	ray::DrawTextureRec
 	(
 		ui ? *UI_GLYPHS : *GAME_GLYPHS,
 		CalculateGridRectangle(index, ui),
@@ -494,33 +507,9 @@ static void DrawMessages(cref<Log> log, Color color = WHITE)
 	}
 }
 
-static void RecordEpoch()
-{
-	++CURRENT_EPOCH;
-	LAST_EPOCH_TIME = GetTime();
-
-	PLAYER_ACTED = false;
-}
-
-static void RecordInput()
-{
-	++INPUT_COUNT;
-	LAST_INPUT_TIME = GetTime();
-}
-
-static bool HasEpochTranspired()
-{
-	return GetTime() - LAST_EPOCH_TIME >= MIN_EPOCH_INTERVAL;
-}
-
-static bool HasInputTranspired()
-{
-	return GetTime() - LAST_INPUT_TIME >= MIN_INPUT_INTERVAL;
-}
-
 static void UpdateCursor()
 {
-	Vector2 rawMousePos = GetMousePosition();
+	Vector2 rawMousePos = ray::GetMousePosition();
 
 	MOUSE_X = (i32)rawMousePos.x;
 	MOUSE_Y = (i32)rawMousePos.y;
@@ -553,18 +542,18 @@ static std::string GetCardinalDirection(i32 x, i32 y)
 
 static void UpdatePlayer()
 {
-	if (!HasEpochTranspired())
+	if (!EPOCH_TIMER.ready())
 		return;
 
 	PLAYER_ACTED = false;
 
-	if (!HasInputTranspired())
+	if (!INPUT_TIMER.ready())
 		return;
 
-	if (IsKeyDown(KEY_KP_5))
+	if (ray::IsKeyDown(KEY_KP_5))
 	{
-		RecordInput();
-		RecordEpoch();
+		EPOCH_TIMER.record();
+		INPUT_TIMER.record();
 
 		MESSAGES.log("You wait.");
 		MESSAGES.log("");
@@ -573,24 +562,24 @@ static void UpdatePlayer()
 
 	i32 x{ 0 }, y{ 0 };
 
-	if (AnyKeysDown(KEY_W, KEY_KP_7, KEY_KP_8, KEY_KP_9) && PLAYER_Y > MAP_ORIGIN_Y) --y;
-	if (AnyKeysDown(KEY_A, KEY_KP_1, KEY_KP_4, KEY_KP_7) && PLAYER_X > MAP_ORIGIN_X) --x;
-	if (AnyKeysDown(KEY_S, KEY_KP_1, KEY_KP_2, KEY_KP_3) && PLAYER_Y < MAP_EXTENT_Y) ++y;
-	if (AnyKeysDown(KEY_D, KEY_KP_3, KEY_KP_6, KEY_KP_9) && PLAYER_X < MAP_EXTENT_X) ++x;
+	if (Keyboard::AnyKeysDown(KEY_W, KEY_KP_7, KEY_KP_8, KEY_KP_9) && PLAYER_Y > MAP_ORIGIN_Y) --y;
+	if (Keyboard::AnyKeysDown(KEY_A, KEY_KP_1, KEY_KP_4, KEY_KP_7) && PLAYER_X > MAP_ORIGIN_X) --x;
+	if (Keyboard::AnyKeysDown(KEY_S, KEY_KP_1, KEY_KP_2, KEY_KP_3) && PLAYER_Y < MAP_EXTENT_Y) ++y;
+	if (Keyboard::AnyKeysDown(KEY_D, KEY_KP_3, KEY_KP_6, KEY_KP_9) && PLAYER_X < MAP_EXTENT_X) ++x;
 
 	if (x != 0 || y != 0)
 	{
-		RecordInput();
+		INPUT_TIMER.record();
 
 		if (SOLID[(usize)PLAYER_X + x + ((usize)PLAYER_Y + y) * MAP_WIDTH])
 		{
-			MESSAGES.push("You bump into a wall.");
-			RecordEpoch();
+			MESSAGES.log("You bump into a wall.");
+			EPOCH_TIMER.record();
 			PLAYER_ACTED = true;
 			return;
 		}
 
-		RecordEpoch();
+		EPOCH_TIMER.record();
 
 		PLAYER_X += x;
 		PLAYER_Y += y;
@@ -605,7 +594,7 @@ static void UpdatePlayer()
 			VISIBLE[index] = true;
 		}
 
-		log("You move " + GetCardinalDirection(x, y));
+		MESSAGES.log("You move " + GetCardinalDirection(x, y));
 	}
 	else return;
 
@@ -614,26 +603,26 @@ static void UpdatePlayer()
 
 static void UpdateCamera()
 {
-	if (IsKeyPressed(KEY_SPACE)) CAMERA_LOCKED = !CAMERA_LOCKED;
+	if (ray::IsKeyPressed(KEY_SPACE)) CAMERA_LOCKED = !CAMERA_LOCKED;
 
 	if (!CAMERA_LOCKED)
 	{
-		if (!HasInputTranspired())
+		if (!INPUT_TIMER.ready())
 			return;
 
 		i32 x{ 0 }, y{ 0 };
 
-		if (IsKeyDown(KEY_UP) && CAMERA_Y > MAP_ORIGIN_Y) --y;
-		if (IsKeyDown(KEY_DOWN) && CAMERA_Y < MAP_EXTENT_Y - GRID_EXTENT_Y) ++y;
-		if (IsKeyDown(KEY_RIGHT) && CAMERA_X < MAP_EXTENT_X - GRID_EXTENT_X) ++x;
-		if (IsKeyDown(KEY_LEFT) && CAMERA_X > MAP_ORIGIN_X) --x;
+		if (ray::IsKeyDown(KEY_UP) && CAMERA_Y > MAP_ORIGIN_Y) --y;
+		if (ray::IsKeyDown(KEY_DOWN) && CAMERA_Y < MAP_EXTENT_Y - GRID_EXTENT_Y) ++y;
+		if (ray::IsKeyDown(KEY_RIGHT) && CAMERA_X < MAP_EXTENT_X - GRID_EXTENT_X) ++x;
+		if (ray::IsKeyDown(KEY_LEFT) && CAMERA_X > MAP_ORIGIN_X) --x;
 
 		if (x != 0 || y != 0)
 		{
 			CAMERA_X += x;
 			CAMERA_Y += y;
 
-			RecordInput();
+			INPUT_TIMER.record();
 		}
 	}
 	else
@@ -772,11 +761,11 @@ static void GenerateCaverns()
 
 int main(void)
 {
-	InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT + 12, fmt::format("{} v{}", GAME_TITLE, GAME_VERSION).c_str());
-	//SetWindowState(FLAG_WINDOW_UNDECORATED);
+	ray::InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT + 12, fmt::format("{} v{}", GAME_TITLE, GAME_VERSION).c_str());
+	//ray::SetWindowState(FLAG_WINDOW_UNDECORATED);
 
-	SetTargetFPS(60);
-	HideCursor();
+	ray::SetTargetFPS(60);
+	ray::HideCursor();
 
 	GenerateCaverns();
 	GenerateOpacity();
@@ -790,7 +779,7 @@ int main(void)
 	}
 	else
 	{
-		log("Failed to find a starting position.", __FILE__, __LINE__);
+		MESSAGES.debug("Failed to find a starting position.", __TIME__, __FILE__, __LINE__);
 		return EXIT_FAILURE;
 	}
 
@@ -804,32 +793,32 @@ int main(void)
 		VISIBLE[index] = true;
 	}
 
-	UI_GLYPHS = new Texture2D(LoadTexture("Assets/glyphs_8x8.png"));
-	GAME_GLYPHS = new Texture2D(LoadTexture("Assets/glyphs_12x12.png"));
+	UI_GLYPHS = new Texture2D(ray::LoadTexture("Assets/glyphs_8x8.png"));
+	GAME_GLYPHS = new Texture2D(ray::LoadTexture("Assets/glyphs_12x12.png"));
 
-	CURSOR = new Texture2D(LoadTexture("Assets/cursor.png"));
+	CURSOR = new Texture2D(ray::LoadTexture("Assets/cursor.png"));
 
-	LAST_INPUT_TIME = GetTime();
-	LAST_EPOCH_TIME = GetTime();
+	INPUT_TIMER.record();
+	EPOCH_TIMER.record();
 
-	while (!WindowShouldClose())
+	while (!ray::WindowShouldClose())
 	{
-		Prune(MESSAGES, MAX_MESSAGES);
-		Prune(ERRORS, MAX_ERRORS);
+		MESSAGES.prune();
+		ERRORS.prune();
 
 		UpdatePlayer();
 
 		UpdateCursor();
 		UpdateCamera();
 
-		UpdateSineWave(GetTime());
+		UpdateSineWave(ray::GetTime());
 
-		BeginDrawing();
+		ray::BeginDrawing();
 
-		ClearBackground(BLACK);
+		ray::ClearBackground(BLACK);
 
 #ifndef NDEBUG
-		if (IsKeyPressed(KEY_F1)) SHOW_ERRORS = !SHOW_ERRORS;
+		if (ray::IsKeyPressed(KEY_F1)) SHOW_ERRORS = !SHOW_ERRORS;
 
 		SHOW_ERRORS ? DrawMessages(ERRORS, RED) : DrawMessages(MESSAGES);
 
@@ -856,19 +845,24 @@ int main(void)
 #endif
 					{
 #ifndef NDEBUG
-						que<std::string> messages{ SHOW_ERRORS ? ERRORS : MESSAGES };
-#else
-						que<std::string> messages{ MESSAGES };
-#endif
-						while (messagePos != 0)
+						cref<Log> log = SHOW_ERRORS ? ERRORS : MESSAGES;
+
+						u32 i{ 0 };
+
+						for (auto& message : log)
 						{
-							messages.pop();
-							--messagePos;
+							DrawGlyphs(">: " + message, 0, UI_GRID_EXTENT_Y + i + 1, SHOW_ERRORS ? RED : WHITE, true, 2, 1, false);
+							++i;
 						}
-#ifndef NDEBUG
-						DrawGlyphs(">: " + messages.front(), 0, UI_GRID_EXTENT_Y + 1, SHOW_ERRORS ? RED : WHITE, true, 2, 1, false);
+
 #else
-						DrawGlyphs(">: " + messages.front(), 0, UI_GRID_EXTENT_Y + 1, WHITE, true, 2, 1, false);
+						u32 i{ 0 };
+
+						for (auto& message : MESSAGES)
+						{
+							DrawGlyphs(">: " + message, 0, UI_GRID_EXTENT_Y + i + 1, WHITE, true, 2, 1, false);
+							++i;
+						}
 #endif
 					}
 				}
@@ -900,22 +894,22 @@ int main(void)
 			DrawGlyph('@', PLAYER_X - CAMERA_X, PLAYER_Y - CAMERA_Y, GREEN, false);
 
 		if (CURSOR_INSIDE_GAME && CURSOR_INSIDE_MAP)
-			DrawRectangleLines(CURSOR_X * CELL_WIDTH - 1, CURSOR_Y * CELL_HEIGHT - 1, CELL_WIDTH + 2, CELL_HEIGHT + 2, { 255, 215, 0, (u8)(255 * SINE_VALUE) });
-		else DrawTexture(*CURSOR, MOUSE_X, MOUSE_Y, WHITE);
+			ray::DrawRectangleLines(CURSOR_X * CELL_WIDTH - 1, CURSOR_Y * CELL_HEIGHT - 1, CELL_WIDTH + 2, CELL_HEIGHT + 2, { 255, 215, 0, (u8)(255 * SINE_VALUE) });
+		else ray::DrawTexture(*CURSOR, MOUSE_X, MOUSE_Y, WHITE);
 
-		DrawRectangleLinesEx({ 0, 0, GAME_WIDTH, GAME_HEIGHT }, 1, WHITE);
-		DrawRectangleLinesEx({ UI_ORIGIN_X, 0, UI_WIDTH, UI_HEIGHT }, 1, WHITE);
+		ray::DrawRectangleLinesEx({ 0, 0, GAME_WIDTH, GAME_HEIGHT }, 1, WHITE);
+		ray::DrawRectangleLinesEx({ UI_ORIGIN_X, 0, UI_WIDTH, UI_HEIGHT }, 1, WHITE);
 
-		DrawRectangleLinesEx({ 0, WINDOW_EXTENT_Y, GAME_WIDTH, 12 }, 1, WHITE);
-		DrawRectangleLinesEx({ UI_ORIGIN_X, WINDOW_EXTENT_Y, UI_WIDTH, 12 }, 1, WHITE);
+		ray::DrawRectangleLinesEx({ 0, WINDOW_EXTENT_Y, GAME_WIDTH, 12 }, 1, WHITE);
+		ray::DrawRectangleLinesEx({ UI_ORIGIN_X, WINDOW_EXTENT_Y, UI_WIDTH, 12 }, 1, WHITE);
 
 #ifndef NDEBUG
-		std::std::string fps_text = fmt::format("FPS: {}", GetFPS());
+		std::string fps_text = fmt::format("FPS: {}", ray::GetFPS());
 
 		DrawGlyphs(fps_text.c_str(), UI_GRID_EXTENT_X - (i32)fps_text.length(), UI_GRID_EXTENT_Y + 1, GREEN, true, 2, 1);
 #endif
 
-		EndDrawing();
+		ray::EndDrawing();
 	}
 
 	delete UI_GLYPHS;
@@ -923,7 +917,7 @@ int main(void)
 
 	delete CURSOR;
 
-	CloseWindow();
+	ray::CloseWindow();
 
 	return EXIT_SUCCESS;
 }

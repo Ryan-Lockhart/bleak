@@ -2,39 +2,44 @@
 
 #include <stdexcept>
 #include <utility>
-#include <memory>
 
 #include <string>
 #include <vector>
 
-#include <raylib.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
+#include "texture.hpp"
 
 #include "point.hpp"
 #include "rect.hpp"
+
+#include "glyph.hpp"
 
 class Atlas
 {
 private:
 	const std::string path;
 
-	std::vector<Rect> rects;
-	std::unique_ptr<Texture2D> texture;
+	std::vector<SDL_Rect> rects;
+
+	Texture texture;
 
 	const Point atlasSize;
 	const Point imageSize;
 	const Point glyphSize;
 
 public:
-	Atlas() = delete;
-	Atlas(cref<std::string> path, cref<Point> size) :
+	inline Atlas() = delete;
+	inline Atlas(rval<Texture> texture, cref<Point> size) :
 		path(path),
 
 		rects(),
-		texture(std::make_unique<Texture2D>(LoadTexture(path.c_str()))),
+		texture(std::move(texture)),
 
 		atlasSize(size),
-		imageSize(texture->width, texture->height),
-		glyphSize(imageSize.x / size.x, imageSize.y / size.y)
+		imageSize(this->texture.size),
+		glyphSize(imageSize / size)
 	{
 		if (atlasSize.x <= 0 || atlasSize.y <= 0)
 			throw std::runtime_error("atlas size must be positive!");
@@ -64,14 +69,35 @@ public:
 		}
 	}
 
-	Atlas(cref<Atlas> other) = delete;
-	Atlas(rval<Atlas> other) = delete;
+	inline Atlas(cref<Atlas> other) = delete;
+	inline Atlas(rval<Atlas> other) = delete;
 
-	~Atlas() { UnloadTexture(*texture); }
+	inline ref<Atlas> operator=(cref<Atlas> other) = delete;
+	inline ref<Atlas> operator=(rval<Atlas> other) = delete;
 
-	void drawGlyph(cref<Glyph> glyph, cref<Point> position, bool onGrid = true) const
+	inline ~Atlas() = default;
+
+	inline void drawGlyph(cref<Glyph> glyph, cref<Point> position, bool onGrid = true) const
 	{
+		if (glyph.index < 0 || glyph.index >= rects.size()) throw std::out_of_range("glyph index out of range!");
 
+		const Point pos = onGrid ? position * glyphSize : position;
+		const SDL_Rect dst{ pos.x, pos.y, glyphSize.x, glyphSize.y };
+
+		texture.draw(&rects[glyph.index], &dst, glyph.color);
 	}
 
+	inline void drawGlyphs(cref<std::vector<Glyph>> glyphs, cref<std::vector<Point>> positions, bool onGrid = true) const
+	{
+		if (glyphs.size() != positions.size()) throw std::invalid_argument("glyphs and positions must have the same size!");
+
+		for (usize i = 0; i < glyphs.size(); i++)
+			drawGlyph(glyphs[i], positions[i], onGrid);
+	}
+
+	inline void drawGlyphs(cptr<Glyph> glyphs, cptr<Point> positions, usize count, bool onGrid = true) const
+	{
+		for (usize i = 0; i < count; i++)
+			drawGlyph(glyphs[i], positions[i], onGrid);
+	}
 };

@@ -18,21 +18,55 @@ public:
 	inline Path() noexcept : points{} {}
 	inline Path(cref<std::vector<Point>> points) : points{} {}
 
+	inline Path(cref<Line> line) : points{}
+	{
+		if (line.start == line.end) throw std::invalid_argument("path cannot be comprised of a single point");
+
+		Point pos{ line.start };
+
+		Point delta {
+			std::abs(line.end.x - line.start.x),
+			std::abs(line.end.y - line.start.y)
+		};
+
+		Point step {
+			line.start.x < line.end.x ? 1 : -1,
+			line.start.y < line.end.y ? 1 : -1
+		};
+
+		Point::point_t err = delta.x - delta.y;
+
+		for (;;)
+		{
+			push_back(line.start);
+
+			if (pos == line.end) break;
+
+			i32 e2 = 2 * err;
+
+			if (e2 > -delta.y)
+			{
+				err -= delta.y;
+				pos.x += step.x;
+			}
+
+			if (e2 < delta.x)
+			{
+				err += delta.x;
+				pos.y += step.y;
+			}
+		}
+	}
+
 	inline Path(cref<std::vector<Line>> lines)
 	{
-		if (lines.size() < 2)
-		{
-			throw std::invalid_argument("path cannot be comprised of a single point");
-		}
+		if (lines.size() < 2) throw std::invalid_argument("path cannot be comprised of a single point");
 
 		points.push_back(lines.front().start);
 
 		for (usize i = 0; i < lines.size() - 1; ++i)
 		{
-			if (lines[i].end != lines[i + 1].start)
-			{
-				throw std::invalid_argument("path is discontiguous");
-			}
+			if (lines[i].end != lines[i + 1].start) throw std::invalid_argument("path is discontiguous");
 
 			points.push_back(lines[i].end);
 		}

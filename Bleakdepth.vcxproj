@@ -144,13 +144,17 @@
     <ClInclude Include="keyboard.hpp" />
     <ClInclude Include="line.hpp" />
     <ClInclude Include="log.hpp" />
+    <ClInclude Include="mouse.hpp" />
     <ClInclude Include="octant.hpp" />
     <ClInclude Include="path.hpp" />
     <ClInclude Include="point.hpp" />
     <ClInclude Include="program.h" />
     <ClInclude Include="rect.hpp" />
+    <ClInclude Include="renderer.hpp" />
+    <ClInclude Include="texture.hpp" />
     <ClInclude Include="timer.hpp" />
     <ClInclude Include="typedef.hpp" />
+    <ClInclude Include="window.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\cursor.png">

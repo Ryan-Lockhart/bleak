@@ -5,7 +5,7 @@
 #include <list>
 #include <string>
 
-#include <fmt/format.h>
+#include <fmt/core.h>
 
 class Log
 {
@@ -126,14 +126,10 @@ public:
 		);
 	}
 	
-	template<typename... Args, typename = cstr>
-	inline void log(cstr format, Args... args) { messages.push_back(fmt::format(format, { args... })); }
+	template<typename... Args> inline void log(cstr format, Args... args) { messages.push_back(fmt::format(format, { args... })); }
+	template<typename... Args> inline void log(std::string format, Args... args) { messages.push_back(fmt::format(format, { args... })); }
 
-	template<typename... Args, typename = std::string>
-	inline void log(std::string format, Args... args) { messages.push_back(fmt::format(format, { args... })); }
-
-	template<typename... Args, typename = cstr>
-	inline void debug(cstr format, cstr time, cstr file, usize line, Args... args)
+	template<typename... Args> inline void debug(cstr format, cstr time, cstr file, usize line, Args... args)
 	{
 		messages.push_back(
 			fmt::format(
@@ -149,8 +145,7 @@ public:
 		);
 	}
 
-	template<typename... Args, typename = std::string>
-	inline void debug(std::string format, cstr time, cstr file, usize line, Args... args)
+	template<typename... Args> inline void debug(std::string format, cstr time, cstr file, usize line, Args... args)
 	{
 		messages.push_back(
 			fmt::format(

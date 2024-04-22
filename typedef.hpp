@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits.h>
+
 typedef unsigned char u8;
 typedef signed char i8;
 
@@ -27,6 +29,18 @@ typedef i64 isize;
 
 #endif
 
+typedef u8 byte;
+typedef i8 sbyte;
+
+typedef u16 word;
+typedef i16 sword;
+
+typedef u32 dword;
+typedef i32 sdword;
+
+typedef u64 qword;
+typedef i64 sqword;
+
 template<typename T> using ref = T&;
 template<typename T> using cref = const T&;
 template<typename T> using rval = T&&;
@@ -41,10 +55,12 @@ typedef cptr<void> cmem;
 
 mem offet(usize size) { return (mem)size; }
 
-template<typename T>
-mem offet(usize count) { return (mem)(sizeof(T) * count); }
+template<typename T> mem offet(usize count) { return (mem)(sizeof(T) * count); }
 
 typedef ptr<char> str;
 typedef cptr<char> cstr;
+
+typedef ptr<u8> buffer;
+typedef cptr<u8> cbuffer;
 
 #define __FILE_NAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)

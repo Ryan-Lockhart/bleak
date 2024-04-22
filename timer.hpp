@@ -3,7 +3,6 @@
 #include "typedef.hpp"
 
 #include <utility>
-#include <raylib.h>
 
 class Timer
 {
@@ -24,12 +23,12 @@ public:
 	constexpr ref<Timer> operator=(cref<Timer> other) noexcept = delete;
 	constexpr ref<Timer> operator=(rval<Timer> other) noexcept = delete;
 
-	constexpr void record() { ++total; last = GetTime(); }
+	inline void record() { ++total; last = ray::GetTime(); }
 
-	constexpr f64 elapsed() const { return GetTime() - last; }
+	inline f64 elapsed() const { return ray::GetTime() - last; }
 	constexpr usize count() const { return total; }
 
-	constexpr bool ready() const { return elapsed() >= interval; }
+	inline bool ready() const { return elapsed() >= interval; }
 
-	constexpr void reset() { total = 0; last = GetTime(); }
+	inline void reset() { total = 0; last = ray::GetTime(); }
 };
