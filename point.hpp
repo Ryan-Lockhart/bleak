@@ -5,15 +5,33 @@
 #include <utility>
 #include <string>
 
+#include <SDL2\SDL.h>
+
 struct Point
 {
 	using point_t = i32;
 
-	point_t x, y;
+	union {
+		// logical name of the first component of a point
+		point_t x;
+		// logical name of the first component of a size
+		point_t w;
+		// logical name of the first component of an index
+		point_t i;
+	};
 
-	static const Point Zero;
+	union {
+		// logical name of the second component of a point
+		point_t y;
+		// logical name of the second component of a size
+		point_t h;
+		// logical name of the second component of an index
+		point_t j;
+	};
 
-	constexpr Point() noexcept : x(Zero.x), y(Zero.y) {}
+	static const Point zero;
+
+	constexpr Point() noexcept : x(zero.x), y(zero.y) {}
 	constexpr Point(point_t x, point_t y) noexcept : x(x), y(y) {}
 
 	constexpr Point(cref<Point> other) noexcept : x(other.x), y(other.y) {}
@@ -80,7 +98,12 @@ struct Point
 	constexpr ref<Point> operator/=(point_t scalar) noexcept { x /= scalar; y /= scalar; return *this; }
 	constexpr ref<Point> operator%=(point_t scalar) noexcept { x %= scalar; y %= scalar; return *this; }
 
-	constexpr operator std::string() const noexcept { return "[" + std::to_string(x) + ", " + std::to_string(y) + "]"; }
+	constexpr operator SDL_Point() const noexcept { return { x, y }; }
+	constexpr explicit operator SDL_FPoint() const noexcept { return { static_cast<f32>(x), static_cast<f32>(y) }; }
+
+	inline operator std::string() const noexcept { return "[" + std::to_string(x) + ", " + std::to_string(y) + "]"; }
 };
 
-constexpr Point Point::Zero = { 0, 0 };
+using Size = Point;
+
+constexpr Point Point::zero = { 0, 0 };

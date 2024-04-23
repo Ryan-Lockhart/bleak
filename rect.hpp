@@ -2,48 +2,45 @@
 
 #include "typedef.hpp"
 
+#include <utility>
+
+#include <SDL2/SDL.h>
+
 #include "point.hpp"
 #include "line.hpp"
 
-#include <utility>
-
 struct Rect
 {
-	using rect_t = i32;
+	using rect_t = Point::point_t;
 
-	rect_t x, y, w, h;
+	Point position;
+	Size size;
 
-	constexpr Rect() noexcept : x(0), y(0), w(0), h(0) {}
-	constexpr Rect(rect_t x, rect_t y, rect_t w, rect_t h) noexcept : x(x), y(y), w(w), h(h) {}
-	constexpr Rect(cref<Point> point, cref<Point> size) noexcept : x(point.x), y(point.y), w(size.x), h(size.y) {}
+	constexpr Rect() noexcept : position(), size() {}
+	constexpr Rect(rect_t x, rect_t y, rect_t w, rect_t h) noexcept : position(x, y), size(w, h) {}
+	constexpr Rect(cref<Point> position, cref<Size> size) noexcept : position(position), size(size) {}
 
-	constexpr Rect(cref<Rect> other) noexcept : x(other.x), y(other.y), w(other.w), h(other.h) {}
-	constexpr Rect(rval<Rect> other) noexcept : x(std::move(other.x)), y(std::move(other.y)), w(std::move(other.w)), h(std::move(other.h)) {}
+	constexpr Rect(cref<Rect> other) noexcept : position(other.position), size(other.size) {}
+	constexpr Rect(rval<Rect> other) noexcept : position(std::move(other.position)), size(std::move(other.size)) {}
 
-	constexpr Rect& operator=(cref<Rect> other) noexcept
+	constexpr ref<Rect> operator=(cref<Rect> other) noexcept
 	{
-		x = other.x;
-		y = other.y;
-
-		w = other.w;
-		h = other.h;
+		position = other.position;
+		size = other.size;
 
 		return *this;
 	}
 
-	constexpr Rect& operator=(rval<Rect> other) noexcept
+	constexpr ref<Rect> operator=(rval<Rect> other) noexcept
 	{
-		x = std::move(other.x);
-		y = std::move(other.y);
-
-		w = std::move(other.w);
-		h = std::move(other.h);
+		position = std::move(other.position);
+		size = std::move(other.size);
 
 		return *this;
 	}
 
-	constexpr bool operator==(cref<Rect> other) const noexcept { return x == other.x && y == other.y && w == other.w && h == other.h; }
-	constexpr bool operator!=(cref<Rect> other) const noexcept { return x != other.x || y != other.y || w != other.w || h != other.h; }
+	constexpr bool operator==(cref<Rect> other) const noexcept { return position == other.position && size == other.size; }
+	constexpr bool operator!=(cref<Rect> other) const noexcept { return position != other.position || size != other.size; }
 
 	constexpr bool operator<(cref<Rect> other) = delete;
 	constexpr bool operator<=(cref<Rect> other) = delete;
@@ -51,40 +48,23 @@ struct Rect
 	constexpr bool operator>(cref<Rect> other) = delete;
 	constexpr bool operator>=(cref<Rect> other) = delete;
 
-	// I swear, if this works...
+	constexpr Point center() const noexcept { return position + size / 2; }
 
-	constexpr ref<Point> position() noexcept { return *(Point*)(&x); }
-	constexpr cref<Point> position() const noexcept { return *(Point*)(&x); }
+	constexpr rect_t area() const noexcept { return size.size(); }
 
-	constexpr ref<Point> size() noexcept { return *(Point*)(&w); }
-	constexpr cref<Point> size() const noexcept { return *(Point*)(&w); }
-
-	constexpr Point center() const noexcept { return Point(x + w / 2, y + h / 2); }
-
-	enum class Corner : u8
+	constexpr bool contains(rect_t x, rect_t y) const noexcept { return x >= position.x && x < position.x + size.w && y >= position.y && y < position.y + size.h; }
+	constexpr bool contains(cref<Point> point) const noexcept { return point.x >= position.x && point.x < position.x + size.w && point.y >= position.y && point.y < position.y + size.h; }
+	constexpr bool contains(cref<Line> line) const noexcept { return contains(line.start) && contains(line.end); }
+	constexpr bool contains(cref<Rect> other) const noexcept
 	{
-		TopLeft,
-		TopRight,
-		BottomRight,
-		BottomLeft
-	};
-
-	constexpr Point corner(Corner corner) const noexcept
-	{
-		switch (corner)
-		{
-			case Corner::TopLeft: return Point(x, y);
-			case Corner::TopRight: return Point(x + w, y);
-			case Corner::BottomRight: return Point(x + w, y + h);
-			case Corner::BottomLeft: return Point(x, y + h);
-		}
-
-		return Point();
+		return position.x <= other.position.x && position.y <= other.position.y && position.x + size.w >= other.position.x + other.size.w && position.y + size.h >= other.position.y + other.size.h;
 	}
 
-	constexpr rect_t area() const noexcept { return w * h; }
+	constexpr bool intersects(cref<Rect> other) const noexcept
+	{
+		return position.x < other.position.x + other.size.w && position.x + size.w > other.position.x && position.y < other.position.y + other.size.h && position.y + size.h > other.position.y;
+	}
 
-	constexpr bool contains(rect_t x, rect_t y) const noexcept { return x >= this->x && x < this->x + w && y >= this->y && y < this->y + h; }
-	constexpr bool contains(cref<Point> point) const noexcept { return point.x >= x && point.x < x + w && point.y >= y && point.y < y + h; }
-	constexpr bool contains(cref<Line> line) const noexcept { return contains(line.start) && contains(line.end); }
+	constexpr operator SDL_Rect() const noexcept { return SDL_Rect{ position.x, position.y, size.w, size.h }; }
+	constexpr explicit operator SDL_FRect() const noexcept { return SDL_FRect{ (f32)position.x, (f32)position.y, (f32)size.w, (f32)size.h }; }
 };

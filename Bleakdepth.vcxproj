@@ -140,6 +140,8 @@
   <ItemGroup>
     <ClInclude Include="atlas.hpp" />
     <ClInclude Include="color.hpp" />
+    <ClInclude Include="cursor.hpp" />
+    <ClInclude Include="delta.hpp" />
     <ClInclude Include="glyph.hpp" />
     <ClInclude Include="keyboard.hpp" />
     <ClInclude Include="line.hpp" />
@@ -151,6 +153,7 @@
     <ClInclude Include="program.h" />
     <ClInclude Include="rect.hpp" />
     <ClInclude Include="renderer.hpp" />
+    <ClInclude Include="subsystem.hpp" />
     <ClInclude Include="texture.hpp" />
     <ClInclude Include="timer.hpp" />
     <ClInclude Include="typedef.hpp" />

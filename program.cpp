@@ -6,6 +6,10 @@
 #include <algorithm>
 #include <random>
 
+#include "subsystem.hpp"
+#include "window.hpp"
+#include "renderer.hpp"
+
 #include "log.hpp"
 #include "keyboard.hpp"
 #include "mouse.hpp"
@@ -24,6 +28,9 @@
 
 constexpr cstr GAME_TITLE = "Bleakdepth";
 constexpr cstr GAME_VERSION = "0.0.1";
+
+constexpr u32 WINDOW_FLAGS = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
+constexpr u32 RENDERER_FLAGS = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
 
 constexpr i32 WINDOW_WIDTH = 1280;
 constexpr i32 WINDOW_HEIGHT = 480;
@@ -125,8 +132,18 @@ static Log ERRORS;
 constexpr i32 HORIZONTAL_TAB_SIZE = 4;
 constexpr i32 VERTICAL_TAB_SIZE = 4;
 
-static Atlas GAME_GLYPHS{ "Assets\\glyphs_16x16.png", { 16, 16 } };
-static Atlas UI_GLYPHS{ "Assets\\glyphs_8x8.png", { 16, 16 } };
+static Subsystem SUBSYSTEM{};
+
+static Window WINDOW{ GAME_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_FLAGS };
+static Renderer RENDERER{ WINDOW.handle(), RENDERER_FLAGS };
+
+static Keyboard KEYBOARD;
+static Mouse MOUSE;
+
+static Atlas GAME_GLYPHS{ Texture{ RENDERER.handle(), "Assets\\glyphs_16x16.png" }, { 16, 16 } };
+static Atlas UI_GLYPHS{ Texture{ RENDERER.handle(), "Assets\\glyphs_8x8.png" }, { 16, 16 } };
+
+static Texture CURSOR{ RENDERER.handle(), "Assets\\cursor.png" };
 
 static SDL_Texture* CURSOR{ nullptr };
 
@@ -303,8 +320,8 @@ static void Reveal(cref<std::vector<Point>> fov)
 
 static void Reveal(cref<Rect> area)
 {
-	for (i32 j{ area.y }; j < area.y + area.h; ++j)
-		for (i32 i{ area.x }; i < area.x + area.w; ++i)
+	for (i32 j{ area.position.y }; j < area.position.y + area.size.h; ++j)
+		for (i32 i{ area.position.x }; i < area.position.x + area.size.w; ++i)
 			VISIBLE[GetIndex(i, j)] = true;
 }
 
@@ -322,8 +339,8 @@ static void Obscure(cref<std::vector<Point>> fov)
 
 static void Obscure(cref<Rect> area)
 {
-	for (i32 j{ area.y }; j < area.y + area.h; ++j)
-		for (i32 i{ area.x }; i < area.x + area.w; ++i)
+	for (i32 j{ area.position.y }; j < area.position.y + area.size.h; ++j)
+		for (i32 i{ area.position.x }; i < area.position.x + area.size.w; ++i)
 			VISIBLE[GetIndex(i, j)] = false;
 }
 
@@ -335,185 +352,8 @@ static constexpr bool IsPointInsideGame(i32 x, i32 y) { return x >= 0 && x < GAM
 static constexpr i32 SelectCellWidth(bool ui) { return ui ? UI_CELL_WIDTH : CELL_WIDTH; }
 static constexpr i32 SelectCellHeight(bool ui) { return ui ? UI_CELL_HEIGHT : CELL_HEIGHT; }
 
-static Vector2 UnflattenIndex(u8 index)
-{
-	div_t div_result = div(index, 16);
-
-	f32 x = (f32)div_result.rem;
-	f32 y = (f32)div_result.quot;
-
-	return { x, y };
-}
-
-static Rectangle CalculateGridRectangle(u8 index, bool ui = false)
-{
-	Vector2 position = UnflattenIndex(index);
-
-	i32 w = SelectCellWidth(ui);
-	i32 h = SelectCellHeight(ui);
-
-	return Rectangle{ position.x * w, position.y * h, (f32)w, (f32)h };
-}
-
-static void DrawGlyph(u8 index, i32 x, i32 y, Color color, bool ui = false, i32 nx = 0, i32 ny = 0)
-{
-	ray::DrawTextureRec
-	(
-		ui ? *UI_GLYPHS : *GAME_GLYPHS,
-		CalculateGridRectangle(index, ui),
-		{
-			static_cast<f32>(x * SelectCellWidth(ui) + nx),
-			static_cast<f32>(y * SelectCellHeight(ui) + ny)
-		},
-		color
-	);
-}
-
-static Vector2 CalculateStringSize(cref<std::string> s)
-{
-	if (s == "")
-		return { 0, 0 };
-
-	i32 maxWidth = 0;
-	
-	i32 width = 0;
-	i32 height = 0;
-
-	for (auto& c : s)
-	{
-		i32 rem{};
-
-		switch (c)
-		{
-		case '\0':
-			break;
-		case '\n':
-			if (width > maxWidth)
-				maxWidth = width;
-			width = 0;
-			++height;
-			continue;
-
-		case '\t':
-			rem = width % HORIZONTAL_TAB_SIZE;
-			width += rem != 0 ? rem : HORIZONTAL_TAB_SIZE;
-			continue;
-
-		case '\v':
-			rem = height % VERTICAL_TAB_SIZE;
-			width += rem != 0 ? rem : VERTICAL_TAB_SIZE;
-			continue;
-
-		default:
-			++width;
-			continue;
-		}
-	}
-
-	if (width > maxWidth)
-		maxWidth = width;
-
-	return { (f32)maxWidth, (f32)height };
-}
-
-static void DrawGlyphs(cref<std::string> glyphs, i32 x, i32 y, Color color, bool ui = false, i32 nx = 0, i32 ny = 0, bool truncate = true, bool wrap = false)
-{
-	if (glyphs == "")
-		return;
-
-	Vector2 size = CalculateStringSize(glyphs);
-
-	i32 carriage_x = 0;
-	i32 carriage_y = 0;
-
-	for (auto& glyph : glyphs)
-	{
-		i32 rem{};
-
-		if (carriage_x >= (ui ? UI_GRID_WIDTH : GRID_WIDTH) - 5)
-		{
-			if (truncate)
-			{
-				for (int i{ 0 }; i < 3; ++i)
-					DrawGlyph('.', x + carriage_x + i, y + carriage_y, color, ui);
-
-				return;
-			}
-
-			if (wrap)
-			{
-				carriage_x = 2;
-				++carriage_y;
-			}
-		}
-
-		switch (glyph)
-		{
-			case '\0':
-				return;
-			case '\n':
-				carriage_x = 0;
-				++carriage_y;
-				continue;
-
-			case '\t':
-				rem = carriage_x % HORIZONTAL_TAB_SIZE;
-				carriage_x += rem != 0 ? rem : HORIZONTAL_TAB_SIZE;
-				continue;
-
-			case '\v':
-				rem = carriage_y % VERTICAL_TAB_SIZE;
-				carriage_y += rem != 0 ? rem : VERTICAL_TAB_SIZE;
-				continue;
-
-			default:
-				DrawGlyph(glyph, x + carriage_x, y + carriage_y, color, ui, nx, ny);
-				carriage_x++;
-				continue;
-		}
-	}
-}
-
-static void DrawMessages(cref<Log> log, Color color = WHITE)
-{
-	int i{ 0 };
-
-	std::string last{ "" };
-	int duplicates{ 0 };
-
-	for (auto& message : log)
-	{
-		if (message == last)
-		{
-			++duplicates;
-			continue;
-		}
-		else if (duplicates > 0)
-		{
-			DrawGlyphs("\tx " + std::to_string(duplicates + 1), UI_GRID_ORIGIN_X + 1, i * 2, color, true);
-			duplicates = 0;
-		}
-
-		last = message;
-
-		DrawGlyphs(">: " + message, UI_GRID_ORIGIN_X + 1, i * 2 + 1, color, true);
-		++i;
-	}
-	
-	if (duplicates > 0)
-	{
-		DrawGlyphs("\tx " + std::to_string(duplicates + 1), UI_GRID_ORIGIN_X + 1, i * 2, color, true);
-		duplicates = 0;
-	}
-}
-
 static void UpdateCursor()
 {
-	Vector2 rawMousePos = ray::GetMousePosition();
-
-	MOUSE_X = (i32)rawMousePos.x;
-	MOUSE_Y = (i32)rawMousePos.y;
-
 	CURSOR_X = MOUSE_X / CELL_WIDTH;
 	CURSOR_Y = MOUSE_Y / CELL_HEIGHT;
 
@@ -550,22 +390,21 @@ static void UpdatePlayer()
 	if (!INPUT_TIMER.ready())
 		return;
 
-	if (ray::IsKeyDown(KEY_KP_5))
+	if (KEYBOARD.IsKeyDown(SDL_SCANCODE_KP_5))
 	{
 		EPOCH_TIMER.record();
 		INPUT_TIMER.record();
 
 		MESSAGES.log("You wait.");
-		MESSAGES.log("");
 		return;
 	}
 
 	i32 x{ 0 }, y{ 0 };
 
-	if (Keyboard::AnyKeysDown(KEY_W, KEY_KP_7, KEY_KP_8, KEY_KP_9) && PLAYER_Y > MAP_ORIGIN_Y) --y;
-	if (Keyboard::AnyKeysDown(KEY_A, KEY_KP_1, KEY_KP_4, KEY_KP_7) && PLAYER_X > MAP_ORIGIN_X) --x;
-	if (Keyboard::AnyKeysDown(KEY_S, KEY_KP_1, KEY_KP_2, KEY_KP_3) && PLAYER_Y < MAP_EXTENT_Y) ++y;
-	if (Keyboard::AnyKeysDown(KEY_D, KEY_KP_3, KEY_KP_6, KEY_KP_9) && PLAYER_X < MAP_EXTENT_X) ++x;
+	if (KEYBOARD.AnyKeysDown(SDL_SCANCODE_W, SDL_SCANCODE_KP_7, SDL_SCANCODE_KP_8, SDL_SCANCODE_KP_9) && PLAYER_Y > MAP_ORIGIN_Y) --y;
+	if (KEYBOARD.AnyKeysDown(SDL_SCANCODE_A, SDL_SCANCODE_KP_1, SDL_SCANCODE_KP_4, SDL_SCANCODE_KP_7) && PLAYER_X > MAP_ORIGIN_X) --x;
+	if (KEYBOARD.AnyKeysDown(SDL_SCANCODE_S, SDL_SCANCODE_KP_1, SDL_SCANCODE_KP_2, SDL_SCANCODE_KP_3) && PLAYER_Y < MAP_EXTENT_Y) ++y;
+	if (KEYBOARD.AnyKeysDown(SDL_SCANCODE_D, SDL_SCANCODE_KP_3, SDL_SCANCODE_KP_6, SDL_SCANCODE_KP_9) && PLAYER_X < MAP_EXTENT_X) ++x;
 
 	if (x != 0 || y != 0)
 	{
@@ -603,7 +442,7 @@ static void UpdatePlayer()
 
 static void UpdateCamera()
 {
-	if (ray::IsKeyPressed(KEY_SPACE)) CAMERA_LOCKED = !CAMERA_LOCKED;
+	if (KEYBOARD.IsKeyPressed(SDL_SCANCODE_SPACE)) CAMERA_LOCKED = !CAMERA_LOCKED;
 
 	if (!CAMERA_LOCKED)
 	{
@@ -612,10 +451,10 @@ static void UpdateCamera()
 
 		i32 x{ 0 }, y{ 0 };
 
-		if (ray::IsKeyDown(KEY_UP) && CAMERA_Y > MAP_ORIGIN_Y) --y;
-		if (ray::IsKeyDown(KEY_DOWN) && CAMERA_Y < MAP_EXTENT_Y - GRID_EXTENT_Y) ++y;
-		if (ray::IsKeyDown(KEY_RIGHT) && CAMERA_X < MAP_EXTENT_X - GRID_EXTENT_X) ++x;
-		if (ray::IsKeyDown(KEY_LEFT) && CAMERA_X > MAP_ORIGIN_X) --x;
+		if (KEYBOARD.IsKeyDown(SDL_SCANCODE_UP) && CAMERA_Y > MAP_ORIGIN_Y) --y;
+		if (KEYBOARD.IsKeyDown(SDL_SCANCODE_DOWN) && CAMERA_Y < MAP_EXTENT_Y - GRID_EXTENT_Y) ++y;
+		if (KEYBOARD.IsKeyDown(SDL_SCANCODE_RIGHT) && CAMERA_X < MAP_EXTENT_X - GRID_EXTENT_X) ++x;
+		if (KEYBOARD.IsKeyDown(SDL_SCANCODE_LEFT) && CAMERA_X > MAP_ORIGIN_X) --x;
 
 		if (x != 0 || y != 0)
 		{
@@ -639,7 +478,7 @@ static void UpdateCamera()
 
 static void UpdateSineWave(f64 time)
 {
-	SINE_VALUE = AMPLITUDE * (PHASE + std::sin(2.0 * PI * FREQUENCY * time));
+	SINE_VALUE = AMPLITUDE * (PHASE + std::sin(2.0 * M_PI * FREQUENCY * time));
 }
 
 static bool IsBorder(cref<Point> p) { return p.x < MAP_ORIGIN_X + MAP_BORDER_SIZE || p.x > MAP_EXTENT_X - MAP_BORDER_SIZE || p.y < MAP_ORIGIN_Y + MAP_BORDER_SIZE || p.y > MAP_EXTENT_Y - MAP_BORDER_SIZE; }
@@ -761,11 +600,7 @@ static void GenerateCaverns()
 
 int main(void)
 {
-	ray::InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT + 12, fmt::format("{} v{}", GAME_TITLE, GAME_VERSION).c_str());
-	//ray::SetWindowState(FLAG_WINDOW_UNDECORATED);
-
-	ray::SetTargetFPS(60);
-	ray::HideCursor();
+	MOUSE.HideCursor();
 
 	GenerateCaverns();
 	GenerateOpacity();
@@ -793,15 +628,10 @@ int main(void)
 		VISIBLE[index] = true;
 	}
 
-	UI_GLYPHS = new Texture2D(ray::LoadTexture("Assets/glyphs_8x8.png"));
-	GAME_GLYPHS = new Texture2D(ray::LoadTexture("Assets/glyphs_12x12.png"));
-
-	CURSOR = new Texture2D(ray::LoadTexture("Assets/cursor.png"));
-
 	INPUT_TIMER.record();
 	EPOCH_TIMER.record();
 
-	while (!ray::WindowShouldClose())
+	while (!WINDOW.closing())
 	{
 		MESSAGES.prune();
 		ERRORS.prune();
@@ -811,7 +641,9 @@ int main(void)
 		UpdateCursor();
 		UpdateCamera();
 
-		UpdateSineWave(ray::GetTime());
+		UpdateSineWave(SDL_GetPerformanceFrequency());
+
+
 
 		ray::BeginDrawing();
 

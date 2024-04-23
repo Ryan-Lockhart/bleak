@@ -5,6 +5,8 @@
 #include <utility>
 #include <string>
 
+#include <fmt/core.h>
+
 struct Color
 {
 	union {
@@ -47,8 +49,5 @@ struct Color
 
 	constexpr explicit operator u32() const noexcept { return packed; }
 
-	inline operator std::string() const noexcept
-	{
-		return "[" + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) + ", " + std::to_string(a) + "]";
-	}
+	inline operator std::string() const noexcept { return fmt::format("[{}, {}, {}, {}]", r, g, b, a); }
 };

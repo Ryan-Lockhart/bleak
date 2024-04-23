@@ -71,6 +71,15 @@
     <ClInclude Include="window.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="subsystem.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cursor.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="delta.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\glyphs_8x8.png">
