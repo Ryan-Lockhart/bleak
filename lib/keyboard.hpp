@@ -6,213 +6,205 @@
 
 #include <SDL.h>
 
-struct Keyboard
-{
-public:
-	using Key = SDL_Scancode;
+namespace Bleakdepth {
+	struct keyboard {
+	  public:
+		using key_t = SDL_Scancode;
 
-	static constexpr Key KEY_START = SDL_SCANCODE_UNKNOWN;
-	static constexpr Key KEY_END = SDL_NUM_SCANCODES;
+		static constexpr key_t KEY_START = SDL_SCANCODE_UNKNOWN;
+		static constexpr key_t KEY_END = SDL_NUM_SCANCODES;
 
-	enum class KeyState
-	{
-		Pressed,
-		Released,
-		Down,
-		Up
-	};
+		enum class key_state_t { Pressed, Released, Down, Up };
 
-private:
-	std::bitset<KEY_END> currentState;
-	std::bitset<KEY_END> previousState;
+	  private:
+		static inline std::bitset<KEY_END> currentState;
+		static inline std::bitset<KEY_END> previousState;
 
-public:
-	inline Keyboard() : currentState(false), previousState(false) {}
-	inline ~Keyboard() = default;
+	  public:
+		static constexpr void initialize() {
+			currentState.reset();
+			previousState.reset();
+		}
 
-	inline Keyboard(cref<Keyboard> other) = delete;
-	inline Keyboard(rval<Keyboard> other) = delete;
-
-	inline ref<Keyboard> operator=(cref<Keyboard> other) = delete;
-	inline ref<Keyboard> operator=(rval<Keyboard> other) = delete;
-
-	inline void update(Key key, bool state)
-	{
-		previousState[key] = currentState[key];
-		currentState[key] = state;
-	}
-
-	template<typename... Keys, typename = std::pair<Key, bool>>
-	inline void update(Keys... keyStates)
-	{
-		for (const auto& [key, state] : { keyStates... })
-		{
+		static constexpr void update(key_t key, bool state) {
 			previousState[key] = currentState[key];
 			currentState[key] = state;
 		}
-	}
 
-	inline void update(cptr<Key> keys, cptr<bool> states, usize count)
-	{
-		for (usize i{ 0 }; i < count; ++i)
-		{
-			previousState[keys[i]] = currentState[keys[i]];
-			currentState[keys[i]] = states[i];
-		}
-	}
-
-	inline KeyState operator[](Key key) const { return previousState[key] ? currentState[key] ? KeyState::Pressed : KeyState::Up : currentState[key] ? KeyState::Down : KeyState::Released; }
-	inline KeyState operator[](int key) const { return previousState[key] ? currentState[key] ? KeyState::Pressed : KeyState::Up : currentState[key] ? KeyState::Down : KeyState::Released; }
-
-	inline bool IsKeyPressed(Key key) const { return (*this)[key] == KeyState::Pressed; }
-	inline bool IsKeyPressed(int key) const { return (*this)[key] == KeyState::Pressed; }
-
-	inline bool IsKeyReleased(Key key) const { return (*this)[key] == KeyState::Released; }
-	inline bool IsKeyReleased(int key) const { return (*this)[key] == KeyState::Released; }
-
-	inline bool IsKeyDown(Key key) const { return (*this)[key] == KeyState::Down; }
-	inline bool IsKeyDown(int key) const { return (*this)[key] == KeyState::Down; }
-
-	inline bool IsKeyUp(Key key) const { return (*this)[key] == KeyState::Up; }
-	inline bool IsKeyUp(int key) const { return (*this)[key] == KeyState::Up; }
-
-	inline bool AnyKeyPressed() const
-	{
-		for (int i{ KEY_START }; i < KEY_END; ++i)
-		{
-			if (IsKeyPressed(i))
-				return true;
+		template<typename... Keys, typename = std::pair<key_t, bool>> static constexpr void update(Keys... keyStates) {
+			for (const auto& [key, state] : { keyStates... }) {
+				previousState[key] = currentState[key];
+				currentState[key] = state;
+			}
 		}
 
-		return false;
-	}
-
-	inline bool AnyKeyReleased() const
-	{
-		for (int i{ KEY_START }; i < KEY_END; ++i)
-		{
-			if (IsKeyReleased(i))
-				return true;
+		static constexpr void update(cptr<key_t> keys, cptr<bool> states, usize count) {
+			for (usize i { 0 }; i < count; ++i) {
+				previousState[keys[i]] = currentState[keys[i]];
+				currentState[keys[i]] = states[i];
+			}
 		}
 
-		return false;
-	}
-
-	inline bool AnyKeyDown() const
-	{
-		for (int i{ KEY_START }; i < KEY_END; ++i)
-		{
-			if (IsKeyDown(i))
-				return true;
+		static constexpr key_state_t operator[](key_t key) {
+			return previousState[key] ? currentState[key] ? key_state_t::Pressed : key_state_t::Up :
+				   currentState[key]  ? key_state_t::Down :
+										key_state_t::Released;
 		}
 
-		return false;
-	}
-
-	inline bool AnyKeyUp() const
-	{
-		for (int i{ KEY_START }; i < KEY_END; ++i)
-		{
-			if (IsKeyUp(i))
-				return true;
+		static constexpr key_state_t operator[](int key) {
+			return previousState[key] ? currentState[key] ? key_state_t::Pressed : key_state_t::Up :
+				   currentState[key]  ? key_state_t::Down :
+										key_state_t::Released;
 		}
 
-		return false;
-	}
+		static constexpr bool IsKeyPressed(key_t key);
+		static constexpr bool IsKeyPressed(int key);
 
-	template<typename... Keys, typename = Key>
-	inline bool AreKeysPressed(Keys... keys) const
-	{
-		for (Key key : { keys... })
-		{
-			if (!IsKeyPressed(key))
-				return false;
+		static constexpr bool IsKeyReleased(key_t key);
+		static constexpr bool IsKeyReleased(int key);
+
+		static constexpr bool IsKeyDown(key_t key);
+		static constexpr bool IsKeyDown(int key);
+
+		static constexpr bool IsKeyUp(key_t key);
+		static constexpr bool IsKeyUp(int key);
+
+		static inline bool AnyKeyPressed() {
+			for (int i { KEY_START }; i < KEY_END; ++i) {
+				if (IsKeyPressed(i)) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
-		return true;
-	}
+		static inline bool AnyKeyReleased() {
+			for (int i { KEY_START }; i < KEY_END; ++i) {
+				if (IsKeyReleased(i)) {
+					return true;
+				}
+			}
 
-	template<typename... Keys, typename = Key>
-	inline bool AreKeysReleased(Keys... keys) const
-	{
-		for (Key key : { keys... })
-		{
-			if (!IsKeyReleased(key))
-				return false;
+			return false;
 		}
 
-		return true;
-	}
+		static inline bool AnyKeyDown() {
+			for (int i { KEY_START }; i < KEY_END; ++i) {
+				if (IsKeyDown(i)) {
+					return true;
+				}
+			}
 
-	template<typename... Keys, typename = Key>
-	inline bool AreKeysDown(Keys... keys) const
-	{
-		for (Key key : { keys... })
-		{
-			if (!IsKeyDown(key))
-				return false;
+			return false;
 		}
 
-		return true;
-	}
+		static inline bool AnyKeyUp() {
+			for (int i { KEY_START }; i < KEY_END; ++i) {
+				if (IsKeyUp(i)) {
+					return true;
+				}
+			}
 
-	template<typename... Keys, typename = Key>
-	inline bool AreKeysUp(Keys... keys) const
-	{
-		for (Key key : { keys... })
-		{
-			if (!IsKeyUp(key))
-				return false;
+			return false;
 		}
 
-		return true;
-	}
+		template<typename... Keys, typename = key_t> static inline bool AreKeysPressed(Keys... keys) {
+			for (key_t key : { keys... }) {
+				if (!IsKeyPressed(key)) {
+					return false;
+				}
+			}
 
-	template<typename... Keys, typename = Key>
-	inline bool AnyKeysPressed(Keys... keys) const
-	{
-		for (Key key : { keys... })
-		{
-			if (IsKeyPressed(key))
-				return true;
+			return true;
 		}
 
-		return false;
-	}
+		template<typename... Keys, typename = key_t> static inline bool AreKeysReleased(Keys... keys) {
+			for (key_t key : { keys... }) {
+				if (!IsKeyReleased(key)) {
+					return false;
+				}
+			}
 
-	template<typename... Keys, typename = Key>
-	inline bool AnyKeysReleased(Keys... keys) const
-	{
-		for (Key key : { keys... })
-		{
-			if (IsKeyReleased(key))
-				return true;
+			return true;
 		}
 
-		return false;
-	}
+		template<typename... Keys, typename = key_t> static inline bool AreKeysDown(Keys... keys) {
+			for (key_t key : { keys... }) {
+				if (!IsKeyDown(key)) {
+					return false;
+				}
+			}
 
-	template<typename... Keys, typename = Key>
-	inline bool AnyKeysDown(Keys... keys) const
-	{
-		for (Key key : { keys... })
-		{
-			if (IsKeyDown(key))
-				return true;
+			return true;
 		}
 
-		return false;
-	}
+		template<typename... Keys, typename = key_t> static inline bool AreKeysUp(Keys... keys) {
+			for (key_t key : { keys... }) {
+				if (!IsKeyUp(key)) {
+					return false;
+				}
+			}
 
-	template<typename... Keys, typename = Key>
-	inline bool AnyKeysUp(Keys... keys) const
-	{
-		for (Key key : { keys... })
-		{
-			if (IsKeyUp(key))
-				return true;
+			return true;
 		}
 
-		return false;
-	}
-};
+		template<typename... Keys, typename = key_t> static inline bool AnyKeysPressed(Keys... keys) {
+			for (key_t key : { keys... }) {
+				if (IsKeyPressed(key)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		template<typename... Keys, typename = key_t> static inline bool AnyKeysReleased(Keys... keys) {
+			for (key_t key : { keys... }) {
+				if (IsKeyReleased(key)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		template<typename... Keys, typename = key_t> static inline bool AnyKeysDown(Keys... keys) {
+			for (key_t key : { keys... }) {
+				if (IsKeyDown(key)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		template<typename... Keys, typename = key_t> static inline bool AnyKeysUp(Keys... keys) {
+			for (key_t key : { keys... }) {
+				if (IsKeyUp(key)) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+	};
+
+	static inline keyboard Keyboard;
+
+	constexpr inline bool keyboard::IsKeyPressed(key_t key) { return Keyboard[key] == key_state_t::Pressed; }
+
+	constexpr inline bool keyboard::IsKeyPressed(int key) { return Keyboard[key] == key_state_t::Pressed; }
+
+	constexpr inline bool keyboard::IsKeyReleased(key_t key) { return Keyboard[key] == key_state_t::Released; }
+
+	constexpr inline bool keyboard::IsKeyReleased(int key) { return Keyboard[key] == key_state_t::Released; }
+
+	constexpr inline bool keyboard::IsKeyDown(key_t key) { return Keyboard[key] == key_state_t::Down; }
+
+	constexpr inline bool keyboard::IsKeyDown(int key) { return Keyboard[key] == key_state_t::Down; }
+
+	constexpr inline bool keyboard::IsKeyUp(key_t key) { return Keyboard[key] == key_state_t::Up; }
+
+	constexpr inline bool keyboard::IsKeyUp(int key) { return Keyboard[key] == key_state_t::Up; }
+} // namespace Bleakdepth

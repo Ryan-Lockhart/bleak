@@ -4,39 +4,42 @@
 
 #include <utility>
 
-struct Octant
-{
-	using octant_t = i32;
+namespace Bleakdepth {
+	template<typename T = i32> struct octant_t {
+		T x, dx, y, dy;
 
-	octant_t x, dx, y, dy;
+		constexpr octant_t() = delete;
 
-	constexpr Octant() = delete;
-	constexpr Octant(octant_t x, octant_t dx, octant_t y, octant_t dy) : x(x), dx(dx), y(y), dy(dy) {}
+		constexpr octant_t(T x, T dx, T y, T dy) : x(x), dx(dx), y(y), dy(dy) {}
 
-	constexpr Octant(cref<Octant> other) : x(other.x), dx(other.dx), y(other.y), dy(other.dy) {}
-	constexpr Octant(rval<Octant> other) : x(std::move(other.x)), dx(std::move(other.dx)), y(std::move(other.y)), dy(std::move(other.dy)) {}
+		constexpr octant_t(cref<octant_t> other) : x(other.x), dx(other.dx), y(other.y), dy(other.dy) {}
 
-	constexpr ~Octant() = default;
+		constexpr octant_t(rval<octant_t> other) :
+			x(std::move(other.x)),
+			dx(std::move(other.dx)),
+			y(std::move(other.y)),
+			dy(std::move(other.dy)) {}
 
-	constexpr Octant& operator=(cref<Octant> other)
-	{
-		x = other.x;
-		dx = other.dx;
+		constexpr ~octant_t() = default;
 
-		y = other.y;
-		dy = other.dy;
+		constexpr octant_t& operator=(cref<octant_t> other) {
+			x = other.x;
+			dx = other.dx;
 
-		return *this;
-	}
+			y = other.y;
+			dy = other.dy;
 
-	constexpr Octant& operator=(rval<Octant> other)
-	{
-		x = std::move(other.x);
-		dx = std::move(other.dx);
+			return *this;
+		}
 
-		y = std::move(other.y);
-		dy = std::move(other.dy);
+		constexpr octant_t& operator=(rval<octant_t> other) {
+			x = std::move(other.x);
+			dx = std::move(other.dx);
 
-		return *this;
-	}
-};
+			y = std::move(other.y);
+			dy = std::move(other.dy);
+
+			return *this;
+		}
+	};
+} // namespace Bleakdepth

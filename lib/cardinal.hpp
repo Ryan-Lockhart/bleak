@@ -4,85 +4,108 @@
 
 #include <string>
 
-struct Cardinal
-{
-private:
-    u8 value;
+namespace Bleakdepth {
+	struct cardinal_t {
+	  private:
+		u8 value;
 
-public:
-    constexpr Cardinal() : value(0) {}
-    constexpr Cardinal(u8 value) : value(value) {}
+	  public:
+		constexpr cardinal_t() : value(0) {}
 
-    static const Cardinal Central;
+		constexpr cardinal_t(u8 value) : value(value) {}
 
-    static const Cardinal North;
-    static const Cardinal East;
-    static const Cardinal South;
-    static const Cardinal West;
+		static const cardinal_t Central;
 
-    static const Cardinal Northwest;
-    static const Cardinal Northeast;
+		static const cardinal_t North;
+		static const cardinal_t East;
+		static const cardinal_t South;
+		static const cardinal_t West;
 
-    static const Cardinal Southwest;
-    static const Cardinal Southeast;
+		static const cardinal_t Northwest;
+		static const cardinal_t Northeast;
 
-    constexpr Cardinal operator~() const { return ~value; }
-    constexpr Cardinal operator|(cref<Cardinal> other) const { return value | other.value; }
-    constexpr Cardinal operator&(cref<Cardinal> other) const { return value & other.value; }
-    constexpr Cardinal operator^(cref<Cardinal> other) const { return value ^ other.value; }
+		static const cardinal_t Southwest;
+		static const cardinal_t Southeast;
 
-    constexpr Cardinal operator<<(cref<Cardinal> other) const { return value << other.value; }
-    constexpr Cardinal operator>>(cref<Cardinal> other) const { return value >> other.value; }
+		constexpr cardinal_t operator~() const { return ~value; }
 
-    constexpr ref<Cardinal> operator|=(cref<Cardinal> other) { value |= other.value; return *this; }
-    constexpr ref<Cardinal> operator&=(cref<Cardinal> other) { value &= other.value; return *this; }
-    constexpr ref<Cardinal> operator^=(cref<Cardinal> other) { value ^= other.value; return *this; }
+		constexpr cardinal_t operator|(cref<cardinal_t> other) const { return value | other.value; }
 
-    constexpr ref<Cardinal> operator<<=(cref<Cardinal> other) { value <<= other.value; return *this; }
-    constexpr ref<Cardinal> operator>>=(cref<Cardinal> other) { value >>= other.value; return *this; }
+		constexpr cardinal_t operator&(cref<cardinal_t> other) const { return value & other.value; }
 
-    constexpr bool operator==(cref<Cardinal> other) const { return value == other.value; }
-    constexpr bool operator!=(cref<Cardinal> other) const { return value != other.value; }
+		constexpr cardinal_t operator^(cref<cardinal_t> other) const { return value ^ other.value; }
 
-    constexpr operator u8() const { return value; }
+		constexpr cardinal_t operator<<(cref<cardinal_t> other) const { return value << other.value; }
 
-    constexpr operator std::string() const;
-};
+		constexpr cardinal_t operator>>(cref<cardinal_t> other) const { return value >> other.value; }
 
-constexpr const Cardinal Cardinal::Central{ 0 };
+		constexpr ref<cardinal_t> operator|=(cref<cardinal_t> other) {
+			value |= other.value;
+			return *this;
+		}
 
-constexpr const Cardinal Cardinal::North{ 1 << 0 };
-constexpr const Cardinal Cardinal::East{ 1 << 1 };
-constexpr const Cardinal Cardinal::South{ 1 << 2 };
-constexpr const Cardinal Cardinal::West{ 1 << 3 };
+		constexpr ref<cardinal_t> operator&=(cref<cardinal_t> other) {
+			value &= other.value;
+			return *this;
+		}
 
-constexpr const Cardinal Cardinal::Northwest{ Cardinal::North | Cardinal::West };
-constexpr const Cardinal Cardinal::Northeast{ Cardinal::North | Cardinal::East };
+		constexpr ref<cardinal_t> operator^=(cref<cardinal_t> other) {
+			value ^= other.value;
+			return *this;
+		}
 
-constexpr const Cardinal Cardinal::Southwest{ Cardinal::South | Cardinal::West };
-constexpr const Cardinal Cardinal::Southeast{ Cardinal::South | Cardinal::East };
+		constexpr ref<cardinal_t> operator<<=(cref<cardinal_t> other) {
+			value <<= other.value;
+			return *this;
+		}
 
-constexpr inline Cardinal::operator std::string() const
-{
-    switch (value)
-    {
-    case Cardinal::North:
-        return "North";
-    case Cardinal::East:
-        return "East";
-    case Cardinal::South:
-        return "South";
-    case Cardinal::West:
-        return "West";
-    case Cardinal::Northwest:
-        return "Northwest";
-    case Cardinal::Northeast:
-        return "Northeast";
-    case Cardinal::Southwest:
-        return "Southwest";
-    case Cardinal::Southeast:
-        return "Southeast";
-    default:
-        return "Central";
-    }
-}
+		constexpr ref<cardinal_t> operator>>=(cref<cardinal_t> other) {
+			value >>= other.value;
+			return *this;
+		}
+
+		constexpr bool operator==(cref<cardinal_t> other) const { return value == other.value; }
+
+		constexpr bool operator!=(cref<cardinal_t> other) const { return value != other.value; }
+
+		constexpr operator u8() const { return value; }
+
+		constexpr operator std::string() const;
+	};
+
+	constexpr const cardinal_t cardinal_t::Central { 0 };
+
+	constexpr const cardinal_t cardinal_t::North { 1 << 0 };
+	constexpr const cardinal_t cardinal_t::East { 1 << 1 };
+	constexpr const cardinal_t cardinal_t::South { 1 << 2 };
+	constexpr const cardinal_t cardinal_t::West { 1 << 3 };
+
+	constexpr const cardinal_t cardinal_t::Northwest { cardinal_t::North | cardinal_t::West };
+	constexpr const cardinal_t cardinal_t::Northeast { cardinal_t::North | cardinal_t::East };
+
+	constexpr const cardinal_t cardinal_t::Southwest { cardinal_t::South | cardinal_t::West };
+	constexpr const cardinal_t cardinal_t::Southeast { cardinal_t::South | cardinal_t::East };
+
+	constexpr inline cardinal_t::operator std::string() const {
+		switch (value) {
+		case cardinal_t::North:
+			return "North";
+		case cardinal_t::East:
+			return "East";
+		case cardinal_t::South:
+			return "South";
+		case cardinal_t::West:
+			return "West";
+		case cardinal_t::Northwest:
+			return "Northwest";
+		case cardinal_t::Northeast:
+			return "Northeast";
+		case cardinal_t::Southwest:
+			return "Southwest";
+		case cardinal_t::Southeast:
+			return "Southeast";
+		default:
+			return "Central";
+		}
+	}
+} // namespace Bleakdepth

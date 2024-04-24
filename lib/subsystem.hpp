@@ -1,6 +1,6 @@
 #pragma once
 
-#include "typedef.hpp"
+#include <iostream>
 
 #include <stdexcept>
 #include <string>
@@ -11,41 +11,100 @@
 #include <SDL_net.h>
 #include <SDL_ttf.h>
 
-struct Subsystem
-{
-private:
-	static bool _initialized;
-public:
-	static inline void initialize()
-	{
-		if (_initialized) return;
+namespace Bleakdepth {
+	struct subsystem_t {
+	  private:
+		static inline bool sdl_initialized;
+		static inline bool sdl_image_initialized;
+		static inline bool sdl_mixer_initialized;
+		static inline bool sdl_net_initialized;
+		static inline bool sdl_ttf_initialized;
 
-		try {
-			if (SDL_Init(SDL_INIT_EVERYTHING) < 0) throw std::runtime_error("failed to initialize sdl: " + std::string(SDL_GetError()));
-			if (IMG_Init(IMG_INIT_PNG) < 0) throw std::runtime_error("failed to initialize sdl-image: " + std::string(IMG_GetError()));
-			if (Mix_Init(MIX_INIT_MOD | MIX_INIT_OGG) < 0) throw std::runtime_error("failed to initialize sdl-mixer: " + std::string(Mix_GetError()));
-			if (SDLNet_Init() < 0) throw std::runtime_error("failed to initialize sdl-net: " + std::string(SDLNet_GetError()));
-			if (TTF_Init() < 0) throw std::runtime_error("failed to initialize sdl-ttf: " + std::string(TTF_GetError()));
-		} catch (ref<std::runtime_error> e) {
-			
+	  public:
+		static inline void initialize() {
+			if (initialized()) {
+				return;
+			}
+
+			sdl_initialized = SDL_Init(SDL_INIT_VIDEO) == 0;
+			std::string sdl_error { SDL_GetError() };
+
+			sdl_image_initialized = IMG_Init(IMG_INIT_PNG) != 0;
+			std::string sdl_image_error { IMG_GetError() };
+
+			sdl_mixer_initialized = Mix_Init(MIX_INIT_OGG) != 0;
+			std::string sdl_mixer_error { Mix_GetError() };
+
+			sdl_net_initialized = SDLNet_Init() == 0;
+			std::string sdl_net_error { SDLNet_GetError() };
+
+			sdl_ttf_initialized = TTF_Init() == 0;
+			std::string sdl_ttf_error { TTF_GetError() };
+
+			if (!initialized()) {
+				terminate();
+
+				if (!sdl_initialized) {
+					std::cerr << "failed to initialize sdl: " << sdl_error << "\n";
+				}
+				if (!sdl_image_initialized) {
+					std::cerr << "failed to initialize sdl-image: " << sdl_image_error << "\n";
+				}
+				if (!sdl_mixer_initialized) {
+					std::cerr << "failed to initialize sdl-mixer: " << sdl_mixer_error << "\n";
+				}
+				if (!sdl_net_initialized) {
+					std::cerr << "failed to initialize sdl-net: " << sdl_net_error << "\n";
+				}
+				if (!sdl_ttf_initialized) {
+					std::cerr << "failed to initialize sdl-ttf: " << sdl_ttf_error << "\n";
+				}
+
+				throw std::runtime_error("failed to initialize subsystems!");
+			}
 		}
-		
 
-		_initialized = true;
-	}
+		static inline void terminate() {
+			if (!initialized()) {
+				return;
+			}
 
-	static inline void terminate()
-	{
-		if (!_initialized) return;
+			if (sdl_ttf_initialized) {
+				TTF_Quit();
+				sdl_ttf_initialized = false;
+				std::cout << "sdl-ttf terminated\n";
+			}
 
-		TTF_Quit();
-		SDLNet_Quit();
-		Mix_Quit();
-		IMG_Quit();
-		SDL_Quit();
+			if (sdl_net_initialized) {
+				SDLNet_Quit();
+				sdl_net_initialized = false;
+				std::cout << "sdl-net terminated\n";
+			}
 
-		_initialized = false;
-	}
+			if (sdl_mixer_initialized) {
+				Mix_Quit();
+				sdl_mixer_initialized = false;
+				std::cout << "sdl-mixer terminated\n";
+			}
 
-	static inline bool initialized() { return _initialized; }
-};
+			if (sdl_image_initialized) {
+				IMG_Quit();
+				sdl_image_initialized = false;
+				std::cout << "sdl-image terminated\n";
+			}
+
+			if (sdl_initialized) {
+				SDL_Quit();
+				sdl_initialized = false;
+				std::cout << "sdl terminated\n";
+			}
+		}
+
+		static inline bool initialized() {
+			return sdl_initialized && sdl_image_initialized && sdl_mixer_initialized && sdl_net_initialized
+				   && sdl_ttf_initialized;
+		}
+	};
+
+	static inline subsystem_t Subsystem;
+} // namespace Bleakdepth

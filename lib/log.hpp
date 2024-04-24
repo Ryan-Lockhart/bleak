@@ -2,171 +2,144 @@
 
 #include "typedef.hpp"
 
+#include <format>
 #include <list>
 #include <string>
-#include <format>
 
-class Log
-{
-private:
-	std::list<std::string> messages;
-	usize maxMessages;
+namespace Bleakdepth {
+	class log_t {
+	  private:
+		std::list<std::string> messages;
+		usize maxMessages;
 
-public:
-	using iterator = std::list<std::string>::iterator;
-	using const_iterator = std::list<std::string>::const_iterator;
+	  public:
+		using iterator = std::list<std::string>::iterator;
+		using const_iterator = std::list<std::string>::const_iterator;
 
-	inline Log(usize maxMessages = 16) : messages(), maxMessages(maxMessages) {}
+		inline log_t(usize maxMessages = 16) : messages(), maxMessages(maxMessages) {}
 
-	inline Log(cref<Log> other) noexcept : messages(other.messages), maxMessages(other.maxMessages) {}
-	inline Log(rval<Log> other) noexcept : messages(std::move(other.messages)), maxMessages(std::move(other.maxMessages)) {}
+		inline log_t(cref<log_t> other) noexcept : messages(other.messages), maxMessages(other.maxMessages) {}
 
-	inline ref<Log> operator=(cref<Log> other) noexcept
-	{
-		messages = other.messages;
-		maxMessages = other.maxMessages;
+		inline log_t(rval<log_t> other) noexcept :
+			messages(std::move(other.messages)),
+			maxMessages(std::move(other.maxMessages)) {}
 
-		return *this;
-	}
-	inline ref<Log> operator=(rval<Log> other) noexcept
-	{
-		messages = std::move(other.messages);
-		maxMessages = std::move(other.maxMessages);
+		inline ref<log_t> operator=(cref<log_t> other) noexcept {
+			messages = other.messages;
+			maxMessages = other.maxMessages;
 
-		return *this;
-	}
+			return *this;
+		}
 
-	inline iterator begin() { return messages.begin(); }
-	inline iterator end() { return messages.end(); }
+		inline ref<log_t> operator=(rval<log_t> other) noexcept {
+			messages = std::move(other.messages);
+			maxMessages = std::move(other.maxMessages);
 
-	inline const_iterator begin() const { return messages.begin(); }
-	inline const_iterator end() const { return messages.end(); }
+			return *this;
+		}
 
-	inline iterator operator[](usize index) { return std::next(messages.begin(), index); }
-	inline const_iterator operator[](usize index) const { return std::next(messages.begin(), index); }
+		inline iterator begin() { return messages.begin(); }
 
-	inline ref<std::string> at(usize index)
-	{
-		if (index >= messages.size())
-			throw(std::out_of_range("Index out of range"));
+		inline iterator end() { return messages.end(); }
 
-		return *std::next(messages.begin(), index);
-	}
-	inline cref<std::string> at(usize index) const
-	{
-		if (index >= messages.size())
-			throw(std::out_of_range("Index out of range"));
+		inline const_iterator begin() const { return messages.begin(); }
 
-		return *std::next(messages.begin(), index);
-	}
+		inline const_iterator end() const { return messages.end(); }
 
-	inline usize size() const { return messages.size(); }
-	inline usize capacity() const { return maxMessages; }
+		inline iterator operator[](usize index) { return std::next(messages.begin(), index); }
 
-	inline ref<std::string> front() { return messages.front(); }
-	inline ref<std::string> back() { return messages.back(); }
+		inline const_iterator operator[](usize index) const { return std::next(messages.begin(), index); }
 
-	inline cref<std::string> front() const { return messages.front(); }
-	inline cref<std::string> back() const { return messages.back(); }
+		inline ref<std::string> at(usize index) {
+			if (index >= messages.size()) {
+				throw(std::out_of_range("Index out of range"));
+			}
 
-	inline void prune()
-	{
-		if (maxMessages <= 0)
-			return;
+			return *std::next(messages.begin(), index);
+		}
 
-		while (messages.size() > maxMessages)
-			messages.pop_front();
-	}
+		inline cref<std::string> at(usize index) const {
+			if (index >= messages.size()) {
+				throw(std::out_of_range("Index out of range"));
+			}
 
-	inline void prune(usize count)
-	{
-		if (count <= 0)
-			return;
+			return *std::next(messages.begin(), index);
+		}
 
-		while (messages.size() > count)
-			messages.pop_front();
-	}
+		inline usize size() const { return messages.size(); }
 
-	inline void clear() { messages.clear(); }
+		inline usize capacity() const { return maxMessages; }
 
-	inline void log(cstr message)
-	{
-		messages.push_back(message);
-	}
+		inline ref<std::string> front() { return messages.front(); }
 
-	inline void log(std::string message)
-	{
-		messages.push_back(message);
-	}
+		inline ref<std::string> back() { return messages.back(); }
 
-	inline void debug(cstr message, cstr time, cstr file, usize line)
-	{
-		messages.push_back(
-			std::format(
-				"[{}]: \"{}\" ({}): {}",
-				time,
-				file,
-				line,
-				message
-			)
-		);
-	}
+		inline cref<std::string> front() const { return messages.front(); }
 
-	inline void debug(std::string message, cstr time, cstr file, usize line)
-	{
-		messages.push_back(
-			std::format(
-				"[{}]: \"{}\" ({}): {}",
-				time,
-				file,
-				line,
-				message
-			)
-		);
-	}
-	
-	template<typename... Args> inline void log(cstr format, Args... args) { messages.push_back(std::format(format, { args... })); }
-	template<typename... Args> inline void log(std::string format, Args... args) { messages.push_back(std::format(format, { args... })); }
+		inline cref<std::string> back() const { return messages.back(); }
 
-	template<typename... Args> inline void debug(cstr format, cstr time, cstr file, usize line, Args... args)
-	{
-		messages.push_back(
-			std::format(
-				std::format(
-					"[{}]: \"{}\" ({}): {}",
-					time,
-					file,
-					line,
-					format
-				).c_str(),
-				{ args... }
-			)
-		);
-	}
+		inline void prune() {
+			if (maxMessages <= 0) {
+				return;
+			}
 
-	template<typename... Args> inline void debug(std::string format, cstr time, cstr file, usize line, Args... args)
-	{
-		messages.push_back(
-			std::format(
-				std::format(
-					"[{}]: \"{}\" ({}): {}",
-					time,
-					file,
-					line,
-					format
-				).c_str(),
-				{ args... }
-			)
-		);
-	}
+			while (messages.size() > maxMessages) {
+				messages.pop_front();
+			}
+		}
 
-	inline operator std::string() const
-	{
-		std::string result;
+		inline void prune(usize count) {
+			if (count <= 0) {
+				return;
+			}
 
-		for (cref<std::string> message : messages)
-			result += message + "\n";
+			while (messages.size() > count) {
+				messages.pop_front();
+			}
+		}
 
-		return result;
-	}
-};
+		inline void clear() { messages.clear(); }
+
+		inline void add(cstr message) { messages.push_back(message); }
+
+		inline void add(std::string message) { messages.push_back(message); }
+
+		inline void add(cstr message, cstr time, cstr file, usize line) {
+			messages.push_back(std::format("[{}]: \"{}\" ({}): {}", time, file, line, message));
+		}
+
+		inline void add(std::string message, cstr time, cstr file, usize line) {
+			messages.push_back(std::format("[{}]: \"{}\" ({}): {}", time, file, line, message));
+		}
+
+		template<typename... Args> inline void add(cstr format, Args... args) {
+			messages.push_back(std::format(format, { args... }));
+		}
+
+		template<typename... Args> inline void add(std::string format, Args... args) {
+			messages.push_back(std::format(format, { args... }));
+		}
+
+		template<typename... Args> inline void add(cstr format, cstr time, cstr file, usize line, Args... args) {
+			messages.push_back(
+				std::format(std::format("[{}]: \"{}\" ({}): {}", time, file, line, format).c_str(), { args... })
+			);
+		}
+
+		template<typename... Args> inline void add(std::string format, cstr time, cstr file, usize line, Args... args) {
+			messages.push_back(
+				std::format(std::format("[{}]: \"{}\" ({}): {}", time, file, line, format).c_str(), { args... })
+			);
+		}
+
+		inline operator std::string() const {
+			std::string result;
+
+			for (cref<std::string> message : messages) {
+				result += message + "\n";
+			}
+
+			return result;
+		}
+	};
+} // namespace Bleakdepth

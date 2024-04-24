@@ -1,22 +1,24 @@
 #pragma once
 
+#include "cardinal.hpp"
 #include "glyph.hpp"
 
 #include "constants/characters.hpp"
 #include "constants/colors.hpp"
 
-namespace Glyphs
-{
-    constexpr const Glyph Empty{ Characters::Empty, Colors::Transparent };
+namespace Bleakdepth {
+	namespace Glyphs {
+		constexpr const glyph_t Empty { Characters::Empty, Colors::Transparent };
 
-    constexpr const Glyph Error{ Characters::Error, Colors::Red };
+		constexpr const glyph_t Error { Characters::Error, Colors::Red };
 
-    constexpr const Glyph Wall{ Characters::Wall, Colors::Marble };
-    constexpr const Glyph Floor{ Characters::Floor, Colors::LightCharcoal };
-    constexpr const Glyph Obstacle{ Characters::Obstacle, Colors::LightIntrite };
+		constexpr const glyph_t Wall { Characters::Wall, Colors::Marble };
+		constexpr const glyph_t Floor { Characters::Floor, Colors::LightCharcoal };
+		constexpr const glyph_t Obstacle { Characters::Obstacle, Colors::LightIntrite };
 
-    constexpr const Glyph Player{ Characters::Entity[Cardinal::Central], Colors::Green };
-    constexpr const Glyph Enemy{ Characters::Entity[Cardinal::Central], Colors::Red };
-    constexpr const Glyph Ally{ Characters::Entity[Cardinal::Central], Colors::Cyan };
-    constexpr const Glyph Neutral{ Characters::Entity[Cardinal::Central], Colors::Yellow };
-}
+		constexpr const glyph_t Player { Characters::Entity[cardinal_t::Central], Colors::Green };
+		constexpr const glyph_t Enemy { Characters::Entity[cardinal_t::Central], Colors::Red };
+		constexpr const glyph_t Ally { Characters::Entity[cardinal_t::Central], Colors::Cyan };
+		constexpr const glyph_t Neutral { Characters::Entity[cardinal_t::Central], Colors::Yellow };
+	} // namespace Glyphs
+} // namespace Bleakdepth

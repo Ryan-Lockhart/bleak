@@ -4,9 +4,8 @@
 
 #include "mouse.hpp"
 
-struct Cursor
-{
-	const Point size;
-
-
-};
+namespace Bleakdepth {
+	struct cursor {
+		const point_t<i32> size;
+	};
+} // namespace Bleakdepth

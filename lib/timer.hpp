@@ -4,31 +4,40 @@
 
 #include <SDL.h>
 
-class Timer
-{
-private:
-	const f64 interval;
-	usize total;
-	f64 last;
+namespace Bleakdepth {
+	class timer_t {
+	  private:
+		const f64 interval;
+		usize total;
+		f64 last;
 
-public:
-	constexpr Timer() = delete;
-	constexpr Timer(f64 interval) :  interval{ interval }, total{ }, last{ } { }
+	  public:
+		constexpr timer_t() = delete;
 
-	constexpr Timer(cref<Timer> other) noexcept = delete;
-	constexpr Timer(rval<Timer> other) noexcept = delete;
+		constexpr timer_t(f64 interval) : interval { interval }, total {}, last {} {}
 
-	constexpr ~Timer() = default;
+		constexpr timer_t(cref<timer_t> other) noexcept = delete;
+		constexpr timer_t(rval<timer_t> other) noexcept = delete;
 
-	constexpr ref<Timer> operator=(cref<Timer> other) noexcept = delete;
-	constexpr ref<Timer> operator=(rval<Timer> other) noexcept = delete;
+		constexpr ~timer_t() = default;
 
-	inline void record() { ++total; last = SDL_GetPerformanceCounter(); }
+		constexpr ref<timer_t> operator=(cref<timer_t> other) noexcept = delete;
+		constexpr ref<timer_t> operator=(rval<timer_t> other) noexcept = delete;
 
-	inline f64 elapsed() const { return SDL_GetPerformanceCounter() - last; }
-	constexpr usize count() const { return total; }
+		inline void record() {
+			++total;
+			last = SDL_GetPerformanceCounter();
+		}
 
-	inline bool ready() const { return elapsed() >= interval; }
+		inline f64 elapsed() const { return SDL_GetPerformanceCounter() - last; }
 
-	inline void reset() { total = 0; last = SDL_GetPerformanceCounter(); }
-};
+		constexpr usize count() const { return total; }
+
+		inline bool ready() const { return elapsed() >= interval; }
+
+		inline void reset() {
+			total = 0;
+			last = SDL_GetPerformanceCounter();
+		}
+	};
+} // namespace Bleakdepth

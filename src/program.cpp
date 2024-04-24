@@ -1,55 +1,72 @@
 #include "typedef.hpp"
 
+#include <SDL_scancode.h>
 #include <cstdlib>
 #include <iostream>
 
 #include <SDL.h>
 
+#include "clock.hpp"
+#include "renderer.hpp"
 #include "subsystem.hpp"
 #include "window.hpp"
-#include "renderer.hpp"
-#include "delta.hpp"
 
 #include "log.hpp"
 
 #include "keyboard.hpp"
 #include "mouse.hpp"
 
-#include "timer.hpp"
 #include "atlas.hpp"
+#include "timer.hpp"
 
-constexpr cstr GAME_TITLE = "Bleakdepth";
-constexpr cstr GAME_VERSION = "0.0.1";
+#include <format>
 
-constexpr u32 WINDOW_FLAGS = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
-constexpr u32 RENDERER_FLAGS = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+namespace Bleakdepth {
+	constexpr cstr GameName = "Bleakdepth";
+	constexpr cstr GameVersion = "0.0.1";
+	constexpr cstr GameAuthor = "Ryan Lockhart";
 
-constexpr i32 WINDOW_WIDTH = 1280;
-constexpr i32 WINDOW_HEIGHT = 480;
+	const std::string GameTitle { std::format("{} v{} by {}", GameName, GameVersion, GameAuthor) };
 
-static Log MESSAGES;
-static Log ERRORS;
+	constexpr u32 WindowFlags = SDL_WINDOW_ALWAYS_ON_TOP | SDL_WINDOW_BORDERLESS;
+	constexpr u32 RendererFlags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
 
-static Subsystem SUBSYSTEM{ };
+	constexpr size_t<i32> WindowSize { 800, 600 };
 
-static Window WINDOW{ GAME_TITLE, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_FLAGS };
-static Renderer RENDERER{ WINDOW, RENDERER_FLAGS };
+	static window_t Window { GameTitle.c_str(), WindowSize, WindowFlags };
+	static renderer_t Renderer { Window, RendererFlags };
 
-static DeltaClock CLOCK{ };
+	static atlas_t<16, 16> GameAtlas { { Renderer, "resources\\glyphs_16x16.png" } };
+	static atlas_t<16, 16> UIAtlas { { Renderer, "resources\\glyphs_8x8.png" } };
 
-static Atlas<16, 16> GAME_GLYPHS{ Texture{ RENDERER, "Assets\\glyphs_16x16.png" } };
-static Atlas<16, 16> UI_GLYPHS{ Texture{ RENDERER, "Assets\\glyphs_8x8.png" } };
+	static texture_t CursorTexture { Renderer, "resources\\cursor.png" };
 
-static Texture CURSOR{ RENDERER, "Assets\\cursor.png" };
+	static timer_t InputTimer { 0.25 };
+	static timer_t EpochTimer { 1.00 };
 
-static Timer INPUT_TIMER{ 0.25 };
-static Timer EPOCH_TIMER{ 1.00 };
+	static log_t MessageLog;
+	static log_t ErrorLog;
+
+} // namespace Bleakdepth
+
+using namespace Bleakdepth;
 
 #define main SDL_main
 
-int main(int argv, char** args)
-{
-	std::cout << "Hello, world!\n";
+#include "constants/colors.hpp"
+
+int main(int argv, char** args) {
+	while (!Window.isClosing()) {
+		Window.pollEvents();
+
+		if (Keyboard.IsKeyDown(SDL_SCANCODE_ESCAPE)) {
+			Window.close();
+		}
+
+		Renderer.clear(Colors::Black);
+
+		Renderer.present();
+	}
 
 	return EXIT_SUCCESS;
 }

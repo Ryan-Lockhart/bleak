@@ -19,13 +19,13 @@ find_package(SDL2_mixer CONFIG REQUIRED)
 find_package(SDL2_net CONFIG REQUIRED)
 find_package(SDL2_ttf CONFIG REQUIRED)
 
-add_library(bleak STATIC
+add_library(bleak SHARED
     lib/array.hpp
     lib/atlas.hpp
     lib/cardinal.hpp
+    lib/clock.hpp
     lib/color.hpp
     lib/cursor.hpp
-    lib/delta.hpp
     lib/glyph.hpp
     lib/keyboard.hpp
     lib/line.hpp
@@ -70,3 +70,10 @@ add_executable(bleakdepth
 set_target_properties(bleakdepth PROPERTIES LINKER_LANGUAGE CXX)
 
 target_link_libraries(bleakdepth PRIVATE bleak)
+
+configure_file(resources/cursor.png ${CMAKE_CURRENT_BINARY_DIR}/resources/cursor.png COPYONLY)
+
+configure_file(resources/glyphs_8x8.png ${CMAKE_CURRENT_BINARY_DIR}/resources/glyphs_8x8.png COPYONLY)
+configure_file(resources/glyphs_12x12.png ${CMAKE_CURRENT_BINARY_DIR}/resources/glyphs_12x12.png COPYONLY)
+configure_file(resources/glyphs_16x16.png ${CMAKE_CURRENT_BINARY_DIR}/resources/glyphs_16x16.png COPYONLY)
+configure_file(resources/glyphs_24x24.png ${CMAKE_CURRENT_BINARY_DIR}/resources/glyphs_24x24.png COPYONLY)

@@ -4,14 +4,13 @@
 
 #include "color.hpp"
 
-struct Glyph
-{
-	Color color;
-	u8 index;
+namespace Bleakdepth {
+	struct glyph_t {
+		color_t color;
+		u8 index;
 
-    constexpr Glyph() noexcept : color{ }, index{ } { }
-    constexpr Glyph(u8 index, Color color) noexcept :
-        color{ color },
-        index{ index }
-    { }
-};
+		constexpr glyph_t() noexcept : color {}, index {} {}
+
+		constexpr glyph_t(u8 index, color_t color) noexcept : color { color }, index { index } {}
+	};
+} // namespace Bleakdepth
