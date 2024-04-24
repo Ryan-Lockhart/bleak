@@ -4,19 +4,17 @@
 
 #include "point.hpp"
 
-struct Line
+template<typename T = i32> struct Line
 {
-	using point_t = Point::point_t;
-
-	Point start;
-	Point end;
+	Point<T> start;
+	Point<T> end;
 
 	constexpr Line() = delete;
 
-	constexpr Line(point_t x1, point_t y1, point_t x2, point_t y2) noexcept : start(x1, y1), end(x2, y2) {}
+	constexpr Line(T x1, T y1, T x2, T y2) noexcept : start(x1, y1), end(x2, y2) {}
 
-	constexpr Line(cref<Point> start, cref<Point> end) noexcept : start(start), end(end) {}
-	constexpr Line(rval<Point> start, rval<Point> end) noexcept : start(std::move(start)), end(std::move(end)) {}
+	constexpr Line(cref<Point<T>> start, cref<Point<T>> end) noexcept : start(start), end(end) {}
+	constexpr Line(rval<Point<T>> start, rval<Point<T>> end) noexcept : start(std::move(start)), end(std::move(end)) {}
 
 	constexpr Line(cref<Line> line) noexcept : start(line.start), end(line.end) {}
 	constexpr Line(rval<Line> line) noexcept : start(std::move(line.start)), end(std::move(line.end)) {}
@@ -30,6 +28,7 @@ struct Line
 
 		return *this;
 	}
+	
 	constexpr ref<Line> operator=(rval<Line> line) noexcept
 	{
 		start = std::move(line.start);

@@ -4,7 +4,7 @@
 
 #include <bitset>
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 struct Keyboard
 {
@@ -42,14 +42,13 @@ public:
 		currentState[key] = state;
 	}
 
-	inline void update(cref<std::vector<Key>> keys, cref<std::vector<bool>> states)
+	template<typename... Keys, typename = std::pair<Key, bool>>
+	inline void update(Keys... keyStates)
 	{
-		if (keys.size() != states.size()) throw std::runtime_error("keys and states must have the same!");
-
-		for (usize i{ 0 }; i < keys.size(); ++i)
+		for (const auto& [key, state] : { keyStates... })
 		{
-			previousState[keys[i]] = currentState[keys[i]];
-			currentState[keys[i]] = states[i];
+			previousState[key] = currentState[key];
+			currentState[key] = state;
 		}
 	}
 
@@ -84,6 +83,8 @@ public:
 			if (IsKeyPressed(i))
 				return true;
 		}
+
+		return false;
 	}
 
 	inline bool AnyKeyReleased() const
@@ -93,6 +94,8 @@ public:
 			if (IsKeyReleased(i))
 				return true;
 		}
+
+		return false;
 	}
 
 	inline bool AnyKeyDown() const
@@ -102,6 +105,8 @@ public:
 			if (IsKeyDown(i))
 				return true;
 		}
+
+		return false;
 	}
 
 	inline bool AnyKeyUp() const
@@ -111,6 +116,8 @@ public:
 			if (IsKeyUp(i))
 				return true;
 		}
+
+		return false;
 	}
 
 	template<typename... Keys, typename = Key>

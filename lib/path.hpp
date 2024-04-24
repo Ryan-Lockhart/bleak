@@ -12,13 +12,13 @@
 class Path
 {
 private:
-	std::list<Point> points;
+	std::list<Point<i32>> points;
 
 public:
-	inline Path() noexcept : points{} {}
-	inline Path(cref<std::vector<Point>> points) : points{} {}
+	inline Path() noexcept : points{ } { }
+	inline Path(cref<std::list<Point<i32>>> points) : points{ points } { }
 
-	inline Path(cref<Line> line) : points{}
+	inline Path(cref<Line<i32>> line) : points{ }
 	{
 		if (line.start == line.end) throw std::invalid_argument("path cannot be comprised of a single point");
 
@@ -34,7 +34,7 @@ public:
 			line.start.y < line.end.y ? 1 : -1
 		};
 
-		Point::point_t err = delta.x - delta.y;
+		i32 err = delta.x - delta.y;
 
 		for (;;)
 		{
@@ -58,7 +58,7 @@ public:
 		}
 	}
 
-	inline Path(cref<std::vector<Line>> lines)
+	inline Path(cref<std::vector<Line<i32>>> lines)
 	{
 		if (lines.size() < 2) throw std::invalid_argument("path cannot be comprised of a single point");
 
@@ -94,26 +94,26 @@ public:
 	inline bool empty() const { return points.empty(); }
 	inline usize size() const { return points.size(); }
 
-	inline cref<Point> front() const { return points.front(); }
-	inline cref<Point> back() const { return points.back(); }
+	inline cref<Point<i32>> front() const { return points.front(); }
+	inline cref<Point<i32>> back() const { return points.back(); }
 
-	inline cref<Point> operator[](usize index) const { return *std::next(points.begin(), index); }
+	inline cref<Point<i32>> operator[](usize index) const { return *std::next(points.begin(), index); }
 
-	inline void push_front(cref<Point> point) { points.push_front(point); }
-	inline void push_back(cref<Point> point) { points.push_back(point); }
+	inline void push_front(cref<Point<i32>> point) { points.push_front(point); }
+	inline void push_back(cref<Point<i32>> point) { points.push_back(point); }
 
 	inline void pop_front() { points.pop_front(); }
 	inline void pop_back() { points.pop_back(); }
 
-	inline void emplace_front(rval<Point> point) { points.emplace_front(point); }
-	inline void emplace_back(rval<Point> point) { points.emplace_back(point); }
+	inline void emplace_front(rval<Point<i32>> point) { points.emplace_front(point); }
+	inline void emplace_back(rval<Point<i32>> point) { points.emplace_back(point); }
 
-	inline rval<Point> extract_front() { rval<Point> p = std::move(points.front()); points.pop_front(); return std::move(p); }
-	inline rval<Point> extract_back() { rval<Point> p = std::move(points.back()); points.pop_back(); return std::move(p); }
+	inline rval<Point<i32>> extract_front() { rval<Point<i32>> p = std::move(points.front()); points.pop_front(); return std::move(p); }
+	inline rval<Point<i32>> extract_back() { rval<Point<i32>> p = std::move(points.back()); points.pop_back(); return std::move(p); }
 
 	inline void clear() { points.clear(); }
 
-	inline void insert(usize index, cref<Point> point) { points.insert(std::next(points.begin(), index), point); }
+	inline void insert(usize index, cref<Point<i32>> point) { points.insert(std::next(points.begin(), index), point); }
 	inline void insert(usize index, cref<Path> path) { points.insert(std::next(points.begin(), index), path.points.begin(), path.points.end()); }
 	inline void erase(usize index) { points.erase(std::next(points.begin(), index)); }
 

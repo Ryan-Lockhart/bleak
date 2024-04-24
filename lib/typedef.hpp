@@ -1,7 +1,5 @@
 #pragma once
 
-#include <limits.h>
-
 typedef unsigned char u8;
 typedef signed char i8;
 
@@ -22,10 +20,16 @@ typedef double f64;
 typedef u32 usize;
 typedef i32 isize;
 
+typedef u16 uhalf;
+typedef i16 ihalf;
+
 #else
 
 typedef u64 usize;
 typedef i64 isize;
+
+typedef u32 uhalf;
+typedef i32 ihalf;
 
 #endif
 
@@ -53,14 +57,16 @@ template<typename T> using cptrc = const T* const;
 typedef ptr<void> mem;
 typedef cptr<void> cmem;
 
-mem offet(usize size) { return (mem)size; }
-
-template<typename T> mem offet(usize count) { return (mem)(sizeof(T) * count); }
-
 typedef ptr<char> str;
 typedef cptr<char> cstr;
 
 typedef ptr<u8> buffer;
 typedef cptr<u8> cbuffer;
 
-#define __FILE_NAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+template<typename T> constexpr inline T wrap(T value, T min, T max)
+{
+    if (value < min) return max - (min - value) + 1;
+    if (value > max) return min + (value - max) - 1;
+
+    return value;
+}

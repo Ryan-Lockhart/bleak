@@ -4,8 +4,7 @@
 
 #include <list>
 #include <string>
-
-#include <fmt/core.h>
+#include <format>
 
 class Log
 {
@@ -103,7 +102,7 @@ public:
 	inline void debug(cstr message, cstr time, cstr file, usize line)
 	{
 		messages.push_back(
-			fmt::format(
+			std::format(
 				"[{}]: \"{}\" ({}): {}",
 				time,
 				file,
@@ -116,7 +115,7 @@ public:
 	inline void debug(std::string message, cstr time, cstr file, usize line)
 	{
 		messages.push_back(
-			fmt::format(
+			std::format(
 				"[{}]: \"{}\" ({}): {}",
 				time,
 				file,
@@ -126,14 +125,14 @@ public:
 		);
 	}
 	
-	template<typename... Args> inline void log(cstr format, Args... args) { messages.push_back(fmt::format(format, { args... })); }
-	template<typename... Args> inline void log(std::string format, Args... args) { messages.push_back(fmt::format(format, { args... })); }
+	template<typename... Args> inline void log(cstr format, Args... args) { messages.push_back(std::format(format, { args... })); }
+	template<typename... Args> inline void log(std::string format, Args... args) { messages.push_back(std::format(format, { args... })); }
 
 	template<typename... Args> inline void debug(cstr format, cstr time, cstr file, usize line, Args... args)
 	{
 		messages.push_back(
-			fmt::format(
-				fmt::format(
+			std::format(
+				std::format(
 					"[{}]: \"{}\" ({}): {}",
 					time,
 					file,
@@ -148,8 +147,8 @@ public:
 	template<typename... Args> inline void debug(std::string format, cstr time, cstr file, usize line, Args... args)
 	{
 		messages.push_back(
-			fmt::format(
-				fmt::format(
+			std::format(
+				std::format(
 					"[{}]: \"{}\" ({}): {}",
 					time,
 					file,
