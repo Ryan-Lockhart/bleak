@@ -167,6 +167,14 @@ namespace Bleakdepth {
 
 		constexpr point_t operator%(cref<point_t> other) const noexcept { return { x % other.x, y % other.y }; }
 
+		template<f32> point_t operator%(cref<point_t> other) const noexcept {
+			return { std::fmodf(x, other.x), std::fmodf(y, other.y) };
+		}
+
+		template<f64> point_t operator%(cref<point_t> other) const noexcept {
+			return { std::fmodl(x, other.x), std::fmodl(y, other.y) };
+		}
+
 		constexpr point_t operator+(T scalar) const noexcept { return { x + scalar, y + scalar }; }
 
 		constexpr point_t operator-(T scalar) const noexcept { return { x - scalar, y - scalar }; }
@@ -177,91 +185,152 @@ namespace Bleakdepth {
 
 		constexpr point_t operator%(T scalar) const noexcept { return { x % scalar, y % scalar }; }
 
+		template<f32> point_t operator%(T scalar) const noexcept {
+			return { std::fmodf(x, scalar), std::fmodf(y, scalar) };
+		}
+
+		template<f64> point_t operator%(T scalar) const noexcept {
+			return { std::fmodl(x, scalar), std::fmodl(y, scalar) };
+		}
+
 		constexpr ref<point_t> operator-() noexcept {
 			x = -x;
 			y = -y;
+
 			return *this;
 		}
 
 		constexpr ref<point_t> operator+=(cref<point_t> other) noexcept {
 			x += other.x;
 			y += other.y;
+
 			return *this;
 		}
 
 		constexpr ref<point_t> operator-=(cref<point_t> other) noexcept {
 			x -= other.x;
 			y -= other.y;
+
 			return *this;
 		}
 
 		constexpr ref<point_t> operator*=(cref<point_t> other) noexcept {
 			x *= other.x;
 			y *= other.y;
+
 			return *this;
 		}
 
 		constexpr ref<point_t> operator/=(cref<point_t> other) noexcept {
 			x /= other.x;
 			y /= other.y;
+
 			return *this;
 		}
 
 		constexpr ref<point_t> operator%=(cref<point_t> other) noexcept {
 			x %= other.x;
 			y %= other.y;
+
+			return *this;
+		}
+
+		template<f32> ref<point_t> operator%=(cref<point_t> other) noexcept {
+			x = std::fmodf(x, other.x);
+			y = std::fmodf(y, other.y);
+
+			return *this;
+		}
+
+		template<f64> ref<point_t> operator%=(cref<point_t> other) noexcept {
+			x = std::fmodl(x, other.x);
+			y = std::fmodl(y, other.y);
+
 			return *this;
 		}
 
 		constexpr ref<point_t> operator+=(T scalar) noexcept {
 			x += scalar;
 			y += scalar;
+
 			return *this;
 		}
 
 		constexpr ref<point_t> operator-=(T scalar) noexcept {
 			x -= scalar;
 			y -= scalar;
+
 			return *this;
 		}
 
 		constexpr ref<point_t> operator*=(T scalar) noexcept {
 			x *= scalar;
 			y *= scalar;
+
 			return *this;
 		}
 
 		constexpr ref<point_t> operator/=(T scalar) noexcept {
 			x /= scalar;
 			y /= scalar;
+
 			return *this;
 		}
 
 		constexpr ref<point_t> operator%=(T scalar) noexcept {
 			x %= scalar;
 			y %= scalar;
+
 			return *this;
 		}
 
-		constexpr operator SDL_Point() const noexcept { return SDL_Point { x, y }; }
+		template<f32> ref<point_t> operator%=(T scalar) noexcept {
+			x = std::fmodf(x, scalar);
+			y = std::fmodf(y, scalar);
+
+			return *this;
+		}
+
+		template<f64> ref<point_t> operator%=(T scalar) noexcept {
+			x = std::fmodl(x, scalar);
+			y = std::fmodl(y, scalar);
+
+			return *this;
+		}
+
+		constexpr explicit operator SDL_Point() const noexcept {
+			return SDL_Point { static_cast<i32>(x), static_cast<i32>(y) };
+		}
+
+		template<i32> constexpr operator SDL_Point() const noexcept { return SDL_Point { x, y }; }
+
+		template<i32> constexpr operator ptr<SDL_Point>() noexcept { return (ptr<SDL_Point>)&x; }
+
+		template<i32> constexpr operator cptr<SDL_Point>() const noexcept { return (cptr<SDL_Point>)&x; }
 
 		constexpr explicit operator SDL_FPoint() const noexcept {
 			return SDL_FPoint { static_cast<f32>(x), static_cast<f32>(y) };
 		}
 
+		template<f32> constexpr operator SDL_FPoint() const noexcept { return SDL_FPoint { x, y }; }
+
+		template<f32> constexpr operator ptr<SDL_FPoint>() noexcept { return (ptr<SDL_FPoint>)&x; }
+
+		template<f32> constexpr operator cptr<SDL_FPoint>() const noexcept { return (cptr<SDL_FPoint>)&x; }
+
 		constexpr operator std::string() const noexcept { return std::format("[{}, {}]", x, y); }
 
-		constexpr operator cardinal_t() const noexcept {
-			if (x == 0 && y == 0) {
+		template<i32> constexpr operator cardinal_t() const noexcept {
+			if (x == point_t<>::Zero.x && y == point_t<>::Zero.x) {
 				return cardinal_t::Central;
 			} else {
 				cardinal_t result = cardinal_t::Central;
 
-				if (x != 0) {
-					result |= x < 0 ? cardinal_t::West : cardinal_t::East;
+				if (x != point_t<>::Zero.x) {
+					result |= x < point_t<>::Zero.x ? cardinal_t::West : cardinal_t::East;
 				}
-				if (y != 0) {
-					result |= y < 0 ? cardinal_t::North : cardinal_t::South;
+				if (y != point_t<>::Zero.y) {
+					result |= y < point_t<>::Zero.y ? cardinal_t::North : cardinal_t::South;
 				}
 
 				return result;
@@ -286,4 +355,20 @@ namespace Bleakdepth {
 
 	template<> constexpr const point_t point_t<i32>::Southeast = { 1, 1 };
 	template<> constexpr const point_t point_t<i32>::Southwest = { -1, 1 };
+
+	template<> constexpr const point_t point_t<f32>::Zero = { 0.0f };
+
+	template<> constexpr const point_t point_t<f32>::Central = point_t::Zero;
+
+	template<> constexpr const point_t point_t<f32>::North = { 0.0f, -1.0f };
+	template<> constexpr const point_t point_t<f32>::South = { 0.0f, 1.0f };
+
+	template<> constexpr const point_t point_t<f32>::East = { 1.0f, 0.0f };
+	template<> constexpr const point_t point_t<f32>::West = { -1.0f, 0.0f };
+
+	template<> constexpr const point_t point_t<f32>::Northeast = { 1.0f, -1.0f };
+	template<> constexpr const point_t point_t<f32>::Northwest = { -1.0f, -1.0f };
+
+	template<> constexpr const point_t point_t<f32>::Southeast = { 1.0f, 1.0f };
+	template<> constexpr const point_t point_t<f32>::Southwest = { -1.0f, 1.0f };
 } // namespace Bleakdepth

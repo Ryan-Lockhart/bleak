@@ -4,6 +4,7 @@
 
 #include <SDL.h>
 
+#include <SDL_timer.h>
 #include <chrono>
 #include <thread>
 
@@ -11,14 +12,16 @@ namespace Bleakdepth {
 	struct clock {
 	  private:
 		static inline usize last;
-		static inline usize current;
-		static inline f64 delta;
 
 	  public:
+		static inline usize now() { return static_cast<usize>(SDL_GetPerformanceCounter()); }
+
+		static inline usize frequency() { return static_cast<usize>(SDL_GetPerformanceFrequency()); }
+
 		static inline void initialize() {
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 
-			current = SDL_GetPerformanceCounter();
+			tick();
 
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 
@@ -26,12 +29,19 @@ namespace Bleakdepth {
 		}
 
 		static inline void tick() {
-			last = current;
-			current = SDL_GetPerformanceCounter();
-			delta = (current - last) * 1000 / static_cast<f64>(SDL_GetPerformanceFrequency());
+			last = now();
 		}
 
-		static inline f64 deltaTime() { return delta; }
+		static inline void tick(f32 interval) {	
+			last = now();
+			if (auto dt = deltaTime(); dt < interval) {
+				SDL_Delay(static_cast<Bleakdepth::u32>(interval - dt));
+			}
+		}
+
+		static inline f32 deltaTime() { return ((now() - last) * 1000.0f) / frequency(); }
+
+		static inline f32 frameTime() { return 1000.0f / deltaTime(); }
 	};
 
 	static inline clock Clock;

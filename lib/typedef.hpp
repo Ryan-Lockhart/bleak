@@ -24,6 +24,8 @@ namespace Bleakdepth {
 	typedef u16 uhalf;
 	typedef i16 ihalf;
 
+	typedef f32 fsize;
+
 #else
 
 	typedef u64 usize;
@@ -31,6 +33,8 @@ namespace Bleakdepth {
 
 	typedef u32 uhalf;
 	typedef i32 ihalf;
+	
+	typedef f64 fsize;
 
 #endif
 

@@ -112,23 +112,16 @@ namespace Bleakdepth {
 			messages.push_back(std::format("[{}]: \"{}\" ({}): {}", time, file, line, message));
 		}
 
-		template<typename... Args> inline void add(cstr format, Args... args) {
-			messages.push_back(std::format(format, { args... }));
+		template<typename... Args> inline void add(const std::format_string<Args...> format, rval<Args>... args) {
+			messages.push_back(std::format(format, std::forward<Args>(args)...));
 		}
 
-		template<typename... Args> inline void add(std::string format, Args... args) {
-			messages.push_back(std::format(format, { args... }));
-		}
-
-		template<typename... Args> inline void add(cstr format, cstr time, cstr file, usize line, Args... args) {
+		template<typename... Args> inline void add(const std::format_string<Args...> format, cstr time, cstr file, usize line, rval<Args>... args) {
 			messages.push_back(
-				std::format(std::format("[{}]: \"{}\" ({}): {}", time, file, line, format).c_str(), { args... })
-			);
-		}
-
-		template<typename... Args> inline void add(std::string format, cstr time, cstr file, usize line, Args... args) {
-			messages.push_back(
-				std::format(std::format("[{}]: \"{}\" ({}): {}", time, file, line, format).c_str(), { args... })
+				std::format(
+					std::format("[{}]: \"{}\" ({}): {}", time, file, line, format),
+					std::forward<Args>(args)...
+				)
 			);
 		}
 

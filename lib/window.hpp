@@ -1,9 +1,11 @@
 #pragma once
 
 #include "keyboard.hpp"
+#include "mouse.hpp"
 #include "subsystem.hpp"
 #include "typedef.hpp"
 
+#include <SDL_events.h>
 #include <SDL_video.h>
 #include <format>
 #include <stdexcept>
@@ -27,8 +29,16 @@ namespace Bleakdepth {
 		bool closing = false;
 
 		static inline ptr<SDL_Window> create(cstr title, i32 x, i32 y, i32 width, i32 height, u32 flags) {
-			if (!subsystem_t::initialized()) {
-				subsystem_t::initialize();
+			if (!subsystem::initialized()) {
+				subsystem::initialize();
+			}
+
+			if (!mouse::initialized()) {
+				mouse::initialize();
+			}
+
+			if (!keyboard::initialized()) {
+				keyboard::initialize();
 			}
 
 			if (width <= 0) {
@@ -137,16 +147,19 @@ namespace Bleakdepth {
 				case SDL_QUIT:
 					closing = true;
 					break;
-				case SDL_KEYDOWN:
-					keyboard::update(event.key.keysym.scancode, true);
+				case SDL_MOUSEMOTION:
+					mouse::update(point_t<i32>{ event.motion.x, event.motion.y });
 					break;
-				case SDL_KEYUP:
-					keyboard::update(event.key.keysym.scancode, false);
+				case SDL_MOUSEWHEEL:
+					mouse::update(point_t<f32>{ event.wheel.preciseX, event.wheel.preciseY });
 					break;
 				default:
 					break;
 				}
 			}
+
+			keyboard::update();
+			mouse::update();
 		}
 
 		constexpr bool isClosing() const noexcept { return closing; }

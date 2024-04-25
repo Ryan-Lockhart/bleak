@@ -2,14 +2,14 @@
 
 #include "typedef.hpp"
 
-#include <SDL.h>
+#include "clock.hpp"
 
 namespace Bleakdepth {
 	class timer_t {
 	  private:
 		const f64 interval;
 		usize total;
-		f64 last;
+		usize last;
 
 	  public:
 		constexpr timer_t() = delete;
@@ -26,10 +26,10 @@ namespace Bleakdepth {
 
 		inline void record() {
 			++total;
-			last = SDL_GetPerformanceCounter();
+			last = Clock.now();
 		}
 
-		inline f64 elapsed() const { return SDL_GetPerformanceCounter() - last; }
+		inline f64 elapsed() const { return (Clock.now() - last) * 1000.0 / Clock.frequency(); }
 
 		constexpr usize count() const { return total; }
 
@@ -37,7 +37,7 @@ namespace Bleakdepth {
 
 		inline void reset() {
 			total = 0;
-			last = SDL_GetPerformanceCounter();
+			last = Clock.now();
 		}
 	};
 } // namespace Bleakdepth

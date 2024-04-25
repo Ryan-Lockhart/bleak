@@ -1,7 +1,10 @@
 #pragma once
 
+#include "constants/colors.hpp"
 #include "typedef.hpp"
 
+#include <SDL_rect.h>
+#include <SDL_render.h>
 #include <format>
 #include <stdexcept>
 
@@ -47,6 +50,10 @@ namespace Bleakdepth {
 		ref<renderer_t> renderer;
 		ptr<SDL_Texture> texture;
 
+		constexpr inline void copy(cptr<SDL_Rect> src, cptr<SDL_Rect> dst) const {
+			SDL_RenderCopy(renderer.handle(), texture, src, dst);
+		}
+
 	  public:
 		const info_t info;
 
@@ -57,7 +64,11 @@ namespace Bleakdepth {
 		constexpr texture_t(rval<texture_t> other) noexcept :
 			renderer(other.renderer),
 			texture(std::move(other.texture)),
-			info(other.info) {}
+			info(other.info) {
+			other.texture = nullptr;
+			setBlendMode(SDL_BLENDMODE_BLEND);
+			setColor(Colors::White);
+		}
 
 		constexpr ref<texture_t> operator=(cref<texture_t> other) noexcept = delete;
 		constexpr ref<texture_t> operator=(rval<texture_t> other) noexcept = delete;
@@ -80,6 +91,9 @@ namespace Bleakdepth {
 			if (info.channels == SDL_PIXELFORMAT_UNKNOWN) {
 				throw std::runtime_error("texture channels must be known!");
 			}
+
+			setBlendMode(SDL_BLENDMODE_BLEND);
+			setColor(Colors::White);
 		}
 
 		inline ~texture_t() {
@@ -88,35 +102,58 @@ namespace Bleakdepth {
 			}
 		}
 
+		constexpr inline void setColor(cref<color_t> color) const {
+			SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
+			SDL_SetTextureAlphaMod(texture, color.a);
+		}
+
+		constexpr inline void setBlendMode(SDL_BlendMode mode) const { SDL_SetTextureBlendMode(texture, mode); }
+
 		constexpr ptr<SDL_Texture> handle() { return texture; }
 
 		constexpr cptr<SDL_Texture> handle() const { return texture; }
 
 		constexpr void draw(cref<point_t<i32>> pos) const {
 			const SDL_Rect dst { pos.x, pos.y, info.size.x, info.size.y };
-			SDL_RenderCopy(renderer.handle(), texture, nullptr, &dst);
+			copy(nullptr, &dst);
 		}
 
 		constexpr void draw(cref<point_t<i32>> pos, cref<color_t> color) const {
 			const SDL_Rect dst { pos.x, pos.y, info.size.x, info.size.y };
-			SDL_SetRenderDrawColor(renderer.handle(), color.r, color.g, color.b, color.a);
-			SDL_RenderCopy(renderer.handle(), texture, nullptr, &dst);
+			setColor(color);
+			copy(nullptr, &dst);
 		}
 
-		constexpr void draw(const SDL_Rect* dst) const { SDL_RenderCopy(renderer.handle(), texture, nullptr, dst); }
+		constexpr void draw(cptr<SDL_Rect> dst) const { copy(nullptr, (ptr<SDL_Rect>)dst); }
 
-		constexpr void draw(const SDL_Rect* dst, cref<color_t> color) const {
-			SDL_SetRenderDrawColor(renderer.handle(), color.r, color.g, color.b, color.a);
-			SDL_RenderCopy(renderer.handle(), texture, nullptr, dst);
+		constexpr void draw(cptr<SDL_Rect> dst, cref<color_t> color) const {
+			setColor(color);
+			copy(nullptr, (ptr<SDL_Rect>)dst);
 		}
 
-		constexpr void draw(const SDL_Rect* src, const SDL_Rect* dst) const {
-			SDL_RenderCopy(renderer.handle(), texture, src, dst);
+		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_Rect> dst) const { copy(src, dst); }
+
+		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_Rect> dst, cref<color_t> color) const {
+			setColor(color);
+			copy(src, dst);
 		}
 
-		constexpr void draw(const SDL_Rect* src, const SDL_Rect* dst, cref<color_t> color) const {
-			SDL_SetRenderDrawColor(renderer.handle(), color.r, color.g, color.b, color.a);
-			SDL_RenderCopy(renderer.handle(), texture, src, dst);
+		constexpr void draw(cptr<rect_t<i32>> dst) const {
+			copy(nullptr, (ptr<SDL_Rect>)dst);
+		}
+
+		constexpr void draw(cptr<rect_t<i32>> dst, cref<color_t> color) const {
+			setColor(color);
+			copy(nullptr, (ptr<SDL_Rect>)dst);
+		}
+
+		constexpr void draw(cptr<rect_t<i32>> src, cptr<rect_t<i32>> dst) const {
+			copy((ptr<SDL_Rect>)src, (ptr<SDL_Rect>)dst);
+		}
+
+		constexpr void draw(cptr<rect_t<i32>> src, cptr<rect_t<i32>> dst, cref<color_t> color) const {
+			setColor(color);
+			copy((ptr<SDL_Rect>)src, (ptr<SDL_Rect>)dst);
 		}
 	};
 } // namespace Bleakdepth

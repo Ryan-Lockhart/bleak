@@ -1,5 +1,6 @@
 #pragma once
 
+#include "coord.hpp"
 #include "typedef.hpp"
 
 #include <string>
@@ -9,23 +10,68 @@ namespace Bleakdepth {
 	  private:
 		u8 value;
 
-	  public:
-		constexpr cardinal_t() : value(0) {}
-
-		constexpr cardinal_t(u8 value) : value(value) {}
-
 		static const cardinal_t Central;
 
 		static const cardinal_t North;
 		static const cardinal_t East;
 		static const cardinal_t South;
 		static const cardinal_t West;
+		static const cardinal_t Up;
+		static const cardinal_t Down;
 
-		static const cardinal_t Northwest;
-		static const cardinal_t Northeast;
+	  public:
+		constexpr cardinal_t() : value(Central) {}
 
-		static const cardinal_t Southwest;
-		static const cardinal_t Southeast;
+		constexpr cardinal_t(u8 value) : value(value) {}
+
+		struct Horizontal {
+			static const cardinal_t Central;
+
+			static const cardinal_t North;
+			static const cardinal_t East;
+			static const cardinal_t South;
+			static const cardinal_t West;
+			static const cardinal_t Up;
+			static const cardinal_t Down;
+
+			static const cardinal_t Northwest;
+			static const cardinal_t Northeast;
+
+			static const cardinal_t Southwest;
+			static const cardinal_t Southeast;
+		};
+
+		struct Vertical {
+			struct Up {
+				static const cardinal_t Central;
+
+				static const cardinal_t North;
+				static const cardinal_t East;
+				static const cardinal_t South;
+				static const cardinal_t West;
+
+				static const cardinal_t Northwest;
+				static const cardinal_t Northeast;
+
+				static const cardinal_t Southwest;
+				static const cardinal_t Southeast;
+			};
+
+			struct Down {
+				static const cardinal_t Central;
+
+				static const cardinal_t North;
+				static const cardinal_t East;
+				static const cardinal_t South;
+				static const cardinal_t West;
+
+				static const cardinal_t Northwest;
+				static const cardinal_t Northeast;
+
+				static const cardinal_t Southwest;
+				static const cardinal_t Southeast;
+			};
+		};
 
 		constexpr cardinal_t operator~() const { return ~value; }
 
@@ -79,6 +125,8 @@ namespace Bleakdepth {
 	constexpr const cardinal_t cardinal_t::East { 1 << 1 };
 	constexpr const cardinal_t cardinal_t::South { 1 << 2 };
 	constexpr const cardinal_t cardinal_t::West { 1 << 3 };
+	constexpr const cardinal_t cardinal_t::Up { 1 << 4 };
+	constexpr const cardinal_t cardinal_t::Down { 1 << 5 };
 
 	constexpr const cardinal_t cardinal_t::Northwest { cardinal_t::North | cardinal_t::West };
 	constexpr const cardinal_t cardinal_t::Northeast { cardinal_t::North | cardinal_t::East };

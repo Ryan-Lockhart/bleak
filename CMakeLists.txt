@@ -72,6 +72,7 @@ set_target_properties(bleakdepth PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(bleakdepth PRIVATE bleak)
 
 configure_file(resources/cursor.png ${CMAKE_CURRENT_BINARY_DIR}/resources/cursor.png COPYONLY)
+configure_file(resources/grid_cursor.png ${CMAKE_CURRENT_BINARY_DIR}/resources/grid_cursor.png COPYONLY)
 
 configure_file(resources/glyphs_8x8.png ${CMAKE_CURRENT_BINARY_DIR}/resources/glyphs_8x8.png COPYONLY)
 configure_file(resources/glyphs_12x12.png ${CMAKE_CURRENT_BINARY_DIR}/resources/glyphs_12x12.png COPYONLY)

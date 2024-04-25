@@ -1,5 +1,6 @@
 #pragma once
 
+#include "input.hpp"
 #include "typedef.hpp"
 
 #include <bitset>
@@ -12,65 +13,64 @@ namespace Bleakdepth {
 		using key_t = SDL_Scancode;
 
 		static constexpr key_t KEY_START = SDL_SCANCODE_UNKNOWN;
-		static constexpr key_t KEY_END = SDL_NUM_SCANCODES;
-
-		enum class key_state_t { Pressed, Released, Down, Up };
+		static constexpr key_t KEY_END = SDL_SCANCODE_ENDCALL;
+		static constexpr usize KEY_COUNT = SDL_NUM_SCANCODES;
 
 	  private:
-		static inline std::bitset<KEY_END> currentState;
-		static inline std::bitset<KEY_END> previousState;
+		static inline std::bitset<KEY_COUNT> currentState;
+		static inline std::bitset<KEY_COUNT> previousState;
+
+		static inline bool init;
 
 	  public:
-		static constexpr void initialize() {
+		static inline bool initialized() { return init; }
+
+		static inline void initialize() {
 			currentState.reset();
 			previousState.reset();
+
+			init = true;
 		}
 
-		static constexpr void update(key_t key, bool state) {
-			previousState[key] = currentState[key];
-			currentState[key] = state;
-		}
+		static inline void update() {
+			cptr<u8> state = SDL_GetKeyboardState(nullptr);
 
-		template<typename... Keys, typename = std::pair<key_t, bool>> static constexpr void update(Keys... keyStates) {
-			for (const auto& [key, state] : { keyStates... }) {
-				previousState[key] = currentState[key];
-				currentState[key] = state;
+			for (usize i { KEY_START }; i <= KEY_END; ++i) {
+				previousState[i] = currentState[i];
+				currentState[i] = state[i];
 			}
 		}
 
-		static constexpr void update(cptr<key_t> keys, cptr<bool> states, usize count) {
-			for (usize i { 0 }; i < count; ++i) {
-				previousState[keys[i]] = currentState[keys[i]];
-				currentState[keys[i]] = states[i];
+		static inline input_state_t operator[](key_t key) {
+			if (previousState[key]) {
+				return currentState[key] ? input_state_t::Pressed : input_state_t::Up;
+			} else {
+				return currentState[key] ? input_state_t::Down : input_state_t::Released;
 			}
 		}
 
-		static constexpr key_state_t operator[](key_t key) {
-			return previousState[key] ? currentState[key] ? key_state_t::Pressed : key_state_t::Up :
-				   currentState[key]  ? key_state_t::Down :
-										key_state_t::Released;
+		static inline input_state_t operator[](int key) {
+			if (previousState[key]) {
+				return currentState[key] ? input_state_t::Pressed : input_state_t::Up;
+			} else {
+				return currentState[key] ? input_state_t::Down : input_state_t::Released;
+			}
 		}
 
-		static constexpr key_state_t operator[](int key) {
-			return previousState[key] ? currentState[key] ? key_state_t::Pressed : key_state_t::Up :
-				   currentState[key]  ? key_state_t::Down :
-										key_state_t::Released;
-		}
+		static inline bool IsKeyPressed(key_t key);
+		static inline bool IsKeyPressed(int key);
 
-		static constexpr bool IsKeyPressed(key_t key);
-		static constexpr bool IsKeyPressed(int key);
+		static inline bool IsKeyReleased(key_t key);
+		static inline bool IsKeyReleased(int key);
 
-		static constexpr bool IsKeyReleased(key_t key);
-		static constexpr bool IsKeyReleased(int key);
+		static inline bool IsKeyDown(key_t key);
+		static inline bool IsKeyDown(int key);
 
-		static constexpr bool IsKeyDown(key_t key);
-		static constexpr bool IsKeyDown(int key);
-
-		static constexpr bool IsKeyUp(key_t key);
-		static constexpr bool IsKeyUp(int key);
+		static inline bool IsKeyUp(key_t key);
+		static inline bool IsKeyUp(int key);
 
 		static inline bool AnyKeyPressed() {
-			for (int i { KEY_START }; i < KEY_END; ++i) {
+			for (int i { KEY_START }; i <= KEY_END; ++i) {
 				if (IsKeyPressed(i)) {
 					return true;
 				}
@@ -80,7 +80,7 @@ namespace Bleakdepth {
 		}
 
 		static inline bool AnyKeyReleased() {
-			for (int i { KEY_START }; i < KEY_END; ++i) {
+			for (int i { KEY_START }; i <= KEY_END; ++i) {
 				if (IsKeyReleased(i)) {
 					return true;
 				}
@@ -90,7 +90,7 @@ namespace Bleakdepth {
 		}
 
 		static inline bool AnyKeyDown() {
-			for (int i { KEY_START }; i < KEY_END; ++i) {
+			for (int i { KEY_START }; i <= KEY_END; ++i) {
 				if (IsKeyDown(i)) {
 					return true;
 				}
@@ -100,7 +100,7 @@ namespace Bleakdepth {
 		}
 
 		static inline bool AnyKeyUp() {
-			for (int i { KEY_START }; i < KEY_END; ++i) {
+			for (int i { KEY_START }; i <= KEY_END; ++i) {
 				if (IsKeyUp(i)) {
 					return true;
 				}
@@ -192,19 +192,19 @@ namespace Bleakdepth {
 
 	static inline keyboard Keyboard;
 
-	constexpr inline bool keyboard::IsKeyPressed(key_t key) { return Keyboard[key] == key_state_t::Pressed; }
+	inline bool keyboard::IsKeyPressed(key_t key) { return Keyboard[key] == input_state_t::Pressed; }
 
-	constexpr inline bool keyboard::IsKeyPressed(int key) { return Keyboard[key] == key_state_t::Pressed; }
+	inline bool keyboard::IsKeyPressed(int key) { return Keyboard[key] == input_state_t::Pressed; }
 
-	constexpr inline bool keyboard::IsKeyReleased(key_t key) { return Keyboard[key] == key_state_t::Released; }
+	inline bool keyboard::IsKeyReleased(key_t key) { return Keyboard[key] == input_state_t::Released; }
 
-	constexpr inline bool keyboard::IsKeyReleased(int key) { return Keyboard[key] == key_state_t::Released; }
+	inline bool keyboard::IsKeyReleased(int key) { return Keyboard[key] == input_state_t::Released; }
 
-	constexpr inline bool keyboard::IsKeyDown(key_t key) { return Keyboard[key] == key_state_t::Down; }
+	inline bool keyboard::IsKeyDown(key_t key) { return Keyboard[key] == input_state_t::Down; }
 
-	constexpr inline bool keyboard::IsKeyDown(int key) { return Keyboard[key] == key_state_t::Down; }
+	inline bool keyboard::IsKeyDown(int key) { return Keyboard[key] == input_state_t::Down; }
 
-	constexpr inline bool keyboard::IsKeyUp(key_t key) { return Keyboard[key] == key_state_t::Up; }
+	inline bool keyboard::IsKeyUp(key_t key) { return Keyboard[key] == input_state_t::Up; }
 
-	constexpr inline bool keyboard::IsKeyUp(int key) { return Keyboard[key] == key_state_t::Up; }
+	inline bool keyboard::IsKeyUp(int key) { return Keyboard[key] == input_state_t::Up; }
 } // namespace Bleakdepth

@@ -120,6 +120,9 @@ namespace Bleakdepth {
 		constexpr T area() const noexcept { return size.size(); }
 
 		constexpr operator SDL_Rect() const noexcept { return SDL_Rect { position.x, position.y, size.w, size.h }; }
+		
+		constexpr operator ptr<SDL_Rect>() noexcept { return (ptr<SDL_Rect>)&position.x; }
+		constexpr operator cptr<SDL_Rect>() const noexcept { return (cptr<SDL_Rect>)&position.x;}
 
 		constexpr explicit operator SDL_FRect() const noexcept {
 			return SDL_FRect { (f32)position.x, (f32)position.y, (f32)size.w, (f32)size.h };

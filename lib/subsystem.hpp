@@ -12,7 +12,7 @@
 #include <SDL_ttf.h>
 
 namespace Bleakdepth {
-	struct subsystem_t {
+	struct subsystem {
 	  private:
 		static inline bool sdl_initialized;
 		static inline bool sdl_image_initialized;
@@ -106,5 +106,5 @@ namespace Bleakdepth {
 		}
 	};
 
-	static inline subsystem_t Subsystem;
+	static inline subsystem Subsystem;
 } // namespace Bleakdepth
