@@ -6,6 +6,7 @@ namespace Bleakdepth {
 	namespace Colors {
 		static constexpr color_t White { u8 { 0xFF }, u8 { 0xFF }, u8 { 0xFF } };
 		static constexpr color_t Black { u8 { 0x00 }, u8 { 0x00 }, u8 { 0x00 } };
+		static constexpr color_t Grey { u8 { 0x80 }, u8 { 0x80 }, u8 { 0x80 } };
 
 		static constexpr color_t Transparent { u8 { 0x00 }, u8 { 0x00 }, u8 { 0x00 }, u8 { 0x00 } };
 
@@ -20,41 +21,44 @@ namespace Bleakdepth {
 		static constexpr color_t Cyan { u8 { 0x00 }, u8 { 0xFF }, u8 { 0xFF } };
 		static constexpr color_t Magenta { u8 { 0xFF }, u8 { 0x00 }, u8 { 0xFF } };
 		static constexpr color_t Yellow { u8 { 0xFF }, u8 { 0xFF }, u8 { 0x00 } };
+		static constexpr color_t Orange { u8 { 0xFF }, u8 { 0x80 }, u8 { 0x00 } };
 
-		static constexpr color_t Grey { u8 { 0x80 }, u8 { 0x80 }, u8 { 0x80 } };
-		static constexpr color_t LightGrey { u8 { 0xC0 }, u8 { 0xC0 }, u8 { 0xC0 } };
-		static constexpr color_t DarkGrey { u8 { 0x40 }, u8 { 0x40 }, u8 { 0x40 } };
+		namespace Light {
+			static constexpr color_t Grey { u8 { 0xC0 }, u8 { 0xC0 }, u8 { 0xC0 } };
 
-		static constexpr color_t LightRed { u8 { 0xFF }, u8 { 0x80 }, u8 { 0x80 } };
-		static constexpr color_t LightGreen { u8 { 0x80 }, u8 { 0xFF }, u8 { 0x80 } };
-		static constexpr color_t LightBlue { u8 { 0x80 }, u8 { 0x80 }, u8 { 0xFF } };
+			static constexpr color_t Red { u8 { 0xFF }, u8 { 0x80 }, u8 { 0x80 } };
+			static constexpr color_t Green { u8 { 0x80 }, u8 { 0xFF }, u8 { 0x80 } };
+			static constexpr color_t Blue { u8 { 0x80 }, u8 { 0x80 }, u8 { 0xFF } };
 
-		static constexpr color_t LightIntrite { u8 { 132 }, u8 { 124 }, u8 { 124 } };
-		static constexpr color_t LightCharcoal { u8 { 60 }, u8 { 58 }, u8 { 58 } };
+			static constexpr color_t Intrite { u8 { 132 }, u8 { 124 }, u8 { 124 } };
+			static constexpr color_t Charcoal { u8 { 60 }, u8 { 58 }, u8 { 58 } };
 
-		static constexpr color_t LightCyan { u8 { 0x80 }, u8 { 0xFF }, u8 { 0xFF } };
-		static constexpr color_t LightMagenta { u8 { 0xFF }, u8 { 0x80 }, u8 { 0xFF } };
-		static constexpr color_t LightYellow { u8 { 0xFF }, u8 { 0xFF }, u8 { 0x80 } };
+			static constexpr color_t Cyan { u8 { 0x80 }, u8 { 0xFF }, u8 { 0xFF } };
+			static constexpr color_t Magenta { u8 { 0xFF }, u8 { 0x80 }, u8 { 0xFF } };
+			static constexpr color_t Yellow { u8 { 0xFF }, u8 { 0xFF }, u8 { 0x80 } };
+			static constexpr color_t Orange { u8 { 0xC0 }, u8 { 0x80 }, u8 { 0x00 } };
+		} // namespace Light
 
-		static constexpr color_t DarkRed { u8 { 0x80 }, u8 { 0x00 }, u8 { 0x00 } };
-		static constexpr color_t DarkGreen { u8 { 0x00 }, u8 { 0x80 }, u8 { 0x00 } };
-		static constexpr color_t DarkBlue { u8 { 0x00 }, u8 { 0x00 }, u8 { 0x80 } };
+		namespace Dark {
+			static constexpr color_t Grey { u8 { 0x40 }, u8 { 0x40 }, u8 { 0x40 } };
 
-		static constexpr color_t DarkMarble { u8 { 200 }, u8 { 192 }, u8 { 192 } };
-		static constexpr color_t DarkIntrite { u8 { 92 }, u8 { 84 }, u8 { 84 } };
-		static constexpr color_t DarkCharcoal { u8 { 20 }, u8 { 16 }, u8 { 16 } };
+			static constexpr color_t Red { u8 { 0x80 }, u8 { 0x00 }, u8 { 0x00 } };
+			static constexpr color_t Green { u8 { 0x00 }, u8 { 0x80 }, u8 { 0x00 } };
+			static constexpr color_t Blue { u8 { 0x00 }, u8 { 0x00 }, u8 { 0x80 } };
 
-		static constexpr color_t DarkCyan { u8 { 0x00 }, u8 { 0x80 }, u8 { 0x80 } };
-		static constexpr color_t DarkMagenta { u8 { 0x80 }, u8 { 0x00 }, u8 { 0x80 } };
-		static constexpr color_t DarkYellow { u8 { 0x80 }, u8 { 0x80 }, u8 { 0x00 } };
+			static constexpr color_t Marble { u8 { 200 }, u8 { 192 }, u8 { 192 } };
+			static constexpr color_t Intrite { u8 { 92 }, u8 { 84 }, u8 { 84 } };
+			static constexpr color_t Charcoal { u8 { 20 }, u8 { 16 }, u8 { 16 } };
 
-		static constexpr color_t BrightOrange { u8 { 255 }, u8 { 94 }, u8 { 5 } };
-		static constexpr color_t LightOrange { u8 { 255 }, u8 { 165 }, u8 { 115 } };
-		static constexpr color_t DarkOrange { u8 { 200 }, u8 { 71 }, u8 { 0 } };
+			static constexpr color_t Cyan { u8 { 0x00 }, u8 { 0x80 }, u8 { 0x80 } };
+			static constexpr color_t Magenta { u8 { 0x80 }, u8 { 0x00 }, u8 { 0x80 } };
+			static constexpr color_t Yellow { u8 { 0x80 }, u8 { 0x80 }, u8 { 0x00 } };
+			static constexpr color_t Orange { u8 { 0x80 }, u8 { 0x40 }, u8 { 0x00 } };
+		} // namespace Dark
 
 		namespace Materials {
-			static constexpr color_t LightBlood { u8 { 177 }, u8 { 34 }, u8 { 53 } };
 			static constexpr color_t Blood { u8 { 157 }, u8 { 34 }, u8 { 53 } };
+			static constexpr color_t LightBlood { u8 { 177 }, u8 { 34 }, u8 { 53 } };
 			static constexpr color_t DarkBlood { u8 { 137 }, u8 { 14 }, u8 { 33 } };
 
 			static constexpr color_t Ebony { u8 { 40 }, u8 { 44 }, u8 { 52 } };

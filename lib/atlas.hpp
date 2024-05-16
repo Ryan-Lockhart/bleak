@@ -6,7 +6,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-#include "array.hpp"
+#include "array/layer.tpp"
 #include "texture.hpp"
 
 #include "point.hpp"
@@ -14,31 +14,14 @@
 #include "glyph.hpp"
 
 namespace Bleakdepth {
-	// size in bytes of one kilobyte
-	constexpr const usize KILOBYTE { 1024 };
-	// size in bytes of one megabyte
-	constexpr const usize MEGABYTE { 1024 * KILOBYTE };
-	// size in bytes of one gigabyte
-	constexpr const usize GIGABYTE { 1024 * MEGABYTE };
-	// size in bytes of one terabyte
-	constexpr const usize TERABYTE { 1024 * GIGABYTE };
-	// size in bytes of one petabyte
-	constexpr const usize PETABYTE { 1024 * TERABYTE };
-	// size in bytes of one exabyte
-	constexpr const usize EXABYTE { 1024 * PETABYTE };
-	// size in bytes of one zettabyte minus one byte
-	constexpr const usize MEMORY_MAXIMUM { usize { 0 } - 1 };
-	// size in bytes of the maximum size an array can be
-	constexpr const usize MEMORY_LIMIT { 8ULL * GIGABYTE };
-
 	template<usize Width, usize Height> class atlas_t {
 	  private:
 		static_assert(Width > 0, "atlas width must be greater than zero!");
 		static_assert(Height > 0, "atlas height must be greater than zero!");
 
-		static_assert(sizeof(SDL_Rect) * Width * Height <= MEMORY_LIMIT, "atlas size exceeds memory limit!");
+		static_assert(sizeof(SDL_Rect) * Width * Height <= Memory::Maximum, "atlas size exceeds memory limit!");
 
-		array_t<SDL_Rect, Width, Height> rects;
+		layer_t<SDL_Rect, Width, Height> rects;
 
 		texture_t texture;
 

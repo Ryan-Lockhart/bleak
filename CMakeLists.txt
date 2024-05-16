@@ -21,12 +21,18 @@ find_package(SDL2_ttf CONFIG REQUIRED)
 
 add_library(bleak SHARED
     lib/array.hpp
+    lib/array/iter.tpp
+    lib/array/row.tpp
+    lib/array/layer.tpp
+    lib/array/volume.tpp
     lib/atlas.hpp
     lib/cardinal.hpp
     lib/clock.hpp
     lib/color.hpp
+    lib/coord.hpp
     lib/cursor.hpp
     lib/glyph.hpp
+    lib/input.hpp
     lib/keyboard.hpp
     lib/line.hpp
     lib/log.hpp
@@ -37,15 +43,19 @@ add_library(bleak SHARED
     lib/point.hpp
     lib/rect.hpp
     lib/renderer.hpp
+    lib/sprite.hpp
     lib/subsystem.hpp
     lib/texture.hpp
     lib/timer.hpp
+    lib/tree.hpp
     lib/typedef.hpp
     lib/wave.hpp
     lib/window.hpp
+    lib/constants/bindings.hpp
     lib/constants/characters.hpp
     lib/constants/colors.hpp
     lib/constants/glyphs.hpp
+    lib/constants/keys.hpp
     lib/constants/octants.hpp
 )
 
@@ -65,6 +75,7 @@ target_link_libraries(bleak PUBLIC $<IF:$<TARGET_EXISTS:SDL2_ttf::SDL2_ttf>,SDL2
 
 add_executable(bleakdepth
     src/program.cpp
+    src/test.cpp
 )
 
 set_target_properties(bleakdepth PROPERTIES LINKER_LANGUAGE CXX)

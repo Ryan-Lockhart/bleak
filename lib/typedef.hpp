@@ -1,6 +1,13 @@
 #pragma once
 
 namespace Bleakdepth {
+
+#if defined(__x86_64__)
+#define BLEAKDEPTH_64
+#elif defined(__i386__)
+#define BLEAKDEPTH_32
+#endif
+
 	typedef unsigned char u8;
 	typedef signed char i8;
 
@@ -13,10 +20,14 @@ namespace Bleakdepth {
 	typedef unsigned long long u64;
 	typedef signed long long i64;
 
+	typedef unsigned __int128 u128;
+	typedef signed __int128 i128;
+
+	typedef _Float16 f16;
 	typedef float f32;
 	typedef double f64;
 
-#if defined(WIN32)
+#if defined(BLEAKDEPTH_32)
 
 	typedef u32 usize;
 	typedef i32 isize;
@@ -24,6 +35,7 @@ namespace Bleakdepth {
 	typedef u16 uhalf;
 	typedef i16 ihalf;
 
+	typedef f16 fhalf;
 	typedef f32 fsize;
 
 #else
@@ -33,22 +45,11 @@ namespace Bleakdepth {
 
 	typedef u32 uhalf;
 	typedef i32 ihalf;
-	
+
+	typedef f32 fhalf;
 	typedef f64 fsize;
 
 #endif
-
-	typedef u8 byte;
-	typedef i8 sbyte;
-
-	typedef u16 word;
-	typedef i16 sword;
-
-	typedef u32 dword;
-	typedef i32 sdword;
-
-	typedef u64 qword;
-	typedef i64 sqword;
 
 	template<typename T> using ref = T&;
 	template<typename T> using cref = const T&;

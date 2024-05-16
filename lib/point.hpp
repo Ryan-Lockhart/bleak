@@ -51,13 +51,9 @@ namespace Bleakdepth {
 
 		constexpr point_t(rval<SDL_Point> other) noexcept : x(std::move(other.x)), y(std::move(other.y)) {}
 
-		constexpr explicit point_t(cref<SDL_FPoint> other) noexcept :
-			x(static_cast<T>(other.x)),
-			y(static_cast<T>(other.y)) {}
+		constexpr explicit point_t(cref<SDL_FPoint> other) noexcept : x(static_cast<T>(other.x)), y(static_cast<T>(other.y)) {}
 
-		constexpr explicit point_t(rval<SDL_FPoint> other) noexcept :
-			x(static_cast<T>(std::move(other.x))),
-			y(static_cast<T>(std::move(other.y))) {}
+		constexpr explicit point_t(rval<SDL_FPoint> other) noexcept : x(static_cast<T>(std::move(other.x))), y(static_cast<T>(std::move(other.y))) {}
 
 		constexpr ~point_t() = default;
 
@@ -167,13 +163,9 @@ namespace Bleakdepth {
 
 		constexpr point_t operator%(cref<point_t> other) const noexcept { return { x % other.x, y % other.y }; }
 
-		template<f32> point_t operator%(cref<point_t> other) const noexcept {
-			return { std::fmodf(x, other.x), std::fmodf(y, other.y) };
-		}
+		template<f32> point_t operator%(cref<point_t> other) const noexcept { return { ::fmodf(x, other.x), ::fmodf(y, other.y) }; }
 
-		template<f64> point_t operator%(cref<point_t> other) const noexcept {
-			return { std::fmodl(x, other.x), std::fmodl(y, other.y) };
-		}
+		template<f64> point_t operator%(cref<point_t> other) const noexcept { return { ::fmodl(x, other.x), ::fmodl(y, other.y) }; }
 
 		constexpr point_t operator+(T scalar) const noexcept { return { x + scalar, y + scalar }; }
 
@@ -185,20 +177,9 @@ namespace Bleakdepth {
 
 		constexpr point_t operator%(T scalar) const noexcept { return { x % scalar, y % scalar }; }
 
-		template<f32> point_t operator%(T scalar) const noexcept {
-			return { std::fmodf(x, scalar), std::fmodf(y, scalar) };
-		}
+		template<f32> point_t operator%(T scalar) const noexcept { return { ::fmodf(x, scalar), ::fmodf(y, scalar) }; }
 
-		template<f64> point_t operator%(T scalar) const noexcept {
-			return { std::fmodl(x, scalar), std::fmodl(y, scalar) };
-		}
-
-		constexpr ref<point_t> operator-() noexcept {
-			x = -x;
-			y = -y;
-
-			return *this;
-		}
+		template<f64> point_t operator%(T scalar) const noexcept { return { ::fmodl(x, scalar), ::fmodl(y, scalar) }; }
 
 		constexpr ref<point_t> operator+=(cref<point_t> other) noexcept {
 			x += other.x;
@@ -236,15 +217,15 @@ namespace Bleakdepth {
 		}
 
 		template<f32> ref<point_t> operator%=(cref<point_t> other) noexcept {
-			x = std::fmodf(x, other.x);
-			y = std::fmodf(y, other.y);
+			x = ::fmodf(x, other.x);
+			y = ::fmodf(y, other.y);
 
 			return *this;
 		}
 
 		template<f64> ref<point_t> operator%=(cref<point_t> other) noexcept {
-			x = std::fmodl(x, other.x);
-			y = std::fmodl(y, other.y);
+			x = ::fmodl(x, other.x);
+			y = ::fmodl(y, other.y);
 
 			return *this;
 		}
@@ -285,22 +266,20 @@ namespace Bleakdepth {
 		}
 
 		template<f32> ref<point_t> operator%=(T scalar) noexcept {
-			x = std::fmodf(x, scalar);
-			y = std::fmodf(y, scalar);
+			x = ::fmodf(x, scalar);
+			y = ::fmodf(y, scalar);
 
 			return *this;
 		}
 
 		template<f64> ref<point_t> operator%=(T scalar) noexcept {
-			x = std::fmodl(x, scalar);
-			y = std::fmodl(y, scalar);
+			x = ::fmodl(x, scalar);
+			y = ::fmodl(y, scalar);
 
 			return *this;
 		}
 
-		constexpr explicit operator SDL_Point() const noexcept {
-			return SDL_Point { static_cast<i32>(x), static_cast<i32>(y) };
-		}
+		constexpr explicit operator SDL_Point() const noexcept { return SDL_Point { static_cast<i32>(x), static_cast<i32>(y) }; }
 
 		template<i32> constexpr operator SDL_Point() const noexcept { return SDL_Point { x, y }; }
 
@@ -308,9 +287,7 @@ namespace Bleakdepth {
 
 		template<i32> constexpr operator cptr<SDL_Point>() const noexcept { return (cptr<SDL_Point>)&x; }
 
-		constexpr explicit operator SDL_FPoint() const noexcept {
-			return SDL_FPoint { static_cast<f32>(x), static_cast<f32>(y) };
-		}
+		constexpr explicit operator SDL_FPoint() const noexcept { return SDL_FPoint { static_cast<f32>(x), static_cast<f32>(y) }; }
 
 		template<f32> constexpr operator SDL_FPoint() const noexcept { return SDL_FPoint { x, y }; }
 

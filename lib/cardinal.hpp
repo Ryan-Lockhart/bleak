@@ -1,6 +1,5 @@
 #pragma once
 
-#include "coord.hpp"
 #include "typedef.hpp"
 
 #include <string>
@@ -10,45 +9,37 @@ namespace Bleakdepth {
 	  private:
 		u8 value;
 
-		static const cardinal_t Central;
-
-		static const cardinal_t North;
-		static const cardinal_t East;
-		static const cardinal_t South;
-		static const cardinal_t West;
-		static const cardinal_t Up;
-		static const cardinal_t Down;
-
 	  public:
 		constexpr cardinal_t() : value(Central) {}
 
 		constexpr cardinal_t(u8 value) : value(value) {}
 
-		struct Horizontal {
-			static const cardinal_t Central;
+		static const cardinal_t Central;
 
-			static const cardinal_t North;
-			static const cardinal_t East;
-			static const cardinal_t South;
-			static const cardinal_t West;
-			static const cardinal_t Up;
-			static const cardinal_t Down;
+		static const cardinal_t North;
+		static const cardinal_t South;
 
-			static const cardinal_t Northwest;
-			static const cardinal_t Northeast;
+		static const cardinal_t East;
+		static const cardinal_t West;
 
-			static const cardinal_t Southwest;
-			static const cardinal_t Southeast;
-		};
+		static const cardinal_t Up;
+		static const cardinal_t Down;
+
+		static const cardinal_t Northwest;
+		static const cardinal_t Northeast;
+
+		static const cardinal_t Southwest;
+		static const cardinal_t Southeast;
 
 		struct Vertical {
 			struct Up {
 				static const cardinal_t Central;
 
 				static const cardinal_t North;
-				static const cardinal_t East;
 				static const cardinal_t South;
+
 				static const cardinal_t West;
+				static const cardinal_t East;
 
 				static const cardinal_t Northwest;
 				static const cardinal_t Northeast;
@@ -61,9 +52,10 @@ namespace Bleakdepth {
 				static const cardinal_t Central;
 
 				static const cardinal_t North;
-				static const cardinal_t East;
 				static const cardinal_t South;
+
 				static const cardinal_t West;
+				static const cardinal_t East;
 
 				static const cardinal_t Northwest;
 				static const cardinal_t Northeast;
@@ -134,8 +126,38 @@ namespace Bleakdepth {
 	constexpr const cardinal_t cardinal_t::Southwest { cardinal_t::South | cardinal_t::West };
 	constexpr const cardinal_t cardinal_t::Southeast { cardinal_t::South | cardinal_t::East };
 
+	constexpr const cardinal_t cardinal_t::Vertical::Up::Central { cardinal_t::Central | cardinal_t::Up };
+
+	constexpr const cardinal_t cardinal_t::Vertical::Up::North { cardinal_t::North | cardinal_t::Up };
+	constexpr const cardinal_t cardinal_t::Vertical::Up::South { cardinal_t::South | cardinal_t::Up };
+
+	constexpr const cardinal_t cardinal_t::Vertical::Up::West { cardinal_t::West | cardinal_t::Up };
+	constexpr const cardinal_t cardinal_t::Vertical::Up::East { cardinal_t::East | cardinal_t::Up };
+
+	constexpr const cardinal_t cardinal_t::Vertical::Up::Northwest { cardinal_t::Northwest | cardinal_t::Up };
+	constexpr const cardinal_t cardinal_t::Vertical::Up::Northeast { cardinal_t::Northeast | cardinal_t::Up };
+
+	constexpr const cardinal_t cardinal_t::Vertical::Up::Southwest { cardinal_t::Southwest | cardinal_t::Up };
+	constexpr const cardinal_t cardinal_t::Vertical::Up::Southeast { cardinal_t::Southeast | cardinal_t::Up };
+
+	constexpr const cardinal_t cardinal_t::Vertical::Down::Central { cardinal_t::Central | cardinal_t::Down };
+
+	constexpr const cardinal_t cardinal_t::Vertical::Down::North { cardinal_t::North | cardinal_t::Down };
+	constexpr const cardinal_t cardinal_t::Vertical::Down::South { cardinal_t::South | cardinal_t::Down };
+
+	constexpr const cardinal_t cardinal_t::Vertical::Down::West { cardinal_t::West | cardinal_t::Down };
+	constexpr const cardinal_t cardinal_t::Vertical::Down::East { cardinal_t::East | cardinal_t::Down };
+
+	constexpr const cardinal_t cardinal_t::Vertical::Down::Northwest { cardinal_t::Northwest | cardinal_t::Down };
+	constexpr const cardinal_t cardinal_t::Vertical::Down::Northeast { cardinal_t::Northeast | cardinal_t::Down };
+
+	constexpr const cardinal_t cardinal_t::Vertical::Down::Southwest { cardinal_t::Southwest | cardinal_t::Down };
+	constexpr const cardinal_t cardinal_t::Vertical::Down::Southeast { cardinal_t::Southeast | cardinal_t::Down };
+
 	constexpr inline cardinal_t::operator std::string() const {
 		switch (value) {
+		case cardinal_t::Central:
+			return "Central";
 		case cardinal_t::North:
 			return "North";
 		case cardinal_t::East:
@@ -152,8 +174,44 @@ namespace Bleakdepth {
 			return "Southwest";
 		case cardinal_t::Southeast:
 			return "Southeast";
+		case cardinal_t::Vertical::Up::Central:
+			return "Central Ascending";
+		case cardinal_t::Vertical::Up::North:
+			return "North Ascending";
+		case cardinal_t::Vertical::Up::East:
+			return "East Ascending";
+		case cardinal_t::Vertical::Up::South:
+			return "South Ascending";
+		case cardinal_t::Vertical::Up::West:
+			return "West Ascending";
+		case cardinal_t::Vertical::Up::Northwest:
+			return "Northwest Ascending";
+		case cardinal_t::Vertical::Up::Northeast:
+			return "Northeast Ascending";
+		case cardinal_t::Vertical::Up::Southwest:
+			return "Southwest Ascending";
+		case cardinal_t::Vertical::Up::Southeast:
+			return "Southeast Ascending";
+		case cardinal_t::Vertical::Down::Central:
+			return "Central Descending";
+		case cardinal_t::Vertical::Down::North:
+			return "North Descending";
+		case cardinal_t::Vertical::Down::East:
+			return "East Descending";
+		case cardinal_t::Vertical::Down::South:
+			return "South Descending";
+		case cardinal_t::Vertical::Down::West:
+			return "West Descending";
+		case cardinal_t::Vertical::Down::Northwest:
+			return "Northwest Descending";
+		case cardinal_t::Vertical::Down::Northeast:
+			return "Northeast Descending";
+		case cardinal_t::Vertical::Down::Southwest:
+			return "Southwest Descending";
+		case cardinal_t::Vertical::Down::Southeast:
+			return "Southeast Descending";
 		default:
-			return "Central";
+			return "Unknown";
 		}
 	}
 } // namespace Bleakdepth

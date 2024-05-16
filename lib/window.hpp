@@ -5,8 +5,6 @@
 #include "subsystem.hpp"
 #include "typedef.hpp"
 
-#include <SDL_events.h>
-#include <SDL_video.h>
 #include <format>
 #include <stdexcept>
 
@@ -61,81 +59,46 @@ namespace Bleakdepth {
 			if (window) {
 				SDL_DestroyWindow(window);
 			}
+
+			if (subsystem::initialized()) {
+				subsystem::terminate();
+			}
 		}
 
 	  public:
 		inline window_t() = delete;
 
 		inline window_t(cstr title, cref<size_t<i32>> size, u32 flags) :
-			window(create(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.w, size.h, flags)),
-			title(title),
-			size(size),
-			flags(flags) {}
+			window { create(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.w, size.h, flags) },
+			title { title },
+			size { size },
+			flags { flags } {}
 
 		inline window_t(cstr title, cref<point_t<i32>> position, cref<size_t<i32>> size, u32 flags) :
-			window(create(title, position.x, position.y, size.w, size.h, flags)),
-			title(title),
-			size(size),
-			flags(flags) {}
+			window { create(title, position.x, position.y, size.w, size.h, flags) },
+			title { title },
+			size { size },
+			flags { flags } {}
 
 		inline window_t(cstr title, cref<rect_t<i32>> transform, u32 flags) :
-			window(nullptr),
-			title(title),
-			size(transform.size),
-			flags(flags) {
-			window = SDL_CreateWindow(
-				title, transform.position.x, transform.position.y, transform.size.w, transform.size.h, flags
-			);
-
-			if (!window) {
-				throw std::runtime_error(std::format("failed to create window: {}", SDL_GetError()));
-			}
-
-			if (size.w <= 0) {
-				throw std::invalid_argument("width must be greater than zero!");
-			}
-			if (size.h <= 0) {
-				throw std::invalid_argument("height must be greater than zero!");
-			}
-		}
+			window {
+				create(title, transform.position.x, transform.position.y, transform.size.w, transform.size.h, flags)
+			},
+			title { title },
+			size { transform.size },
+			flags { flags } {}
 
 		inline window_t(cstr title, i32 width, i32 height, u32 flags) :
-			window(nullptr),
-			title(title),
-			size(width, height),
-			flags(flags) {
-			window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
-
-			if (!window) {
-				throw std::runtime_error(std::format("failed to create window: {}", SDL_GetError()));
-			}
-
-			if (size.w <= 0) {
-				throw std::invalid_argument("width must be greater than zero!");
-			}
-			if (size.h <= 0) {
-				throw std::invalid_argument("height must be greater than zero!");
-			}
-		}
+			window { create(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags) },
+			title { title },
+			size { width, height },
+			flags { flags } {}
 
 		inline window_t(cstr title, i32 x, i32 y, i32 width, i32 height, u32 flags) :
-			window(nullptr),
-			title(title),
-			size(width, height),
-			flags(flags) {
-			window = SDL_CreateWindow(title, x, y, width, height, flags);
-
-			if (!window) {
-				throw std::runtime_error(std::format("failed to create window: {}", SDL_GetError()));
-			}
-
-			if (size.w <= 0) {
-				throw std::invalid_argument("width must be greater than zero!");
-			}
-			if (size.h <= 0) {
-				throw std::invalid_argument("height must be greater than zero!");
-			}
-		}
+			window { create(title, x, y, width, height, flags) },
+			title { title },
+			size { width, height },
+			flags { flags } {}
 
 		inline ~window_t() { destroy(window); }
 
@@ -148,10 +111,10 @@ namespace Bleakdepth {
 					closing = true;
 					break;
 				case SDL_MOUSEMOTION:
-					mouse::update(point_t<i32>{ event.motion.x, event.motion.y });
+					mouse::update(point_t<i32> { event.motion.x, event.motion.y });
 					break;
 				case SDL_MOUSEWHEEL:
-					mouse::update(point_t<f32>{ event.wheel.preciseX, event.wheel.preciseY });
+					mouse::update(point_t<f32> { event.wheel.preciseX, event.wheel.preciseY });
 					break;
 				default:
 					break;

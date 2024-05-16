@@ -39,9 +39,11 @@ namespace Bleakdepth {
 			}
 		}
 
-		static inline f32 deltaTime() { return ((now() - last) * 1000.0f) / frequency(); }
+		static inline f64 deltaTime() { return ((now() - last) * 1000.0) / frequency(); }
 
-		static inline f32 frameTime() { return 1000.0f / deltaTime(); }
+		static inline f64 frameTime() { return 1000.0 / deltaTime(); }
+
+		static inline f64 elapsed() { return (f64)now() / frequency(); }
 	};
 
 	static inline clock Clock;

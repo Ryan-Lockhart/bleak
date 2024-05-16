@@ -15,10 +15,10 @@ namespace Bleakdepth {
 		constexpr octant_t(cref<octant_t> other) : x(other.x), dx(other.dx), y(other.y), dy(other.dy) {}
 
 		constexpr octant_t(rval<octant_t> other) :
-			x(std::move(other.x)),
-			dx(std::move(other.dx)),
-			y(std::move(other.y)),
-			dy(std::move(other.dy)) {}
+			x { std::move(other.x) },
+			dx { std::move(other.dx) },
+			y { std::move(other.y) },
+			dy { std::move(other.dy) } {}
 
 		constexpr ~octant_t() = default;
 

@@ -36,13 +36,9 @@ namespace Bleakdepth {
 
 		constexpr ~pair_t() = default;
 
-		constexpr bool operator==(cref<pair_t> other) const noexcept {
-			return key == other.key && value == other.value;
-		}
+		constexpr bool operator==(cref<pair_t> other) const noexcept { return key == other.key && value == other.value; }
 
-		constexpr bool operator!=(cref<pair_t> other) const noexcept {
-			return key != other.key || value != other.value;
-		}
+		constexpr bool operator!=(cref<pair_t> other) const noexcept { return key != other.key || value != other.value; }
 
 		constexpr bool operator<(cref<pair_t> other) const noexcept { return value < other.value; }
 
@@ -53,8 +49,19 @@ namespace Bleakdepth {
 		constexpr bool operator>=(cref<pair_t> other) const noexcept { return value >= other.value; }
 	};
 
+#if defined(BLEAKDEPTH_32)
+	constexpr const usize LUT_SIZE_CAP { 1024 };
+#elif defined(BLEAKDEPTH_64)
+	constexpr const usize LUT_SIZE_CAP { 2048 };
+#endif
+
 	template<typename Key, typename Value, usize Size, typename Index = usize> class lut_t {
 	  public:
+		static constexpr usize size { Size };
+
+		static_assert(size > 0, "lookup table size must be greater than zero!");
+		static_assert(size < LUT_SIZE_CAP, "lookup tables are intended for small sizes!");
+
 		using KeyIndex = pair_t<Key, Index>;
 		using KeyValue = pair_t<Key, Value>;
 
@@ -65,14 +72,13 @@ namespace Bleakdepth {
 	  public:
 		constexpr lut_t() noexcept = default;
 
-		template<typename... Elements, typename = KeyValue>
-		constexpr lut_t(Elements... elements) noexcept : lookup {}, values {} {
-			if (sizeof...(Elements) != Size) {
-				throw std::invalid_argument("lookup table size mismatch!");
+		constexpr lut_t(std::initializer_list<KeyValue> elements) : lookup {}, values {} {
+			if (elements.size() != size) {
+				throw std::invalid_argument("initializer list size mismatch!");
 			}
 
 			usize i { 0 };
-			for (const auto& element : { elements... }) {
+			for (const auto& element : elements) {
 				lookup[i] = { element.key, i };
 				values[i] = element.value;
 				++i;
@@ -81,9 +87,7 @@ namespace Bleakdepth {
 
 		constexpr lut_t(cref<lut_t> other) noexcept : lookup { other.lookup }, values { other.values } {}
 
-		constexpr lut_t(rval<lut_t> other) noexcept :
-			lookup { std::move(other.lookup) },
-			values { std::move(other.values) } {}
+		constexpr lut_t(rval<lut_t> other) noexcept : lookup { std::move(other.lookup) }, values { std::move(other.values) } {}
 
 		constexpr ref<Value> operator[](cref<Key> key) {
 			for (const auto& [k, i] : lookup) {

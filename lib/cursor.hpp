@@ -14,9 +14,10 @@ namespace Bleakdepth {
 	  private:
 		texture_t texture;
 		point_t<i32> position;
-		color_t color;
 
 	  public:
+		color_t color;
+
 		inline cursor_t() = delete;
 
 		inline cursor_t(rval<texture_t> texture) :
@@ -30,6 +31,7 @@ namespace Bleakdepth {
 			color { color } {}
 
 		inline void update() { position = Mouse.GetPosition(); }
+		inline void update(cref<point_t<i32>> pos) { position = pos; };
 
 		inline void draw() const { texture.draw(position, color); }
 	};
@@ -39,9 +41,10 @@ namespace Bleakdepth {
 		texture_t texture;
 		point_t<i32> position;
 		point_t<i32> offset;
-		color_t color;
 
 	  public:
+		color_t color;
+		
 		static constexpr point_t<i32> size { Width, Height };
 
 		inline grid_cursor_t() = delete;
@@ -59,6 +62,7 @@ namespace Bleakdepth {
 			color { color } {}
 
 		inline void update() { position = Mouse.GetPosition() / size; }
+		inline void update(cref<point_t<i32>> pos) { position = pos / size; };
 
 		inline void draw() const { texture.draw(position * size + offset, color); }
 	};

@@ -14,6 +14,7 @@
 
 namespace Bleakdepth {
 	template<typename T = i32> struct coord_t {
+	  public:
 		union {
 			T x, w;
 		};
@@ -28,50 +29,54 @@ namespace Bleakdepth {
 
 		static const coord_t Zero;
 
-		struct Horizontal {
-			static const coord_t North;
-			static const coord_t South;
-			static const coord_t East;
-			static const coord_t West;
+		static const coord_t Central;
 
-			static const coord_t Northeast;
-			static const coord_t Northwest;
+		static const coord_t North;
+		static const coord_t South;
 
-			static const coord_t Southeast;
-			static const coord_t Southwest;
+		static const coord_t East;
+		static const coord_t West;
 
-			static const coord_t Central;
-		};
+		static const coord_t Up;
+		static const coord_t Down;
+
+		static const coord_t Northwest;
+		static const coord_t Northeast;
+
+		static const coord_t Southwest;
+		static const coord_t Southeast;
 
 		struct Vertical {
 			struct Up {
+				static const coord_t Central;
+
 				static const coord_t North;
 				static const coord_t South;
+
 				static const coord_t East;
 				static const coord_t West;
 
-				static const coord_t Northeast;
 				static const coord_t Northwest;
+				static const coord_t Northeast;
 
-				static const coord_t Southeast;
 				static const coord_t Southwest;
-
-				static const coord_t Central;
+				static const coord_t Southeast;
 			};
 
 			struct Down {
+				static const coord_t Central;
+
 				static const coord_t North;
 				static const coord_t South;
+
 				static const coord_t East;
 				static const coord_t West;
 
-				static const coord_t Northeast;
 				static const coord_t Northwest;
+				static const coord_t Northeast;
 
-				static const coord_t Southeast;
 				static const coord_t Southwest;
-
-				static const coord_t Central;
+				static const coord_t Southeast;
 			};
 		};
 
@@ -189,11 +194,11 @@ namespace Bleakdepth {
 		}
 
 		template<f32> coord_t operator%(cref<coord_t> other) const noexcept {
-			return { std::fmodf(x, other.x), std::fmodf(y, other.y), std::fmodf(z, other.z) };
+			return { ::fmodf(x, other.x), ::fmodf(y, other.y), ::fmodf(z, other.z) };
 		}
 
 		template<f64> coord_t operator%(cref<coord_t> other) const noexcept {
-			return { std::fmodl(x, other.x), std::fmodl(y, other.y), std::fmodl(z, other.z) };
+			return { ::fmodl(x, other.x), ::fmodl(y, other.y), ::fmodl(z, other.z) };
 		}
 
 		constexpr coord_t operator+(T scalar) const noexcept { return { x + scalar, y + scalar, z + scalar }; }
@@ -207,11 +212,11 @@ namespace Bleakdepth {
 		constexpr coord_t operator%(T scalar) const noexcept { return { x % scalar, y % scalar, z % scalar }; }
 
 		template<f32> coord_t operator%(T scalar) const noexcept {
-			return { std::fmodf(x, scalar), std::fmodf(y, scalar), std::fmodf(z, scalar) };
+			return { ::fmodf(x, scalar), ::fmodf(y, scalar), ::fmodf(z, scalar) };
 		}
 
 		template<f64> coord_t operator%(T scalar) const noexcept {
-			return { std::fmodl(x, scalar), std::fmodl(y, scalar), std::fmodl(z, scalar) };
+			return { ::fmodl(x, scalar), ::fmodl(y, scalar), ::fmodl(z, scalar) };
 		}
 
 		constexpr ref<coord_t> operator-() noexcept {
@@ -225,7 +230,7 @@ namespace Bleakdepth {
 		constexpr ref<coord_t> operator+=(cref<coord_t> other) noexcept {
 			x += other.x;
 			y += other.y;
-            z += other.z;
+			z += other.z;
 
 			return *this;
 		}
@@ -233,7 +238,7 @@ namespace Bleakdepth {
 		constexpr ref<coord_t> operator-=(cref<coord_t> other) noexcept {
 			x -= other.x;
 			y -= other.y;
-            z -= other.z;
+			z -= other.z;
 
 			return *this;
 		}
@@ -241,7 +246,7 @@ namespace Bleakdepth {
 		constexpr ref<coord_t> operator*=(cref<coord_t> other) noexcept {
 			x *= other.x;
 			y *= other.y;
-            z *= other.z;
+			z *= other.z;
 
 			return *this;
 		}
@@ -249,7 +254,7 @@ namespace Bleakdepth {
 		constexpr ref<coord_t> operator/=(cref<coord_t> other) noexcept {
 			x /= other.x;
 			y /= other.y;
-            z /= other.z;
+			z /= other.z;
 
 			return *this;
 		}
@@ -257,23 +262,23 @@ namespace Bleakdepth {
 		constexpr ref<coord_t> operator%=(cref<coord_t> other) noexcept {
 			x %= other.x;
 			y %= other.y;
-            z %= other.z;
+			z %= other.z;
 
 			return *this;
 		}
 
 		template<f32> ref<coord_t> operator%=(cref<coord_t> other) noexcept {
-			x = std::fmodf(x, other.x);
-			y = std::fmodf(y, other.y);
-			y = std::fmodf(z, other.z);
+			x = ::fmodf(x, other.x);
+			y = ::fmodf(y, other.y);
+			y = ::fmodf(z, other.z);
 
 			return *this;
 		}
 
 		template<f64> ref<coord_t> operator%=(cref<coord_t> other) noexcept {
-			x = std::fmodl(x, other.x);
-			y = std::fmodl(y, other.y);
-			y = std::fmodl(z, other.z);
+			x = ::fmodl(x, other.x);
+			y = ::fmodl(y, other.y);
+			y = ::fmodl(z, other.z);
 
 			return *this;
 		}
@@ -281,7 +286,7 @@ namespace Bleakdepth {
 		constexpr ref<coord_t> operator+=(T scalar) noexcept {
 			x += scalar;
 			y += scalar;
-            z += scalar;
+			z += scalar;
 
 			return *this;
 		}
@@ -289,7 +294,7 @@ namespace Bleakdepth {
 		constexpr ref<coord_t> operator-=(T scalar) noexcept {
 			x -= scalar;
 			y -= scalar;
-            z -= scalar;
+			z -= scalar;
 
 			return *this;
 		}
@@ -297,7 +302,7 @@ namespace Bleakdepth {
 		constexpr ref<coord_t> operator*=(T scalar) noexcept {
 			x *= scalar;
 			y *= scalar;
-            z *= scalar;
+			z *= scalar;
 
 			return *this;
 		}
@@ -305,7 +310,7 @@ namespace Bleakdepth {
 		constexpr ref<coord_t> operator/=(T scalar) noexcept {
 			x /= scalar;
 			y /= scalar;
-            z /= scalar;
+			z /= scalar;
 
 			return *this;
 		}
@@ -313,23 +318,23 @@ namespace Bleakdepth {
 		constexpr ref<coord_t> operator%=(T scalar) noexcept {
 			x %= scalar;
 			y %= scalar;
-            z %= scalar;
+			z %= scalar;
 
 			return *this;
 		}
 
 		template<f32> ref<coord_t> operator%=(T scalar) noexcept {
-			x = std::fmodf(x, scalar);
-			y = std::fmodf(y, scalar);
-			z = std::fmodf(z, scalar);
+			x = ::fmodf(x, scalar);
+			y = ::fmodf(y, scalar);
+			z = ::fmodf(z, scalar);
 
 			return *this;
 		}
 
 		template<f64> ref<coord_t> operator%=(T scalar) noexcept {
-			x = std::fmodl(x, scalar);
-			y = std::fmodl(y, scalar);
-			z = std::fmodl(z, scalar);
+			x = ::fmodl(x, scalar);
+			y = ::fmodl(y, scalar);
+			z = ::fmodl(z, scalar);
 
 			return *this;
 		}
@@ -338,15 +343,18 @@ namespace Bleakdepth {
 
 		template<i32> constexpr operator cardinal_t() const noexcept {
 			if (x == coord_t<>::Zero.x && y == coord_t<>::Zero.x) {
-				return cardinal_t::Central;
+				return coord_t::Central;
 			} else {
-				cardinal_t result = cardinal_t::Central;
+				coord_t result = coord_t::Central;
 
 				if (x != coord_t<>::Zero.x) {
-					result |= x < coord_t<>::Zero.x ? cardinal_t::West : cardinal_t::East;
+					result |= x < coord_t<>::Zero.x ? coord_t::West : coord_t::East;
 				}
 				if (y != coord_t<>::Zero.y) {
-					result |= y < coord_t<>::Zero.y ? cardinal_t::North : cardinal_t::South;
+					result |= y < coord_t<>::Zero.y ? coord_t::North : coord_t::South;
+				}
+				if (z != coord_t<>::Zero.z) {
+					result |= z < coord_t<>::Zero.z ? coord_t::Down : coord_t::Up;
 				}
 
 				return result;
@@ -358,66 +366,48 @@ namespace Bleakdepth {
 
 	template<> constexpr const coord_t coord_t<i32>::Zero { 0 };
 
-	template<> constexpr const coord_t coord_t<i32>::Horizontal::Central { 0, 0, 0 };
+	template<> constexpr const coord_t coord_t<i32>::Central { coord_t<i32>::Zero };
 
-	template<> constexpr const coord_t coord_t<i32>::Horizontal::North = { 0, -1 };
-	template<> constexpr const coord_t coord_t<i32>::Horizontal::South = { 0, 1 };
+	template<> constexpr const coord_t coord_t<i32>::North = { 0, -1, 0 };
+	template<> constexpr const coord_t coord_t<i32>::South = { 0, 1, 0 };
 
-	template<> constexpr const coord_t coord_t<i32>::Horizontal::East = { 1, 0 };
-	template<> constexpr const coord_t coord_t<i32>::Horizontal::West = { -1, 0 };
+	template<> constexpr const coord_t coord_t<i32>::East = { 1, 0, 0 };
+	template<> constexpr const coord_t coord_t<i32>::West = { -1, 0, 0 };
 
-	template<> constexpr const coord_t coord_t<i32>::Horizontal::Northeast = { 1, -1 };
-	template<> constexpr const coord_t coord_t<i32>::Horizontal::Northwest = { -1, -1 };
+	template<> constexpr const coord_t coord_t<i32>::Up { 0, 0, 1 };
+	template<> constexpr const coord_t coord_t<i32>::Down { 0, 0, -1 };
 
-	template<> constexpr const coord_t coord_t<i32>::Horizontal::Southeast = { 1, 1 };
-	template<> constexpr const coord_t coord_t<i32>::Horizontal::Southwest = { -1, 1 };
+	template<> constexpr const coord_t coord_t<i32>::Northwest { coord_t::North + coord_t::West };
+	template<> constexpr const coord_t coord_t<i32>::Northeast { coord_t::North + coord_t::East };
 
-	static const coord_t Zero;
+	template<> constexpr const coord_t coord_t<i32>::Southwest { coord_t::South + coord_t::West };
+	template<> constexpr const coord_t coord_t<i32>::Southeast { coord_t::South + coord_t::East };
 
-	struct Horizontal {
-		static const coord_t North;
-		static const coord_t South;
-		static const coord_t East;
-		static const coord_t West;
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Up::Central { coord_t::Central + coord_t::Up };
 
-		static const coord_t Northeast;
-		static const coord_t Northwest;
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Up::North { coord_t::North + coord_t::Up };
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Up::South { coord_t::South + coord_t::Up };
 
-		static const coord_t Southeast;
-		static const coord_t Southwest;
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Up::West { coord_t::West + coord_t::Up };
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Up::East { coord_t::East + coord_t::Up };
 
-		const coord_t Central;
-	};
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Up::Northwest { coord_t::Northwest + coord_t::Up };
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Up::Northeast { coord_t::Northeast + coord_t::Up };
 
-	struct Vertical {
-		struct Up {
-			static const coord_t North;
-			static const coord_t South;
-			static const coord_t East;
-			static const coord_t West;
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Up::Southwest { coord_t::Southwest + coord_t::Up };
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Up::Southeast { coord_t::Southeast + coord_t::Up };
 
-			static const coord_t Northeast;
-			static const coord_t Northwest;
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Down::Central { coord_t::Central + coord_t::Down };
 
-			static const coord_t Southeast;
-			static const coord_t Southwest;
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Down::North { coord_t::North + coord_t::Down };
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Down::South { coord_t::South + coord_t::Down };
 
-			static const coord_t Central;
-		};
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Down::West { coord_t::West + coord_t::Down };
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Down::East { coord_t::East + coord_t::Down };
 
-		struct Down {
-			static const coord_t North;
-			static const coord_t South;
-			static const coord_t East;
-			static const coord_t West;
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Down::Northwest { coord_t::Northwest + coord_t::Down };
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Down::Northeast { coord_t::Northeast + coord_t::Down };
 
-			static const coord_t Northeast;
-			static const coord_t Northwest;
-
-			static const coord_t Southeast;
-			static const coord_t Southwest;
-
-			static const coord_t Central;
-		};
-	};
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Down::Southwest { coord_t::Southwest + coord_t::Down };
+	template<> constexpr const coord_t coord_t<i32>::Vertical::Down::Southeast { coord_t::Southeast + coord_t::Down };
 } // namespace Bleakdepth

@@ -2,36 +2,34 @@
 
 #include "typedef.hpp"
 
+#include <initializer_list>
 #include <iterator>
-#include <stdexcept>
-#include <utility>
 
-#include <format>
-
+#include "coord.hpp"
 #include "point.hpp"
 
 namespace Bleakdepth {
-	struct Memory {
+	namespace Memory {
 		// size in bytes of one byte
-		static constexpr usize Byte { usize { 1 } << 0 };
+		constexpr const usize Byte { usize { 1 } << 0 };
 		// size in bytes of one kilobyte
-		static constexpr usize Kilobyte { usize { 1 } << 10 };
+		constexpr const usize Kilobyte { usize { 1 } << 10 };
 		// size in bytes of one megabyte
-		static constexpr usize Megabyte { usize { 1 } << 20 };
+		constexpr const usize Megabyte { usize { 1 } << 20 };
 		// size in bytes of one gigabyte
-		static constexpr usize Gigabyte { usize { 1 } << 30 };
+		constexpr const usize Gigabyte { usize { 1 } << 30 };
 		// size in bytes of one terabyte
-		static constexpr usize Terabyte { usize { 1 } << 40 };
+		constexpr const usize Terabyte { usize { 1 } << 40 };
 		// size in bytes of one petabyte
-		static constexpr usize Petabyte { usize { 1 } << 50 };
+		constexpr const usize Petabyte { usize { 1 } << 50 };
 		// size in bytes of one exabyte
-		static constexpr usize Exabyte { usize { 1 } << 60 };
+		constexpr const usize Exabyte { usize { 1 } << 60 };
 
 		// size in bytes of one zettabyte minus one byte
-		static constexpr usize Limit { usize { 0 } - 1 };
+		constexpr const usize Limit { usize { 0 } - 1 };
 		// size in bytes of the maximum size of an array
-		static constexpr usize Maximum { Gigabyte * 4 };
-	};
+		constexpr const usize Maximum { Gigabyte * 4 };
+	}; // namespace Memory
 
 	template<typename T> struct fwd_iter_t;
 	template<typename T> struct rev_iter_t;
@@ -47,91 +45,45 @@ namespace Bleakdepth {
 
 		constexpr fwd_iter_t() = delete;
 
-		constexpr fwd_iter_t(pointer handle) : handle { handle } {}
+		constexpr fwd_iter_t(pointer handle);
 
-		constexpr fwd_iter_t(cref<fwd_iter_t> other) : handle { other.handle } {}
+		constexpr fwd_iter_t(cref<fwd_iter_t> other);
 
-		constexpr fwd_iter_t(rval<fwd_iter_t> other) : handle { std::move(other.handle) } { other.handle = nullptr; }
+		constexpr fwd_iter_t(rval<fwd_iter_t> other);
 
-		constexpr explicit fwd_iter_t(cref<rev_iter_t<T>> other) : handle { other.handle } {}
+		constexpr explicit fwd_iter_t(cref<rev_iter_t<T>> other);
 
-		constexpr explicit fwd_iter_t(rval<rev_iter_t<T>> other) : handle { std::move(other.handle) } {
-			other.handle = nullptr;
-		}
+		constexpr explicit fwd_iter_t(rval<rev_iter_t<T>> other);
 
-		constexpr ref<fwd_iter_t> operator=(cref<rev_iter_t<T>> other) {
-			if (this == &other) {
-				return *this;
-			}
+		constexpr ref<fwd_iter_t> operator=(cref<rev_iter_t<T>> other);
 
-			handle = other.handle;
-			return *this;
-		}
+		constexpr ref<fwd_iter_t> operator=(rval<rev_iter_t<T>> other);
 
-		constexpr ref<fwd_iter_t> operator=(rval<rev_iter_t<T>> other) {
-			if (this == &other) {
-				return *this;
-			}
+		constexpr ref<fwd_iter_t> operator=(cref<fwd_iter_t> other);
 
-			handle = std::move(other.handle);
-			other.handle = nullptr;
-			return *this;
-		}
+		constexpr ref<fwd_iter_t> operator=(rval<fwd_iter_t> other);
 
-		constexpr ref<fwd_iter_t> operator=(cref<fwd_iter_t> other) {
-			if (this == &other) {
-				return *this;
-			}
+		constexpr ~fwd_iter_t();
 
-			handle = other.handle;
-			return *this;
-		}
+		constexpr reference operator*() const noexcept;
 
-		constexpr ref<fwd_iter_t> operator=(rval<fwd_iter_t> other) {
-			if (this == &other) {
-				return *this;
-			}
+		constexpr pointer operator->() const noexcept;
 
-			handle = std::move(other.handle);
-			other.handle = nullptr;
-			return *this;
-		}
+		constexpr ref<fwd_iter_t> operator++() noexcept;
 
-		constexpr ~fwd_iter_t() {};
+		constexpr fwd_iter_t operator++(int) noexcept;
 
-		constexpr reference operator*() const noexcept { return *handle; }
+		constexpr ref<fwd_iter_t> operator--() noexcept;
 
-		constexpr pointer operator->() const noexcept { return handle; }
+		constexpr fwd_iter_t operator--(int) noexcept;
 
-		constexpr ref<fwd_iter_t> operator++() noexcept {
-			++handle;
-			return *this;
-		}
+		constexpr bool operator==(cref<fwd_iter_t> other) const noexcept;
 
-		constexpr ref<fwd_iter_t> operator++(int) noexcept {
-			auto temp { *this };
-			++handle;
-			return temp;
-		}
+		constexpr bool operator!=(cref<fwd_iter_t> other) const noexcept;
 
-		constexpr ref<fwd_iter_t> operator--() noexcept {
-			--handle;
-			return *this;
-		}
+		constexpr bool operator==(cref<rev_iter_t<T>> other) const noexcept;
 
-		constexpr ref<fwd_iter_t> operator--(int) noexcept {
-			auto temp { *this };
-			--handle;
-			return temp;
-		}
-
-		constexpr bool operator==(cref<fwd_iter_t> other) const noexcept { return handle == other.handle; }
-
-		constexpr bool operator!=(cref<fwd_iter_t> other) noexcept { return handle != other.handle; }
-
-		constexpr bool operator==(cref<rev_iter_t<T>> other) noexcept { return handle == other.handle; }
-
-		constexpr bool operator!=(cref<rev_iter_t<T>> other) noexcept { return handle != other.handle; }
+		constexpr bool operator!=(cref<rev_iter_t<T>> other) const noexcept;
 
 	  private:
 		pointer handle;
@@ -146,97 +98,45 @@ namespace Bleakdepth {
 
 		constexpr rev_iter_t() = delete;
 
-		constexpr rev_iter_t(pointer handle) : handle { handle } {}
+		constexpr rev_iter_t(pointer handle);
 
-		constexpr rev_iter_t(cref<rev_iter_t> other) : handle { other.handle } {}
+		constexpr rev_iter_t(cref<rev_iter_t> other);
 
-		constexpr rev_iter_t(rval<rev_iter_t> other) : handle { std::move(other.handle) } { other.handle = nullptr; }
+		constexpr rev_iter_t(rval<rev_iter_t> other);
 
-		constexpr rev_iter_t(cref<fwd_iter_t<T>> other) : handle { other.handle } {}
+		constexpr rev_iter_t(cref<fwd_iter_t<T>> other);
 
-		constexpr rev_iter_t(rval<fwd_iter_t<T>> other) : handle { std::move(other.handle) } { other.handle = nullptr; }
+		constexpr rev_iter_t(rval<fwd_iter_t<T>> other);
 
-		constexpr ref<rev_iter_t> operator=(cref<rev_iter_t> other) {
-			if (this == &other) {
-				return *this;
-			}
+		constexpr ref<rev_iter_t> operator=(cref<rev_iter_t> other);
 
-			handle = other.handle;
-			return *this;
-		}
+		constexpr ref<rev_iter_t> operator=(rval<rev_iter_t> other);
 
-		constexpr ref<rev_iter_t> operator=(rval<rev_iter_t> other) {
-			if (this == &other) {
-				return *this;
-			}
+		constexpr ref<rev_iter_t> operator=(cref<fwd_iter_t<T>> other);
 
-			handle = std::move(other.handle);
-			other.handle = nullptr;
-			return *this;
-		}
+		constexpr ref<rev_iter_t> operator=(rval<fwd_iter_t<T>> other);
 
-		constexpr ref<rev_iter_t> operator=(cref<fwd_iter_t<T>> other) {
-			if (this == &other) {
-				return *this;
-			}
+		constexpr ~rev_iter_t();
 
-			handle = other.handle;
-			return *this;
-		}
+		constexpr reference operator*() const;
 
-		constexpr ref<rev_iter_t> operator=(rval<fwd_iter_t<T>> other) {
-			if (this == &other) {
-				return *this;
-			}
+		constexpr pointer operator->() const;
 
-			handle = std::move(other.handle);
-			other.handle = nullptr;
-			return *this;
-		}
+		constexpr ref<rev_iter_t> operator++();
 
-		constexpr ~rev_iter_t() {};
+		constexpr ref<rev_iter_t> operator++(int);
 
-		constexpr reference operator*() const { return *handle; }
+		constexpr ref<rev_iter_t> operator--();
 
-		constexpr pointer operator->() const { return handle; }
+		constexpr ref<rev_iter_t> operator--(int);
 
-		constexpr ref<rev_iter_t> operator++() {
-			--handle;
-			return *this;
-		}
+		constexpr bool operator==(cref<rev_iter_t> other) const noexcept;
 
-		constexpr ref<rev_iter_t> operator++(int) {
-			auto temp { *this };
-			--handle;
-			return temp;
-		}
+		constexpr bool operator!=(cref<rev_iter_t> other) const noexcept;
 
-		constexpr ref<rev_iter_t> operator--() {
-			++handle;
-			return *this;
-		}
+		constexpr bool operator==(cref<fwd_iter_t<T>> other) const noexcept;
 
-		constexpr ref<rev_iter_t> operator--(int) {
-			auto temp { *this };
-			++handle;
-			return temp;
-		}
-
-		constexpr friend bool operator==(cref<rev_iter_t> lhs, cref<rev_iter_t> rhs) {
-			return lhs.handle == rhs.handle;
-		}
-
-		constexpr friend bool operator!=(cref<rev_iter_t> lhs, cref<rev_iter_t> rhs) {
-			return lhs.handle != rhs.handle;
-		}
-
-		constexpr bool operator==(cref<rev_iter_t> other) noexcept { return handle == other.handle; }
-
-		constexpr bool operator!=(cref<rev_iter_t> other) noexcept { return handle != other.handle; }
-
-		constexpr bool operator==(cref<fwd_iter_t<T>> other) const noexcept { return handle == other.handle; }
-
-		constexpr bool operator!=(cref<fwd_iter_t<T>> other) noexcept { return handle != other.handle; }
+		constexpr bool operator!=(cref<fwd_iter_t<T>> other) const noexcept;
 
 	  private:
 		pointer handle;
@@ -249,7 +149,7 @@ namespace Bleakdepth {
 	  public:
 		static constexpr usize size { Width };
 
-		static_assert(size > 0, "array_t must have a size greater than zero!");
+		static_assert(size > 0, "array must have a size greater than zero!");
 		static_assert(size * sizeof(T) <= Memory::Maximum, "array must not exceed the maximum size of an array!");
 
 		static constexpr usize first { 0 };
@@ -261,74 +161,62 @@ namespace Bleakdepth {
 		using reverse_iterator = rev_iter_t<T>;
 		using const_reverse_iterator = rev_iter_t<const T>;
 
-		constexpr array_t() : data(new T[size]) {}
+		constexpr array_t();
 
-		constexpr array_t(cref<array_t> other) : data(new T[size]) {
-			for (usize i { 0 }; i < size; ++i) {
-				data[i] = other.data[i];
-			}
-		}
+		constexpr array_t(std::initializer_list<T> elements);
 
-		constexpr array_t(rval<array_t> other) : data(std::move(other.data)) { other.data = nullptr; }
+		constexpr array_t(cref<array_t> other);
 
-		constexpr ~array_t() { delete[] data; }
+		constexpr array_t(rval<array_t> other);
 
-		constexpr ref<T> operator[](usize index) noexcept { return data[index]; }
+		constexpr ref<array_t> operator=(cref<array_t> other);
 
-		constexpr cref<T> operator[](usize index) const noexcept { return data[index]; }
+		constexpr ref<array_t> operator=(rval<array_t> other);
 
-		constexpr bool valid(usize index) const noexcept { return index < size; }
+		constexpr ~array_t();
 
-		constexpr ref<T> at(usize index) {
-			if (index >= size) {
-				throw std::out_of_range(std::format("index of {} was out of range!", index));
-			}
+		constexpr ref<T> operator[](usize index) noexcept;
 
-			return data[index];
-		}
+		constexpr cref<T> operator[](usize index) const noexcept;
 
-		constexpr cref<T> at(usize index) const {
-			if (index >= size) {
-				throw std::out_of_range(std::format("index of {} was out of range!", index));
-			}
+		constexpr bool valid(usize index) const noexcept;
 
-			return data[index];
-		}
+		constexpr ref<T> at(usize index);
 
-		constexpr ref<T> front() { return data[first]; }
+		constexpr cref<T> at(usize index) const;
 
-		constexpr cref<T> front() const { return data[first]; }
+		constexpr ref<T> front();
 
-		constexpr ref<T> back() { return data[last]; }
+		constexpr cref<T> front() const;
 
-		constexpr cref<T> back() const { return data[last]; }
+		constexpr ref<T> back();
 
-		constexpr iterator begin() { return iterator { data }; }
+		constexpr cref<T> back() const;
 
-		constexpr iterator end() { return iterator { data + size }; }
+		constexpr iterator begin();
 
-		constexpr const_iterator begin() const { return const_iterator { data }; }
+		constexpr iterator end();
 
-		constexpr const_iterator end() const { return const_iterator { data + size }; }
+		constexpr const_iterator begin() const;
 
-		constexpr const_iterator cbegin() const { return const_iterator { data }; }
+		constexpr const_iterator end() const;
 
-		constexpr const_iterator cend() const { return const_iterator { data + size }; }
+		constexpr const_iterator cbegin() const;
 
-		constexpr reverse_iterator rbegin() { return reverse_iterator { data + size - 1 }; }
+		constexpr const_iterator cend() const;
 
-		constexpr reverse_iterator rend() { return reverse_iterator { data - 1 }; }
+		constexpr reverse_iterator rbegin();
 
-		constexpr const_reverse_iterator rbegin() const { return const_reverse_iterator { data + size - 1 }; }
+		constexpr reverse_iterator rend();
 
-		constexpr const_reverse_iterator rend() const { return const_reverse_iterator { data - 1 }; }
+		constexpr const_reverse_iterator rbegin() const;
 
-		constexpr const_reverse_iterator crbegin() const { return const_reverse_iterator { data + size - 1 }; }
+		constexpr const_reverse_iterator rend() const;
 
-		constexpr const_reverse_iterator crend() const { return const_reverse_iterator { data - 1 }; }
+		constexpr const_reverse_iterator crbegin() const;
+
+		constexpr const_reverse_iterator crend() const;
 	};
-
-	template<typename T, usize Width> using row_t = array_t<T, Width>;
 
 	template<typename T, usize Width, usize Height> class array_t<T, Width, Height> {
 	  private:
@@ -339,22 +227,19 @@ namespace Bleakdepth {
 
 		static constexpr usize size { area };
 
-		static_assert(size > 0, "array_t must have a size greater than zero!");
+		static_assert(size > 0, "array must have a size greater than zero!");
 		static_assert(size * sizeof(T) <= Memory::Maximum, "array must not exceed the maximum size of an array!");
 
 		static constexpr usize first { 0 };
 		static constexpr usize last { size - 1 };
 
-		static inline constexpr usize flatten(uhalf i, uhalf j) { return j * Width + i; }
+		static constexpr usize flatten(uhalf i, uhalf j);
 
-		static inline constexpr usize flatten(cref<point_t<uhalf>> position) { return position.y * Width + position.x; }
+		static constexpr usize flatten(cref<point_t<uhalf>> position);
 
-		static inline constexpr point_t<uhalf> unflatten(usize index) { return { index % Width, index / Width }; }
+		static constexpr point_t<uhalf> unflatten(usize index);
 
-		static inline constexpr void unflatten(usize index, ref<uhalf> i, ref<uhalf> j) {
-			i = index % Width;
-			j = index / Width;
-		}
+		static constexpr void unflatten(usize index, ref<uhalf> i, ref<uhalf> j);
 
 		using iterator = fwd_iter_t<T>;
 		using const_iterator = fwd_iter_t<const T>;
@@ -362,111 +247,82 @@ namespace Bleakdepth {
 		using reverse_iterator = rev_iter_t<T>;
 		using const_reverse_iterator = rev_iter_t<const T>;
 
-		constexpr array_t() : data(new T[size]) {}
+		constexpr array_t();
 
-		constexpr array_t(cref<array_t> other) : data(new T[size]) {
-			for (usize i { 0 }; i < size; ++i) {
-				data[i] = other.data[i];
-			}
-		}
+		constexpr array_t(std::initializer_list<T> elements);
 
-		constexpr array_t(rval<array_t> other) : data(std::move(other.data)) { other.data = nullptr; }
+		constexpr array_t(cref<array_t> other);
 
-		constexpr ~array_t() { delete[] data; }
+		constexpr array_t(rval<array_t> other);
 
-		constexpr ref<T> operator[](usize index) { return data[index]; }
+		constexpr ref<array_t> operator=(cref<array_t> other);
 
-		constexpr cref<T> operator[](usize index) const { return data[index]; }
+		constexpr ref<array_t> operator=(rval<array_t> other);
 
-		constexpr ref<T> operator[](uhalf i, uhalf j) { return data[flatten(i, j)]; }
+		constexpr ~array_t();
 
-		constexpr cref<T> operator[](uhalf i, uhalf j) const { return data[flatten(i, j)]; }
+		constexpr ref<T> operator[](usize index) noexcept;
 
-		constexpr ref<T> at(usize index) {
-			if (index >= size) {
-				throw std::out_of_range(std::format("index of {} was out of range!", index));
-			}
+		constexpr cref<T> operator[](usize index) const noexcept;
 
-			return data[index];
-		}
+		constexpr ref<T> operator[](uhalf i, uhalf j) noexcept;
 
-		constexpr cref<T> at(usize index) const {
-			if (index >= size) {
-				throw std::out_of_range(std::format("index of {} was out of range!", index));
-			}
+		constexpr cref<T> operator[](uhalf i, uhalf j) const noexcept;
 
-			return data[index];
-		}
+		constexpr ref<T> operator[](cref<point_t<uhalf>> position) noexcept;
 
-		constexpr ref<T> at(uhalf i, uhalf j) {
-			if (i >= Width || j >= Height) {
-				throw std::out_of_range(std::format("index of [{}, {}] was out of range!", i, j));
-			}
+		constexpr cref<T> operator[](cref<point_t<uhalf>> position) const noexcept;
 
-			return data[flatten(i, j)];
-		}
+		constexpr bool valid(usize index) const noexcept;
 
-		constexpr cref<T> at(uhalf i, uhalf j) const {
-			usize index { flatten(i, j) };
-			if (index >= size) {
-				throw std::out_of_range(std::format("index of [{}, {}] was out of range!", i, j));
-			}
+		constexpr ref<T> at(usize index);
 
-			return data[index];
-		}
+		constexpr cref<T> at(usize index) const;
 
-		constexpr ref<T> at(cref<point_t<uhalf>> position) {
-			usize index { flatten(position) };
-			if (index >= size) {
-				throw std::out_of_range(std::format("index of [{}, {}] was out of range!", position.x, position.y));
-			}
+		constexpr bool valid(uhalf i, uhalf j) const noexcept;
 
-			return data[index];
-		}
+		constexpr ref<T> at(uhalf i, uhalf j);
 
-		constexpr cref<T> at(cref<point_t<uhalf>> position) const {
-			usize index { flatten(position) };
-			if (index >= size) {
-				throw std::out_of_range(std::format("index of [{}, {}] was out of range!", position.x, position.y));
-			}
+		constexpr cref<T> at(uhalf i, uhalf j) const;
 
-			return data[index];
-		}
+		constexpr bool valid(cref<point_t<uhalf>> position) const noexcept;
 
-		constexpr ref<T> front() { return data[first]; }
+		constexpr ref<T> at(cref<point_t<uhalf>> position);
 
-		constexpr cref<T> front() const { return data[first]; }
+		constexpr cref<T> at(cref<point_t<uhalf>> position) const;
 
-		constexpr ref<T> back() { return data[last]; }
+		constexpr ref<T> front();
 
-		constexpr cref<T> back() const { return data[last]; }
+		constexpr cref<T> front() const;
 
-		constexpr iterator begin() { return iterator { data }; }
+		constexpr ref<T> back();
 
-		constexpr iterator end() { return iterator { data + size }; }
+		constexpr cref<T> back() const;
 
-		constexpr const_iterator begin() const { return const_iterator { data }; }
+		constexpr iterator begin();
 
-		constexpr const_iterator end() const { return const_iterator { data + size }; }
+		constexpr iterator end();
 
-		constexpr const_iterator cbegin() const { return const_iterator { data }; }
+		constexpr const_iterator begin() const;
 
-		constexpr const_iterator cend() const { return const_iterator { data + size }; }
+		constexpr const_iterator end() const;
 
-		constexpr reverse_iterator rbegin() { return reverse_iterator { data + size - 1 }; }
+		constexpr const_iterator cbegin() const;
 
-		constexpr reverse_iterator rend() { return reverse_iterator { data - 1 }; }
+		constexpr const_iterator cend() const;
 
-		constexpr const_reverse_iterator rbegin() const { return const_reverse_iterator { data + size - 1 }; }
+		constexpr reverse_iterator rbegin();
 
-		constexpr const_reverse_iterator rend() const { return const_reverse_iterator { data - 1 }; }
+		constexpr reverse_iterator rend();
 
-		constexpr const_reverse_iterator crbegin() const { return const_reverse_iterator { data + size - 1 }; }
+		constexpr const_reverse_iterator rbegin() const;
 
-		constexpr const_reverse_iterator crend() const { return const_reverse_iterator { data - 1 }; }
+		constexpr const_reverse_iterator rend() const;
+
+		constexpr const_reverse_iterator crbegin() const;
+
+		constexpr const_reverse_iterator crend() const;
 	};
-
-	template<typename T, usize Width, usize Height> using layer_t = array_t<T, Width, Height>;
 
 	template<typename T, usize Width, usize Height, usize Depth> class array_t<T, Width, Height, Depth> {
 	  private:
@@ -478,33 +334,19 @@ namespace Bleakdepth {
 
 		static constexpr usize size = volume;
 
-		static_assert(size > 0, "array_t must have a size greater than zero!");
+		static_assert(size > 0, "array must have a size greater than zero!");
 		static_assert(size * sizeof(T) <= Memory::Maximum, "array must not exceed the maximum size of an array!");
 
 		static constexpr usize first { 0 };
 		static constexpr usize last { size - 1 };
 
-		static inline constexpr usize flatten(uhalf i, uhalf j, uhalf k) {
-			return (usize)k * Width * Height + j * Width + i;
-		}
+		static constexpr usize flatten(uhalf i, uhalf j, uhalf k);
 
-		static inline constexpr usize flatten(cref<coord_t<uhalf>> position) {
-			return (usize)position.z * Width * Height + position.y * Width + position.x;
-		}
+		static constexpr usize flatten(cref<coord_t<uhalf>> position);
 
-		static inline constexpr coord_t<uhalf> unflatten(usize index) {
-			usize div { index / area };
+		static constexpr coord_t<uhalf> unflatten(usize index);
 
-			return coord_t<uhalf> { (uhalf)(index % Width), (uhalf)(div % Height), (uhalf)(div / Height) };
-		}
-
-		static inline constexpr void unflatten(usize index, ref<uhalf> i, ref<uhalf> j, ref<uhalf> k) {
-			usize div { index / area };
-
-			i = index % Width;
-			j = div % Height;
-			k = div / Height;
-		}
+		static constexpr void unflatten(usize index, ref<uhalf> i, ref<uhalf> j, ref<uhalf> k);
 
 		using iterator = fwd_iter_t<T>;
 		using const_iterator = const fwd_iter_t<T>;
@@ -512,92 +354,80 @@ namespace Bleakdepth {
 		using reverse_iterator = rev_iter_t<T>;
 		using const_reverse_iterator = rev_iter_t<T>;
 
-		constexpr array_t() : data(new T[size]) {}
+		constexpr array_t();
 
-		constexpr array_t(cref<array_t> other) : data(new T[size]) {
-			for (usize i { 0 }; i < size; ++i) {
-				data[i] = other.data[i];
-			}
-		}
+		constexpr array_t(std::initializer_list<T> elements);
 
-		constexpr array_t(rval<array_t> other) : data(std::move(other.data)) { other.data = nullptr; }
+		constexpr array_t(cref<array_t> other);
 
-		constexpr ~array_t() { delete[] data; }
+		constexpr array_t(rval<array_t> other);
 
-		constexpr ref<T> operator[](usize index) { return data[index]; }
+		constexpr ref<array_t> operator=(cref<array_t> other);
 
-		constexpr cref<T> operator[](usize index) const { return data[index]; }
+		constexpr ref<array_t> operator=(rval<array_t> other);
 
-		constexpr ref<T> operator[](uhalf i, uhalf j, uhalf k) { return data[flatten(i, j, k)]; }
+		constexpr ~array_t();
 
-		constexpr cref<T> operator[](uhalf i, uhalf j, uhalf k) const { return data[flatten(i, j, k)]; }
+		constexpr ref<T> operator[](usize index) noexcept;
 
-		constexpr ref<T> at(usize index) {
-			if (index >= size) {
-				throw std::out_of_range(std::format("index of {} was out of range!", index));
-			}
+		constexpr cref<T> operator[](usize index) const noexcept;
 
-			return data[index];
-		}
+		constexpr ref<T> operator[](uhalf i, uhalf j, uhalf k) noexcept;
 
-		constexpr cref<T> at(usize index) const {
-			if (index >= size) {
-				throw std::out_of_range(std::format("index of {} was out of range!", index));
-			}
+		constexpr cref<T> operator[](uhalf i, uhalf j, uhalf k) const noexcept;
 
-			return data[index];
-		}
+		constexpr ref<T> operator[](cref<coord_t<uhalf>> position) noexcept;
 
-		constexpr ref<T> at(uhalf i, uhalf j, uhalf k) {
-			usize index { flatten(i, j, k) };
-			if (index >= size) {
-				throw std::out_of_range(std::format("index of [{}, {}, {}] was out of range!", i, j, k));
-			}
+		constexpr cref<T> operator[](cref<coord_t<uhalf>> position) const noexcept;
 
-			return data[index];
-		}
+		constexpr bool valid(usize index) const noexcept;
 
-		constexpr cref<T> at(uhalf i, uhalf j, uhalf k) const {
-			usize index { flatten(i, j, k) };
-			if (index >= size) {
-				throw std::out_of_range(std::format("index of [{}, {}, {}] was out of range!", i, j, k));
-			}
+		constexpr ref<T> at(usize index);
 
-			return data[index];
-		}
+		constexpr cref<T> at(usize index) const;
 
-		constexpr ref<T> front() { return data[first]; }
+		constexpr bool valid(uhalf i, uhalf j, uhalf k) const noexcept;
 
-		constexpr cref<T> front() const { return data[first]; }
+		constexpr ref<T> at(uhalf i, uhalf j, uhalf k);
 
-		constexpr ref<T> back() { return data[last]; }
+		constexpr cref<T> at(uhalf i, uhalf j, uhalf k) const;
 
-		constexpr cref<T> back() const { return data[last]; }
+		constexpr bool valid(cref<coord_t<uhalf>> position) const noexcept;
 
-		constexpr iterator begin() { return iterator { data }; }
+		constexpr ref<T> at(cref<coord_t<uhalf>> position);
 
-		constexpr iterator end() { return iterator { data + size }; }
+		constexpr cref<T> at(cref<coord_t<uhalf>> position) const;
 
-		constexpr const_iterator begin() const { return const_iterator { data }; }
+		constexpr ref<T> front();
 
-		constexpr const_iterator end() const { return const_iterator { data + size }; }
+		constexpr cref<T> front() const;
 
-		constexpr const_iterator cbegin() const { return const_iterator { data }; }
+		constexpr ref<T> back();
 
-		constexpr const_iterator cend() const { return const_iterator { data + size }; }
+		constexpr cref<T> back() const;
 
-		constexpr reverse_iterator rbegin() { return reverse_iterator { data + size - 1 }; }
+		constexpr iterator begin();
 
-		constexpr reverse_iterator rend() { return reverse_iterator { data - 1 }; }
+		constexpr iterator end();
 
-		constexpr const_reverse_iterator rbegin() const { return const_reverse_iterator { data + size - 1 }; }
+		constexpr const_iterator begin() const;
 
-		constexpr const_reverse_iterator rend() const { return const_reverse_iterator { data - 1 }; }
+		constexpr const_iterator end() const;
 
-		constexpr const_reverse_iterator crbegin() const { return const_reverse_iterator { data + size - 1 }; }
+		constexpr const_iterator cbegin() const;
 
-		constexpr const_reverse_iterator crend() const { return const_reverse_iterator { data - 1 }; }
+		constexpr const_iterator cend() const;
+
+		constexpr reverse_iterator rbegin();
+
+		constexpr reverse_iterator rend();
+
+		constexpr const_reverse_iterator rbegin() const;
+
+		constexpr const_reverse_iterator rend() const;
+
+		constexpr const_reverse_iterator crbegin() const;
+
+		constexpr const_reverse_iterator crend() const;
 	};
-
-	template<typename T, usize Width, usize Height, usize Depth> using volume_t = array_t<T, Width, Height, Depth>;
 } // namespace Bleakdepth
