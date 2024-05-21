@@ -6,23 +6,23 @@ namespace Bleakdepth {
 	template<typename T, usize Width, usize Height, usize Depth> using volume_t = array_t<T, Width, Height, Depth>;
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr usize array_t<T, Width, Height, Depth>::flatten(uhalf i, uhalf j, uhalf k) {
+	inline constexpr usize array_t<T, Width, Height, Depth>::flatten(uhalf i, uhalf j, uhalf k) noexcept {
 		return k * area + j * Width + i;
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr usize array_t<T, Width, Height, Depth>::flatten(cref<coord_t<uhalf>> position) {
+	inline constexpr usize array_t<T, Width, Height, Depth>::flatten(cref<coord_t<uhalf>> position) noexcept {
 		return position.z * area + position.y * Width + position.x;
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr coord_t<uhalf> array_t<T, Width, Height, Depth>::unflatten(usize index) {
+	inline constexpr coord_t<uhalf> array_t<T, Width, Height, Depth>::unflatten(usize index) noexcept {
 		usize div { index / Width };
 		return coord_t<uhalf> { (uhalf)(index % Width), (uhalf)(div % Height), (uhalf)(div / Height) };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr void array_t<T, Width, Height, Depth>::unflatten(usize index, ref<uhalf> i, ref<uhalf> j, ref<uhalf> k) {
+	inline constexpr void array_t<T, Width, Height, Depth>::unflatten(usize index, ref<uhalf> i, ref<uhalf> j, ref<uhalf> k) noexcept {
 		usize div { index / Width };
 
 		i = index % Width;
@@ -52,12 +52,12 @@ namespace Bleakdepth {
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::array_t(rval<array_t> other) : data { std::move(other.data) } {
+	inline constexpr array_t<T, Width, Height, Depth>::array_t(rval<array_t> other) noexcept : data { std::move(other.data) } {
 		other.data = nullptr;
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr ref<array_t<T, Width, Height, Depth>> array_t<T, Width, Height, Depth>::operator=(cref<array_t> other) {
+	inline constexpr ref<array_t<T, Width, Height, Depth>> array_t<T, Width, Height, Depth>::operator=(cref<array_t> other) noexcept {
 		if (this == &other) {
 			return *this;
 		}
@@ -70,7 +70,7 @@ namespace Bleakdepth {
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr ref<array_t<T, Width, Height, Depth>> array_t<T, Width, Height, Depth>::operator=(rval<array_t> other) {
+	inline constexpr ref<array_t<T, Width, Height, Depth>> array_t<T, Width, Height, Depth>::operator=(rval<array_t> other) noexcept {
 		if (this == &other) {
 			return *this;
 		}
@@ -80,7 +80,7 @@ namespace Bleakdepth {
 		return *this;
 	}
 
-	template<typename T, usize Width, usize Height, usize Depth> inline constexpr array_t<T, Width, Height, Depth>::~array_t() { delete[] data; }
+	template<typename T, usize Width, usize Height, usize Depth> inline constexpr array_t<T, Width, Height, Depth>::~array_t() noexcept { delete[] data; }
 
 	template<typename T, usize Width, usize Height, usize Depth> inline constexpr ref<T> array_t<T, Width, Height, Depth>::operator[](usize index) noexcept {
 		return data[index];
@@ -179,73 +179,73 @@ namespace Bleakdepth {
 		return data[index];
 	}
 
-	template<typename T, usize Width, usize Height, usize Depth> inline constexpr ref<T> array_t<T, Width, Height, Depth>::front() { return data[first]; }
+	template<typename T, usize Width, usize Height, usize Depth> inline constexpr ref<T> array_t<T, Width, Height, Depth>::front() noexcept { return data[first]; }
 
-	template<typename T, usize Width, usize Height, usize Depth> inline constexpr cref<T> array_t<T, Width, Height, Depth>::front() const {
+	template<typename T, usize Width, usize Height, usize Depth> inline constexpr cref<T> array_t<T, Width, Height, Depth>::front() const noexcept {
 		return data[first];
 	}
 
-	template<typename T, usize Width, usize Height, usize Depth> inline constexpr ref<T> array_t<T, Width, Height, Depth>::back() { return data[last]; }
+	template<typename T, usize Width, usize Height, usize Depth> inline constexpr ref<T> array_t<T, Width, Height, Depth>::back() noexcept { return data[last]; }
 
-	template<typename T, usize Width, usize Height, usize Depth> inline constexpr cref<T> array_t<T, Width, Height, Depth>::back() const { return data[last]; }
+	template<typename T, usize Width, usize Height, usize Depth> inline constexpr cref<T> array_t<T, Width, Height, Depth>::back() const noexcept { return data[last]; }
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::iterator array_t<T, Width, Height, Depth>::begin() {
+	inline constexpr array_t<T, Width, Height, Depth>::iterator array_t<T, Width, Height, Depth>::begin() noexcept {
 		return iterator { data };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::iterator array_t<T, Width, Height, Depth>::end() {
+	inline constexpr array_t<T, Width, Height, Depth>::iterator array_t<T, Width, Height, Depth>::end() noexcept {
 		return iterator { data + size };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::const_iterator array_t<T, Width, Height, Depth>::begin() const {
+	inline constexpr array_t<T, Width, Height, Depth>::const_iterator array_t<T, Width, Height, Depth>::begin() const noexcept {
 		return const_iterator { data };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::const_iterator array_t<T, Width, Height, Depth>::end() const {
+	inline constexpr array_t<T, Width, Height, Depth>::const_iterator array_t<T, Width, Height, Depth>::end() const noexcept {
 		return const_iterator { data + size };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::const_iterator array_t<T, Width, Height, Depth>::cbegin() const {
+	inline constexpr array_t<T, Width, Height, Depth>::const_iterator array_t<T, Width, Height, Depth>::cbegin() const noexcept {
 		return const_iterator { data };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::const_iterator array_t<T, Width, Height, Depth>::cend() const {
+	inline constexpr array_t<T, Width, Height, Depth>::const_iterator array_t<T, Width, Height, Depth>::cend() const noexcept {
 		return const_iterator { data + size };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::reverse_iterator array_t<T, Width, Height, Depth>::rbegin() {
+	inline constexpr array_t<T, Width, Height, Depth>::reverse_iterator array_t<T, Width, Height, Depth>::rbegin() noexcept {
 		return reverse_iterator { data + size - 1 };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::reverse_iterator array_t<T, Width, Height, Depth>::rend() {
+	inline constexpr array_t<T, Width, Height, Depth>::reverse_iterator array_t<T, Width, Height, Depth>::rend() noexcept {
 		return reverse_iterator { data - 1 };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::const_reverse_iterator array_t<T, Width, Height, Depth>::rbegin() const {
+	inline constexpr array_t<T, Width, Height, Depth>::const_reverse_iterator array_t<T, Width, Height, Depth>::rbegin() const noexcept {
 		return const_reverse_iterator { data + size - 1 };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::const_reverse_iterator array_t<T, Width, Height, Depth>::rend() const {
+	inline constexpr array_t<T, Width, Height, Depth>::const_reverse_iterator array_t<T, Width, Height, Depth>::rend() const noexcept {
 		return const_reverse_iterator { data - 1 };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::const_reverse_iterator array_t<T, Width, Height, Depth>::crbegin() const {
+	inline constexpr array_t<T, Width, Height, Depth>::const_reverse_iterator array_t<T, Width, Height, Depth>::crbegin() const noexcept {
 		return const_reverse_iterator { data + size - 1 };
 	}
 
 	template<typename T, usize Width, usize Height, usize Depth>
-	inline constexpr array_t<T, Width, Height, Depth>::const_reverse_iterator array_t<T, Width, Height, Depth>::crend() const {
+	inline constexpr array_t<T, Width, Height, Depth>::const_reverse_iterator array_t<T, Width, Height, Depth>::crend() const noexcept {
 		return const_reverse_iterator { data - 1 };
 	}
 } // namespace Bleakdepth

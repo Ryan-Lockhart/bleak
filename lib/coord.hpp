@@ -360,6 +360,26 @@ namespace Bleakdepth {
 				return result;
 			}
 		}
+
+		constexpr void clamp_to(coord_t<T> value, coord_t<T> min, coord_t<T> max) {
+			x = value.x < min.x ? min.x : value.x > max.x ? max.x : value.x;
+			y = value.y < min.y ? min.y : value.y > max.y ? max.y : value.y;
+			z = value.z < min.z ? min.z : value.z > max.z ? max.z : value.z;
+		}
+
+		constexpr void clamp(coord_t<T> min, coord_t<T> max) {
+			x = x < min.x ? min.x : x > max.x ? max.x : x;
+			y = y < min.y ? min.y : y > max.y ? max.y : y;
+			z = z < min.z ? min.z : z > max.z ? max.z : z;
+		}
+
+		static constexpr coord_t clamp(coord_t<T> value, coord_t<T> min, coord_t<T> max) {
+			return {
+				value.x < min.x ? min.x : value.x > max.x ? max.x : value.x,
+				value.y < min.y ? min.y : value.y > max.y ? max.y : value.y,
+				value.z < min.z ? min.z : value.z > max.z ? max.z : value.z
+			};
+		}
 	};
 
 	template<typename T = i32> using bounds_t = coord_t<T>;

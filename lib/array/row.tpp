@@ -24,9 +24,9 @@ namespace Bleakdepth {
         }
     }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::array_t(rval<array_t> other) : data { std::move(other.data) } { other.data = nullptr; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::array_t(rval<array_t> other) noexcept : data { std::move(other.data) } { other.data = nullptr; }
 
-    template<typename T, usize Width> constexpr ref<array_t<T, Width>> array_t<T, Width>::operator=(cref<array_t> other) {
+    template<typename T, usize Width> constexpr ref<array_t<T, Width>> array_t<T, Width>::operator=(cref<array_t> other) noexcept {
         if (this == &other) {
             return *this;
         }
@@ -38,7 +38,7 @@ namespace Bleakdepth {
         return *this;
     }
 
-    template<typename T, usize Width> constexpr ref<array_t<T, Width>> array_t<T, Width>::operator=(rval<array_t> other) {
+    template<typename T, usize Width> constexpr ref<array_t<T, Width>> array_t<T, Width>::operator=(rval<array_t> other) noexcept {
         if (this == &other) {
             return *this;
         }
@@ -48,7 +48,7 @@ namespace Bleakdepth {
         return *this;
     }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::~array_t() { delete[] data; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::~array_t() noexcept { delete[] data; }
 
     template<typename T, usize Width> constexpr ref<T> array_t<T, Width>::operator[](usize index) noexcept { return data[index]; }
 
@@ -72,35 +72,35 @@ namespace Bleakdepth {
         return data[index];
     }
 
-    template<typename T, usize Width> constexpr ref<T> array_t<T, Width>::front() { return data[first]; }
+    template<typename T, usize Width> constexpr ref<T> array_t<T, Width>::front() noexcept { return data[first]; }
 
-    template<typename T, usize Width> constexpr cref<T> array_t<T, Width>::front() const { return data[first]; }
+    template<typename T, usize Width> constexpr cref<T> array_t<T, Width>::front() const noexcept { return data[first]; }
 
-    template<typename T, usize Width> constexpr ref<T> array_t<T, Width>::back() { return data[last]; }
+    template<typename T, usize Width> constexpr ref<T> array_t<T, Width>::back() noexcept { return data[last]; }
 
-    template<typename T, usize Width> constexpr cref<T> array_t<T, Width>::back() const { return data[last]; }
+    template<typename T, usize Width> constexpr cref<T> array_t<T, Width>::back() const noexcept { return data[last]; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::iterator array_t<T, Width>::begin() { return iterator { data }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::iterator array_t<T, Width>::begin() noexcept { return iterator { data }; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::iterator array_t<T, Width>::end() { return iterator { data + size }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::iterator array_t<T, Width>::end() noexcept { return iterator { data + size }; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::const_iterator array_t<T, Width>::begin() const { return const_iterator { data }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::const_iterator array_t<T, Width>::begin() const noexcept { return const_iterator { data }; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::const_iterator array_t<T, Width>::end() const { return const_iterator { data + size }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::const_iterator array_t<T, Width>::end() const noexcept { return const_iterator { data + size }; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::const_iterator array_t<T, Width>::cbegin() const { return const_iterator { data }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::const_iterator array_t<T, Width>::cbegin() const noexcept { return const_iterator { data }; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::const_iterator array_t<T, Width>::cend() const { return const_iterator { data + size }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::const_iterator array_t<T, Width>::cend() const noexcept { return const_iterator { data + size }; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::reverse_iterator array_t<T, Width>::rbegin() { return reverse_iterator { data + size - 1 }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::reverse_iterator array_t<T, Width>::rbegin() noexcept { return reverse_iterator { data + size - 1 }; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::reverse_iterator array_t<T, Width>::rend() { return reverse_iterator { data - 1 }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::reverse_iterator array_t<T, Width>::rend() noexcept { return reverse_iterator { data - 1 }; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::const_reverse_iterator array_t<T, Width>::rbegin() const { return const_reverse_iterator { data + size - 1 }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::const_reverse_iterator array_t<T, Width>::rbegin() const noexcept { return const_reverse_iterator { data + size - 1 }; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::const_reverse_iterator array_t<T, Width>::rend() const { return const_reverse_iterator { data - 1 }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::const_reverse_iterator array_t<T, Width>::rend() const noexcept { return const_reverse_iterator { data - 1 }; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::const_reverse_iterator array_t<T, Width>::crbegin() const { return const_reverse_iterator { data + size - 1 }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::const_reverse_iterator array_t<T, Width>::crbegin() const noexcept { return const_reverse_iterator { data + size - 1 }; }
 
-    template<typename T, usize Width> constexpr array_t<T, Width>::const_reverse_iterator array_t<T, Width>::crend() const { return const_reverse_iterator { data - 1 }; }
+    template<typename T, usize Width> constexpr array_t<T, Width>::const_reverse_iterator array_t<T, Width>::crend() const noexcept { return const_reverse_iterator { data - 1 }; }
 }

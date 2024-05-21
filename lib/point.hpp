@@ -37,23 +37,51 @@ namespace Bleakdepth {
 
 		static const point_t Central;
 
-		constexpr point_t() noexcept : x(Zero.x), y(Zero.y) {}
+		constexpr point_t() noexcept : x { Zero.x }, y { Zero.y } {}
 
-		constexpr point_t(T scalar) noexcept : x(scalar), y(scalar) {}
+		constexpr point_t(T scalar) noexcept : x { scalar }, y { scalar } {}
 
-		constexpr point_t(T x, T y) noexcept : x(x), y(y) {}
+		constexpr point_t(T x, T y) noexcept : x { x }, y { y } {}
 
-		constexpr point_t(cref<point_t> other) noexcept : x(other.x), y(other.y) {}
+		constexpr point_t(cref<point_t> other) noexcept : x { other.x }, y { other.y } {}
 
-		constexpr point_t(rval<point_t> other) noexcept : x(std::move(other.x)), y(std::move(other.y)) {}
+		constexpr point_t(rval<point_t> other) noexcept : x { std::move(other.x) }, y { std::move(other.y) } {}
 
-		constexpr point_t(cref<SDL_Point> other) noexcept : x(other.x), y(other.y) {}
+		constexpr point_t(cardinal_t direction) noexcept : x {}, y {} {
+			if (direction == cardinal_t::Central) {
+				x = point_t<>::Zero.x;
+				y = point_t<>::Zero.y;
+			} else {
+				if (direction & cardinal_t::North) {
+					x += point_t<>::North.x;
+					y += point_t<>::North.y;
+				} else if (direction & cardinal_t::South) {
+					x += point_t<>::South.x;
+					y += point_t<>::South.y;
+				}
 
-		constexpr point_t(rval<SDL_Point> other) noexcept : x(std::move(other.x)), y(std::move(other.y)) {}
+				if (direction & cardinal_t::East) {
+					x += point_t<>::East.x;
+					y += point_t<>::East.y;
+				} else if (direction & cardinal_t::West) {
+					x += point_t<>::West.x;
+					y += point_t<>::West.y;
+				}
+			}
+		}
 
-		constexpr explicit point_t(cref<SDL_FPoint> other) noexcept : x(static_cast<T>(other.x)), y(static_cast<T>(other.y)) {}
+		template<typename U> constexpr explicit point_t(cref<point_t<U>> other) noexcept : x { static_cast<T>(other.x) }, y { static_cast<T>(other.y) } {}
 
-		constexpr explicit point_t(rval<SDL_FPoint> other) noexcept : x(static_cast<T>(std::move(other.x))), y(static_cast<T>(std::move(other.y))) {}
+		template<typename U>
+		constexpr explicit point_t(rval<point_t<U>> other) noexcept : x { static_cast<T>(std::move(other.x)) }, y { static_cast<T>(std::move(other.y)) } {}
+
+		constexpr point_t(cref<SDL_Point> other) noexcept : x { other.x }, y { other.y } {}
+
+		constexpr point_t(rval<SDL_Point> other) noexcept : x { std::move(other.x) }, y { std::move(other.y) } {}
+
+		constexpr explicit point_t(cref<SDL_FPoint> other) noexcept : x { static_cast<T>(other.x) }, y { static_cast<T>(other.y) } {}
+
+		constexpr explicit point_t(rval<SDL_FPoint> other) noexcept : x { static_cast<T>(std::move(other.x)) }, y { static_cast<T>(std::move(other.y)) } {}
 
 		constexpr ~point_t() = default;
 
@@ -162,6 +190,31 @@ namespace Bleakdepth {
 		constexpr point_t operator/(cref<point_t> other) const noexcept { return { x / other.x, y / other.y }; }
 
 		constexpr point_t operator%(cref<point_t> other) const noexcept { return { x % other.x, y % other.y }; }
+
+		constexpr point_t operator+(cardinal_t direction) const noexcept {
+			auto dir { static_cast<point_t<T>>(direction) };
+			return point_t<> { x + dir.x, y + dir.y };
+		}
+
+		constexpr point_t operator-(cardinal_t direction) const noexcept {
+			auto dir { static_cast<point_t<T>>(direction) };
+			return point_t<> { x - dir.x, y - dir.y };
+		}
+
+		constexpr point_t operator*(cardinal_t direction) const noexcept {
+			auto dir { static_cast<point_t<T>>(direction) };
+			return point_t<> { x * dir.x, y * dir.y };
+		}
+
+		constexpr point_t operator/(cardinal_t direction) const noexcept {
+			auto dir { static_cast<point_t<T>>(direction) };
+			return point_t<> { x / dir.x, y / dir.y };
+		}
+
+		constexpr point_t operator%(cardinal_t direction) const noexcept {
+			auto dir { static_cast<point_t<T>>(direction) };
+			return point_t<> { x % dir.x, y % dir.y };
+		}
 
 		template<f32> point_t operator%(cref<point_t> other) const noexcept { return { ::fmodf(x, other.x), ::fmodf(y, other.y) }; }
 
@@ -295,6 +348,8 @@ namespace Bleakdepth {
 
 		template<f32> constexpr operator cptr<SDL_FPoint>() const noexcept { return (cptr<SDL_FPoint>)&x; }
 
+		template<typename U> constexpr explicit operator point_t<U>() const noexcept { return { static_cast<U>(x), static_cast<U>(y) }; }
+
 		constexpr operator std::string() const noexcept { return std::format("[{}, {}]", x, y); }
 
 		template<i32> constexpr operator cardinal_t() const noexcept {
@@ -312,6 +367,23 @@ namespace Bleakdepth {
 
 				return result;
 			}
+		}
+
+		constexpr void clamp_to(point_t<T> value, point_t<T> min, point_t<T> max) {
+			x = value.x < min.x ? min.x : value.x > max.x ? max.x : value.x;
+			y = value.y < min.y ? min.y : value.y > max.y ? max.y : value.y;
+		}
+
+		constexpr void clamp(point_t<T> min, point_t<T> max) {
+			x = x < min.x ? min.x : x > max.x ? max.x : x;
+			y = y < min.y ? min.y : y > max.y ? max.y : y;
+		}
+
+		static constexpr point_t clamp(point_t<T> value, point_t<T> min, point_t<T> max) {
+			return {
+				value.x < min.x ? min.x : value.x > max.x ? max.x : value.x,
+				value.y < min.y ? min.y : value.y > max.y ? max.y : value.y
+			};
 		}
 	};
 
@@ -332,6 +404,8 @@ namespace Bleakdepth {
 
 	template<> constexpr const point_t point_t<i32>::Southeast = { 1, 1 };
 	template<> constexpr const point_t point_t<i32>::Southwest = { -1, 1 };
+
+	template<> constexpr const point_t point_t<usize>::Zero = { 0ULL };
 
 	template<> constexpr const point_t point_t<f32>::Zero = { 0.0f };
 

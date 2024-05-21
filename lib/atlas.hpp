@@ -7,11 +7,11 @@
 #include <SDL_image.h>
 
 #include "array/layer.tpp"
-#include "texture.hpp"
-
-#include "point.hpp"
-
+#include "color.hpp"
 #include "glyph.hpp"
+#include "point.hpp"
+#include "text.hpp"
+#include "texture.hpp"
 
 namespace Bleakdepth {
 	template<usize Width, usize Height> class atlas_t {
@@ -30,6 +30,9 @@ namespace Bleakdepth {
 		const size_t<i32> imageSize;
 		// The size of each glyph in pixels.
 		const size_t<i32> glyphSize;
+
+		size_t<i32> universal_offset { 0 };
+		size_t<f32> universal_foffset { 0.0f };
 
 		// The size of the atlas in glyphs.
 		static constexpr size_t<i32> size { Width, Height };
@@ -68,15 +71,291 @@ namespace Bleakdepth {
 
 		inline ~atlas_t() = default;
 
-		inline void draw(cref<glyph_t> glyph, cref<point_t<i32>> position, bool onGrid = true) const {
+		inline void draw(cref<glyph_t> glyph, cref<point_t<i32>> position) const {
 			if (glyph.index < 0 || glyph.index >= rects.size) {
 				throw std::out_of_range("glyph index out of range!");
 			}
 
-			const point_t pos = onGrid ? position * glyphSize : position;
-			const SDL_Rect dst { pos.x, pos.y, glyphSize.x, glyphSize.y };
+			const point_t pos = position * glyphSize;
+			const SDL_Rect dst { pos.x + universal_offset.x, pos.y + universal_offset.y, glyphSize.x, glyphSize.y };
 
 			texture.draw(&rects[glyph.index], &dst, glyph.color);
+		}
+
+		inline void draw(cref<glyph_t> glyph, cref<point_t<f32>> position) const {
+			if (glyph.index < 0 || glyph.index >= rects.size) {
+				throw std::out_of_range("glyph index out of range!");
+			}
+
+			const SDL_FRect dst {
+				position.x + universal_foffset.x, position.y + universal_foffset.y, static_cast<f32>(glyphSize.x), static_cast<f32>(glyphSize.y)
+			};
+
+			texture.draw(&rects[glyph.index], &dst, glyph.color);
+		}
+
+		inline void draw(cref<runes_t> runes, cref<point_t<i32>> position) const {
+			if (runes.empty()) {
+				return;
+			}
+
+			point_t<i32> carriage_pos { 0 };
+
+			for (auto& rune : runes) {
+				switch (rune.index) {
+				case '\0':
+					return;
+				case '\n':
+					++carriage_pos.y;
+					carriage_pos.x = 0;
+					continue;
+				case '\t':
+					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					continue;
+				case '\v':
+					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.x = 0;
+					continue;
+				default:
+					draw(rune, position + carriage_pos);
+					++carriage_pos.x;
+					continue;
+				}
+			}
+		}
+
+		inline void draw(cref<runes_t> runes, cref<point_t<f32>> position) const {
+			if (runes.empty()) {
+				return;
+			}
+
+			point_t<i32> carriage_pos { 0 };
+
+			for (auto& rune : runes) {
+				switch (rune.index) {
+				case '\0':
+					return;
+				case '\n':
+					++carriage_pos.y;
+					carriage_pos.x = 0;
+					continue;
+				case '\t':
+					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					continue;
+				case '\v':
+					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.x = 0;
+					continue;
+				default:
+					draw(rune, position + static_cast<point_t<f32>>(carriage_pos));
+					++carriage_pos.x;
+					continue;
+				}
+			}
+		}
+
+		inline void draw(cref<runes_t> runes, cref<point_t<i32>> position, cardinal_t alignment) const {
+			if (runes.empty()) {
+				return;
+			}
+
+			const point_t<i32> size { static_cast<point_t<i32>>(Text::calculate_size(runes)) * alignment };
+			const point_t<i32> alignment_offs { size - size / 2 };
+
+			point_t<i32> carriage_pos { 0 };
+
+			for (auto& rune : runes) {
+				switch (rune.index) {
+				case '\0':
+					return;
+				case '\n':
+					++carriage_pos.y;
+					carriage_pos.x = 0;
+					continue;
+				case '\t':
+					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					continue;
+				case '\v':
+					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.x = 0;
+					continue;
+				default:
+					draw(rune, position + carriage_pos + alignment_offs);
+					++carriage_pos.x;
+					continue;
+				}
+			}
+		}
+
+		inline void draw(cref<runes_t> runes, point_t<f32> position, cardinal_t alignment) const {
+			if (runes.empty()) {
+				return;
+			}
+
+			const point_t<i32> size { static_cast<point_t<i32>>(Text::calculate_size(runes)) * alignment };
+			position += static_cast<point_t<f32>>(size - size / 2);
+
+			point_t<i32> carriage_pos { 0 };
+
+			for (auto& rune : runes) {
+				switch (rune.index) {
+				case '\0':
+					return;
+				case '\n':
+					++carriage_pos.y;
+					carriage_pos.x = 0;
+					continue;
+				case '\t':
+					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					continue;
+				case '\v':
+					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.x = 0;
+					continue;
+				default:
+					draw(rune, position + static_cast<point_t<f32>>(carriage_pos));
+					++carriage_pos.x;
+					continue;
+				}
+			}
+		}
+
+		inline void draw(cref<std::string> text, point_t<i32> position, color_t color) const {
+			if (text.empty()) {
+				return;
+			}
+
+			const point_t<i32> size { static_cast<point_t<i32>>(Text::calculate_size(text)) };
+			const point_t<i32> alignment_offs { size - size / 2 };
+
+			point_t<i32> carriage_pos { 0 };
+
+			for (auto& ch : text) {
+				switch (ch) {
+				case '\0':
+					return;
+				case '\n':
+					++carriage_pos.y;
+					carriage_pos.x = 0;
+					continue;
+				case '\t':
+					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					continue;
+				case '\v':
+					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.x = 0;
+					continue;
+				default:
+					draw({ static_cast<u8>(ch), color }, position + carriage_pos + alignment_offs);
+					++carriage_pos.x;
+					continue;
+				}
+			}
+		}
+
+		inline void draw(cref<std::string> text, point_t<f32> position, color_t color) const {
+			if (text.empty()) {
+				return;
+			}
+
+			const point_t<i32> size { static_cast<point_t<i32>>(Text::calculate_size(text)) };
+			const point_t<i32> alignment_offs { size - size / 2 };
+
+			point_t<i32> carriage_pos { 0 };
+
+			for (auto& ch : text) {
+				switch (ch) {
+				case '\0':
+					return;
+				case '\n':
+					++carriage_pos.y;
+					carriage_pos.x = 0;
+					continue;
+				case '\t':
+					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					continue;
+				case '\v':
+					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.x = 0;
+					continue;
+				default:
+					draw(
+						{ static_cast<u8>(ch), color },
+						position + static_cast<point_t<f32>>(carriage_pos + alignment_offs) * static_cast<point_t<f32>>(glyphSize)
+					);
+					++carriage_pos.x;
+					continue;
+				}
+			}
+		}
+
+		inline void draw(cref<std::string> text, point_t<i32> position, color_t color, cardinal_t alignment) const {
+			if (text.empty()) {
+				return;
+			}
+
+			const point_t<i32> size { static_cast<point_t<i32>>(Text::calculate_size(text)) * alignment };
+			const point_t<i32> alignment_offs { size - size / 2 };
+
+			point_t<i32> carriage_pos { 0 };
+
+			for (auto& ch : text) {
+				switch (ch) {
+				case '\0':
+					return;
+				case '\n':
+					++carriage_pos.y;
+					carriage_pos.x = 0;
+					continue;
+				case '\t':
+					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					continue;
+				case '\v':
+					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.x = 0;
+					continue;
+				default:
+					draw({ static_cast<u8>(ch), color }, position + carriage_pos + alignment_offs);
+					++carriage_pos.x;
+					continue;
+				}
+			}
+		}
+
+		inline void draw(cref<std::string> text, point_t<f32> position, color_t color, cardinal_t alignment) const {
+			if (text.empty()) {
+				return;
+			}
+
+			const point_t<i32> size { static_cast<point_t<i32>>(Text::calculate_size(text)) * alignment };
+			const point_t<i32> alignment_offs { size - size / 2 };
+
+			point_t<i32> carriage_pos { 0 };
+
+			for (auto& ch : text) {
+				switch (ch) {
+				case '\0':
+					return;
+				case '\n':
+					++carriage_pos.y;
+					carriage_pos.x = 0;
+					continue;
+				case '\t':
+					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					continue;
+				case '\v':
+					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.x = 0;
+					continue;
+				default:
+					draw(
+						{ static_cast<u8>(ch), color },
+						position + static_cast<point_t<f32>>(carriage_pos + alignment_offs) * static_cast<point_t<f32>>(glyphSize)
+					);
+					++carriage_pos.x;
+					continue;
+				}
+			}
 		}
 	};
 } // namespace Bleakdepth

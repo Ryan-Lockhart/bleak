@@ -52,6 +52,11 @@ namespace Bleakdepth {
 
 		constexpr inline void copy(cptr<SDL_Rect> src, cptr<SDL_Rect> dst) const {
 			SDL_RenderCopy(renderer.handle(), texture, src, dst);
+			
+		}
+
+		constexpr inline void copy(cptr<SDL_Rect> src, cptr<SDL_FRect> dst) const {
+			SDL_RenderCopyF(renderer.handle(), texture, src, dst);
 		}
 
 	  public:
@@ -118,42 +123,76 @@ namespace Bleakdepth {
 			copy(nullptr, &dst);
 		}
 
+		constexpr void draw(cref<point_t<f32>> pos) const {
+			const SDL_FRect dst { pos.x, pos.y, static_cast<f32>(info.size.x), static_cast<f32>(info.size.y) };
+			copy(nullptr, &dst);
+		}
+
 		constexpr void draw(cref<point_t<i32>> pos, cref<color_t> color) const {
 			const SDL_Rect dst { pos.x, pos.y, info.size.x, info.size.y };
 			setColor(color);
 			copy(nullptr, &dst);
 		}
 
-		constexpr void draw(cptr<SDL_Rect> dst) const { copy(nullptr, (ptr<SDL_Rect>)dst); }
+		constexpr void draw(cref<point_t<f32>> pos, cref<color_t> color) const {
+			const SDL_FRect dst { pos.x, pos.y, static_cast<f32>(info.size.x), static_cast<f32>(info.size.y) };
+			setColor(color);
+			copy(nullptr, &dst);
+		}
+
+		constexpr void draw(cptr<SDL_Rect> dst) const { copy(nullptr, (cptr<SDL_Rect>)dst); }
+
+		constexpr void draw(cptr<SDL_FRect> dst) const { copy(nullptr, (cptr<SDL_FRect>)dst); }
 
 		constexpr void draw(cptr<SDL_Rect> dst, cref<color_t> color) const {
 			setColor(color);
-			copy(nullptr, (ptr<SDL_Rect>)dst);
+			copy(nullptr, (cptr<SDL_Rect>)dst);
+		}
+
+		constexpr void draw(cptr<SDL_FRect> dst, cref<color_t> color) const {
+			setColor(color);
+			copy(nullptr, (cptr<SDL_FRect>)dst);
 		}
 
 		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_Rect> dst) const { copy(src, dst); }
+
+		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_FRect> dst) const { copy(src, dst); }
 
 		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_Rect> dst, cref<color_t> color) const {
 			setColor(color);
 			copy(src, dst);
 		}
 
+		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_FRect> dst, cref<color_t> color) const {
+			setColor(color);
+			copy(src, dst);
+		}
+
 		constexpr void draw(cptr<rect_t<i32>> dst) const {
-			copy(nullptr, (ptr<SDL_Rect>)dst);
+			copy(nullptr, (cptr<SDL_Rect>)dst);
+		}
+
+		constexpr void draw(cptr<rect_t<f32>> dst) const {
+			copy(nullptr, (cptr<SDL_FRect>)dst);
 		}
 
 		constexpr void draw(cptr<rect_t<i32>> dst, cref<color_t> color) const {
 			setColor(color);
-			copy(nullptr, (ptr<SDL_Rect>)dst);
+			copy(nullptr, (cptr<SDL_Rect>)dst);
+		}
+
+		constexpr void draw(cptr<rect_t<f32>> dst, cref<color_t> color) const {
+			setColor(color);
+			copy(nullptr, (cptr<SDL_FRect>)dst);
 		}
 
 		constexpr void draw(cptr<rect_t<i32>> src, cptr<rect_t<i32>> dst) const {
-			copy((ptr<SDL_Rect>)src, (ptr<SDL_Rect>)dst);
+			copy((cptr<SDL_Rect>)src, (cptr<SDL_Rect>)dst);
 		}
 
 		constexpr void draw(cptr<rect_t<i32>> src, cptr<rect_t<i32>> dst, cref<color_t> color) const {
 			setColor(color);
-			copy((ptr<SDL_Rect>)src, (ptr<SDL_Rect>)dst);
+			copy((cptr<SDL_Rect>)src, (cptr<SDL_Rect>)dst);
 		}
 	};
 } // namespace Bleakdepth

@@ -1,22 +1,19 @@
 #include "typedef.hpp"
 
+#include <cassert>
 #include <cstdlib>
 #include <format>
 #include <initializer_list>
 #include <iostream>
-#include <random>
-#include <utility>
 
 #include <SDL.h>
 
-#include "array.hpp"
 #include "atlas.hpp"
 #include "cardinal.hpp"
 #include "clock.hpp"
 #include "cursor.hpp"
 #include "keyboard.hpp"
 #include "log.hpp"
-#include "map.hpp"
 #include "mouse.hpp"
 #include "point.hpp"
 #include "renderer.hpp"
@@ -43,21 +40,23 @@ namespace Bleakdepth {
 	constexpr f32 FrameTime = 1000.0f / FrameLimit;
 
 	constexpr size_t<i32> WindowSize { 640, 480 };
+	constexpr size_t<i32> WindowPadding { 8, 8 };
 
-	static window_t Window { GameTitle.c_str(), WindowSize, WindowFlags };
+	constexpr size_t<i32> GameGridSize { WindowSize / 16 };
+	constexpr size_t<i32> UIGridSize { WindowSize / 8 };
+
+	static window_t Window { GameTitle.c_str(), WindowSize + WindowPadding, WindowFlags };
 	static renderer_t Renderer { Window, RendererFlags };
 
 	static atlas_t<16, 16> GameAtlas { { Renderer, "resources\\glyphs_16x16.png" } };
 	static atlas_t<16, 16> UIAtlas { { Renderer, "resources\\glyphs_8x8.png" } };
 
 	static cursor_t Cursor { { Renderer, "resources\\cursor.png" }, Colors::White };
-	static grid_cursor_t<16, 16> GridCursor { { Renderer, "resources\\grid_cursor.png" }, { -4, -4 }, Colors::Metals::Gold };
+	static grid_cursor_t<16, 16> GridCursor { { Renderer, "resources\\grid_cursor.png" }, { 0 }, Colors::Metals::Gold, { 0, 0 }, GameGridSize - 1 };
 
-	static point_t<i32> CameraPosition { 0, 0 };
+	static point_t<i32> CameraPosition { 0 };
 
-	static map_t<32, 32> Map {};
-
-	static animated_sprite_t<3> Player { { { u8 { 0xB0 }, u8 { 0xB1 }, u8 { 0xB2 } }, Colors::Green }, { 0, 0 } };
+	static animated_sprite_t<3> Player { { { u8 { 0xB0 }, u8 { 0xB1 }, u8 { 0xB2 } }, Colors::Green }, { 0 } };
 
 	static timer_t InputTimer { 100 };
 	static timer_t EpochTimer { 250 };
@@ -73,70 +72,6 @@ namespace Bleakdepth {
 #define main SDL_main
 
 using namespace Bleakdepth;
-
-void initialize_map() {
-	std::mt19937 generator { std::random_device()() };
-	std::bernoulli_distribution distribution { 0.5 };
-
-	array_t<bool, Map.width, Map.height> solids {};
-
-	for (usize y { 0 }; y < Map.height; ++y) {
-		for (uhalf x { 0 }; x < Map.width; ++x) {
-			bool border = x == 0 || x == Map.width - 1 || y == 0 || y == Map.height - 1;
-			solids[x, y] = border ? true : distribution(generator);
-		}
-	}
-
-	auto buffer { solids };
-
-	for (u8 i { 0 }; i < 5; ++i) {
-		for (uhalf y { 0 }; y < Map.height; ++y) {
-			for (uhalf x { 0 }; x < Map.width; ++x) {
-				const point_t<uhalf> pos { x, y };
-				bool border = x == 0 || x == Map.width - 1 || y == 0 || y == Map.height - 1;
-
-				if (border) {
-					buffer[pos] = true;
-					continue;
-				}
-
-				u8 neighbours { 0 };
-
-				for (i8 y_offs { -1 }; y_offs <= 1; ++y_offs) {
-					for (i8 x_offs { -1 }; x_offs <= 1; ++x_offs) {
-						if (x_offs == 0 && y_offs == 0) {
-							continue;
-						}
-						const point_t<uhalf> offs_pos { static_cast<uhalf>(x_offs + pos.x), static_cast<uhalf>(y_offs + pos.y) };
-
-						if (solids.valid(offs_pos) && solids[offs_pos]) {
-							++neighbours;
-						}
-					}
-				}
-
-				if (neighbours > 4) {
-					buffer[pos] = true;
-				} else if (neighbours < 4) {
-					buffer[pos] = false;
-				} else {
-					buffer[pos] = solids[pos];
-				}
-			}
-		}
-
-		std::swap(solids, buffer);
-	}
-
-	std::swap(solids, buffer);
-
-	for (usize i { 0 }; i < Map.area; ++i) {
-		Map[i].add(cell_state_t::Seen | cell_state_t::Explored);
-		if (solids[i]) {
-			Map[i].add(cell_state_t::Solid);
-		}
-	}
-}
 
 bool camera_movement() {
 	point_t<> direction { 0, 0 };
@@ -200,7 +135,11 @@ int main(int argc, char* argv[]) {
 
 	std::cout << (std::string)MessageLog << std::endl;
 
-	initialize_map();
+	GameAtlas.universal_offset = WindowPadding / 2;
+	UIAtlas.universal_offset = WindowPadding / 2;
+
+	GameAtlas.universal_foffset = static_cast<point_t<f32>>(WindowPadding / 2);
+	UIAtlas.universal_foffset = static_cast<point_t<f32>>(WindowPadding / 2);
 
 	Mouse.HideCursor();
 
@@ -241,10 +180,13 @@ int main(int argc, char* argv[]) {
 
 		Renderer.clear(Colors::Black);
 
-		Map.draw(GameAtlas, CameraPosition);
 		Player.draw(GameAtlas, CameraPosition);
 
 		GridCursor.draw();
+
+		runes_t fpsText { std::format("FPS: {}", static_cast<u32>(Clock.frameTime())), Colors::White };
+
+		UIAtlas.draw(fpsText, point_t<i32> { 0, UIGridSize.h - 1 });
 
 		Renderer.present();
 	}

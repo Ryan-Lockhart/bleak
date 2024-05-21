@@ -147,7 +147,19 @@ namespace Bleakdepth {
 		ptr<T> data;
 
 	  public:
-		static constexpr usize size { Width };
+		static constexpr usize width { Width };
+
+		static constexpr usize size { width };
+
+		static constexpr usize byte_size { size * sizeof(T) };
+
+		constexpr ptr<T> data_ptr() noexcept {
+			return data;
+		}
+
+		constexpr cptr<T> data_ptr() const noexcept {
+			return data;
+		}
 
 		static_assert(size > 0, "array must have a size greater than zero!");
 		static_assert(size * sizeof(T) <= Memory::Maximum, "array must not exceed the maximum size of an array!");
@@ -167,13 +179,13 @@ namespace Bleakdepth {
 
 		constexpr array_t(cref<array_t> other);
 
-		constexpr array_t(rval<array_t> other);
+		constexpr array_t(rval<array_t> other) noexcept;
 
-		constexpr ref<array_t> operator=(cref<array_t> other);
+		constexpr ref<array_t> operator=(cref<array_t> other) noexcept;
 
-		constexpr ref<array_t> operator=(rval<array_t> other);
+		constexpr ref<array_t> operator=(rval<array_t> other) noexcept;
 
-		constexpr ~array_t();
+		constexpr ~array_t() noexcept;
 
 		constexpr ref<T> operator[](usize index) noexcept;
 
@@ -185,37 +197,37 @@ namespace Bleakdepth {
 
 		constexpr cref<T> at(usize index) const;
 
-		constexpr ref<T> front();
+		constexpr ref<T> front() noexcept;
 
-		constexpr cref<T> front() const;
+		constexpr cref<T> front() const noexcept;
 
-		constexpr ref<T> back();
+		constexpr ref<T> back() noexcept;
 
-		constexpr cref<T> back() const;
+		constexpr cref<T> back() const noexcept;
 
-		constexpr iterator begin();
+		constexpr iterator begin() noexcept;
 
-		constexpr iterator end();
+		constexpr iterator end() noexcept;
 
-		constexpr const_iterator begin() const;
+		constexpr const_iterator begin() const noexcept;
 
-		constexpr const_iterator end() const;
+		constexpr const_iterator end() const noexcept;
 
-		constexpr const_iterator cbegin() const;
+		constexpr const_iterator cbegin() const noexcept;
 
-		constexpr const_iterator cend() const;
+		constexpr const_iterator cend() const noexcept;
 
-		constexpr reverse_iterator rbegin();
+		constexpr reverse_iterator rbegin() noexcept;
 
-		constexpr reverse_iterator rend();
+		constexpr reverse_iterator rend() noexcept;
 
-		constexpr const_reverse_iterator rbegin() const;
+		constexpr const_reverse_iterator rbegin() const noexcept;
 
-		constexpr const_reverse_iterator rend() const;
+		constexpr const_reverse_iterator rend() const noexcept;
 
-		constexpr const_reverse_iterator crbegin() const;
+		constexpr const_reverse_iterator crbegin() const noexcept;
 
-		constexpr const_reverse_iterator crend() const;
+		constexpr const_reverse_iterator crend() const noexcept;
 	};
 
 	template<typename T, usize Width, usize Height> class array_t<T, Width, Height> {
@@ -223,9 +235,22 @@ namespace Bleakdepth {
 		ptr<T> data;
 
 	  public:
-		static constexpr usize area { Width * Height };
+		static constexpr usize width { Width };
+		static constexpr usize height { Height };
+
+		static constexpr usize area { width * height };
 
 		static constexpr usize size { area };
+
+		static constexpr usize byte_size { size * sizeof(T) };
+
+		constexpr ptr<T> data_ptr() noexcept {
+			return data;
+		}
+
+		constexpr cptr<T> data_ptr() const noexcept {
+			return data;
+		}
 
 		static_assert(size > 0, "array must have a size greater than zero!");
 		static_assert(size * sizeof(T) <= Memory::Maximum, "array must not exceed the maximum size of an array!");
@@ -233,13 +258,13 @@ namespace Bleakdepth {
 		static constexpr usize first { 0 };
 		static constexpr usize last { size - 1 };
 
-		static constexpr usize flatten(uhalf i, uhalf j);
+		static constexpr usize flatten(uhalf i, uhalf j) noexcept;
 
-		static constexpr usize flatten(cref<point_t<uhalf>> position);
+		static constexpr usize flatten(cref<point_t<uhalf>> position) noexcept;
 
-		static constexpr point_t<uhalf> unflatten(usize index);
+		static constexpr point_t<uhalf> unflatten(usize index) noexcept;
 
-		static constexpr void unflatten(usize index, ref<uhalf> i, ref<uhalf> j);
+		static constexpr void unflatten(usize index, ref<uhalf> i, ref<uhalf> j) noexcept;
 
 		using iterator = fwd_iter_t<T>;
 		using const_iterator = fwd_iter_t<const T>;
@@ -253,13 +278,13 @@ namespace Bleakdepth {
 
 		constexpr array_t(cref<array_t> other);
 
-		constexpr array_t(rval<array_t> other);
+		constexpr array_t(rval<array_t> other) noexcept;
 
-		constexpr ref<array_t> operator=(cref<array_t> other);
+		constexpr ref<array_t> operator=(cref<array_t> other) noexcept;
 
-		constexpr ref<array_t> operator=(rval<array_t> other);
+		constexpr ref<array_t> operator=(rval<array_t> other) noexcept;
 
-		constexpr ~array_t();
+		constexpr ~array_t() noexcept;
 
 		constexpr ref<T> operator[](usize index) noexcept;
 
@@ -291,37 +316,37 @@ namespace Bleakdepth {
 
 		constexpr cref<T> at(cref<point_t<uhalf>> position) const;
 
-		constexpr ref<T> front();
+		constexpr ref<T> front() noexcept;
 
-		constexpr cref<T> front() const;
+		constexpr cref<T> front() const noexcept;
 
-		constexpr ref<T> back();
+		constexpr ref<T> back() noexcept;
 
-		constexpr cref<T> back() const;
+		constexpr cref<T> back() const noexcept;
 
-		constexpr iterator begin();
+		constexpr iterator begin() noexcept;
 
-		constexpr iterator end();
+		constexpr iterator end() noexcept;
 
-		constexpr const_iterator begin() const;
+		constexpr const_iterator begin() const noexcept;
 
-		constexpr const_iterator end() const;
+		constexpr const_iterator end() const noexcept;
 
-		constexpr const_iterator cbegin() const;
+		constexpr const_iterator cbegin() const noexcept;
 
-		constexpr const_iterator cend() const;
+		constexpr const_iterator cend() const noexcept;
 
-		constexpr reverse_iterator rbegin();
+		constexpr reverse_iterator rbegin() noexcept;
 
-		constexpr reverse_iterator rend();
+		constexpr reverse_iterator rend() noexcept;
 
-		constexpr const_reverse_iterator rbegin() const;
+		constexpr const_reverse_iterator rbegin() const noexcept;
 
-		constexpr const_reverse_iterator rend() const;
+		constexpr const_reverse_iterator rend() const noexcept;
 
-		constexpr const_reverse_iterator crbegin() const;
+		constexpr const_reverse_iterator crbegin() const noexcept;
 
-		constexpr const_reverse_iterator crend() const;
+		constexpr const_reverse_iterator crend() const noexcept;
 	};
 
 	template<typename T, usize Width, usize Height, usize Depth> class array_t<T, Width, Height, Depth> {
@@ -329,10 +354,24 @@ namespace Bleakdepth {
 		ptr<T> data;
 
 	  public:
-		static constexpr usize area = Width * Height;
-		static constexpr usize volume = Width * Height * Depth;
+		static constexpr usize width { Width };
+		static constexpr usize height { Height };
+		static constexpr usize depth { Depth };
 
-		static constexpr usize size = volume;
+		static constexpr usize area { width * height };
+		static constexpr usize volume { width * height * depth };
+
+		static constexpr usize size { volume };
+
+		static constexpr usize byte_size { size * sizeof(T) };
+
+		constexpr ptr<T> data_ptr() noexcept {
+			return data;
+		}
+
+		constexpr cptr<T> data_ptr() const noexcept {
+			return data;
+		}
 
 		static_assert(size > 0, "array must have a size greater than zero!");
 		static_assert(size * sizeof(T) <= Memory::Maximum, "array must not exceed the maximum size of an array!");
@@ -340,13 +379,13 @@ namespace Bleakdepth {
 		static constexpr usize first { 0 };
 		static constexpr usize last { size - 1 };
 
-		static constexpr usize flatten(uhalf i, uhalf j, uhalf k);
+		static constexpr usize flatten(uhalf i, uhalf j, uhalf k) noexcept;
 
-		static constexpr usize flatten(cref<coord_t<uhalf>> position);
+		static constexpr usize flatten(cref<coord_t<uhalf>> position) noexcept;
 
-		static constexpr coord_t<uhalf> unflatten(usize index);
+		static constexpr coord_t<uhalf> unflatten(usize index) noexcept;
 
-		static constexpr void unflatten(usize index, ref<uhalf> i, ref<uhalf> j, ref<uhalf> k);
+		static constexpr void unflatten(usize index, ref<uhalf> i, ref<uhalf> j, ref<uhalf> k) noexcept;
 
 		using iterator = fwd_iter_t<T>;
 		using const_iterator = const fwd_iter_t<T>;
@@ -360,13 +399,13 @@ namespace Bleakdepth {
 
 		constexpr array_t(cref<array_t> other);
 
-		constexpr array_t(rval<array_t> other);
+		constexpr array_t(rval<array_t> other) noexcept;
 
-		constexpr ref<array_t> operator=(cref<array_t> other);
+		constexpr ref<array_t> operator=(cref<array_t> other) noexcept;
 
-		constexpr ref<array_t> operator=(rval<array_t> other);
+		constexpr ref<array_t> operator=(rval<array_t> other) noexcept;
 
-		constexpr ~array_t();
+		constexpr ~array_t() noexcept;
 
 		constexpr ref<T> operator[](usize index) noexcept;
 
@@ -398,36 +437,36 @@ namespace Bleakdepth {
 
 		constexpr cref<T> at(cref<coord_t<uhalf>> position) const;
 
-		constexpr ref<T> front();
+		constexpr ref<T> front() noexcept;
 
-		constexpr cref<T> front() const;
+		constexpr cref<T> front() const noexcept;
 
-		constexpr ref<T> back();
+		constexpr ref<T> back() noexcept;
 
-		constexpr cref<T> back() const;
+		constexpr cref<T> back() const noexcept;
 
-		constexpr iterator begin();
+		constexpr iterator begin() noexcept;
 
-		constexpr iterator end();
+		constexpr iterator end() noexcept;
 
-		constexpr const_iterator begin() const;
+		constexpr const_iterator begin() const noexcept;
 
-		constexpr const_iterator end() const;
+		constexpr const_iterator end() const noexcept;
 
-		constexpr const_iterator cbegin() const;
+		constexpr const_iterator cbegin() const noexcept;
 
-		constexpr const_iterator cend() const;
+		constexpr const_iterator cend() const noexcept;
 
-		constexpr reverse_iterator rbegin();
+		constexpr reverse_iterator rbegin() noexcept;
 
-		constexpr reverse_iterator rend();
+		constexpr reverse_iterator rend() noexcept;
 
-		constexpr const_reverse_iterator rbegin() const;
+		constexpr const_reverse_iterator rbegin() const noexcept;
 
-		constexpr const_reverse_iterator rend() const;
+		constexpr const_reverse_iterator rend() const noexcept;
 
-		constexpr const_reverse_iterator crbegin() const;
+		constexpr const_reverse_iterator crbegin() const noexcept;
 
-		constexpr const_reverse_iterator crend() const;
+		constexpr const_reverse_iterator crend() const noexcept;
 	};
 } // namespace Bleakdepth

@@ -1,12 +1,16 @@
 #pragma once
 
+#include "array.hpp"
 #include "cardinal.hpp"
 #include "glyph.hpp"
 #include "point.hpp"
 #include "typedef.hpp"
 
 #include <algorithm>
+#include <exception>
 #include <format>
+#include <fstream>
+#include <iostream>
 #include <string>
 
 #include "array/layer.tpp"
@@ -145,6 +149,13 @@ namespace Bleakdepth {
 				explored() ? "Explored" : "Unexplored"
 			);
 		}
+
+		constexpr u8 serialize() const { return value; }
+
+		constexpr bool deserialize(u8 data) {
+			value = data;
+			return true;
+		}
 	};
 
 	template<usize Width, usize Height> class map_t {
@@ -156,6 +167,8 @@ namespace Bleakdepth {
 		static constexpr usize height { Height };
 
 		static constexpr usize area { Width * Height };
+
+		static constexpr usize size { area };
 
 		inline map_t() : state {} {}
 
@@ -180,6 +193,9 @@ namespace Bleakdepth {
 		}
 
 		inline ~map_t() noexcept {}
+
+		inline cref<array_t<cell_state_t, Width, Height>> data() const noexcept { return state; }
+		inline cptr<array_t<cell_state_t, Width, Height>> data_ptr() const noexcept { return &state;}
 
 		inline ref<cell_state_t> operator[](usize index) noexcept { return state[index]; }
 
@@ -221,39 +237,39 @@ namespace Bleakdepth {
 			return state;
 		}
 
-		inline u8 neighbour_count(cref<point_t<uhalf>> position, cell_state_t state) const noexcept {
+		inline u8 neighbour_count(cref<point_t<uhalf>> position, cell_state_t mask) const noexcept {
 			u8 count { 0 };
 			cardinal_t edge { edge_state(position) };
 
-			if (edge != cardinal_t::Northwest && this[position + point_t<uhalf>::Northwest].contains(state)) {
+			if (edge != cardinal_t::Northwest && state[position + point_t<uhalf>::Northwest].contains(mask)) {
 				++count;
 			}
 
-			if (edge != cardinal_t::North && this[position + point_t<uhalf>::North].contains(state)) {
+			if (edge != cardinal_t::North && state[position + point_t<uhalf>::North].contains(mask)) {
 				++count;
 			}
 
-			if (edge != cardinal_t::Northeast && this[position + point_t<uhalf>::Northeast].contains(state)) {
+			if (edge != cardinal_t::Northeast && state[position + point_t<uhalf>::Northeast].contains(mask)) {
 				++count;
 			}
 
-			if (edge != cardinal_t::West && this[position + point_t<uhalf>::West].contains(state)) {
+			if (edge != cardinal_t::West && state[position + point_t<uhalf>::West].contains(mask)) {
 				++count;
 			}
 
-			if (edge != cardinal_t::East && this[position + point_t<uhalf>::East].contains(state)) {
+			if (edge != cardinal_t::East && state[position + point_t<uhalf>::East].contains(mask)) {
 				++count;
 			}
 
-			if (edge != cardinal_t::Southwest && this[position + point_t<uhalf>::Southwest].contains(state)) {
+			if (edge != cardinal_t::Southwest && state[position + point_t<uhalf>::Southwest].contains(mask)) {
 				++count;
 			}
 
-			if (edge != cardinal_t::South && this[position + point_t<uhalf>::South].contains(state)) {
+			if (edge != cardinal_t::South && state[position + point_t<uhalf>::South].contains(mask)) {
 				++count;
 			}
 
-			if (edge != cardinal_t::Southeast && this[position + point_t<uhalf>::Southeast].contains(state)) {
+			if (edge != cardinal_t::Southeast && state[position + point_t<uhalf>::Southeast].contains(mask)) {
 				++count;
 			}
 
@@ -293,10 +309,28 @@ namespace Bleakdepth {
 					const u8 alpha { cell_state.seen() ? u8 { 0xFF } : u8 { 0x80 } };
 					const u8 glyph { cell_state.solid() ? u8 { 0xB2 } : u8 { 0xB0 } };
 
-					atlas.draw({ glyph, { rgb, rgb, rgb, alpha } }, point_t<i32>{ static_cast<i32>(x), static_cast<i32>(y) } + offset);
+					atlas.draw({ glyph, { rgb, rgb, rgb, alpha } }, point_t<i32> { static_cast<i32>(x), static_cast<i32>(y) } + offset);
 				}
 			}
 		}
+
+		inline bool serialize(cref<std::string> path, cref<std::string> name) const {
+			std::ofstream file{};
+
+			try {
+				file.open(std::format("{}\\{}.map.bin", path, name), std::ios::out | std::ios::binary);
+
+				file.write(reinterpret_cast<cstr>(state.data_ptr()), state.byte_size);
+
+				file.close();
+			}
+			catch (std::exception e) {
+				std::cerr << e.what() << std::endl;
+				return false;
+			}			
+
+			return true;
+		} 
 	};
 
 	constexpr const cell_state_t cell_state_t::Solid { 1 << 0 };

@@ -15,9 +15,12 @@ namespace Bleakdepth {
 		i32 value;
 
 	  public:
+	  	static const button_t Unknown;
+
 		static const button_t Left;
 		static const button_t Middle;
 		static const button_t Right;
+
 		static const button_t SideOne;
 		static const button_t SideTwo;
 
@@ -38,6 +41,8 @@ namespace Bleakdepth {
 
 		constexpr inline operator std::string() const;
 	};
+
+	constexpr const button_t button_t::Unknown { 0 };
 
 	constexpr const button_t button_t::Left { SDL_BUTTON_LEFT };
 	constexpr const button_t button_t::Middle { SDL_BUTTON_MIDDLE };

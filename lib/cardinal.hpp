@@ -65,50 +65,66 @@ namespace Bleakdepth {
 			};
 		};
 
-		constexpr cardinal_t operator~() const { return ~value; }
+		constexpr cardinal_t operator~() const noexcept { return ~value; }
 
-		constexpr cardinal_t operator|(cref<cardinal_t> other) const { return value | other.value; }
+		constexpr cardinal_t operator|(cref<cardinal_t> other) const noexcept { return value | other.value; }
 
-		constexpr cardinal_t operator&(cref<cardinal_t> other) const { return value & other.value; }
+		constexpr cardinal_t operator&(cref<cardinal_t> other) const noexcept { return value & other.value; }
 
-		constexpr cardinal_t operator^(cref<cardinal_t> other) const { return value ^ other.value; }
+		constexpr cardinal_t operator^(cref<cardinal_t> other) const noexcept { return value ^ other.value; }
 
-		constexpr cardinal_t operator<<(cref<cardinal_t> other) const { return value << other.value; }
+		constexpr cardinal_t operator<<(cref<cardinal_t> other) const noexcept { return value << other.value; }
 
-		constexpr cardinal_t operator>>(cref<cardinal_t> other) const { return value >> other.value; }
+		constexpr cardinal_t operator>>(cref<cardinal_t> other) const noexcept { return value >> other.value; }
 
-		constexpr ref<cardinal_t> operator|=(cref<cardinal_t> other) {
+		constexpr bool contains(cref<cardinal_t> other) const noexcept { return value & other; }
+
+		constexpr ref<cardinal_t> operator|=(cref<cardinal_t> other) noexcept {
 			value |= other.value;
 			return *this;
 		}
 
-		constexpr ref<cardinal_t> operator&=(cref<cardinal_t> other) {
+		constexpr ref<cardinal_t> operator&=(cref<cardinal_t> other) noexcept {
 			value &= other.value;
 			return *this;
 		}
 
-		constexpr ref<cardinal_t> operator^=(cref<cardinal_t> other) {
+		constexpr ref<cardinal_t> operator^=(cref<cardinal_t> other) noexcept {
 			value ^= other.value;
 			return *this;
 		}
 
-		constexpr ref<cardinal_t> operator<<=(cref<cardinal_t> other) {
+		constexpr ref<cardinal_t> operator<<=(cref<cardinal_t> other) noexcept {
 			value <<= other.value;
 			return *this;
 		}
 
-		constexpr ref<cardinal_t> operator>>=(cref<cardinal_t> other) {
+		constexpr ref<cardinal_t> operator>>=(cref<cardinal_t> other) noexcept {
 			value >>= other.value;
 			return *this;
 		}
 
-		constexpr bool operator==(cref<cardinal_t> other) const { return value == other.value; }
+		constexpr bool operator==(cref<cardinal_t> other) const noexcept { return value == other.value; }
 
-		constexpr bool operator!=(cref<cardinal_t> other) const { return value != other.value; }
+		constexpr bool operator!=(cref<cardinal_t> other) const noexcept { return value != other.value; }
 
-		constexpr operator u8() const { return value; }
+		constexpr bool is_3d() const noexcept { return (value & East) || (value & West); }
 
-		constexpr operator std::string() const;
+		constexpr bool is_long_neutral() const noexcept { return (value & North) && (value & South); }
+
+		constexpr bool is_lat_neutral() const noexcept { return (value & East) && (value & West); }
+
+		constexpr bool is_vert_neutral() const noexcept { return (value & Up) && (value & Down); }
+
+		constexpr void clear_long() noexcept { value &= ~(North | South); }
+
+		constexpr void clear_lat() noexcept { value &= ~(East | West); }
+
+		constexpr void clear_vert() noexcept { value &= ~(Up | Down); }
+
+		constexpr operator u8() const noexcept { return value; }
+
+		constexpr operator std::string() const noexcept;
 	};
 
 	constexpr const cardinal_t cardinal_t::Central { 0 };
@@ -154,7 +170,7 @@ namespace Bleakdepth {
 	constexpr const cardinal_t cardinal_t::Vertical::Down::Southwest { cardinal_t::Southwest | cardinal_t::Down };
 	constexpr const cardinal_t cardinal_t::Vertical::Down::Southeast { cardinal_t::Southeast | cardinal_t::Down };
 
-	constexpr inline cardinal_t::operator std::string() const {
+	constexpr inline cardinal_t::operator std::string() const noexcept {
 		switch (value) {
 		case cardinal_t::Central:
 			return "Central";
@@ -175,41 +191,41 @@ namespace Bleakdepth {
 		case cardinal_t::Southeast:
 			return "Southeast";
 		case cardinal_t::Vertical::Up::Central:
-			return "Central Ascending";
+			return "Ascending";
 		case cardinal_t::Vertical::Up::North:
-			return "North Ascending";
+			return "Ascending North";
 		case cardinal_t::Vertical::Up::East:
-			return "East Ascending";
+			return "Ascending East";
 		case cardinal_t::Vertical::Up::South:
-			return "South Ascending";
+			return "Ascending South";
 		case cardinal_t::Vertical::Up::West:
-			return "West Ascending";
+			return "Ascending West";
 		case cardinal_t::Vertical::Up::Northwest:
-			return "Northwest Ascending";
+			return "Ascending Northwest";
 		case cardinal_t::Vertical::Up::Northeast:
-			return "Northeast Ascending";
+			return "Ascending Northeast";
 		case cardinal_t::Vertical::Up::Southwest:
-			return "Southwest Ascending";
+			return "Ascending Southwest";
 		case cardinal_t::Vertical::Up::Southeast:
-			return "Southeast Ascending";
+			return "Ascending Southeast";
 		case cardinal_t::Vertical::Down::Central:
-			return "Central Descending";
+			return "Descending";
 		case cardinal_t::Vertical::Down::North:
-			return "North Descending";
+			return "Descending North";
 		case cardinal_t::Vertical::Down::East:
-			return "East Descending";
+			return "Descending East";
 		case cardinal_t::Vertical::Down::South:
-			return "South Descending";
+			return "Descending South";
 		case cardinal_t::Vertical::Down::West:
-			return "West Descending";
+			return "Descending West";
 		case cardinal_t::Vertical::Down::Northwest:
-			return "Northwest Descending";
+			return "Descending Northwest";
 		case cardinal_t::Vertical::Down::Northeast:
-			return "Northeast Descending";
+			return "Descending Northeast";
 		case cardinal_t::Vertical::Down::Southwest:
-			return "Southwest Descending";
+			return "Descending Southwest";
 		case cardinal_t::Vertical::Down::Southeast:
-			return "Southeast Descending";
+			return "Descending Southeast";
 		default:
 			return "Unknown";
 		}

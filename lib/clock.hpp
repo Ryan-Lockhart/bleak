@@ -18,21 +18,11 @@ namespace Bleakdepth {
 
 		static inline usize frequency() { return static_cast<usize>(SDL_GetPerformanceFrequency()); }
 
-		static inline void initialize() {
-			std::this_thread::sleep_for(std::chrono::seconds(1));
-
-			tick();
-
-			std::this_thread::sleep_for(std::chrono::seconds(1));
-
-			tick();
-		}
-
 		static inline void tick() {
 			last = now();
 		}
 
-		static inline void tick(f32 interval) {	
+		static inline void tick(f64 interval) {
 			last = now();
 			if (auto dt = deltaTime(); dt < interval) {
 				SDL_Delay(static_cast<Bleakdepth::u32>(interval - dt));
