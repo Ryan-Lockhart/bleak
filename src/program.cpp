@@ -48,11 +48,11 @@ namespace Bleakdepth {
 	static window_t Window { GameTitle.c_str(), WindowSize + WindowPadding, WindowFlags };
 	static renderer_t Renderer { Window, RendererFlags };
 
-	static atlas_t<16, 16> GameAtlas { { Renderer, "resources\\glyphs_16x16.png" } };
-	static atlas_t<16, 16> UIAtlas { { Renderer, "resources\\glyphs_8x8.png" } };
+	static atlas_t<16, 16> GameAtlas { { Renderer, "res\\glyphs_16x16.png" } };
+	static atlas_t<16, 16> UIAtlas { { Renderer, "res\\glyphs_8x8.png" } };
 
-	static cursor_t Cursor { { Renderer, "resources\\cursor.png" }, Colors::White };
-	static grid_cursor_t<16, 16> GridCursor { { Renderer, "resources\\grid_cursor.png" }, { 0 }, Colors::Metals::Gold, { 0, 0 }, GameGridSize - 1 };
+	static cursor_t Cursor { { Renderer, "res\\cursor.png" }, Colors::White };
+	static grid_cursor_t<16, 16> GridCursor { { Renderer, "res\\grid_cursor.png" }, { 0 }, Colors::Metals::Gold, { 0, 0 }, GameGridSize - 1 };
 
 	static point_t<i32> CameraPosition { 0 };
 
