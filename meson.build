@@ -44,7 +44,7 @@ lib_sources = [
     'lib/constants/octants.hpp',
 ]
 
-libbleak = static_library('bleak', lib_sources, dependencies: sdl_dependencies, override_options: ['cpp_std=gnu++23', 'cpp_stdlib=libc++'])
+libbleak = static_library('bleak', lib_sources, dependencies: sdl_dependencies, override_options: ['cpp_std=c++26', 'cpp_stdlib=libc++'])
 
 bleak_dependency = declare_dependency(link_with: libbleak, include_directories: include_directories('lib'))
 
@@ -53,7 +53,7 @@ exe_source = [
     'src/test.cpp',
 ]
 
-executable('bleakdepth', exe_source, dependencies: [bleak_dependency, sdl_dependencies], override_options: ['cpp_std=gnu++23', 'cpp_stdlib=libc++'])
+executable('bleakdepth', exe_source, dependencies: [bleak_dependency, sdl_dependencies], override_options: ['cpp_std=c++26', 'cpp_stdlib=libc++'])
 
 fs = import('fs')
 
