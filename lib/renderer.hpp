@@ -24,13 +24,13 @@ namespace Bleakdepth {
 				throw std::runtime_error("window is nullptr");
 			}
 
-			ptr<SDL_Renderer> newRenderer { SDL_CreateRenderer(window.handle(), -1, flags) };
+			ptr<SDL_Renderer> renderer_ptr { SDL_CreateRenderer(window.handle(), -1, flags) };
 
-			if (!newRenderer) {
+			if (!renderer_ptr) {
 				throw std::runtime_error(std::format("failed to create renderer: {}", SDL_GetError()));
 			}
 
-			return newRenderer;
+			return renderer_ptr;
 		}
 
 		static inline void destroy(ptr<SDL_Renderer> renderer) {
@@ -48,96 +48,94 @@ namespace Bleakdepth {
 
 		constexpr cptr<SDL_Renderer> handle() const noexcept { return renderer; }
 
-		inline void setDrawColor(u8 r, u8 g, u8 b, u8 a) noexcept { SDL_SetRenderDrawColor(renderer, r, g, b, a); }
+		inline void set_draw_color(u8 r, u8 g, u8 b, u8 a) noexcept { SDL_SetRenderDrawColor(renderer, r, g, b, a); }
 
-		inline void setDrawColor(cref<color_t> color) noexcept { SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a); }
+		inline void set_draw_color(cref<color_t> color) noexcept { SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a); }
 
 		inline void clear() noexcept { SDL_RenderClear(renderer); }
 
 		inline void clear(cref<color_t> color) noexcept {
-			setDrawColor(color);
+			set_draw_color(color);
 			SDL_RenderClear(renderer);
 		}
 
 		inline void present() noexcept { SDL_RenderPresent(renderer); }
 
-		inline void drawPoint(i32 x, i32 y) noexcept { SDL_RenderDrawPoint(renderer, x, y); }
+		inline void draw_point(i32 x, i32 y) noexcept { SDL_RenderDrawPoint(renderer, x, y); }
 
-		inline void drawPoint(i32 x, i32 y, cref<color_t> color) noexcept {
-			setDrawColor(color);
+		inline void draw_point(i32 x, i32 y, cref<color_t> color) noexcept {
+			set_draw_color(color);
 			SDL_RenderDrawPoint(renderer, x, y);
 		}
 
-		inline void drawPoint(cref<point_t<i32>> point) noexcept { SDL_RenderDrawPoint(renderer, point.x, point.y); }
+		inline void draw_point(cref<point_t<i32>> point) noexcept { SDL_RenderDrawPoint(renderer, point.x, point.y); }
 
-		inline void drawPoint(cref<point_t<i32>> point, cref<color_t> color) noexcept {
-			setDrawColor(color);
+		inline void draw_point(cref<point_t<i32>> point, cref<color_t> color) noexcept {
+			set_draw_color(color);
 			SDL_RenderDrawPoint(renderer, point.x, point.y);
 		}
 
-		inline void drawLine(i32 startX, i32 startY, i32 endX, i32 endY) noexcept { SDL_RenderDrawLine(renderer, startX, startY, endX, endY); }
+		inline void draw_line(i32 startX, i32 startY, i32 endX, i32 endY) noexcept { SDL_RenderDrawLine(renderer, startX, startY, endX, endY); }
 
 		inline void drawLine(i32 startX, i32 startY, i32 endX, i32 endY, cref<color_t> color) noexcept {
-			setDrawColor(color);
+			set_draw_color(color);
 			SDL_RenderDrawLine(renderer, startX, startY, endX, endY);
 		}
 
-		inline void drawLine(cref<point_t<i32>> start, cref<point_t<i32>> end) noexcept { SDL_RenderDrawLine(renderer, start.x, start.y, end.x, end.y); }
+		inline void draw_line(cref<point_t<i32>> start, cref<point_t<i32>> end) noexcept { SDL_RenderDrawLine(renderer, start.x, start.y, end.x, end.y); }
 
-		inline void drawLine(cref<point_t<i32>> start, cref<point_t<i32>> end, cref<color_t> color) noexcept {
-			setDrawColor(color);
+		inline void draw_line(cref<point_t<i32>> start, cref<point_t<i32>> end, cref<color_t> color) noexcept {
+			set_draw_color(color);
 			SDL_RenderDrawLine(renderer, start.x, start.y, end.x, end.y);
 		}
 
-		inline void drawLine(cref<line_t<i32>> line) noexcept { SDL_RenderDrawLine(renderer, line.start.x, line.start.y, line.end.x, line.end.y); }
+		inline void draw_line(cref<line_t<i32>> line) noexcept { SDL_RenderDrawLine(renderer, line.start.x, line.start.y, line.end.x, line.end.y); }
 
-		inline void drawLine(cref<line_t<i32>> line, cref<color_t> color) noexcept {
-			setDrawColor(color);
+		inline void draw_line(cref<line_t<i32>> line, cref<color_t> color) noexcept {
+			set_draw_color(color);
 			SDL_RenderDrawLine(renderer, line.start.x, line.start.y, line.end.x, line.end.y);
 		}
 
-		inline void drawRect(cref<SDL_Rect> rect) noexcept { SDL_RenderDrawRect(renderer, &rect); }
+		inline void draw_rect(cref<SDL_Rect> rect) noexcept { SDL_RenderDrawRect(renderer, &rect); }
 
-		inline void drawRect(cref<SDL_Rect> rect, cref<color_t> color) noexcept {
-			setDrawColor(color);
+		inline void draw_rect(cref<SDL_Rect> rect, cref<color_t> color) noexcept {
+			set_draw_color(color);
 			SDL_RenderDrawRect(renderer, &rect);
 		}
 
-		inline void drawRect(cref<rect_t<i32>> rect) noexcept { SDL_RenderDrawRect(renderer, (ptr<SDL_Rect>)&rect); }
+		inline void draw_rect(cref<rect_t<i32>> rect) noexcept { SDL_RenderDrawRect(renderer, (ptr<SDL_Rect>)&rect); }
 
-		inline void drawRect(cref<rect_t<i32>> rect, cref<color_t> color) noexcept {
-			setDrawColor(color);
+		inline void draw_rect(cref<rect_t<i32>> rect, cref<color_t> color) noexcept {
+			set_draw_color(color);
 			SDL_RenderDrawRect(renderer, (ptr<SDL_Rect>)&rect);
 		}
 
-		inline void fillRect(cref<SDL_Rect> rect) noexcept { SDL_RenderFillRect(renderer, &rect); }
+		inline void fill_rect(cref<SDL_Rect> rect) noexcept { SDL_RenderFillRect(renderer, &rect); }
 
 		inline void fillRect(cref<SDL_Rect> rect, cref<color_t> color) noexcept {
-			setDrawColor(color);
+			set_draw_color(color);
 			SDL_RenderFillRect(renderer, &rect);
 		}
 
-		inline void fillRect(cref<rect_t<i32>> rect) noexcept { SDL_RenderDrawRect(renderer, (ptr<SDL_Rect>)&rect); }
+		inline void fill_rect(cref<rect_t<i32>> rect) noexcept { SDL_RenderDrawRect(renderer, (ptr<SDL_Rect>)&rect); }
 
-		inline void fillRect(cref<rect_t<i32>> rect, cref<color_t> color) noexcept {
-			setDrawColor(color);
+		inline void fill_rect(cref<rect_t<i32>> rect, cref<color_t> color) noexcept {
+			set_draw_color(color);
 			SDL_RenderFillRect(renderer, (ptr<SDL_Rect>)&rect);
 		}
 
-		inline void drawRect(cref<rect_t<i32>> rect, cref<color_t> fill, cref<color_t> outline) noexcept {
-			fillRect(rect, fill);
-			drawRect(rect, outline);
+		inline void draw_rect(cref<rect_t<i32>> rect, cref<color_t> fill, cref<color_t> outline) noexcept {
+			fill_rect(rect, fill);
+			draw_rect(rect, outline);
 		}
 
-		inline void drawRect(cref<rect_t<i32>> rect, cref<color_t> fill, cref<color_t> outline, i32 outlineThickness) noexcept {
-			fillRect(rect, outline);
-			fillRect(
-				rect_t<> {
-					rect.position.x + outlineThickness,
-					rect.position.y + outlineThickness,
-					rect.size.w - outlineThickness * 2,
-					rect.size.h - outlineThickness * 2
-				},
+		inline void draw_rect(cref<rect_t<i32>> rect, cref<color_t> fill, cref<color_t> outline, i32 outlineThickness) noexcept {
+			fill_rect(rect, outline);
+			fill_rect(
+				rect_t<> { rect.position.x + outlineThickness,
+						   rect.position.y + outlineThickness,
+						   rect.size.w - outlineThickness * 2,
+						   rect.size.h - outlineThickness * 2 },
 				fill
 			);
 		}

@@ -1,8 +1,5 @@
 #pragma once
 
-#include "keyboard.hpp"
-#include "mouse.hpp"
-#include "subsystem.hpp"
 #include "typedef.hpp"
 
 #include <format>
@@ -10,8 +7,11 @@
 
 #include <SDL.h>
 
+#include "keyboard.hpp"
+#include "mouse.hpp"
 #include "point.hpp"
 #include "rect.hpp"
+#include "subsystem.hpp"
 
 namespace Bleakdepth {
 	class window_t {
@@ -27,16 +27,16 @@ namespace Bleakdepth {
 		bool closing = false;
 
 		static inline ptr<SDL_Window> create(cstr title, i32 x, i32 y, i32 width, i32 height, u32 flags) {
-			if (!subsystem::initialized()) {
-				subsystem::initialize();
+			if (!Subsystem::is_initialized()) {
+				Subsystem::initialize();
 			}
 
-			if (!mouse::initialized()) {
-				mouse::initialize();
+			if (!Mouse::is_initialized()) {
+				Mouse::initialize();
 			}
 
-			if (!keyboard::initialized()) {
-				keyboard::initialize();
+			if (!Keyboard::is_initialized()) {
+				Keyboard::initialize();
 			}
 
 			if (width <= 0) {
@@ -60,8 +60,8 @@ namespace Bleakdepth {
 				SDL_DestroyWindow(window);
 			}
 
-			if (subsystem::initialized()) {
-				subsystem::terminate();
+			if (Subsystem::is_initialized()) {
+				Subsystem::terminate();
 			}
 		}
 
@@ -81,9 +81,7 @@ namespace Bleakdepth {
 			flags { flags } {}
 
 		inline window_t(cstr title, cref<rect_t<i32>> transform, u32 flags) :
-			window {
-				create(title, transform.position.x, transform.position.y, transform.size.w, transform.size.h, flags)
-			},
+			window { create(title, transform.position.x, transform.position.y, transform.size.w, transform.size.h, flags) },
 			title { title },
 			size { transform.size },
 			flags { flags } {}
@@ -102,7 +100,7 @@ namespace Bleakdepth {
 
 		inline ~window_t() { destroy(window); }
 
-		inline void pollEvents() {
+		inline void poll_events() {
 			SDL_Event event;
 
 			while (SDL_PollEvent(&event)) {
@@ -111,21 +109,22 @@ namespace Bleakdepth {
 					closing = true;
 					break;
 				case SDL_MOUSEMOTION:
-					mouse::update(point_t<i32> { event.motion.x, event.motion.y });
+					Mouse::update(point_t<i32> { event.motion.x, event.motion.y });
 					break;
 				case SDL_MOUSEWHEEL:
-					mouse::update(point_t<f32> { event.wheel.preciseX, event.wheel.preciseY });
+					Mouse::update(point_t<f32> { event.wheel.preciseX, event.wheel.preciseY });
 					break;
 				default:
 					break;
 				}
 			}
 
-			keyboard::update();
-			mouse::update();
+			Keyboard::update();
+			Mouse::update();
 		}
 
-		constexpr bool isClosing() const noexcept { return closing; }
+		constexpr bool is_closing() const noexcept { return closing; }
+		constexpr bool is_running() const noexcept { return !closing; }
 
 		constexpr void close() noexcept { closing = true; }
 

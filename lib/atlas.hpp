@@ -27,9 +27,9 @@ namespace Bleakdepth {
 
 	  public:
 		// The size of the image in pixels.
-		const size_t<i32> imageSize;
+		const size_t<i32> image_size;
 		// The size of each glyph in pixels.
-		const size_t<i32> glyphSize;
+		const size_t<i32> glyph_size;
 
 		size_t<i32> universal_offset { 0 };
 		size_t<f32> universal_foffset { 0.0f };
@@ -43,22 +43,22 @@ namespace Bleakdepth {
 			rects {},
 			texture { std::move(texture) },
 
-			imageSize { this->texture.info.size },
-			glyphSize { imageSize / size } {
-			if (imageSize.x <= 0 || imageSize.y <= 0) {
+			image_size { this->texture.info.size },
+			glyph_size { image_size / size } {
+			if (image_size.x <= 0 || image_size.y <= 0) {
 				throw std::runtime_error("image size must be greater than zero!");
 			}
-			if (glyphSize.x <= 0 || glyphSize.y <= 0) {
+			if (glyph_size.x <= 0 || glyph_size.y <= 0) {
 				throw std::runtime_error("glyph size must be greater than zero!");
 			}
 
-			if (imageSize.x % size.w != 0 || imageSize.y % size.h != 0) {
+			if (image_size.x % size.w != 0 || image_size.y % size.h != 0) {
 				throw std::runtime_error("image size must be divisible by the atlas size!");
 			}
 
 			for (int y = 0; y < size.y; ++y) {
 				for (int x = 0; x < size.x; ++x) {
-					rects[x, y] = { x * glyphSize.x, y * glyphSize.y, glyphSize.w, glyphSize.h };
+					rects[x, y] = { x * glyph_size.x, y * glyph_size.y, glyph_size.w, glyph_size.h };
 				}
 			}
 		}
@@ -76,8 +76,8 @@ namespace Bleakdepth {
 				throw std::out_of_range("glyph index out of range!");
 			}
 
-			const point_t pos = position * glyphSize;
-			const SDL_Rect dst { pos.x + universal_offset.x, pos.y + universal_offset.y, glyphSize.x, glyphSize.y };
+			const point_t pos = position * glyph_size;
+			const SDL_Rect dst { pos.x + universal_offset.x, pos.y + universal_offset.y, glyph_size.x, glyph_size.y };
 
 			texture.draw(&rects[glyph.index], &dst, glyph.color);
 		}
@@ -88,7 +88,7 @@ namespace Bleakdepth {
 			}
 
 			const SDL_FRect dst {
-				position.x + universal_foffset.x, position.y + universal_foffset.y, static_cast<f32>(glyphSize.x), static_cast<f32>(glyphSize.y)
+				position.x + universal_foffset.x, position.y + universal_foffset.y, static_cast<f32>(glyph_size.x), static_cast<f32>(glyph_size.y)
 			};
 
 			texture.draw(&rects[glyph.index], &dst, glyph.color);
@@ -281,7 +281,7 @@ namespace Bleakdepth {
 				default:
 					draw(
 						{ static_cast<u8>(ch), color },
-						position + static_cast<point_t<f32>>(carriage_pos + alignment_offs) * static_cast<point_t<f32>>(glyphSize)
+						position + static_cast<point_t<f32>>(carriage_pos + alignment_offs) * static_cast<point_t<f32>>(glyph_size)
 					);
 					++carriage_pos.x;
 					continue;
@@ -350,7 +350,7 @@ namespace Bleakdepth {
 				default:
 					draw(
 						{ static_cast<u8>(ch), color },
-						position + static_cast<point_t<f32>>(carriage_pos + alignment_offs) * static_cast<point_t<f32>>(glyphSize)
+						position + static_cast<point_t<f32>>(carriage_pos + alignment_offs) * static_cast<point_t<f32>>(glyph_size)
 					);
 					++carriage_pos.x;
 					continue;

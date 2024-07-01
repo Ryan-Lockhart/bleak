@@ -97,21 +97,21 @@ namespace Bleakdepth {
 		constexpr bool operator>(cref<color_t> other) const noexcept = delete;
 		constexpr bool operator>=(cref<color_t> other) const noexcept = delete;
 
-		constexpr void setRGB(f32 red, f32 green, f32 blue) noexcept {
+		constexpr void set_rgb(f32 red, f32 green, f32 blue) noexcept {
 			r = static_cast<u8>(red * 255.0f);
 			g = static_cast<u8>(green * 255.0f);
 			b = static_cast<u8>(blue * 255.0f);
 		}
 
-		constexpr void setRGB(f64 red, f64 green, f64 blue) noexcept {
+		constexpr void set_rgb(f64 red, f64 green, f64 blue) noexcept {
 			r = static_cast<u8>(red * 255.0);
 			g = static_cast<u8>(green * 255.0);
 			b = static_cast<u8>(blue * 255.0);
 		}
 
-		constexpr void setAlpha(f32 alpha) noexcept { a = static_cast<u8>(alpha * 255.0f); }
+		constexpr void set_alpha(f32 alpha) noexcept { a = static_cast<u8>(alpha * 255.0f); }
 
-		constexpr void setAlpha(f64 alpha) noexcept { a = static_cast<u8>(alpha * 255.0); }
+		constexpr void set_alpha(f64 alpha) noexcept { a = static_cast<u8>(alpha * 255.0); }
 
 		constexpr explicit operator u32() const noexcept { return packed(); }
 

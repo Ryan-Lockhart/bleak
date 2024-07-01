@@ -4,12 +4,8 @@
 
 #include <SDL.h>
 
-#include <SDL_timer.h>
-#include <chrono>
-#include <thread>
-
 namespace Bleakdepth {
-	struct clock {
+	struct Clock {
 	  private:
 		static inline usize last;
 
@@ -24,17 +20,15 @@ namespace Bleakdepth {
 
 		static inline void tick(f64 interval) {
 			last = now();
-			if (auto dt = deltaTime(); dt < interval) {
+			if (auto dt = delta_time(); dt < interval) {
 				SDL_Delay(static_cast<Bleakdepth::u32>(interval - dt));
 			}
 		}
 
-		static inline f64 deltaTime() { return ((now() - last) * 1000.0) / frequency(); }
+		static inline f64 delta_time() { return ((now() - last) * 1000.0) / frequency(); }
 
-		static inline f64 frameTime() { return 1000.0 / deltaTime(); }
+		static inline f64 frame_time() { return 1000.0 / delta_time(); }
 
 		static inline f64 elapsed() { return (f64)now() / frequency(); }
 	};
-
-	static inline clock Clock;
 } // namespace Bleakdepth

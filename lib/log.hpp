@@ -10,30 +10,28 @@ namespace Bleakdepth {
 	class log_t {
 	  private:
 		std::list<std::string> messages;
-		usize maxMessages;
+		usize max_messages;
 
 	  public:
 		using iterator = std::list<std::string>::iterator;
 		using const_iterator = std::list<std::string>::const_iterator;
 
-		inline log_t(usize maxMessages = 16) : messages(), maxMessages(maxMessages) {}
+		inline log_t(usize maxMessages = 16) : messages(), max_messages(maxMessages) {}
 
-		inline log_t(cref<log_t> other) noexcept : messages(other.messages), maxMessages(other.maxMessages) {}
+		inline log_t(cref<log_t> other) noexcept : messages(other.messages), max_messages(other.max_messages) {}
 
-		inline log_t(rval<log_t> other) noexcept :
-			messages(std::move(other.messages)),
-			maxMessages(std::move(other.maxMessages)) {}
+		inline log_t(rval<log_t> other) noexcept : messages(std::move(other.messages)), max_messages(std::move(other.max_messages)) {}
 
 		inline ref<log_t> operator=(cref<log_t> other) noexcept {
 			messages = other.messages;
-			maxMessages = other.maxMessages;
+			max_messages = other.max_messages;
 
 			return *this;
 		}
 
 		inline ref<log_t> operator=(rval<log_t> other) noexcept {
 			messages = std::move(other.messages);
-			maxMessages = std::move(other.maxMessages);
+			max_messages = std::move(other.max_messages);
 
 			return *this;
 		}
@@ -68,7 +66,7 @@ namespace Bleakdepth {
 
 		inline usize size() const { return messages.size(); }
 
-		inline usize capacity() const { return maxMessages; }
+		inline usize capacity() const { return max_messages; }
 
 		inline ref<std::string> front() { return messages.front(); }
 
@@ -79,11 +77,11 @@ namespace Bleakdepth {
 		inline cref<std::string> back() const { return messages.back(); }
 
 		inline void prune() {
-			if (maxMessages <= 0) {
+			if (max_messages <= 0) {
 				return;
 			}
 
-			while (messages.size() > maxMessages) {
+			while (messages.size() > max_messages) {
 				messages.pop_front();
 			}
 		}
@@ -104,9 +102,7 @@ namespace Bleakdepth {
 
 		inline void add(std::string message) { messages.push_back(message); }
 
-		inline void add(cstr message, cstr time, cstr file, usize line) {
-			messages.push_back(std::format("[{}]: \"{}\" ({}): {}", time, file, line, message));
-		}
+		inline void add(cstr message, cstr time, cstr file, usize line) { messages.push_back(std::format("[{}]: \"{}\" ({}): {}", time, file, line, message)); }
 
 		inline void add(std::string message, cstr time, cstr file, usize line) {
 			messages.push_back(std::format("[{}]: \"{}\" ({}): {}", time, file, line, message));
@@ -117,12 +113,7 @@ namespace Bleakdepth {
 		}
 
 		template<typename... Args> inline void add(const std::format_string<Args...> format, cstr time, cstr file, usize line, rval<Args>... args) {
-			messages.push_back(
-				std::format(
-					std::format("[{}]: \"{}\" ({}): {}", time, file, line, format),
-					std::forward<Args>(args)...
-				)
-			);
+			messages.push_back(std::format(std::format("[{}]: \"{}\" ({}): {}", time, file, line, format), std::forward<Args>(args)...));
 		}
 
 		inline operator std::string() const {

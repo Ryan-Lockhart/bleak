@@ -1,10 +1,7 @@
 #pragma once
 
-#include "constants/colors.hpp"
 #include "typedef.hpp"
 
-#include <SDL_rect.h>
-#include <SDL_render.h>
 #include <format>
 #include <stdexcept>
 
@@ -13,8 +10,9 @@
 
 #include "color.hpp"
 #include "point.hpp"
+#include "renderer.hpp"
 
-#include <renderer.hpp>
+#include "constants/colors.hpp"
 
 namespace Bleakdepth {
 	struct texture_t {
@@ -25,7 +23,7 @@ namespace Bleakdepth {
 			const u32 channels;
 		};
 
-		static inline ptr<SDL_Texture> LoadTexture(ref<renderer_t> renderer, cstr path) {
+		static inline ptr<SDL_Texture> load_texture(ref<renderer_t> renderer, cstr path) {
 			ptr<SDL_Texture> texture { IMG_LoadTexture(renderer.handle(), path) };
 
 			if (!texture) {
@@ -35,7 +33,7 @@ namespace Bleakdepth {
 			return texture;
 		}
 
-		static inline info_t GetTextureInfo(ptr<SDL_Texture> texture) {
+		static inline info_t get_texture_info(ptr<SDL_Texture> texture) {
 			point_t<i32> size;
 			i32 access;
 			u32 channels;
@@ -50,14 +48,9 @@ namespace Bleakdepth {
 		ref<renderer_t> renderer;
 		ptr<SDL_Texture> texture;
 
-		constexpr inline void copy(cptr<SDL_Rect> src, cptr<SDL_Rect> dst) const {
-			SDL_RenderCopy(renderer.handle(), texture, src, dst);
-			
-		}
+		constexpr inline void copy(cptr<SDL_Rect> src, cptr<SDL_Rect> dst) const { SDL_RenderCopy(renderer.handle(), texture, src, dst); }
 
-		constexpr inline void copy(cptr<SDL_Rect> src, cptr<SDL_FRect> dst) const {
-			SDL_RenderCopyF(renderer.handle(), texture, src, dst);
-		}
+		constexpr inline void copy(cptr<SDL_Rect> src, cptr<SDL_FRect> dst) const { SDL_RenderCopyF(renderer.handle(), texture, src, dst); }
 
 	  public:
 		const info_t info;
@@ -66,13 +59,10 @@ namespace Bleakdepth {
 
 		constexpr texture_t(cref<texture_t> other) noexcept = delete;
 
-		constexpr texture_t(rval<texture_t> other) noexcept :
-			renderer(other.renderer),
-			texture(std::move(other.texture)),
-			info(other.info) {
+		constexpr texture_t(rval<texture_t> other) noexcept : renderer(other.renderer), texture(std::move(other.texture)), info(other.info) {
 			other.texture = nullptr;
-			setBlendMode(SDL_BLENDMODE_BLEND);
-			setColor(Colors::White);
+			set_blend_mode(SDL_BLENDMODE_BLEND);
+			set_color(Colors::White);
 		}
 
 		constexpr ref<texture_t> operator=(cref<texture_t> other) noexcept = delete;
@@ -80,8 +70,8 @@ namespace Bleakdepth {
 
 		inline texture_t(ref<renderer_t> renderer, cstr path) :
 			renderer { renderer },
-			texture { LoadTexture(renderer, path) },
-			info { GetTextureInfo(texture) } {
+			texture { load_texture(renderer, path) },
+			info { get_texture_info(texture) } {
 			if (texture == nullptr) {
 				throw std::runtime_error(std::format("failed to load texture!"));
 			}
@@ -97,8 +87,8 @@ namespace Bleakdepth {
 				throw std::runtime_error("texture channels must be known!");
 			}
 
-			setBlendMode(SDL_BLENDMODE_BLEND);
-			setColor(Colors::White);
+			set_blend_mode(SDL_BLENDMODE_BLEND);
+			set_color(Colors::White);
 		}
 
 		inline ~texture_t() {
@@ -107,12 +97,12 @@ namespace Bleakdepth {
 			}
 		}
 
-		constexpr inline void setColor(cref<color_t> color) const {
+		constexpr inline void set_color(cref<color_t> color) const {
 			SDL_SetTextureColorMod(texture, color.r, color.g, color.b);
 			SDL_SetTextureAlphaMod(texture, color.a);
 		}
 
-		constexpr inline void setBlendMode(SDL_BlendMode mode) const { SDL_SetTextureBlendMode(texture, mode); }
+		constexpr inline void set_blend_mode(SDL_BlendMode mode) const { SDL_SetTextureBlendMode(texture, mode); }
 
 		constexpr ptr<SDL_Texture> handle() { return texture; }
 
@@ -130,13 +120,13 @@ namespace Bleakdepth {
 
 		constexpr void draw(cref<point_t<i32>> pos, cref<color_t> color) const {
 			const SDL_Rect dst { pos.x, pos.y, info.size.x, info.size.y };
-			setColor(color);
+			set_color(color);
 			copy(nullptr, &dst);
 		}
 
 		constexpr void draw(cref<point_t<f32>> pos, cref<color_t> color) const {
 			const SDL_FRect dst { pos.x, pos.y, static_cast<f32>(info.size.x), static_cast<f32>(info.size.y) };
-			setColor(color);
+			set_color(color);
 			copy(nullptr, &dst);
 		}
 
@@ -145,12 +135,12 @@ namespace Bleakdepth {
 		constexpr void draw(cptr<SDL_FRect> dst) const { copy(nullptr, (cptr<SDL_FRect>)dst); }
 
 		constexpr void draw(cptr<SDL_Rect> dst, cref<color_t> color) const {
-			setColor(color);
+			set_color(color);
 			copy(nullptr, (cptr<SDL_Rect>)dst);
 		}
 
 		constexpr void draw(cptr<SDL_FRect> dst, cref<color_t> color) const {
-			setColor(color);
+			set_color(color);
 			copy(nullptr, (cptr<SDL_FRect>)dst);
 		}
 
@@ -159,39 +149,33 @@ namespace Bleakdepth {
 		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_FRect> dst) const { copy(src, dst); }
 
 		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_Rect> dst, cref<color_t> color) const {
-			setColor(color);
+			set_color(color);
 			copy(src, dst);
 		}
 
 		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_FRect> dst, cref<color_t> color) const {
-			setColor(color);
+			set_color(color);
 			copy(src, dst);
 		}
 
-		constexpr void draw(cptr<rect_t<i32>> dst) const {
-			copy(nullptr, (cptr<SDL_Rect>)dst);
-		}
+		constexpr void draw(cptr<rect_t<i32>> dst) const { copy(nullptr, (cptr<SDL_Rect>)dst); }
 
-		constexpr void draw(cptr<rect_t<f32>> dst) const {
-			copy(nullptr, (cptr<SDL_FRect>)dst);
-		}
+		constexpr void draw(cptr<rect_t<f32>> dst) const { copy(nullptr, (cptr<SDL_FRect>)dst); }
 
 		constexpr void draw(cptr<rect_t<i32>> dst, cref<color_t> color) const {
-			setColor(color);
+			set_color(color);
 			copy(nullptr, (cptr<SDL_Rect>)dst);
 		}
 
 		constexpr void draw(cptr<rect_t<f32>> dst, cref<color_t> color) const {
-			setColor(color);
+			set_color(color);
 			copy(nullptr, (cptr<SDL_FRect>)dst);
 		}
 
-		constexpr void draw(cptr<rect_t<i32>> src, cptr<rect_t<i32>> dst) const {
-			copy((cptr<SDL_Rect>)src, (cptr<SDL_Rect>)dst);
-		}
+		constexpr void draw(cptr<rect_t<i32>> src, cptr<rect_t<i32>> dst) const { copy((cptr<SDL_Rect>)src, (cptr<SDL_Rect>)dst); }
 
 		constexpr void draw(cptr<rect_t<i32>> src, cptr<rect_t<i32>> dst, cref<color_t> color) const {
-			setColor(color);
+			set_color(color);
 			copy((cptr<SDL_Rect>)src, (cptr<SDL_Rect>)dst);
 		}
 	};

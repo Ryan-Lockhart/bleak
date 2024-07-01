@@ -1,14 +1,13 @@
 #pragma once
 
-#include "color.hpp"
-#include "constants/colors.hpp"
 #include "typedef.hpp"
 
-#include "point.hpp"
-
+#include "color.hpp"
 #include "mouse.hpp"
+#include "point.hpp"
 #include "texture.hpp"
-#include <algorithm>
+
+#include "constants/colors.hpp"
 
 namespace Bleakdepth {
 	struct cursor_t {
@@ -25,7 +24,7 @@ namespace Bleakdepth {
 
 		inline cursor_t(rval<texture_t> texture, cref<color_t> color) : texture { std::move(texture) }, position { 0, 0 }, color { color } {}
 
-		inline void update() { position = Mouse.GetPosition(); }
+		inline void update() { position = Mouse::get_position(); }
 
 		inline void update(cref<point_t<i32>> pos) { position = pos; };
 
@@ -87,7 +86,7 @@ namespace Bleakdepth {
 			color { color } {}
 
 		inline void update() {
-			point_t<i32> pos { Mouse.GetPosition() / size };
+			point_t<i32> pos { Mouse::get_position() / size };
 			if (use_bounds) {
 				position.clamp_to(pos, min, max);
 			} else {

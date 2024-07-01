@@ -26,10 +26,10 @@ namespace Bleakdepth {
 
 		inline void record() {
 			++total;
-			last = Clock.now();
+			last = Clock::now();
 		}
 
-		inline f64 elapsed() const { return (Clock.now() - last) * 1000.0 / Clock.frequency(); }
+		inline f64 elapsed() const { return (Clock::now() - last) * 1000.0 / Clock::frequency(); }
 
 		constexpr usize count() const { return total; }
 
@@ -37,7 +37,7 @@ namespace Bleakdepth {
 
 		inline void reset() {
 			total = 0;
-			last = Clock.now();
+			last = Clock::now();
 		}
 	};
 } // namespace Bleakdepth

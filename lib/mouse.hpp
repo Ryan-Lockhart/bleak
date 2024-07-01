@@ -2,11 +2,11 @@
 
 #include "typedef.hpp"
 
-#include "input.hpp"
 #include <bitset>
 
 #include <SDL.h>
 
+#include "input.hpp"
 #include "point.hpp"
 
 namespace Bleakdepth {
@@ -15,7 +15,7 @@ namespace Bleakdepth {
 		i32 value;
 
 	  public:
-	  	static const button_t Unknown;
+		static const button_t Unknown;
 
 		static const button_t Left;
 		static const button_t Middle;
@@ -75,79 +75,79 @@ namespace Bleakdepth {
 		}
 	}
 
-	struct mouse {
+	struct Mouse {
 	  private:
-		static inline std::bitset<button_t::Count> currentState;
-		static inline std::bitset<button_t::Count> previousState;
+		static inline std::bitset<button_t::Count> current_state;
+		static inline std::bitset<button_t::Count> previous_state;
 
-		static inline point_t<i32> currentPosition;
-		static inline point_t<i32> previousPosition;
+		static inline point_t<i32> current_position;
+		static inline point_t<i32> previous_position;
 
-		static inline point_t<f32> currentScroll;
-		static inline point_t<f32> previousScroll;
+		static inline point_t<f32> current_scroll;
+		static inline point_t<f32> previous_scroll;
 
-		static inline bool init;
+		static inline bool initialized;
 
 	  public:
-		static inline bool initialized() { return mouse::init; }
+		static inline bool is_initialized() { return Mouse::initialized; }
 
 		static inline void initialize() {
-			mouse::currentState.reset();
-			mouse::previousState.reset();
+			Mouse::current_state.reset();
+			Mouse::previous_state.reset();
 
-			init = true;
+			initialized = true;
 		}
 
 		static inline void update() {
-			u32 state = SDL_GetMouseState(&mouse::currentPosition.x, &mouse::currentPosition.y);
+			u32 state = SDL_GetMouseState(&Mouse::current_position.x, &Mouse::current_position.y);
 
 			for (usize i { button_t::Start }; i <= button_t::End; ++i) {
-				mouse::previousState[i] = mouse::currentState[i];
-				mouse::currentState[i] = state & SDL_BUTTON(i);
+				Mouse::previous_state[i] = Mouse::current_state[i];
+				Mouse::current_state[i] = state & SDL_BUTTON(i);
 			}
 		}
 
 		static inline void update(cref<point_t<i32>> position) {
-			mouse::previousPosition = mouse::currentPosition;
-			mouse::currentPosition = position;
+			Mouse::previous_position = Mouse::current_position;
+			Mouse::current_position = position;
 		}
 
 		static inline void update(cref<point_t<f32>> scroll) {
-			mouse::previousScroll = mouse::currentScroll;
-			mouse::currentScroll = scroll;
+			Mouse::previous_scroll = Mouse::current_scroll;
+			Mouse::current_scroll = scroll;
 		}
 
-		static inline input_state_t operator[](button_t button) {
-			if (previousState[button]) {
-				return currentState[button] ? input_state_t::Pressed : input_state_t::Up;
+		static inline input_state_t at(button_t button) {
+			if (previous_state[button]) {
+				return current_state[button] ? input_state_t::Pressed : input_state_t::Up;
 			} else {
-				return currentState[button] ? input_state_t::Down : input_state_t::Released;
+				return current_state[button] ? input_state_t::Down : input_state_t::Released;
 			}
 		}
 
-		static inline input_state_t operator[](int button) {
-			if (previousState[button]) {
-				return currentState[button] ? input_state_t::Pressed : input_state_t::Up;
+		static inline input_state_t at(int button) {
+			if (previous_state[button]) {
+				return current_state[button] ? input_state_t::Pressed : input_state_t::Up;
 			} else {
-				return currentState[button] ? input_state_t::Down : input_state_t::Released;
+				return current_state[button] ? input_state_t::Down : input_state_t::Released;
 			}
 		}
 
-		static inline bool IsButtonPressed(button_t button);
-		static inline bool IsButtonPressed(int button);
+		static inline bool is_button_pressed(button_t button);
+		static inline bool is_button_pressed(int button);
 
-		static inline bool IsButtonReleased(button_t button);
-		static inline bool IsButtonReleased(int button);
+		static inline bool is_button_released(button_t button);
+		static inline bool is_button_released(int button);
 
-		static inline bool IsButtonDown(button_t button);
-		static inline bool IsButtonDown(int button);
+		static inline bool is_button_down(button_t button);
+		static inline bool is_button_down(int button);
 
-		static inline bool IsButtonUp(button_t button);
-		static inline bool IsButtonUp(int button);
+		static inline bool is_button_up(button_t button);
+		static inline bool is_button_up(int button);
 
-		static inline bool AnyButtonPressed() {
+		static inline bool any_button_pressed() {
 			for (int i { button_t::Start }; i <= button_t::End; ++i) {
-				if (mouse::IsButtonPressed(i)) {
+				if (Mouse::is_button_pressed(i)) {
 					return true;
 				}
 			}
@@ -155,9 +155,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		static inline bool AnyButtonReleased() {
+		static inline bool any_button_released() {
 			for (int i { button_t::Start }; i <= button_t::End; ++i) {
-				if (mouse::IsButtonReleased(i)) {
+				if (Mouse::is_button_released(i)) {
 					return true;
 				}
 			}
@@ -165,9 +165,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		static inline bool AnyButtonDown() {
+		static inline bool any_button_down() {
 			for (int i { button_t::Start }; i <= button_t::End; ++i) {
-				if (mouse::IsButtonDown(i)) {
+				if (Mouse::is_button_down(i)) {
 					return true;
 				}
 			}
@@ -175,9 +175,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		static inline bool AnyButtonUp() {
+		static inline bool any_button_up() {
 			for (int i { button_t::Start }; i <= button_t::End; ++i) {
-				if (mouse::IsButtonUp(i)) {
+				if (Mouse::is_button_up(i)) {
 					return true;
 				}
 			}
@@ -185,9 +185,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		template<typename... Buttons, typename = button_t> static inline bool AreButtonsPressed(Buttons... buttons) {
+		template<typename... Buttons, typename = button_t> static inline bool are_buttons_pressed(Buttons... buttons) {
 			for (button_t button : { buttons... }) {
-				if (!mouse::IsButtonPressed(button)) {
+				if (!Mouse::is_button_pressed(button)) {
 					return false;
 				}
 			}
@@ -195,9 +195,9 @@ namespace Bleakdepth {
 			return true;
 		}
 
-		template<typename... Buttons, typename = button_t> static inline bool AreButtonsReleased(Buttons... buttons) {
+		template<typename... Buttons, typename = button_t> static inline bool are_buttons_released(Buttons... buttons) {
 			for (button_t button : { buttons... }) {
-				if (!mouse::IsButtonReleased(button)) {
+				if (!Mouse::is_button_released(button)) {
 					return false;
 				}
 			}
@@ -205,9 +205,9 @@ namespace Bleakdepth {
 			return true;
 		}
 
-		template<typename... Buttons, typename = button_t> static inline bool AreButtonsDown(Buttons... buttons) {
+		template<typename... Buttons, typename = button_t> static inline bool are_buttons_down(Buttons... buttons) {
 			for (button_t button : { buttons... }) {
-				if (!mouse::IsButtonDown(button)) {
+				if (!Mouse::is_button_down(button)) {
 					return false;
 				}
 			}
@@ -215,9 +215,9 @@ namespace Bleakdepth {
 			return true;
 		}
 
-		template<typename... Buttons, typename = button_t> static inline bool AreButtonsUp(Buttons... buttons) {
+		template<typename... Buttons, typename = button_t> static inline bool are_buttons_up(Buttons... buttons) {
 			for (button_t button : { buttons... }) {
-				if (!mouse::IsButtonUp(button)) {
+				if (!Mouse::is_button_up(button)) {
 					return false;
 				}
 			}
@@ -225,9 +225,9 @@ namespace Bleakdepth {
 			return true;
 		}
 
-		template<typename... Buttons, typename = button_t> static inline bool AnyButtonsPressed(Buttons... buttons) {
+		template<typename... Buttons, typename = button_t> static inline bool any_buttons_pressed(Buttons... buttons) {
 			for (button_t button : { buttons... }) {
-				if (mouse::IsButtonPressed(button)) {
+				if (Mouse::is_button_pressed(button)) {
 					return true;
 				}
 			}
@@ -235,9 +235,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		template<typename... Buttons, typename = button_t> static inline bool AnyButtonsReleased(Buttons... buttons) {
+		template<typename... Buttons, typename = button_t> static inline bool any_buttons_released(Buttons... buttons) {
 			for (button_t button : { buttons... }) {
-				if (mouse::IsButtonReleased(button)) {
+				if (Mouse::is_button_released(button)) {
 					return true;
 				}
 			}
@@ -245,9 +245,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		template<typename... Buttons, typename = button_t> static inline bool AnyButtonsDown(Buttons... buttons) {
+		template<typename... Buttons, typename = button_t> static inline bool any_buttons_down(Buttons... buttons) {
 			for (button_t button : { buttons... }) {
-				if (mouse::IsButtonDown(button)) {
+				if (Mouse::is_button_down(button)) {
 					return true;
 				}
 			}
@@ -255,9 +255,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		template<typename... Buttons, typename = button_t> static inline bool AnyButtonsUp(Buttons... buttons) {
+		template<typename... Buttons, typename = button_t> static inline bool any_buttons_up(Buttons... buttons) {
 			for (button_t button : { buttons... }) {
-				if (mouse::IsButtonUp(button)) {
+				if (Mouse::is_button_up(button)) {
 					return true;
 				}
 			}
@@ -265,30 +265,28 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		static inline point_t<i32> GetPosition() { return mouse::currentPosition; }
+		static inline point_t<i32> get_position() { return Mouse::current_position; }
 
-		static inline point_t<f32> GetScroll() { return mouse::currentScroll; }
+		static inline point_t<f32> get_scroll() { return Mouse::current_scroll; }
 
-		static inline void ShowCursor() { SDL_ShowCursor(SDL_ENABLE); }
+		static inline void show_cursor() { SDL_ShowCursor(SDL_ENABLE); }
 
-		static inline void HideCursor() { SDL_ShowCursor(SDL_DISABLE); }
+		static inline void hide_cursor() { SDL_ShowCursor(SDL_DISABLE); }
 	};
 
-	static inline mouse Mouse;
+	inline bool Mouse::is_button_pressed(button_t button) { return Mouse::at(button) == input_state_t::Pressed; }
 
-	inline bool mouse::IsButtonPressed(button_t button) { return Mouse[button] == input_state_t::Pressed; }
+	inline bool Mouse::is_button_pressed(int button) { return Mouse::at(button) == input_state_t::Pressed; }
 
-	inline bool mouse::IsButtonPressed(int button) { return Mouse[button] == input_state_t::Pressed; }
+	inline bool Mouse::is_button_released(button_t button) { return Mouse::at(button) == input_state_t::Released; }
 
-	inline bool mouse::IsButtonReleased(button_t button) { return Mouse[button] == input_state_t::Released; }
+	inline bool Mouse::is_button_released(int button) { return Mouse::at(button) == input_state_t::Released; }
 
-	inline bool mouse::IsButtonReleased(int button) { return Mouse[button] == input_state_t::Released; }
+	inline bool Mouse::is_button_down(button_t button) { return Mouse::at(button) == input_state_t::Down; }
 
-	inline bool mouse::IsButtonDown(button_t button) { return Mouse[button] == input_state_t::Down; }
+	inline bool Mouse::is_button_down(int button) { return Mouse::at(button) == input_state_t::Down; }
 
-	inline bool mouse::IsButtonDown(int button) { return Mouse[button] == input_state_t::Down; }
+	inline bool Mouse::is_button_up(button_t button) { return Mouse::at(button) == input_state_t::Up; }
 
-	inline bool mouse::IsButtonUp(button_t button) { return Mouse[button] == input_state_t::Up; }
-
-	inline bool mouse::IsButtonUp(int button) { return Mouse[button] == input_state_t::Up; }
+	inline bool Mouse::is_button_up(int button) { return Mouse::at(button) == input_state_t::Up; }
 } // namespace Bleakdepth

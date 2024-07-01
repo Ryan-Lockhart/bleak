@@ -10,7 +10,7 @@
 #include <SDL_ttf.h>
 
 namespace Bleakdepth {
-	struct subsystem {
+	struct Subsystem {
 	  private:
 		static inline bool sdl_initialized;
 		static inline bool sdl_image_initialized;
@@ -130,7 +130,7 @@ namespace Bleakdepth {
 
 	  public:
 		static inline void initialize() {
-			if (initialized()) {
+			if (is_initialized()) {
 				return;
 			}
 
@@ -142,7 +142,7 @@ namespace Bleakdepth {
 		}
 
 		static inline void terminate() {
-			if (!initialized()) {
+			if (!is_initialized()) {
 				return;
 			}
 
@@ -153,11 +153,9 @@ namespace Bleakdepth {
 			terminate_sdl();
 		}
 
-		static inline bool initialized() {
+		static inline bool is_initialized() {
 			return sdl_initialized && sdl_image_initialized && sdl_mixer_initialized && sdl_net_initialized
 				   && sdl_ttf_initialized;
 		}
 	};
-
-	static inline subsystem Subsystem;
 } // namespace Bleakdepth

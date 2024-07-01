@@ -47,6 +47,6 @@ namespace Bleakdepth {
 			value = amplitude * (phase + (2.0 * frequency * time - std::floor(2.0 * frequency * time + 0.5)));
 		}
 
-		constexpr f64 currentValue() const { return value; }
+		constexpr f64 current_value() const { return value; }
 	};
 } // namespace Bleakdepth

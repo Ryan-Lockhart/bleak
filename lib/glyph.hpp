@@ -9,16 +9,16 @@
 namespace Bleakdepth {
 	struct glyph_t {
 		color_t color;
-		u8 index;
+		u16 index;
 
 		constexpr glyph_t() noexcept : color {}, index {} {}
 
-		constexpr glyph_t(u8 index, color_t color) noexcept : color { color }, index { index } {}
+		constexpr glyph_t(u16 index, color_t color) noexcept : color { color }, index { index } {}
 	};
 
 	template<usize Length> struct animated_glyph_t {
 	  private:
-		row_t<u8, Length> indices;
+		row_t<u16, Length> indices;
 		usize frame;
 
 		constexpr inline void wrap() noexcept { frame %= length; }
@@ -29,19 +29,23 @@ namespace Bleakdepth {
 		static constexpr usize first { 0 };
 		static constexpr usize last { length - 1 };
 
-		using iterator = fwd_iter_t<u8>;
-		using const_iterator = fwd_iter_t<const u8>;
+		using iterator = fwd_iter_t<u16>;
+		using const_iterator = fwd_iter_t<const u16>;
 
-		using reverse_iterator = rev_iter_t<u8>;
-		using const_reverse_iterator = rev_iter_t<const u8>;
+		using reverse_iterator = rev_iter_t<u16>;
+		using const_reverse_iterator = rev_iter_t<const u16>;
 
 		color_t color;
 
 		constexpr animated_glyph_t() = delete;
 
-		constexpr animated_glyph_t(std::initializer_list<u8> indices) noexcept : indices { indices }, frame { 0 }, color {} {}
+		constexpr animated_glyph_t(std::initializer_list<u16> indices) noexcept : indices { indices }, frame { 0 }, color {} {}
 
-		constexpr animated_glyph_t(std::initializer_list<u8> indices, color_t color) noexcept : indices { indices }, frame { 0 }, color { color } {}
+		constexpr animated_glyph_t(std::initializer_list<u16> indices, color_t color) noexcept : indices { indices }, frame { 0 }, color { color } {}
+
+		constexpr animated_glyph_t(rval<row_t<u16, Length>> indices) noexcept : indices { indices }, frame { 0 }, color {} {}
+
+		constexpr animated_glyph_t(rval<row_t<u16, Length>> indices, color_t color) noexcept : indices { indices }, frame { 0 }, color { color } {}
 
 		constexpr animated_glyph_t(cref<animated_glyph_t> other) noexcept : indices { other.indices }, frame { other.frame }, color { other.color } {}
 
@@ -76,9 +80,9 @@ namespace Bleakdepth {
 
 		constexpr ~animated_glyph_t() = default;
 
-		constexpr u8 operator[](usize index) const noexcept { return indices[index]; }
+		constexpr u16 operator[](usize index) const noexcept { return indices[index]; }
 
-		constexpr u8 at(usize index) const {
+		constexpr u16 at(usize index) const {
 			if (index >= length) {
 				throw std::out_of_range { "index out of range!" };
 			}
@@ -104,9 +108,9 @@ namespace Bleakdepth {
 
 		constexpr operator glyph_t() const noexcept { return { indices[frame], color }; }
 
-		constexpr u8 front() const noexcept { return indices.front(); }
+		constexpr u16 front() const noexcept { return indices.front(); }
 
-		constexpr u8 back() const noexcept { return indices.back(); }
+		constexpr u16 back() const noexcept { return indices.back(); }
 
 		constexpr iterator begin() noexcept { return indices.begin(); }
 
@@ -140,5 +144,17 @@ namespace Bleakdepth {
 
 		constexpr bool operator<=(cref<animated_glyph_t> other) const noexcept = delete;
 		constexpr bool operator>=(cref<animated_glyph_t> other) const noexcept = delete;
+
+		template<u16 Start, u16 End> constexpr static row_t<u16, Length> generate_contiguous_indices() noexcept {
+			row_t<u16, Length> indices {};
+
+			static_assert(End - Start + 1 == Length, "lengths of indices and range are not equal!");
+
+			for (usize i = 0; i < Length; ++i) {
+				indices[i] = Start + i;
+			}
+
+			return indices;
+		}
 	};
 } // namespace Bleakdepth

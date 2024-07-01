@@ -8,63 +8,63 @@
 #include <bitset>
 
 namespace Bleakdepth {
-	struct keyboard {
+	struct Keyboard {
 	  private:
-		static inline std::bitset<Keys::Count> currentState;
-		static inline std::bitset<Keys::Count> previousState;
+		static inline std::bitset<Keys::Count> current_state;
+		static inline std::bitset<Keys::Count> previous_state;
 
-		static inline bool init;
+		static inline bool initialized;
 
 	  public:
-		static inline bool initialized() { return init; }
+		static inline bool is_initialized() { return initialized; }
 
 		static inline void initialize() {
-			currentState.reset();
-			previousState.reset();
+			current_state.reset();
+			previous_state.reset();
 
-			init = true;
+			initialized = true;
 		}
 
 		static inline void update() {
 			cptr<u8> state = SDL_GetKeyboardState(nullptr);
 
 			for (usize i { Keys::First }; i <= Keys::Last; ++i) {
-				previousState[i] = currentState[i];
-				currentState[i] = state[i];
+				previous_state[i] = current_state[i];
+				current_state[i] = state[i];
 			}
 		}
 
-		static inline input_state_t operator[](Keys::key_t key) {
-			if (previousState[key]) {
-				return currentState[key] ? input_state_t::Pressed : input_state_t::Up;
+		static inline input_state_t at(Keys::key_t key) {
+			if (previous_state[key]) {
+				return current_state[key] ? input_state_t::Pressed : input_state_t::Up;
 			} else {
-				return currentState[key] ? input_state_t::Down : input_state_t::Released;
+				return current_state[key] ? input_state_t::Down : input_state_t::Released;
 			}
 		}
 
-		static inline input_state_t operator[](int key) {
-			if (previousState[key]) {
-				return currentState[key] ? input_state_t::Pressed : input_state_t::Up;
+		static inline input_state_t at(int key) {
+			if (previous_state[key]) {
+				return current_state[key] ? input_state_t::Pressed : input_state_t::Up;
 			} else {
-				return currentState[key] ? input_state_t::Down : input_state_t::Released;
+				return current_state[key] ? input_state_t::Down : input_state_t::Released;
 			}
 		}
 
-		static inline bool IsKeyPressed(Keys::key_t key);
-		static inline bool IsKeyPressed(int key);
+		static inline bool is_key_pressed(Keys::key_t key);
+		static inline bool is_key_pressed(int key);
 
-		static inline bool IsKeyReleased(Keys::key_t key);
-		static inline bool IsKeyReleased(int key);
+		static inline bool is_key_released(Keys::key_t key);
+		static inline bool is_key_released(int key);
 
-		static inline bool IsKeyDown(Keys::key_t key);
-		static inline bool IsKeyDown(int key);
+		static inline bool is_key_down(Keys::key_t key);
+		static inline bool is_key_down(int key);
 
-		static inline bool IsKeyUp(Keys::key_t key);
-		static inline bool IsKeyUp(int key);
+		static inline bool is_key_up(Keys::key_t key);
+		static inline bool is_key_up(int key);
 
-		static inline bool AnyKeyPressed() {
+		static inline bool any_key_pressed() {
 			for (int i { Keys::First }; i <= Keys::Last; ++i) {
-				if (IsKeyPressed(i)) {
+				if (is_key_pressed(i)) {
 					return true;
 				}
 			}
@@ -72,9 +72,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		static inline bool AnyKeyReleased() {
+		static inline bool any_key_released() {
 			for (int i { Keys::First }; i <= Keys::Last; ++i) {
-				if (IsKeyReleased(i)) {
+				if (is_key_released(i)) {
 					return true;
 				}
 			}
@@ -82,9 +82,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		static inline bool AnyKeyDown() {
+		static inline bool any_key_down() {
 			for (int i { Keys::First }; i <= Keys::Last; ++i) {
-				if (IsKeyDown(i)) {
+				if (is_key_down(i)) {
 					return true;
 				}
 			}
@@ -92,9 +92,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		static inline bool AnyKeyUp() {
+		static inline bool any_key_up() {
 			for (int i { Keys::First }; i <= Keys::Last; ++i) {
-				if (IsKeyUp(i)) {
+				if (is_key_up(i)) {
 					return true;
 				}
 			}
@@ -103,9 +103,9 @@ namespace Bleakdepth {
 		}
 
 		// returns true if all keys in the collection are pressed
-		template<typename... K, typename = Keys::key_t> static inline bool AreKeysPressed(K... keys) {
+		template<typename... K, typename = Keys::key_t> static inline bool are_keys_pressed(K... keys) {
 			for (Keys::key_t key : { keys... }) {
-				if (!IsKeyPressed(key)) {
+				if (!is_key_pressed(key)) {
 					return false;
 				}
 			}
@@ -113,9 +113,9 @@ namespace Bleakdepth {
 			return true;
 		}
 
-		template<usize Size> inline bool AreKeysPressed(cref<std::array<Keys::key_t, Size>> keys) {
+		template<usize Size> static inline bool are_keys_pressed(cref<std::array<Keys::key_t, Size>> keys) {
 			for (Keys::key_t key : keys) {
-				if (!IsKeyPressed(key)) {
+				if (!is_key_pressed(key)) {
 					return false;
 				}
 			}
@@ -124,9 +124,9 @@ namespace Bleakdepth {
 		}
 
 		// returns true if all keys in the collection are released
-		template<typename... K, typename = Keys::key_t> static inline bool AreKeysReleased(K... keys) {
+		template<typename... K, typename = Keys::key_t> static inline bool are_keys_released(K... keys) {
 			for (Keys::key_t key : { keys... }) {
-				if (!IsKeyReleased(key)) {
+				if (!is_key_released(key)) {
 					return false;
 				}
 			}
@@ -134,9 +134,9 @@ namespace Bleakdepth {
 			return true;
 		}
 
-		template<usize Size> inline bool AreKeysReleased(cref<std::array<Keys::key_t, Size>> keys) {
+		template<usize Size> static inline bool are_keys_released(cref<std::array<Keys::key_t, Size>> keys) {
 			for (Keys::key_t key : keys) {
-				if (!IsKeyReleased(key)) {
+				if (!is_key_released(key)) {
 					return false;
 				}
 			}
@@ -145,9 +145,9 @@ namespace Bleakdepth {
 		}
 
 		// returns true if all keys in the collection are down
-		template<typename... K, typename = Keys::key_t> static inline bool AreKeysDown(K... keys) {
+		template<typename... K, typename = Keys::key_t> static inline bool are_keys_down(K... keys) {
 			for (Keys::key_t key : { keys... }) {
-				if (!IsKeyDown(key)) {
+				if (!is_key_down(key)) {
 					return false;
 				}
 			}
@@ -155,9 +155,9 @@ namespace Bleakdepth {
 			return true;
 		}
 
-		template<usize Size> inline bool AreKeysDown(cref<std::array<Keys::key_t, Size>> keys) {
+		template<usize Size> static inline bool are_keys_down(cref<std::array<Keys::key_t, Size>> keys) {
 			for (Keys::key_t key : keys) {
-				if (!IsKeyDown(key)) {
+				if (!is_key_down(key)) {
 					return false;
 				}
 			}
@@ -166,9 +166,9 @@ namespace Bleakdepth {
 		}
 
 		// returns true if all keys in the collection are up
-		template<typename... K, typename = Keys::key_t> static inline bool AreKeysUp(K... keys) {
+		template<typename... K, typename = Keys::key_t> static inline bool are_keys_up(K... keys) {
 			for (Keys::key_t key : { keys... }) {
-				if (!IsKeyUp(key)) {
+				if (!is_key_up(key)) {
 					return false;
 				}
 			}
@@ -176,9 +176,9 @@ namespace Bleakdepth {
 			return true;
 		}
 
-		template<usize Size> inline bool AreKeysUp(cref<std::array<Keys::key_t, Size>> keys) {
+		template<usize Size> static inline bool are_keys_up(cref<std::array<Keys::key_t, Size>> keys) {
 			for (Keys::key_t key : keys) {
-				if (!IsKeyUp(key)) {
+				if (!is_key_up(key)) {
 					return false;
 				}
 			}
@@ -187,9 +187,9 @@ namespace Bleakdepth {
 		}
 
 		// returns true if any key in the collection is pressed
-		template<typename... K, typename = Keys::key_t> static inline bool AnyKeysPressed(K... keys) {
+		template<typename... K, typename = Keys::key_t> static inline bool any_keys_pressed(K... keys) {
 			for (Keys::key_t key : { keys... }) {
-				if (IsKeyPressed(key)) {
+				if (is_key_pressed(key)) {
 					return true;
 				}
 			}
@@ -197,9 +197,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		template<usize Size> inline bool AnyKeysPressed(cref<std::array<Keys::key_t, Size>> keys) {
+		template<usize Size> static inline bool any_keys_pressed(cref<std::array<Keys::key_t, Size>> keys) {
 			for (Keys::key_t key : keys) {
-				if (IsKeyPressed(key)) {
+				if (is_key_pressed(key)) {
 					return true;
 				}
 			}
@@ -208,9 +208,9 @@ namespace Bleakdepth {
 		}
 
 		// returns true if any key in the collection is released
-		template<typename... K, typename = Keys::key_t> static inline bool AnyKeysReleased(K... keys) {
+		template<typename... K, typename = Keys::key_t> static inline bool any_keys_released(K... keys) {
 			for (Keys::key_t key : { keys... }) {
-				if (IsKeyReleased(key)) {
+				if (is_key_released(key)) {
 					return true;
 				}
 			}
@@ -218,9 +218,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		template<usize Size> inline bool AnyKeysReleased(cref<std::array<Keys::key_t, Size>> keys) {
+		template<usize Size> static inline bool any_keys_released(cref<std::array<Keys::key_t, Size>> keys) {
 			for (Keys::key_t key : keys) {
-				if (IsKeyReleased(key)) {
+				if (is_key_released(key)) {
 					return true;
 				}
 			}
@@ -229,9 +229,9 @@ namespace Bleakdepth {
 		}
 
 		// returns true if any key in the collection is down
-		template<typename... K, typename = Keys::key_t> static inline bool AnyKeysDown(K... keys) {
+		template<typename... K, typename = Keys::key_t> static inline bool any_keys_down(K... keys) {
 			for (Keys::key_t key : { keys... }) {
-				if (IsKeyDown(key)) {
+				if (is_key_down(key)) {
 					return true;
 				}
 			}
@@ -239,9 +239,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		template<usize Size> inline bool AnyKeysDown(cref<std::array<Keys::key_t, Size>> keys) {
+		template<usize Size> inline bool any_keys_down(cref<std::array<Keys::key_t, Size>> keys) {
 			for (Keys::key_t key : keys) {
-				if (IsKeyDown(key)) {
+				if (is_key_down(key)) {
 					return true;
 				}
 			}
@@ -252,7 +252,7 @@ namespace Bleakdepth {
 		// returns true if any key in the collection is up
 		template<typename... K, typename = Keys::key_t> static inline bool AnyKeysUp(K... keys) {
 			for (Keys::key_t key : { keys... }) {
-				if (IsKeyUp(key)) {
+				if (is_key_up(key)) {
 					return true;
 				}
 			}
@@ -260,9 +260,9 @@ namespace Bleakdepth {
 			return false;
 		}
 
-		template<usize Size> inline bool AnyKeysUp(cref<std::array<Keys::key_t, Size>> keys) {
+		template<usize Size> static inline bool any_keys_up(cref<std::array<Keys::key_t, Size>> keys) {
 			for (Keys::key_t key : keys) {
-				if (IsKeyUp(key)) {
+				if (is_key_up(key)) {
 					return true;
 				}
 			}
@@ -271,21 +271,19 @@ namespace Bleakdepth {
 		}
 	};
 
-	static inline keyboard Keyboard;
+	inline bool Keyboard::is_key_pressed(Keys::key_t key) { return Keyboard::at(key) == input_state_t::Pressed; }
 
-	inline bool keyboard::IsKeyPressed(Keys::key_t key) { return Keyboard[key] == input_state_t::Pressed; }
+	inline bool Keyboard::is_key_pressed(int key) { return Keyboard::at(key) == input_state_t::Pressed; }
 
-	inline bool keyboard::IsKeyPressed(int key) { return Keyboard[key] == input_state_t::Pressed; }
+	inline bool Keyboard::is_key_released(Keys::key_t key) { return Keyboard::at(key) == input_state_t::Released; }
 
-	inline bool keyboard::IsKeyReleased(Keys::key_t key) { return Keyboard[key] == input_state_t::Released; }
+	inline bool Keyboard::is_key_released(int key) { return Keyboard::at(key) == input_state_t::Released; }
 
-	inline bool keyboard::IsKeyReleased(int key) { return Keyboard[key] == input_state_t::Released; }
+	inline bool Keyboard::is_key_down(Keys::key_t key) { return Keyboard::at(key) == input_state_t::Down; }
 
-	inline bool keyboard::IsKeyDown(Keys::key_t key) { return Keyboard[key] == input_state_t::Down; }
+	inline bool Keyboard::is_key_down(int key) { return Keyboard::at(key) == input_state_t::Down; }
 
-	inline bool keyboard::IsKeyDown(int key) { return Keyboard[key] == input_state_t::Down; }
+	inline bool Keyboard::is_key_up(Keys::key_t key) { return Keyboard::at(key) == input_state_t::Up; }
 
-	inline bool keyboard::IsKeyUp(Keys::key_t key) { return Keyboard[key] == input_state_t::Up; }
-
-	inline bool keyboard::IsKeyUp(int key) { return Keyboard[key] == input_state_t::Up; }
+	inline bool Keyboard::is_key_up(int key) { return Keyboard::at(key) == input_state_t::Up; }
 } // namespace Bleakdepth
