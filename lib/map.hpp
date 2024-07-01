@@ -21,19 +21,19 @@ namespace Bleakdepth {
 	// generator for map randomization is fixed due to lack of support for function template partial specialization
 	using MapRandomizer = std::minstd_rand;
 
-	enum class cell_trait_t : u8 { Open, Solid, Transperant, Opaque, Seen, Explored, Unseen, Unexplored, Vacant, Occupied, Dry, Damp, Cold, Warm };
+	enum class cell_trait_t : u8 { Open, Solid, Transperant, Opaque, Seen, Explored, Unseen, Unexplored, Dry, Damp, Cold, Warm, Odorless, Smelly, Safe, Toxic };
 
 	struct cell_state_t {
-	  private:
+	  public:
 		bool solid : 1 { false };
 		bool opaque : 1 { false };
 		bool seen : 1 { false };
 		bool explored : 1 { false };
-		bool occupied : 1 { false };
 		bool damp : 1 { false };
 		bool warm : 1 { false };
+		bool smelly : 1 { false };
+		bool toxic : 1 { false };
 
-	  public:
 		constexpr cell_state_t() noexcept = default;
 
 		constexpr cell_state_t(cref<cell_state_t> other) noexcept :
@@ -41,31 +41,34 @@ namespace Bleakdepth {
 			opaque { other.opaque },
 			seen { other.seen },
 			explored { other.explored },
-			occupied { other.occupied },
 			damp { other.damp },
-			warm { other.warm } {}
+			warm { other.warm },
+			smelly { other.smelly },
+			toxic { other.toxic } {}
 
 		constexpr cell_state_t(rval<cell_state_t> other) noexcept :
 			solid { other.solid },
 			opaque { other.opaque },
 			seen { other.seen },
 			explored { other.explored },
-			occupied { other.occupied },
 			damp { other.damp },
-			warm { other.warm } {}
+			warm { other.warm },
+			smelly { other.smelly },
+			toxic { other.toxic } {}
 
 		constexpr ref<cell_state_t> operator=(cref<cell_state_t> other) noexcept {
 			if (this == &other) {
 				return *this;
 			}
-
+			
 			solid = other.solid;
 			opaque = other.opaque;
 			seen = other.seen;
 			explored = other.explored;
-			occupied = other.occupied;
 			damp = other.damp;
 			warm = other.warm;
+			smelly = other.smelly;
+			toxic = other.toxic;
 
 			return *this;
 		}
@@ -74,14 +77,15 @@ namespace Bleakdepth {
 			if (this == &other) {
 				return *this;
 			}
-
+			
 			solid = other.solid;
 			opaque = other.opaque;
 			seen = other.seen;
 			explored = other.explored;
-			occupied = other.occupied;
 			damp = other.damp;
 			warm = other.warm;
+			smelly = other.smelly;
+			toxic = other.toxic;
 
 			return *this;
 		}
@@ -146,12 +150,6 @@ namespace Bleakdepth {
 			case cell_trait_t::Explored:
 				explored = true;
 				break;
-			case cell_trait_t::Vacant:
-				occupied = false;
-				break;
-			case cell_trait_t::Occupied:
-				occupied = true;
-				break;
 			case cell_trait_t::Dry:
 				damp = false;
 				break;
@@ -163,6 +161,18 @@ namespace Bleakdepth {
 				break;
 			case cell_trait_t::Warm:
 				warm = true;
+				break;
+			case cell_trait_t::Smelly:
+				smelly = true;
+				break;
+			case cell_trait_t::Odorless:
+				smelly = false;
+				break;
+			case cell_trait_t::Toxic:
+				toxic = true;
+				break;
+			case cell_trait_t::Safe:
+				toxic = false;
 				break;
 			default:
 				break;
@@ -195,12 +205,6 @@ namespace Bleakdepth {
 			case cell_trait_t::Explored:
 				explored = false;
 				break;
-			case cell_trait_t::Vacant:
-				occupied = true;
-				break;
-			case cell_trait_t::Occupied:
-				occupied = false;
-				break;
 			case cell_trait_t::Dry:
 				damp = true;
 				break;
@@ -213,31 +217,43 @@ namespace Bleakdepth {
 			case cell_trait_t::Warm:
 				warm = false;
 				break;
+			case cell_trait_t::Smelly:
+				smelly = false;
+				break;
+			case cell_trait_t::Odorless:
+				smelly = true;
+				break;
+			case cell_trait_t::Toxic:
+				toxic = false;
+				break;
+			case cell_trait_t::Safe:
+				toxic = true;
+				break;
 			default:
 				break;
 			}
 		}
 
 		constexpr bool operator==(cref<cell_state_t> other) const noexcept {
-			return solid == other.solid && opaque == other.opaque && seen == other.seen && explored == other.explored && occupied == other.occupied
-				   && damp == other.damp && warm == other.warm;
+			return solid == other.solid && opaque == other.opaque && seen == other.seen && explored == other.explored && damp == other.damp
+				   && warm == other.warm && smelly == other.smelly && toxic == other.toxic;
 		}
 
 		constexpr bool operator!=(cref<cell_state_t> other) const noexcept {
-			return solid != other.solid || opaque != other.opaque || seen != other.seen || explored != other.explored || occupied != other.occupied
-				   || damp != other.damp || warm != other.warm;
+			return solid != other.solid || opaque != other.opaque || seen != other.seen || explored != other.explored || damp != other.damp
+				   || warm != other.warm || smelly != other.smelly || toxic != other.toxic;
 		}
 
 		constexpr bool contains(cell_trait_t trait) const noexcept {
 			switch (trait) {
-			case cell_trait_t::Open:
-				return !solid;
 			case cell_trait_t::Solid:
 				return solid;
-			case cell_trait_t::Transperant:
-				return !opaque;
+			case cell_trait_t::Open:
+				return !solid;
 			case cell_trait_t::Opaque:
 				return opaque;
+			case cell_trait_t::Transperant:
+				return !opaque;
 			case cell_trait_t::Seen:
 				return seen;
 			case cell_trait_t::Unseen:
@@ -246,10 +262,6 @@ namespace Bleakdepth {
 				return explored;
 			case cell_trait_t::Unexplored:
 				return !explored;
-			case cell_trait_t::Occupied:
-				return occupied;
-			case cell_trait_t::Vacant:
-				return !occupied;
 			case cell_trait_t::Damp:
 				return damp;
 			case cell_trait_t::Dry:
@@ -258,21 +270,44 @@ namespace Bleakdepth {
 				return warm;
 			case cell_trait_t::Cold:
 				return !warm;
+			case cell_trait_t::Smelly:
+				return smelly;
+			case cell_trait_t::Odorless:
+				return !smelly;
+			case cell_trait_t::Toxic:
+				return toxic;
+			case cell_trait_t::Safe:
+				return !toxic;
 			default:
 				return false;
 			}
 		}
 
-		inline operator std::string() const {
+		inline constexpr std::string to_tooltip() const {
 			return std::format(
-				"[{}, {}, {}, {}, {}, {}, {}]",
+				"The cell is physically {} and visibly {}.\nThe cell is {} and is {} by the player.\nIt is {} and {} to the touch.\nThe air within is {} and {}.",
+				solid ? "blocked" : "open",
+				seen ? "blocked" : "open",
+				solid ? "in view" : "not in view",
+				explored ? "explored" : "unexplored",
+				damp ? "damp" : "dry",
+				warm ? "warm" : "cold",
+				smelly ? "pungent" : "odorless",
+				toxic ? "toxic" : "harmless"
+			);
+		}
+
+		inline constexpr operator std::string() const {			
+			return std::format(
+				"[{}, {}, {}, {}, {}, {}, {}, {}]",
 				solid ? "Solid" : "Open",
-				seen ? "Opaque" : "Transperant",
-				solid ? "Seen" : "Unseen",
+				opaque ? "Opaque" : "Transperant",
+				seen ? "Seen" : "Unseen",
 				explored ? "Explored" : "Unexplored",
-				occupied ? "Occupied" : "Vacant",
 				damp ? "Damp" : "Dry",
-				warm ? "Warm" : "Cold"
+				warm ? "Warm" : "Cold",
+				smelly ? "Smelly" : "Odorless",
+				toxic ? "Toxic" : "Safe"
 			);
 		}
 	};
@@ -373,7 +408,9 @@ namespace Bleakdepth {
 
 		template<map_region_t Region> inline ref<map_t<Width, Height, BorderWidth, BorderHeight>> set(cell_state_t cell_state);
 
-		template<map_region_t Region> inline ref<map_t<Width, Height, BorderWidth, BorderHeight>> randomize(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state);
+		template<map_region_t Region>
+		inline ref<map_t<Width, Height, BorderWidth, BorderHeight>>
+		randomize(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state);
 
 		template<> inline ref<map_t<Width, Height, BorderWidth, BorderHeight>> set<map_region_t::All>(cell_state_t cell_state) {
 			for (usize i { 0 }; i < area; ++i) {
@@ -412,48 +449,58 @@ namespace Bleakdepth {
 
 		template<> inline ref<map_t<Width, Height, BorderWidth, BorderHeight>> set<map_region_t::None>(cell_state_t cell_state) { return *this; }
 
-		template<> inline ref<map_t<Width, Height, BorderWidth, BorderHeight>> randomize<map_region_t::All>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) {
-			auto dis{std::bernoulli_distribution { fill_percent }};
-			
-			for (usize i{0}; i < area; ++i) {
+		template<>
+		inline ref<map_t<Width, Height, BorderWidth, BorderHeight>>
+		randomize<map_region_t::All>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) {
+			auto dis { std::bernoulli_distribution { fill_percent } };
+
+			for (usize i { 0 }; i < area; ++i) {
 				state[i] = dis(generator) ? true_state : false_state;
 			}
-			
+
 			return *this;
 		}
 
-		template<> inline ref<map_t<Width, Height, BorderWidth, BorderHeight>> randomize<map_region_t::Interior>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) {
-			auto dis{std::bernoulli_distribution { fill_percent }};
-			
-			for (uhalf y{border_origin.y}; y <= border_extent.y; ++y) {
-				for (uhalf x{border_origin.x}; x <= border_extent.x; ++x) {
+		template<>
+		inline ref<map_t<Width, Height, BorderWidth, BorderHeight>>
+		randomize<map_region_t::Interior>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) {
+			auto dis { std::bernoulli_distribution { fill_percent } };
+
+			for (uhalf y { border_origin.y }; y <= border_extent.y; ++y) {
+				for (uhalf x { border_origin.x }; x <= border_extent.x; ++x) {
 					state[x, y] = dis(generator) ? true_state : false_state;
 				}
 			}
-			
+
 			return *this;
 		}
 
-		template<> inline ref<map_t<Width, Height, BorderWidth, BorderHeight>> randomize<map_region_t::Border>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) {
-			auto dis{std::bernoulli_distribution { fill_percent }};
-			
-			for (int y{0}; y < height; ++y) {
+		template<>
+		inline ref<map_t<Width, Height, BorderWidth, BorderHeight>>
+		randomize<map_region_t::Border>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) {
+			auto dis { std::bernoulli_distribution { fill_percent } };
+
+			for (int y { 0 }; y < height; ++y) {
 				if (y < border_origin.y || y > border_extent.y) {
-					for (int x{0}; x < width; ++x) {
+					for (int x { 0 }; x < width; ++x) {
 						state[x, y] = dis(generator) ? true_state : false_state;
 					}
 				} else {
-					for (int i{0}; i < border_width; ++i) {
+					for (int i { 0 }; i < border_width; ++i) {
 						state[i, y] = dis(generator) ? true_state : false_state;
 						state[extent.x - i, y] = dis(generator) ? true_state : false_state;
 					}
 				}
 			}
-			
+
 			return *this;
 		}
 
-		template<> inline ref<map_t<Width, Height, BorderWidth, BorderHeight>> randomize<map_region_t::None>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) { return *this; }
+		template<>
+		inline ref<map_t<Width, Height, BorderWidth, BorderHeight>>
+		randomize<map_region_t::None>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) {
+			return *this;
+		}
 
 		inline u8 neighbour_count(cref<point_t<uhalf>> position, cell_state_t mask) const noexcept {
 			u8 count { 0 };

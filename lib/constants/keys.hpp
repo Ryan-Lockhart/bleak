@@ -130,12 +130,14 @@ namespace Bleakdepth {
 				static constexpr key_t Shift = SDL_SCANCODE_LSHIFT;
 				static constexpr key_t Control = SDL_SCANCODE_LCTRL;
 				static constexpr key_t Alt = SDL_SCANCODE_LALT;
+				static constexpr key_t Meta = SDL_SCANCODE_LGUI;
 			};
 
 			struct Right {
 				static constexpr key_t Shift = SDL_SCANCODE_RSHIFT;
 				static constexpr key_t Control = SDL_SCANCODE_RCTRL;
 				static constexpr key_t Alt = SDL_SCANCODE_RALT;
+				static constexpr key_t Meta = SDL_SCANCODE_RGUI;
 			};
 
 			static constexpr key_t CapsLock = SDL_SCANCODE_CAPSLOCK;

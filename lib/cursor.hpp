@@ -29,6 +29,8 @@ namespace Bleakdepth {
 		inline void update(cref<point_t<i32>> pos) { position = pos; };
 
 		inline void draw() const { texture.draw(position, color); }
+
+		inline cref<point_t<i32>> get_position() const { return position; }
 	};
 
 	template<i32 Width, i32 Height> struct grid_cursor_t {
@@ -104,5 +106,9 @@ namespace Bleakdepth {
 		};
 
 		inline void draw() const { texture.draw(position * size + offset, color); }
+
+		inline cref<point_t<i32>> get_position() const { return position; }
+
+		inline point_t<i32> get_screen_position() const { return position + offset; }
 	};
 } // namespace Bleakdepth

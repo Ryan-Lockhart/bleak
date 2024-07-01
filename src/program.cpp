@@ -160,12 +160,12 @@ void startup() {
 	game_atlas.universal_foffset = static_cast<point_t<f32>>(WINDOW_PADDING / 2);
 	ui_atlas.universal_foffset = static_cast<point_t<f32>>(WINDOW_PADDING / 2);
 
-	game_map.set<map_region_t::Border>({ cell_trait_t::Solid, cell_trait_t::Seen, cell_trait_t::Explored });
+	game_map.set<map_region_t::Border>({ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored });
 	game_map.randomize<map_region_t::Interior>(
 		random_engine,
 		0.5,
-		{ cell_trait_t::Solid, cell_trait_t::Seen, cell_trait_t::Explored },
-		{ cell_trait_t::Open, cell_trait_t::Seen, cell_trait_t::Explored }
+		{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored },
+		{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored }
 	);
 
 	player.position = static_cast<point_t<i32>>(game_map.find_random_cell_interior(random_engine, cell_trait_t::Open).value());
@@ -218,8 +218,13 @@ void render() {
 	grid_cursor.draw();
 
 	runes_t fps_text { std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::White };
-
 	ui_atlas.draw(fps_text, point_t<i32> { 0, UI_GRID_SIZE.h - 1 });
+	
+	runes_t tooltip_text { game_map[static_cast<point_t<uhalf>>(grid_cursor.get_position())].to_tooltip(), Colors::White };
+	Bleakdepth::size_t<> tooltip_size { Bleakdepth::Text::calculate_size(tooltip_text) };
+	auto tooltip_position { grid_cursor.get_screen_position() + point_t<>{ 1, 1 } };
+	renderer.draw_rect({ (grid_cursor.get_position() + point_t<>{ 1, 1 }) * game_atlas.glyph_size, (tooltip_size + point_t<>{ 1, 1 }) * ui_atlas.glyph_size }, Colors::Black, Colors::White);
+	ui_atlas.draw(tooltip_text, tooltip_position * game_atlas.glyph_size / ui_atlas.glyph_size);
 
 	renderer.present();
 }
