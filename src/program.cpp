@@ -1,3 +1,4 @@
+#include "log.hpp"
 #include "typedef.hpp"
 
 #include <cassert>
@@ -11,9 +12,9 @@
 #include "cardinal.hpp"
 #include "clock.hpp"
 #include "cursor.hpp"
+#include "gamepad.hpp"
 #include "glyph.hpp"
 #include "keyboard.hpp"
-#include "log.hpp"
 #include "map.hpp"
 #include "mouse.hpp"
 #include "point.hpp"
@@ -68,9 +69,6 @@ namespace Bleakdepth {
 	static timer_t animation_timer { 1000.0 / 3 };
 
 	static wave_t sine_wave { 1.0, 0.5, 1.0 };
-
-	static log_t message_log {};
-	static log_t error_log {};
 
 } // namespace Bleakdepth
 
@@ -142,7 +140,7 @@ void shutdown();
 
 int main(int argc, char* argv[]) {
 	startup();
-	
+
 	do {
 		update();
 		render();
@@ -154,6 +152,13 @@ int main(int argc, char* argv[]) {
 }
 
 void startup() {
+	GamepadManager::initialize();
+
+	GamepadManager::announce_gamepads();
+
+	message_log.flush_to_console(std::cout);
+	error_log.flush_to_console(std::cerr);
+
 	game_atlas.universal_offset = WINDOW_PADDING / 2;
 	ui_atlas.universal_offset = WINDOW_PADDING / 2;
 
@@ -219,14 +224,21 @@ void render() {
 
 	runes_t fps_text { std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::White };
 	ui_atlas.draw(fps_text, point_t<i32> { 0, UI_GRID_SIZE.h - 1 });
-	
+
 	runes_t tooltip_text { game_map[static_cast<point_t<uhalf>>(grid_cursor.get_position())].to_tooltip(), Colors::White };
 	Bleakdepth::size_t<> tooltip_size { Bleakdepth::Text::calculate_size(tooltip_text) };
-	auto tooltip_position { grid_cursor.get_screen_position() + point_t<>{ 1, 1 } };
-	renderer.draw_rect({ (grid_cursor.get_position() + point_t<>{ 1, 1 }) * game_atlas.glyph_size, (tooltip_size + point_t<>{ 1, 1 }) * ui_atlas.glyph_size }, Colors::Black, Colors::White);
+	auto tooltip_position { grid_cursor.get_screen_position() + point_t<> { 1, 1 } };
+	renderer.draw_rect(
+		{ (grid_cursor.get_position() + point_t<> { 1, 1 }) * game_atlas.glyph_size, (tooltip_size + point_t<> { 1, 1 }) * ui_atlas.glyph_size },
+		Colors::Black,
+		Colors::White
+	);
 	ui_atlas.draw(tooltip_text, tooltip_position * game_atlas.glyph_size / ui_atlas.glyph_size);
 
 	renderer.present();
 }
 
-void shutdown() {}
+void shutdown() {
+	message_log.flush_to_file();
+	error_log.flush_to_file();
+}

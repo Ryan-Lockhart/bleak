@@ -7,6 +7,7 @@
 
 #include <SDL.h>
 
+#include "gamepad.hpp"
 #include "keyboard.hpp"
 #include "mouse.hpp"
 #include "point.hpp"
@@ -46,18 +47,19 @@ namespace Bleakdepth {
 				throw std::invalid_argument("height must be greater than zero!");
 			}
 
-			ptr<SDL_Window> newWindow { SDL_CreateWindow(title, x, y, width, height, flags) };
+			ptr<SDL_Window> new_window { SDL_CreateWindow(title, x, y, width, height, flags) };
 
-			if (!newWindow) {
+			if (new_window == nullptr) {
 				throw std::runtime_error(std::format("failed to create window: {}", SDL_GetError()));
 			}
 
-			return newWindow;
+			return new_window;
 		}
 
 		static inline void destroy(ptr<SDL_Window> window) {
-			if (window) {
+			if (window != nullptr) {
 				SDL_DestroyWindow(window);
+				window = nullptr;
 			}
 
 			if (Subsystem::is_initialized()) {
@@ -109,21 +111,25 @@ namespace Bleakdepth {
 					closing = true;
 					break;
 				case SDL_MOUSEMOTION:
-					Mouse::update(point_t<i32> { event.motion.x, event.motion.y });
-					break;
 				case SDL_MOUSEWHEEL:
-					Mouse::update(point_t<f32> { event.wheel.preciseX, event.wheel.preciseY });
+					Mouse::process_event(event);
+					break;
+				case SDL_JOYDEVICEADDED:
+				case SDL_JOYDEVICEREMOVED:
+					GamepadManager::process_event(event);
 					break;
 				default:
 					break;
 				}
 			}
 
+			GamepadManager::update();
 			Keyboard::update();
 			Mouse::update();
 		}
 
 		constexpr bool is_closing() const noexcept { return closing; }
+
 		constexpr bool is_running() const noexcept { return !closing; }
 
 		constexpr void close() noexcept { closing = true; }

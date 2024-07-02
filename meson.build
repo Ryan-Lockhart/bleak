@@ -1,4 +1,17 @@
-project('bleakdepth', 'cpp', version: '0.0.1')
+project(
+    'bleakdepth',
+    'cpp',
+    version: '0.0.1',
+)
+
+cpu_family = target_machine.cpu_family()
+if cpu_family == 'x86'
+    install_dir = 'C:\\Program Files (x86)\\Bleakdepth'
+elif cpu_family == 'x86_64'
+    install_dir = 'C:\\Program Files\\Bleakdepth'
+endif
+
+install_res_dir = install_dir + '\\res'
 
 sdl_dependencies = [
     dependency('sdl2'),
@@ -36,6 +49,7 @@ lib_sources = [
     'lib/typedef.hpp',
     'lib/wave.hpp',
     'lib/window.hpp',
+
     'lib/constants/bindings.hpp',
     'lib/constants/characters.hpp',
     'lib/constants/colors.hpp',
@@ -44,23 +58,44 @@ lib_sources = [
     'lib/constants/octants.hpp',
 ]
 
-libbleak = static_library('bleak', lib_sources, dependencies: sdl_dependencies, override_options: ['cpp_std=c++26', 'cpp_stdlib=libc++'])
+libbleak = static_library(
+    'bleak',
+    lib_sources,
+    dependencies: sdl_dependencies,
 
-bleak_dependency = declare_dependency(link_with: libbleak, include_directories: include_directories('lib'))
+    override_options: [
+        'cpp_std=c++26',
+        'cpp_stdlib=libc++'
+    ],
+)
+
+bleak_dependency = declare_dependency(
+    link_with: libbleak,
+    include_directories: include_directories('lib'),
+)
 
 exe_source = [
     'src/program.cpp',
     'src/test.cpp',
 ]
 
-executable('bleakdepth', exe_source, dependencies: [bleak_dependency, sdl_dependencies], override_options: ['cpp_std=c++26', 'cpp_stdlib=libc++'])
+executable(
+    'bleakdepth',
+    exe_source,
 
-fs = import('fs')
+    dependencies: [
+        bleak_dependency,
+        sdl_dependencies,
+    ],
 
-fs.copyfile('res\\cursor.png', 'cursor.png')
-fs.copyfile('res\\grid_cursor.png', 'grid_cursor.png')
+    override_options: [
+        'cpp_std=c++26',
+        'cpp_stdlib=libc++',
+    ],
 
-fs.copyfile('res\\glyphs_8x8.png', 'glyphs_8x8.png')
-fs.copyfile('res\\glyphs_12x12.png', 'glyphs_12x12.png')
-fs.copyfile('res\\glyphs_16x16.png', 'glyphs_16x16.png')
-fs.copyfile('res\\glyphs_24x24.png', 'glyphs_24x24.png')
+    install: true,
+    install_dir: install_dir,
+)
+
+install_subdir('log', install_dir: install_dir)
+install_subdir('res', install_dir: install_dir)

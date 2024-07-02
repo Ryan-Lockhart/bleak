@@ -5,10 +5,13 @@
 #include <format>
 #include <list>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 namespace Bleakdepth {
 	class log_t {
 	  private:
+		std::string name;
 		std::list<std::string> messages;
 		usize max_messages;
 
@@ -16,13 +19,14 @@ namespace Bleakdepth {
 		using iterator = std::list<std::string>::iterator;
 		using const_iterator = std::list<std::string>::const_iterator;
 
-		inline log_t(usize maxMessages = 16) : messages(), max_messages(maxMessages) {}
+		inline log_t(cref<std::string> name, usize maxMessages = 16) : name { name }, messages {}, max_messages { maxMessages } {}
 
-		inline log_t(cref<log_t> other) noexcept : messages(other.messages), max_messages(other.max_messages) {}
+		inline log_t(cref<log_t> other) noexcept : name { other.name }, messages { other.messages }, max_messages { other.max_messages } {}
 
-		inline log_t(rval<log_t> other) noexcept : messages(std::move(other.messages)), max_messages(std::move(other.max_messages)) {}
+		inline log_t(rval<log_t> other) noexcept : name { std::move(other.name) }, messages(std::move(other.messages)), max_messages(std::move(other.max_messages)) {}
 
 		inline ref<log_t> operator=(cref<log_t> other) noexcept {
+			name = other.name;
 			messages = other.messages;
 			max_messages = other.max_messages;
 
@@ -30,6 +34,7 @@ namespace Bleakdepth {
 		}
 
 		inline ref<log_t> operator=(rval<log_t> other) noexcept {
+			name = std::move(other.name);
 			messages = std::move(other.messages);
 			max_messages = std::move(other.max_messages);
 
@@ -125,5 +130,26 @@ namespace Bleakdepth {
 
 			return result;
 		}
+
+		inline void flush_to_file() {
+			std::ofstream file { "log\\" + name + ".log", std::ios::out | std::ios::trunc };
+
+			for (cref<std::string> message : messages) {
+				file << message;
+			}
+
+			file.close();
+		}
+		
+		inline void flush_to_console(ref<std::ostream> stream = std::cout) {
+			for (cref<std::string> message : messages) {
+				stream << message;
+			}
+
+			stream.flush();
+		}
 	};
+
+	static inline log_t message_log { "message" };
+	static inline log_t error_log { "error" };
 } // namespace Bleakdepth

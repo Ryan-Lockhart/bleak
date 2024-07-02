@@ -19,10 +19,24 @@ namespace Bleakdepth {
 		static inline bool is_initialized() { return initialized; }
 
 		static inline void initialize() {
+			if (initialized) {
+				return;
+			}
+
 			current_state.reset();
 			previous_state.reset();
 
 			initialized = true;
+		}
+
+		static inline void terminate() {
+			if (!initialized) {
+				return;
+			}
+
+			// no cleanup required
+
+			initialized = false;
 		}
 
 		static inline void update() {
