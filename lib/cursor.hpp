@@ -5,6 +5,7 @@
 #include "color.hpp"
 #include "mouse.hpp"
 #include "point.hpp"
+#include "quadrant.hpp"
 #include "texture.hpp"
 
 #include "constants/colors.hpp"
@@ -34,17 +35,18 @@ namespace Bleakdepth {
 	};
 
 	template<i32 Width, i32 Height> struct grid_cursor_t {
-	  private:
 		texture_t texture;
+
 		point_t<i32> position;
-		point_t<i32> offset;
+		const point_t<i32> offset;
 
 		const point_t<i32> min;
 		const point_t<i32> max;
 
+		const point_t<i32> midpoint;
+
 		const bool use_bounds;
 
-	  public:
 		color_t color;
 
 		static constexpr point_t<i32> size { Width, Height };
@@ -57,6 +59,7 @@ namespace Bleakdepth {
 			offset { offset },
 			min {},
 			max {},
+			midpoint {},
 			use_bounds { false },
 			color { Colors::White } {}
 
@@ -66,6 +69,7 @@ namespace Bleakdepth {
 			offset { offset },
 			min {},
 			max {},
+			midpoint {},
 			use_bounds { false },
 			color { color } {}
 
@@ -75,6 +79,7 @@ namespace Bleakdepth {
 			offset { offset },
 			min { min },
 			max { max },
+			midpoint { (max - min) / 2 },
 			use_bounds { true },
 			color { Colors::White } {}
 
@@ -84,6 +89,7 @@ namespace Bleakdepth {
 			offset { offset },
 			min { min },
 			max { max },
+			midpoint { (max - min) / 2 },
 			use_bounds { true },
 			color { color } {}
 
@@ -110,5 +116,7 @@ namespace Bleakdepth {
 		inline cref<point_t<i32>> get_position() const { return position; }
 
 		inline point_t<i32> get_screen_position() const { return position + offset; }
+
+		inline quadrant_t get_quadrant() const { return quadrant_t { position.y < midpoint.y, position.x < midpoint.x }; }
 	};
 } // namespace Bleakdepth

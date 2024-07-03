@@ -82,6 +82,17 @@ namespace Bleakdepth {
 			texture.draw(&rects[glyph.index], &dst, glyph.color);
 		}
 
+		inline void draw(cref<glyph_t> glyph, cref<point_t<i32>> position, cref<point_t<i32>> offset) const {
+			if (glyph.index < 0 || glyph.index >= rects.size) {
+				throw std::out_of_range("glyph index out of range!");
+			}
+
+			const point_t pos = position * glyph_size + offset;
+			const SDL_Rect dst { pos.x + universal_offset.x, pos.y + universal_offset.y, glyph_size.x, glyph_size.y };
+
+			texture.draw(&rects[glyph.index], &dst, glyph.color);
+		}
+
 		inline void draw(cref<glyph_t> glyph, cref<point_t<f32>> position) const {
 			if (glyph.index < 0 || glyph.index >= rects.size) {
 				throw std::out_of_range("glyph index out of range!");
@@ -181,6 +192,39 @@ namespace Bleakdepth {
 					continue;
 				default:
 					draw(rune, position + carriage_pos + alignment_offs);
+					++carriage_pos.x;
+					continue;
+				}
+			}
+		}
+
+		inline void draw(cref<runes_t> runes, cref<point_t<i32>> position, cardinal_t alignment, cref<point_t<i32>> offset) const {
+			if (runes.empty()) {
+				return;
+			}
+
+			const point_t<i32> size { static_cast<point_t<i32>>(Text::calculate_size(runes)) * alignment };
+			const point_t<i32> alignment_offs { size - size / 2 };
+
+			point_t<i32> carriage_pos { 0 };
+
+			for (auto& rune : runes) {
+				switch (rune.index) {
+				case '\0':
+					return;
+				case '\n':
+					++carriage_pos.y;
+					carriage_pos.x = 0;
+					continue;
+				case '\t':
+					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					continue;
+				case '\v':
+					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.x = 0;
+					continue;
+				default:
+					draw(rune, position + carriage_pos + alignment_offs, offset);
 					++carriage_pos.x;
 					continue;
 				}

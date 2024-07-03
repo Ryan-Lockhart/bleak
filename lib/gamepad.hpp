@@ -6,43 +6,42 @@
 #include <map>
 
 #include <SDL.h>
-#include <stdexcept>
 
 #include "cardinal.hpp"
 #include "input.hpp"
 #include "log.hpp"
 
 extern "C" {
-typedef enum {
-	SDL_JOYSTICK_BUTTON_CROSS = 0,
-	SDL_JOYSTICK_BUTTON_CIRCLE = 1,
-	SDL_JOYSTICK_BUTTON_SQUARE = 2,
-	SDL_JOYSTICK_BUTTON_TRIANGLE = 3,
-	SDL_JOYSTICK_BUTTON_LEFTSTART = 4,
-	SDL_JOYSTICK_BUTTON_PLAYSTATION = 5,
-	SDL_JOYSTICK_BUTTON_RIGHTSTART = 6,
-	SDL_JOYSTICK_BUTTON_LEFTSTICK = 7,
-	SDL_JOYSTICK_BUTTON_RIGHTSTICK = 8,
-	SDL_JOYSTICK_BUTTON_LEFTSHOULDER = 9,
-	SDL_JOYSTICK_BUTTON_RIGHTSHOULDER = 10,
-	SDL_JOYSTICK_BUTTON_UP = 11,
-	SDL_JOYSTICK_BUTTON_DOWN = 12,
-	SDL_JOYSTICK_BUTTON_LEFT = 13,
-	SDL_JOYSTICK_BUTTON_RIGHT = 14,
-	SDL_JOYSTICK_BUTTON_TOUCHPAD = 15,
-	SDL_JOYSTICK_BUTTON_MICROPHONE = 16,
-	SDL_NUM_JOYSTICK_BUTTONS = 17
-} SDL_JoystickButton;
+	typedef enum {
+		SDL_JOYSTICK_BUTTON_CROSS = 0,
+		SDL_JOYSTICK_BUTTON_CIRCLE = 1,
+		SDL_JOYSTICK_BUTTON_SQUARE = 2,
+		SDL_JOYSTICK_BUTTON_TRIANGLE = 3,
+		SDL_JOYSTICK_BUTTON_LEFTSTART = 4,
+		SDL_JOYSTICK_BUTTON_PLAYSTATION = 5,
+		SDL_JOYSTICK_BUTTON_RIGHTSTART = 6,
+		SDL_JOYSTICK_BUTTON_LEFTSTICK = 7,
+		SDL_JOYSTICK_BUTTON_RIGHTSTICK = 8,
+		SDL_JOYSTICK_BUTTON_LEFTSHOULDER = 9,
+		SDL_JOYSTICK_BUTTON_RIGHTSHOULDER = 10,
+		SDL_JOYSTICK_BUTTON_UP = 11,
+		SDL_JOYSTICK_BUTTON_DOWN = 12,
+		SDL_JOYSTICK_BUTTON_LEFT = 13,
+		SDL_JOYSTICK_BUTTON_RIGHT = 14,
+		SDL_JOYSTICK_BUTTON_TOUCHPAD = 15,
+		SDL_JOYSTICK_BUTTON_MICROPHONE = 16,
+		SDL_NUM_JOYSTICK_BUTTONS = 17
+	} SDL_JoystickButton;
 
-typedef enum {
-	SDL_JOYSTICK_AXIS_LEFTX = 0,
-	SDL_JOYSTICK_AXIS_LEFTY = 1,
-	SDL_JOYSTICK_AXIS_RIGHTX = 2,
-	SDL_JOYSTICK_AXIS_RIGHTY = 3,
-	SDL_JOYSTICK_AXIS_TRIGGERLEFT = 4,
-	SDL_JOYSTICK_AXIS_TRIGGERRIGHT = 5,
-	SDL_NUM_JOYSTICK_AXES = 6
-} SDL_JoystickAxis;
+	typedef enum {
+		SDL_JOYSTICK_AXIS_LEFTX = 0,
+		SDL_JOYSTICK_AXIS_LEFTY = 1,
+		SDL_JOYSTICK_AXIS_RIGHTX = 2,
+		SDL_JOYSTICK_AXIS_RIGHTY = 3,
+		SDL_JOYSTICK_AXIS_TRIGGERLEFT = 4,
+		SDL_JOYSTICK_AXIS_TRIGGERRIGHT = 5,
+		SDL_NUM_JOYSTICK_AXES = 6
+	} SDL_JoystickAxis;
 }
 
 namespace Bleakdepth {
@@ -487,21 +486,24 @@ namespace Bleakdepth {
 			initialized = false;
 		}
 
-		static inline cptr<gamepad_t> lease(i32 id, fn_ptr<void> disconnected_callback, fn_ptr<void, cptr<gamepad_t>> reconnected_callback) {
+		static inline cptr<gamepad_t> lease(i32 id, fn_ptr<void> disconnected_callback, fn_ptr<void, cptr<gamepad_t>> reconnected_callback) noexcept {
 			if (disconnected_callback == nullptr || reconnected_callback == nullptr) {
-				throw std::runtime_error("a callback was not provided for gamepad lease");
+				error_log.add("a callback was not provided for gamepad lease!\n");
+				return nullptr;
 			}
 
 			auto iter { slots.find(id) };
 
 			if (iter == slots.end()) {
-				throw std::runtime_error("attempting to lease gamepad that does not exist");
+				error_log.add("attempting to lease gamepad that does not exist!\n");
+				return nullptr;
 			}
 
 			ref<gamepad_slot_t> target { iter->second };
 
 			if (target.has_callbacks()) {
-				throw std::runtime_error("attempting to lease gamepad that is already leased");
+				error_log.add("attempting to lease gamepad that is already leased!\n");
+				return nullptr;
 			}
 
 			target.disconnect_callback = disconnected_callback;
@@ -510,18 +512,21 @@ namespace Bleakdepth {
 			return target.gamepad;
 		}
 
-		static inline void release(i32 id) {
+		static inline void release(i32 id) noexcept {
 			auto iter { slots.find(id) };
 
 			if (iter == slots.end()) {
-				throw std::runtime_error("attempting to release gamepad that does not exist");
+				error_log.add("attempting to release gamepad that does not exist!\n");
+				return;
 			}
 
-			if (iter->second.disconnect_callback == nullptr) {
-				throw std::runtime_error("attempting to release gamepad that is not leased");
+			if (!iter->second.has_callbacks()) {
+				error_log.add("attempting to release gamepad that is not leased!\n");
+				return;
 			}
 
 			iter->second.disconnect_callback = nullptr;
+			iter->second.reconnect_callback = nullptr;
 		}
 
 		static inline bool add_joystick(int id) noexcept;
@@ -535,7 +540,7 @@ namespace Bleakdepth {
 			}
 		}
 
-		static inline void process_event(ref<SDL_Event> event) {
+		static inline void process_event(ref<SDL_Event> event) noexcept {
 			switch (event.type) {
 			case SDL_JOYDEVICEADDED: {
 				if (!add_joystick(event.jdevice.which)) {

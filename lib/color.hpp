@@ -2,94 +2,52 @@
 
 #include "typedef.hpp"
 
-#include <string>
-#include <utility>
-
 #include <format>
+#include <string>
+
+extern "C" {
+	typedef struct c_color_t {
+		union {
+			struct {
+				// 8-bit red component
+				u8 r { 0x00 };
+				// 8-bit green component
+				u8 g { 0x00 };
+				// 8-bit blue component
+				u8 b { 0x00 };
+				// 8-bit alpha component
+				u8 a { 0x00 };
+			};
+
+			// 32-bit packed color value
+			unsigned int packed;
+		};
+	} c_color_t;
+
+	static_assert(sizeof(c_color_t) == 4, "size of c_color_t must be four bytes");
+}
 
 namespace Bleakdepth {
-	struct color_t {
-		u8 r, g, b, a;
+	struct color_t : public c_color_t {
+	  private:
+		static constexpr u8 wrap_cast(f32 value) noexcept { return static_cast<u8>(static_cast<uhalf>(value * 255.0f) % 256); }
 
-		constexpr color_t() noexcept : r {}, g {}, b {}, a {} {}
+		static constexpr u8 wrap_cast(f64 value) noexcept { return static_cast<u8>(static_cast<usize>(value * 255.0f) % 256); }
 
-		constexpr color_t(u8 r, u8 g, u8 b, u8 a = u8 { 0xFF }) noexcept : r { r }, g { g }, b { b }, a { a } {}
+	  public:
+		constexpr color_t() noexcept {}
+
+		constexpr color_t(u8 r, u8 g, u8 b, u8 a = u8 { 0xFF }) noexcept : c_color_t { .r = r, .g = g, .b = b, .a = a } {}
 
 		constexpr color_t(f32 r, f32 g, f32 b, f32 a = 1.0f) noexcept :
-			r { static_cast<u8>(r * 255.0f) },
-			g { static_cast<u8>(g * 255.0f) },
-			b { static_cast<u8>(b * 255.0f) },
-			a { static_cast<u8>(a * 255.0f) } {}
+			c_color_t { .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) } {}
 
 		constexpr color_t(f64 r, f64 g, f64 b, f64 a = 1.0) noexcept :
-			r { static_cast<u8>(r * 255.0) },
-			g { static_cast<u8>(g * 255.0) },
-			b { static_cast<u8>(b * 255.0) },
-			a { static_cast<u8>(a * 255.0) } {}
+			c_color_t { .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) } {}
 
-		constexpr color_t(cref<color_t> other) noexcept : r { other.r }, g { other.g }, b { other.b }, a { other.a } {}
+		constexpr bool operator==(cref<color_t> other) const noexcept { return packed == other.packed; }
 
-		constexpr color_t(rval<color_t> other) noexcept :
-			r { std::move(other.r) },
-			g { std::move(other.g) },
-			b { std::move(other.b) },
-			a { std::move(other.a) } {}
-
-		constexpr color_t(cref<color_t> other, u8 a) noexcept : r { other.r }, g { other.g }, b { other.b }, a { a } {}
-
-		constexpr color_t(rval<color_t> other, u8 a) noexcept :
-			r { std::move(other.r) },
-			g { std::move(other.g) },
-			b { std::move(other.b) },
-			a { a } {}
-
-		constexpr color_t(cref<color_t> other, f32 a) noexcept :
-			r { other.r },
-			g { other.g },
-			b { other.b },
-			a { static_cast<u8>(a * 255.0f) } {}
-
-		constexpr color_t(rval<color_t> other, f32 a) noexcept :
-			r { std::move(other.r) },
-			g { std::move(other.g) },
-			b { std::move(other.b) },
-			a { static_cast<u8>(a * 255.0f) } {}
-
-		constexpr color_t(cref<color_t> other, f64 a) noexcept :
-			r { other.r },
-			g { other.g },
-			b { other.b },
-			a { static_cast<u8>(a * 255.0) } {}
-
-		constexpr color_t(rval<color_t> other, f64 a) noexcept :
-			r { std::move(other.r) },
-			g { std::move(other.g) },
-			b { std::move(other.b) },
-			a { static_cast<u8>(a * 255.0) } {}
-
-		constexpr ref<color_t> operator=(cref<color_t> other) noexcept {
-			r = other.r;
-			g = other.g;
-			b = other.b;
-			a = other.a;
-
-			return *this;
-		}
-
-		constexpr ref<color_t> operator=(rval<color_t> other) noexcept {
-			r = std::move(other.r);
-			g = std::move(other.g);
-			b = std::move(other.b);
-			a = std::move(other.a);
-
-			return *this;
-		}
-
-		constexpr u32 packed() const noexcept { return u32 { *(ptr<u32>)&r }; }
-
-		constexpr bool operator==(cref<color_t> other) const noexcept { return packed() == other.packed(); }
-
-		constexpr bool operator!=(cref<color_t> other) const noexcept { return packed() != other.packed(); }
+		constexpr bool operator!=(cref<color_t> other) const noexcept { return packed != other.packed; }
 
 		constexpr bool operator<(cref<color_t> other) const noexcept = delete;
 		constexpr bool operator<=(cref<color_t> other) const noexcept = delete;
@@ -98,22 +56,22 @@ namespace Bleakdepth {
 		constexpr bool operator>=(cref<color_t> other) const noexcept = delete;
 
 		constexpr void set_rgb(f32 red, f32 green, f32 blue) noexcept {
-			r = static_cast<u8>(red * 255.0f);
-			g = static_cast<u8>(green * 255.0f);
-			b = static_cast<u8>(blue * 255.0f);
+			r = wrap_cast(red);
+			g = wrap_cast(green);
+			b = wrap_cast(blue);
 		}
 
 		constexpr void set_rgb(f64 red, f64 green, f64 blue) noexcept {
-			r = static_cast<u8>(red * 255.0);
-			g = static_cast<u8>(green * 255.0);
-			b = static_cast<u8>(blue * 255.0);
+			r = wrap_cast(red);
+			g = wrap_cast(green);
+			b = wrap_cast(blue);
 		}
 
-		constexpr void set_alpha(f32 alpha) noexcept { a = static_cast<u8>(alpha * 255.0f); }
+		constexpr void set_alpha(f32 alpha) noexcept { a = wrap_cast(alpha); }
 
-		constexpr void set_alpha(f64 alpha) noexcept { a = static_cast<u8>(alpha * 255.0); }
+		constexpr void set_alpha(f64 alpha) noexcept { a = wrap_cast(alpha); }
 
-		constexpr explicit operator u32() const noexcept { return packed(); }
+		constexpr explicit operator u32() const noexcept { return packed; }
 
 		inline operator std::string() const noexcept { return std::format("[{}, {}, {}, {}]", r, g, b, a); }
 	};

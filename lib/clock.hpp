@@ -21,7 +21,7 @@ namespace Bleakdepth {
 		static inline void tick(f64 interval) {
 			last = now();
 			if (auto dt = delta_time(); dt < interval) {
-				SDL_Delay(static_cast<Bleakdepth::u32>(interval - dt));
+				SDL_Delay(static_cast<u32>(interval - dt));
 			}
 		}
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cardinal.hpp"
 #include "typedef.hpp"
 
 #include <format>
@@ -138,6 +139,20 @@ namespace Bleakdepth {
 						   rect.size.h - outlineThickness * 2 },
 				fill
 			);
+		}
+
+		inline void draw_rect(cref<point_t<i32>> position, cref<size_t<i32>> size, cref<color_t> fill, cref<color_t> outline) noexcept {
+			fill_rect(rect_t<> { position, size }, fill);
+			draw_rect(rect_t<> { position, size }, outline);
+		}
+
+		inline void draw_rect(point_t<i32> position, size_t<i32> size, cardinal_t alignment, cref<color_t> fill, cref<color_t> outline) noexcept {
+			auto aligned_size{ size * alignment };
+			
+			position += aligned_size + (-aligned_size - size) / 2;
+
+			fill_rect(rect_t<> { position, size }, fill);
+			draw_rect(rect_t<> { position, size }, outline);
 		}
 	};
 } // namespace Bleakdepth

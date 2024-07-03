@@ -1,12 +1,15 @@
-#include "color.hpp"
-#include "constants/colors.hpp"
+#pragma once
+
 #include "typedef.hpp"
 
 #include <string>
 #include <vector>
 
+#include "color.hpp"
 #include "glyph.hpp"
 #include "point.hpp"
+
+#include "constants/colors.hpp"
 
 namespace Bleakdepth {
 	class runes_t : public std::vector<glyph_t> {

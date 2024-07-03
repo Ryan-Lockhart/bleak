@@ -4,8 +4,6 @@
 
 #include <string>
 
-// I must admit, the following is a bit of a hack. I love the C programming language :)
-
 extern "C" {
 	typedef struct c_cardinal_t {
 		union {
@@ -26,7 +24,7 @@ extern "C" {
 		};
 	} c_cardinal_t;
 
-	static_assert(sizeof(c_cardinal_t) == 1, "c_cardinal_t must be one byte in size (you've either changed the bitfields or something is wrong)");
+	static_assert(sizeof(c_cardinal_t) == 1, "size of c_cardinal_t must be one byte");
 }
 
 namespace Bleakdepth {
@@ -85,6 +83,8 @@ namespace Bleakdepth {
 		constexpr cardinal_t() : c_cardinal_t {} {}
 
 		constexpr cardinal_t(u8 value) : c_cardinal_t { .value = value } {}
+
+		constexpr cardinal_t operator-() const noexcept { return cardinal_t { (u8) ~(u8) * this }; }
 
 		constexpr cardinal_t operator+(cref<cardinal_t> other) const noexcept {
 			cardinal_t sum { static_cast<cardinal_t>(*this | other) };
@@ -217,6 +217,4 @@ namespace Bleakdepth {
 			}
 		}
 	};
-
-	static_assert(sizeof(cardinal_t) == 1, "cardinal_t must be one byte in size (you've either changed the bitfields or something is wrong)");
 } // namespace Bleakdepth

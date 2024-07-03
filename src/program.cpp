@@ -177,6 +177,11 @@ int main(int argc, char* argv[]) {
 }
 
 void startup() {
+	if (primary_gamepad == nullptr) {
+		message_log.add("no gamepad detected\n");
+		gamepad_enabled = false;
+	}
+
 	game_atlas.universal_offset = WINDOW_PADDING / 2;
 	ui_atlas.universal_offset = WINDOW_PADDING / 2;
 
@@ -243,15 +248,18 @@ void render() {
 	runes_t fps_text { std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::White };
 	ui_atlas.draw(fps_text, point_t<i32> { 0, UI_GRID_SIZE.h - 1 });
 
-	runes_t tooltip_text { game_map[static_cast<point_t<uhalf>>(grid_cursor.get_position())].to_tooltip(), Colors::White };
-	Bleakdepth::size_t<> tooltip_size { Bleakdepth::Text::calculate_size(tooltip_text) };
-	auto tooltip_position { grid_cursor.get_screen_position() + point_t<> { 1, 1 } };
-	renderer.draw_rect(
-		{ (grid_cursor.get_position() + point_t<> { 1, 1 }) * game_atlas.glyph_size, (tooltip_size + point_t<> { 1, 1 }) * ui_atlas.glyph_size },
-		Colors::Black,
-		Colors::White
-	);
-	ui_atlas.draw(tooltip_text, tooltip_position * game_atlas.glyph_size / ui_atlas.glyph_size);
+	runes_t tooltip_text { "waffle\nboarde", Colors::White };
+	auto tooltip_size { (point_t<i32>)Text::calculate_size(tooltip_text) };
+
+	auto tooltip_alignment { (cardinal_t)grid_cursor.get_quadrant() };
+
+	auto tooltip_position { grid_cursor.position * game_atlas.glyph_size + grid_cursor.size / 2 + point_t<>{ 4, 4 } };
+
+	renderer.draw_rect(tooltip_position, tooltip_size * ui_atlas.glyph_size, tooltip_alignment, Colors::Black, Colors::White);
+	ui_atlas.draw(tooltip_text, grid_cursor.position * game_atlas.glyph_size / ui_atlas.glyph_size, tooltip_alignment, point_t<>{ 4, 4 } + game_atlas.glyph_size / ui_atlas.glyph_size * tooltip_alignment);
+
+	renderer.draw_point(tooltip_position, Colors::Red);
+	renderer.draw_point(grid_cursor.position * game_atlas.glyph_size, Colors::Green);
 
 	renderer.present();
 }

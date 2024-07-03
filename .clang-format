@@ -124,7 +124,7 @@ IncludeIsMainSourceRegex: ''
 IndentAccessModifiers: false
 IndentCaseBlocks: false
 IndentCaseLabels: false
-IndentExternBlock: AfterExternBlock
+IndentExternBlock: Indent
 IndentGotoLabels: true
 IndentPPDirectives: None
 IndentRequiresClause: true
