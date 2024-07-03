@@ -392,15 +392,15 @@ namespace Bleakdepth {
 			}
 
 			if (position.x == origin.x) {
-				state |= cardinal_t::West;
+				state += cardinal_t::West;
 			} else if (position.x == extent.x) {
-				state |= cardinal_t::East;
+				state += cardinal_t::East;
 			}
 
 			if (position.y == origin.y) {
-				state |= cardinal_t::North;
+				state += cardinal_t::North;
 			} else if (position.y == extent.y) {
-				state |= cardinal_t::South;
+				state += cardinal_t::South;
 			}
 
 			return state;
