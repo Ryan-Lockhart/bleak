@@ -18,7 +18,7 @@ namespace Bleakdepth {
 	  private:
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-private-field"
-		// this is necessary to align the struct to 1 byte, otherwise you'll get random garbage in the unused bits
+		// this is necessary to align the struct to one byte, otherwise you'll get random garbage in the unused bits
 		bool unused : 2 { false };
 #pragma clang diagnostic pop
 
@@ -215,4 +215,6 @@ namespace Bleakdepth {
 			}
 		}
 	};
+
+	static_assert(sizeof(cardinal_t) == 1, "cardinal_t must be one byte in size (you've either changed the bitfields or something is wrong)");
 } // namespace Bleakdepth
