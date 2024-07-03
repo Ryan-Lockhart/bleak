@@ -4,25 +4,33 @@
 
 #include <string>
 
+// I must admit, the following is a bit of a hack. I love the C programming language :)
+
+extern "C" {
+	typedef struct c_cardinal_t {
+		union {
+			struct {
+				bool north : 1 { false };
+				bool south : 1 { false };
+
+				bool east : 1 { false };
+				bool west : 1 { false };
+
+				bool up : 1 { false };
+				bool down : 1 { false };
+
+				bool : 2;
+			};
+
+			unsigned char value;
+		};
+	} c_cardinal_t;
+
+	static_assert(sizeof(c_cardinal_t) == 1, "c_cardinal_t must be one byte in size (you've either changed the bitfields or something is wrong)");
+}
+
 namespace Bleakdepth {
-	struct cardinal_t {
-		bool north : 1;
-		bool south : 1;
-
-		bool east : 1;
-		bool west : 1;
-
-		bool up : 1;
-		bool down : 1;
-
-	  private:
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-private-field"
-		// this is necessary to align the struct to one byte, otherwise you'll get random garbage in the unused bits
-		bool unused : 2 { false };
-#pragma clang diagnostic pop
-
-	  public:
+	struct cardinal_t : public c_cardinal_t {
 		static constexpr u8 Central { 0 };
 
 		static constexpr u8 North { 1 << 0 };
@@ -74,15 +82,9 @@ namespace Bleakdepth {
 			};
 		};
 
-		constexpr cardinal_t() : north { false }, south { false }, east { false }, west { false }, up { false }, down { false } {}
+		constexpr cardinal_t() : c_cardinal_t {} {}
 
-		constexpr cardinal_t(u8 value) :
-			north { static_cast<bool>(value & cardinal_t::North) },
-			south { static_cast<bool>(value & cardinal_t::South) },
-			east { static_cast<bool>(value & cardinal_t::East) },
-			west { static_cast<bool>(value & cardinal_t::West) },
-			up { static_cast<bool>(value & cardinal_t::Up) },
-			down { static_cast<bool>(value & cardinal_t::Down) } {}
+		constexpr cardinal_t(u8 value) : c_cardinal_t { .value = value } {}
 
 		constexpr cardinal_t operator+(cref<cardinal_t> other) const noexcept {
 			cardinal_t sum { static_cast<cardinal_t>(*this | other) };
