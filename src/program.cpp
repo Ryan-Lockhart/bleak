@@ -1,4 +1,3 @@
-#include "log.hpp"
 #include "typedef.hpp"
 
 #include <cassert>
@@ -15,6 +14,7 @@
 #include "gamepad.hpp"
 #include "glyph.hpp"
 #include "keyboard.hpp"
+#include "log.hpp"
 #include "map.hpp"
 #include "mouse.hpp"
 #include "point.hpp"
@@ -57,6 +57,23 @@ namespace Bleakdepth {
 
 	static map_t<GAME_GRID_SIZE.x, GAME_GRID_SIZE.y, 1, 1> game_map {};
 
+	static bool gamepad_enabled { true };
+
+	static void primary_gamepad_disconnected();
+	static void primary_gamepad_reconnected(cptr<gamepad_t> gamepad);
+
+	static cptr<gamepad_t> primary_gamepad { GamepadManager::lease(0, &primary_gamepad_disconnected, &primary_gamepad_reconnected) };
+
+	static void primary_gamepad_disconnected() {
+		gamepad_enabled = false;
+		primary_gamepad = nullptr;
+	}
+
+	static void primary_gamepad_reconnected(cptr<gamepad_t> gamepad) {
+		gamepad_enabled = true;
+		primary_gamepad = gamepad;
+	}
+
 	static cursor_t cursor { { renderer, "res\\cursor.png" }, Colors::White };
 	static grid_cursor_t<16, 16> grid_cursor { { renderer, "res\\grid_cursor.png" }, { 0 }, Colors::Metals::Gold, { 0, 0 }, GAME_GRID_SIZE - 1 };
 
@@ -92,8 +109,12 @@ bool camera_movement() {
 		--direction.x;
 	}
 
+	if (gamepad_enabled && direction == point_t<>::Zero) {
+		direction = primary_gamepad->right_stick.current_state;
+	}
+
 	if (direction != point_t<>::Zero) {
-		camera_position += direction;
+		camera_position -= direction;
 
 		input_timer.record();
 
@@ -117,6 +138,10 @@ bool character_movement() {
 	}
 	if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::East])) {
 		++direction.x;
+	}
+
+	if (gamepad_enabled && direction == point_t<>::Zero) {
+		direction = primary_gamepad->left_stick.current_state;
 	}
 
 	if (direction != point_t<>::Zero) {
@@ -152,13 +177,6 @@ int main(int argc, char* argv[]) {
 }
 
 void startup() {
-	GamepadManager::initialize();
-
-	GamepadManager::announce_gamepads();
-
-	message_log.flush_to_console(std::cout);
-	error_log.flush_to_console(std::cerr);
-
 	game_atlas.universal_offset = WINDOW_PADDING / 2;
 	ui_atlas.universal_offset = WINDOW_PADDING / 2;
 
@@ -239,6 +257,10 @@ void render() {
 }
 
 void shutdown() {
+	if (primary_gamepad != nullptr) {
+		GamepadManager::release(0);
+	}
+
 	message_log.flush_to_file();
 	error_log.flush_to_file();
 }

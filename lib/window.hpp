@@ -28,17 +28,16 @@ namespace Bleakdepth {
 		bool closing = false;
 
 		static inline ptr<SDL_Window> create(cstr title, i32 x, i32 y, i32 width, i32 height, u32 flags) {
-			if (!Subsystem::is_initialized()) {
-				Subsystem::initialize();
-			}
+			Subsystem::initialize();
 
-			if (!Mouse::is_initialized()) {
-				Mouse::initialize();
-			}
+			Mouse::initialize();
 
-			if (!Keyboard::is_initialized()) {
-				Keyboard::initialize();
-			}
+			Keyboard::initialize();
+
+			GamepadManager::initialize();
+
+			message_log.flush_to_console(std::cout);
+			error_log.flush_to_console(std::cerr);
 
 			if (width <= 0) {
 				throw std::invalid_argument("width must be greater than zero!");
@@ -62,9 +61,13 @@ namespace Bleakdepth {
 				window = nullptr;
 			}
 
-			if (Subsystem::is_initialized()) {
-				Subsystem::terminate();
-			}
+			GamepadManager::terminate();
+
+			Keyboard::terminate();
+
+			Mouse::terminate();
+
+			Subsystem::terminate();
 		}
 
 	  public:
@@ -110,14 +113,17 @@ namespace Bleakdepth {
 				case SDL_QUIT:
 					closing = true;
 					break;
+
 				case SDL_MOUSEMOTION:
 				case SDL_MOUSEWHEEL:
 					Mouse::process_event(event);
 					break;
+
 				case SDL_JOYDEVICEADDED:
 				case SDL_JOYDEVICEREMOVED:
 					GamepadManager::process_event(event);
 					break;
+
 				default:
 					break;
 				}
