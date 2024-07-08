@@ -23,6 +23,10 @@ extern "C" {
 
 namespace bleak {
 	struct extent_1d_t : public c_extent_1d_t {
+		template<typename T> static constexpr scalar_t scalar_cast(T value) noexcept { return static_cast<scalar_t>(value); }
+
+		template<typename T> static constexpr product_t product_cast(T value) noexcept { return product_cast(value); }
+
 		static const extent_1d_t zero;
 
 		constexpr extent_1d_t() noexcept {}

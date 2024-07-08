@@ -1,6 +1,6 @@
 #pragma once
 
-#include "octant.hpp"
+#include "bleak/octant.hpp"
 
 namespace bleak {
 	constexpr const octant_t<i32> Octants[] {

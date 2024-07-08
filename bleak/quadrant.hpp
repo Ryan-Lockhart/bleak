@@ -1,10 +1,10 @@
 #pragma once
 
-#include "typedef.hpp"
+#include "bleak/typedef.hpp"
 
 #include <string>
 
-#include "cardinal.hpp"
+#include "bleak/cardinal.hpp"
 
 extern "C" {
 	typedef struct c_quadrant_t {
@@ -15,30 +15,30 @@ extern "C" {
 				bool : 6;
 			};
 
-			u8 value;
+			bleak::u8 value;
 		};
 	} c_quadrant_t;
 
 	static_assert(sizeof(c_quadrant_t) == 1, "size of c_quadrant_t must be one byte");
 }
 
-namespace Bleakdepth {
+namespace bleak {
 	struct quadrant_t : public c_quadrant_t {
 	  public:
-		static constexpr u8 Upper { 1 << 0 };
-		static constexpr u8 Left { 1 << 1 };
+		static constexpr u8 Upper{ 1 << 0 };
+		static constexpr u8 Left{ 1 << 1 };
 
-		static constexpr u8 TopLeft { quadrant_t::Upper | quadrant_t::Left };
-		static constexpr u8 LowerLeft { quadrant_t::Left };
+		static constexpr u8 TopLeft{ quadrant_t::Upper | quadrant_t::Left };
+		static constexpr u8 LowerLeft{ quadrant_t::Left };
 
-		static constexpr u8 UpperRight { quadrant_t::Upper };
-		static constexpr u8 LowerRight { 0 };
+		static constexpr u8 UpperRight{ quadrant_t::Upper };
+		static constexpr u8 LowerRight{ 0 };
 
 		constexpr quadrant_t() noexcept {}
 
-		constexpr quadrant_t(bool upper, bool left) noexcept : c_quadrant_t { .upper = upper, .left = left } {}
+		constexpr quadrant_t(bool upper, bool left) noexcept : c_quadrant_t{ .upper = upper, .left = left } {}
 
-		constexpr quadrant_t(c_quadrant_t quadrant) noexcept : c_quadrant_t { .value = quadrant.value } {}
+		constexpr quadrant_t(c_quadrant_t quadrant) noexcept : c_quadrant_t{ .value = quadrant.value } {}
 
 		constexpr quadrant_t(cardinal_t direction) noexcept {
 			switch (direction) {
@@ -102,4 +102,4 @@ namespace Bleakdepth {
 			}
 		}
 	};
-} // namespace Bleakdepth
+} // namespace bleak

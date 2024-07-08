@@ -1,21 +1,19 @@
 #pragma once
 
-#include "typedef.hpp"
+#include "bleak/typedef.hpp"
 
 #include <format>
-#include <stdexcept>
 
 #include <SDL.h>
 
 #include "bleak/extent.hpp"
+#include "bleak/gamepad.hpp"
+#include "bleak/keyboard.hpp"
+#include "bleak/log.hpp"
+#include "bleak/mouse.hpp"
 #include "bleak/offset.hpp"
-#include "gamepad.hpp"
-#include "keyboard.hpp"
-#include "log.hpp"
-#include "mouse.hpp"
-#include "point.hpp"
-#include "rect.hpp"
-#include "subsystem.hpp"
+#include "bleak/rect.hpp"
+#include "bleak/subsystem.hpp"
 
 namespace bleak {
 	namespace sdl {
@@ -41,7 +39,7 @@ namespace bleak {
 				SDL_DestroyWindow(handle);
 				handle = nullptr;
 			} else {
-				error_log.add("cannot destroy window: window handle is nullptr!");
+				error_log.add("cannot destroy window: window handle is null!");
 			}
 		}
 	} // namespace sdl
@@ -58,25 +56,17 @@ namespace bleak {
 	  private:
 		bool closing = false;
 
-		inline sdl::window create(cstr title, extent_2d_t size, offset_2d_t position, u32 flags) {
-
-			if (size.w <= 0) {
-				throw std::invalid_argument("width must be greater than zero!");
-			}
-			if (size.h <= 0) {
-				throw std::invalid_argument("height must be greater than zero!");
-			}
-
+		inline sdl::window create(cstr title, cref<offset_2d_t> position, cref<extent_2d_t> size, sdl::window_flags flags) noexcept {
 			ptr<SDL_Window> new_window { SDL_CreateWindow(title, position.x, position.y, size.w, size.h, flags) };
 
 			if (new_window == nullptr) {
-				throw std::runtime_error(std::format("failed to create window: {}", SDL_GetError()));
+				error_log.add(std::format("failed to create window: {}", SDL_GetError()));
 			}
 
 			return new_window;
 		}
 
-		static inline void destroy(ptr<SDL_Window> window) {
+		static inline void destroy(ptr<SDL_Window> window) noexcept {
 			if (window != nullptr) {
 				SDL_DestroyWindow(window);
 				window = nullptr;
@@ -94,39 +84,39 @@ namespace bleak {
 	  public:
 		inline window_t() = delete;
 
-		inline window_t(cstr title, cref<size_t<i32>> size, u32 flags) :
-			window { create(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.w, size.h, flags) },
+		inline window_t(cstr title, cref<extent_2d_t> size, sdl::window_flags flags) noexcept :
+			window { create(title, sdl::WINDOW_POSITION_CENTERED, size, flags) },
 			title { title },
 			size { size },
 			flags { flags } {}
 
-		inline window_t(cstr title, cref<offset_2d_t> position, cref<size_t<i32>> size, u32 flags) :
-			window { create(title, position.x, position.y, size.w, size.h, flags) },
+		inline window_t(cstr title, cref<offset_2d_t> position, cref<extent_2d_t> size, sdl::window_flags flags) noexcept :
+			window { create(title, position, size, flags) },
 			title { title },
 			size { size },
 			flags { flags } {}
 
-		inline window_t(cstr title, cref<rect_t<i32>> transform, u32 flags) :
-			window { create(title, transform.position.x, transform.position.y, transform.size.w, transform.size.h, flags) },
-			title { title },
-			size { transform.size },
-			flags { flags } {}
+		inline window_t(cref<window_t> other) noexcept = delete;
 
-		inline window_t(cstr title, i32 width, i32 height, u32 flags) :
-			window { create(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags) },
-			title { title },
-			size { width, height },
-			flags { flags } {}
+		inline window_t(rval<window_t> other) noexcept :
+			window(std::move(other.window)),
+			title(std::move(other.title)),
+			size(std::move(other.size)),
+			flags(std::move(other.flags)) {
+			other.window = nullptr;
+		}
 
-		inline window_t(cstr title, i32 x, i32 y, i32 width, i32 height, u32 flags) :
-			window { create(title, x, y, width, height, flags) },
-			title { title },
-			size { width, height },
-			flags { flags } {}
+		inline ref<window_t> operator=(cref<window_t> other) noexcept = delete;
+
+		inline ref<window_t> operator=(rval<window_t> other) noexcept = delete;
 
 		inline ~window_t() { destroy(window); }
 
 		inline void poll_events() {
+			if (!is_valid()) {
+				return;
+			}
+
 			SDL_Event event;
 
 			while (SDL_PollEvent(&event)) {
@@ -155,6 +145,8 @@ namespace bleak {
 			Mouse::update();
 		}
 
+		constexpr bool is_valid() const noexcept { return window != nullptr; }
+
 		constexpr bool is_closing() const noexcept { return closing; }
 
 		constexpr bool is_running() const noexcept { return !closing; }
@@ -165,12 +157,12 @@ namespace bleak {
 
 		constexpr cptr<SDL_Window> handle() const noexcept { return window; }
 
-		constexpr offset_2d_t origin() const noexcept { return size_t<i32>::Zero; }
+		constexpr offset_2d_t origin() const noexcept { return offset_2d_t::zero; }
 
-		constexpr offset_2d_t center() const noexcept { return size / 2; }
+		constexpr offset_2d_t center() const noexcept { return origin() + size / 2; }
 
-		constexpr offset_2d_t extents() const noexcept { return size - 1; }
+		constexpr offset_2d_t extents() const noexcept { return origin() + size - 1; }
 
-		constexpr rect_t<i32> bounds() const noexcept { return { origin(), extents() }; }
+		constexpr rect_t bounds() const noexcept { return { origin(), size }; }
 	};
 } // namespace bleak

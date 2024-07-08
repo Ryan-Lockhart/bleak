@@ -2,7 +2,7 @@
 
 #include "typedef.hpp"
 
-#include "bleak/offset/offset.hpp"
+#include "bleak/offset.hpp"
 
 namespace bleak {
 	struct line_2d_t {

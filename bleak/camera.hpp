@@ -1,11 +1,12 @@
-#include "typedef.hpp"
+#pragma once
 
-#include "coord.hpp"
-#include "point.hpp"
+#include "bleak/typedef.hpp"
+
+#include "bleak/offset.hpp"
 
 namespace bleak {
-	template<typename T> class camera_t {
+	class camera_t {
 	  private:
-		coord_t<T> position;
+		offset_2d_t position;
 	};
-} // namespace Bleakdepth
+} // namespace bleak

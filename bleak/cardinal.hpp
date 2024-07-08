@@ -154,7 +154,7 @@ namespace bleak {
 			}
 		}
 
-		constexpr operator u8() const noexcept { return *(cptrc<u8>)this; }
+		constexpr operator u8() const noexcept { return value; }
 
 		constexpr operator std::string() const noexcept {
 			switch (*this) {

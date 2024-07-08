@@ -5,6 +5,7 @@
 #include <cmath>
 #include <format>
 #include <string>
+#include <type_traits>
 
 #include <SDL.h>
 
@@ -22,9 +23,9 @@ extern "C" {
 		typedef bleak::fsize float_t;
 #endif
 
-		scalar_t x { 0 };
-		scalar_t y { 0 };
-		scalar_t z { 0 };
+		scalar_t x{ 0 };
+		scalar_t y{ 0 };
+		scalar_t z{ 0 };
 
 		static_assert(
 			(product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max()
@@ -36,6 +37,24 @@ extern "C" {
 
 namespace bleak {
 	struct offset_3d_t : c_offset_3d_t {
+		template<typename T>
+			requires std::is_convertible<T, scalar_t>::value && (std::is_same<T, scalar_t>::value == false)
+		static constexpr scalar_t scalar_cast(T value) noexcept {
+			return static_cast<scalar_t>(value);
+		}
+
+		template<typename T>
+			requires std::is_convertible<T, product_t>::value && (std::is_same<T, product_t>::value == false)
+		static constexpr product_t product_cast(T value) noexcept {
+			return static_cast<product_t>(value);
+		}
+
+		template<typename T>
+			requires std::is_convertible<T, float_t>::value && (std::is_same<T, float_t>::value == false)
+		static constexpr float_t float_cast(T value) noexcept {
+			return static_cast<float_t>(value);
+		}
+
 		static const offset_3d_t zero;
 
 		static const offset_3d_t central;
@@ -91,19 +110,23 @@ namespace bleak {
 
 		constexpr offset_3d_t() noexcept {}
 
-		constexpr offset_3d_t(scalar_t scalar) noexcept : c_offset_3d_t { scalar, scalar, scalar } {}
+		constexpr offset_3d_t(scalar_t scalar) noexcept : c_offset_3d_t{ scalar, scalar, scalar } {}
 
-		constexpr offset_3d_t(scalar_t x, scalar_t y, scalar_t z) noexcept : c_offset_3d_t { x, y, z } {}
+		constexpr offset_3d_t(scalar_t x, scalar_t y, scalar_t z) noexcept : c_offset_3d_t{ x, y, z } {}
+
+		template<typename T>
+			requires std::is_convertible<T, scalar_t>::value && (std::is_same<T, scalar_t>::value == false)
+		constexpr offset_3d_t(T x, T y, T z) noexcept : c_offset_3d_t{ scalar_cast(x), scalar_cast(y), scalar_cast(z) } {}
 
 		constexpr product_t dot() const noexcept { return (product_t)x * x + (product_t)y * y + (product_t)z * z; }
 
 		constexpr offset_3d_t cross(cref<offset_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(y * other.z - z * other.y),
-					 static_cast<scalar_t>(z * other.x - x * other.z),
-					 static_cast<scalar_t>(x * other.y - y * other.x) };
+			return { scalar_cast(y * other.z - z * other.y), scalar_cast(z * other.x - x * other.z), scalar_cast(x * other.y - y * other.x) };
 		}
 
-		template<typename L, typename = f32> constexpr L length() const noexcept;
+		template<typename T>
+			requires std::is_floating_point<T>::value || std::is_same<T, product_t>::value
+		constexpr T length() const noexcept;
 
 		template<> constexpr f32 length() const noexcept { return std::sqrt(static_cast<f32>(dot())); }
 
@@ -111,23 +134,26 @@ namespace bleak {
 
 		template<> constexpr product_t length() const noexcept {
 			static_assert(sizeof(product_t) == sizeof(float_t), "length of product_t and float_t must be equal");
+			static_assert(bitdef::mantissa<float_t>() >= 6, "shift may not exceed bit length of mantissa");
 
 			union {
 				float_t f;
 				product_t i;
-			} v { .f = (float_t)dot() };
+			} v{ .f = (float_t)dot() };
 
-			constexpr auto sub_shift { bitdef::mantissa<float_t>() };
-			constexpr auto add_shift { sub_shift + 6 };
+			constexpr auto sub_shift{ bitdef::mantissa<float_t>() };
+			constexpr auto add_shift{ sub_shift + 6 };
 
-			v.i -= product_t { 1 } << sub_shift;
+			v.i -= product_t{ 1 } << sub_shift;
 			v.i >>= 1;
-			v.i += product_t { 1 } << add_shift;
+			v.i += product_t{ 1 } << add_shift;
 
 			return (product_t)((float_t)v.i);
 		}
 
-		template<typename T, typename = f32> static constexpr T distance(cref<offset_3d_t> start, cref<offset_3d_t> end) noexcept;
+		template<typename T>
+			requires std::is_floating_point<T>::value || std::is_same<T, product_t>::value
+		static constexpr T distance(cref<offset_3d_t> start, cref<offset_3d_t> end) noexcept;
 
 		template<> constexpr f32 distance(cref<offset_3d_t> start, cref<offset_3d_t> end) noexcept { return (end - start).length<f32>(); }
 
@@ -135,13 +161,15 @@ namespace bleak {
 
 		template<> constexpr product_t distance(cref<offset_3d_t> start, cref<offset_3d_t> end) noexcept { return (end - start).length<product_t>(); }
 
+		static constexpr offset_3d_t direction(cref<offset_3d_t> start, cref<offset_3d_t> end) noexcept { return (end - start).normalized(); }
+
 		constexpr ref<offset_3d_t> normalize() noexcept {
 			const auto len = length<product_t>();
 
 			if (len != 0) {
-				x = static_cast<scalar_t>(x / len);
-				y = static_cast<scalar_t>(y / len);
-				z = static_cast<scalar_t>(z / len);
+				x = scalar_cast(x / len);
+				y = scalar_cast(y / len);
+				z = scalar_cast(z / len);
 			}
 
 			return *this;
@@ -151,13 +179,13 @@ namespace bleak {
 			const auto len = length<product_t>();
 
 			if (len != 0) {
-				return { static_cast<scalar_t>(x / len), static_cast<scalar_t>(y / len), static_cast<scalar_t>(z / len) };
+				return { scalar_cast(x / len), scalar_cast(y / len), scalar_cast(z / len) };
 			} else {
 				return { *this };
 			}
 		}
 
-		constexpr ref<offset_3d_t> clamp(offset_3d_t min, offset_3d_t max) {
+		constexpr ref<offset_3d_t> clamp(cref<offset_3d_t> min, cref<offset_3d_t> max) {
 			x = x < min.x ? min.x : x > max.x ? max.x : x;
 			y = y < min.y ? min.y : y > max.y ? max.y : y;
 			z = z < min.z ? min.z : z > max.z ? max.z : z;
@@ -165,7 +193,7 @@ namespace bleak {
 			return *this;
 		}
 
-		static constexpr offset_3d_t clamp(offset_3d_t value, offset_3d_t min, offset_3d_t max) { return value.clamp(min, max); }
+		static constexpr offset_3d_t clamp(offset_3d_t value, cref<offset_3d_t> min, cref<offset_3d_t> max) { return value.clamp(min, max); }
 
 		constexpr bool operator==(cref<offset_3d_t> other) const noexcept { return x == other.x && y == other.y && z == other.z; }
 
@@ -179,63 +207,61 @@ namespace bleak {
 
 		constexpr bool operator>=(cref<offset_3d_t> other) const { return x >= other.x && y >= other.y && z >= other.z; }
 
-		constexpr offset_3d_t operator-() const noexcept { return { static_cast<scalar_t>(-x), static_cast<scalar_t>(-y), static_cast<scalar_t>(-z) }; }
+		constexpr offset_3d_t operator-() const noexcept { return { scalar_cast(-x), scalar_cast(-y), scalar_cast(-z) }; }
 
-		constexpr offset_3d_t operator+(cref<offset_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(x + other.x), static_cast<scalar_t>(y + other.y), static_cast<scalar_t>(z + other.z) };
-		}
+		constexpr offset_3d_t operator+(cref<offset_3d_t> other) const noexcept { return { scalar_cast(x + other.x), scalar_cast(y + other.y), scalar_cast(z + other.z) }; }
 
-		constexpr offset_3d_t operator-(cref<offset_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(x - other.x), static_cast<scalar_t>(y - other.y), static_cast<scalar_t>(z - other.z) };
-		}
+		constexpr offset_3d_t operator-(cref<offset_3d_t> other) const noexcept { return { scalar_cast(x - other.x), scalar_cast(y - other.y), scalar_cast(z - other.z) }; }
 
-		constexpr offset_3d_t operator*(cref<offset_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(x * other.x), static_cast<scalar_t>(y * other.y), static_cast<scalar_t>(z * other.z) };
-		}
+		constexpr offset_3d_t operator*(cref<offset_3d_t> other) const noexcept { return { scalar_cast(x * other.x), scalar_cast(y * other.y), scalar_cast(z * other.z) }; }
 
-		constexpr offset_3d_t operator/(cref<offset_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(x / other.x), static_cast<scalar_t>(y / other.y), static_cast<scalar_t>(z / other.z) };
-		}
+		constexpr offset_3d_t operator/(cref<offset_3d_t> other) const noexcept { return { scalar_cast(x / other.x), scalar_cast(y / other.y), scalar_cast(z / other.z) }; }
 
-		constexpr offset_3d_t operator%(cref<offset_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(x % other.x), static_cast<scalar_t>(y % other.y), static_cast<scalar_t>(z % other.z) };
-		}
+		constexpr offset_3d_t operator%(cref<offset_3d_t> other) const noexcept { return { scalar_cast(x % other.x), scalar_cast(y % other.y), scalar_cast(z % other.z) }; }
 
-		template<f32> offset_3d_t operator%(cref<offset_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(fmodf(x, other.x)), static_cast<scalar_t>(fmodf(y, other.y)), static_cast<scalar_t>(fmodf(z, other.z)) };
-		}
+		template<f32> offset_3d_t operator%(cref<offset_3d_t> other) const noexcept { return { scalar_cast(fmodf(x, other.x)), scalar_cast(fmodf(y, other.y)), scalar_cast(fmodf(z, other.z)) }; }
 
-		template<f64> offset_3d_t operator%(cref<offset_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(fmodl(x, other.x)), static_cast<scalar_t>(fmodl(y, other.y)), static_cast<scalar_t>(fmodl(z, other.z)) };
-		}
+		template<f64> offset_3d_t operator%(cref<offset_3d_t> other) const noexcept { return { scalar_cast(fmodl(x, other.x)), scalar_cast(fmodl(y, other.y)), scalar_cast(fmodl(z, other.z)) }; }
 
-		constexpr offset_3d_t operator+(ihalf scalar) const noexcept {
-			return { static_cast<scalar_t>(x + scalar), static_cast<scalar_t>(y + scalar), static_cast<scalar_t>(z + scalar) };
-		}
+		constexpr offset_3d_t operator+(scalar_t scalar) const noexcept { return { scalar_cast(x + scalar), scalar_cast(y + scalar), scalar_cast(z + scalar) }; }
 
-		constexpr offset_3d_t operator-(ihalf scalar) const noexcept {
-			return { static_cast<scalar_t>(x - scalar), static_cast<scalar_t>(y - scalar), static_cast<scalar_t>(z - scalar) };
-		}
+		constexpr offset_3d_t operator-(scalar_t scalar) const noexcept { return { scalar_cast(x - scalar), scalar_cast(y - scalar), scalar_cast(z - scalar) }; }
 
-		constexpr offset_3d_t operator*(ihalf scalar) const noexcept {
-			return { static_cast<scalar_t>(x * scalar), static_cast<scalar_t>(y * scalar), static_cast<scalar_t>(z * scalar) };
-		}
+		constexpr offset_3d_t operator*(scalar_t scalar) const noexcept { return { scalar_cast(x * scalar), scalar_cast(y * scalar), scalar_cast(z * scalar) }; }
 
-		constexpr offset_3d_t operator/(ihalf scalar) const noexcept {
-			return { static_cast<scalar_t>(x / scalar), static_cast<scalar_t>(y / scalar), static_cast<scalar_t>(z / scalar) };
-		}
+		constexpr offset_3d_t operator/(scalar_t scalar) const noexcept { return { scalar_cast(x / scalar), scalar_cast(y / scalar), scalar_cast(z / scalar) }; }
 
-		constexpr offset_3d_t operator%(ihalf scalar) const noexcept {
-			return { static_cast<scalar_t>(x % scalar), static_cast<scalar_t>(y % scalar), static_cast<scalar_t>(z % scalar) };
-		}
+		constexpr offset_3d_t operator%(scalar_t scalar) const noexcept { return { scalar_cast(x % scalar), scalar_cast(y % scalar), scalar_cast(z % scalar) }; }
 
-		template<f32> offset_3d_t operator%(ihalf scalar) const noexcept {
-			return { static_cast<scalar_t>(fmodf(x, scalar)), static_cast<scalar_t>(fmodf(y, scalar)), static_cast<scalar_t>(fmodf(z, scalar)) };
-		}
+		constexpr offset_3d_t operator+(cref<extent_1d_t> extent) const noexcept;
 
-		template<f64> offset_3d_t operator%(ihalf scalar) const noexcept {
-			return { static_cast<scalar_t>(fmodl(x, scalar)), static_cast<scalar_t>(fmodl(y, scalar)), static_cast<scalar_t>(fmodl(z, scalar)) };
-		}
+		constexpr offset_3d_t operator-(cref<extent_1d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator*(cref<extent_1d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator/(cref<extent_1d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator%(cref<extent_1d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator+(cref<extent_2d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator-(cref<extent_2d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator*(cref<extent_2d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator/(cref<extent_2d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator%(cref<extent_2d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator+(cref<extent_3d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator-(cref<extent_3d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator*(cref<extent_3d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator/(cref<extent_3d_t> extent) const noexcept;
+
+		constexpr offset_3d_t operator%(cref<extent_3d_t> extent) const noexcept;
 
 		constexpr ref<offset_3d_t> operator-() noexcept {
 			x = -x;
@@ -285,23 +311,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<f32> ref<offset_3d_t> operator%=(cref<offset_3d_t> other) noexcept {
-			x = static_cast<ihalf>(fmodf(x, other.x));
-			y = static_cast<ihalf>(fmodf(y, other.y));
-			z = static_cast<ihalf>(fmodf(z, other.z));
-
-			return *this;
-		}
-
-		template<f64> ref<offset_3d_t> operator%=(cref<offset_3d_t> other) noexcept {
-			x = static_cast<ihalf>(fmodl(x, other.x));
-			y = static_cast<ihalf>(fmodl(y, other.y));
-			z = static_cast<ihalf>(fmodl(z, other.z));
-
-			return *this;
-		}
-
-		constexpr ref<offset_3d_t> operator+=(ihalf scalar) noexcept {
+		constexpr ref<offset_3d_t> operator+=(scalar_t scalar) noexcept {
 			x += scalar;
 			y += scalar;
 			z += scalar;
@@ -309,7 +319,7 @@ namespace bleak {
 			return *this;
 		}
 
-		constexpr ref<offset_3d_t> operator-=(ihalf scalar) noexcept {
+		constexpr ref<offset_3d_t> operator-=(scalar_t scalar) noexcept {
 			x -= scalar;
 			y -= scalar;
 			z -= scalar;
@@ -317,7 +327,7 @@ namespace bleak {
 			return *this;
 		}
 
-		constexpr ref<offset_3d_t> operator*=(ihalf scalar) noexcept {
+		constexpr ref<offset_3d_t> operator*=(scalar_t scalar) noexcept {
 			x *= scalar;
 			y *= scalar;
 			z *= scalar;
@@ -325,7 +335,7 @@ namespace bleak {
 			return *this;
 		}
 
-		constexpr ref<offset_3d_t> operator/=(ihalf scalar) noexcept {
+		constexpr ref<offset_3d_t> operator/=(scalar_t scalar) noexcept {
 			x /= scalar;
 			y /= scalar;
 			z /= scalar;
@@ -333,7 +343,7 @@ namespace bleak {
 			return *this;
 		}
 
-		constexpr ref<offset_3d_t> operator%=(ihalf scalar) noexcept {
+		constexpr ref<offset_3d_t> operator%=(scalar_t scalar) noexcept {
 			x %= scalar;
 			y %= scalar;
 			z %= scalar;
@@ -341,21 +351,35 @@ namespace bleak {
 			return *this;
 		}
 
-		template<f32> ref<offset_3d_t> operator%=(ihalf scalar) noexcept {
-			x = static_cast<ihalf>(fmodf(x, scalar));
-			y = static_cast<ihalf>(fmodf(y, scalar));
-			z = static_cast<ihalf>(fmodf(z, scalar));
+		constexpr ref<offset_3d_t> operator+=(cref<extent_1d_t> extent) noexcept;
 
-			return *this;
-		}
+		constexpr ref<offset_3d_t> operator-=(cref<extent_1d_t> extent) noexcept;
 
-		template<f64> ref<offset_3d_t> operator%=(ihalf scalar) noexcept {
-			x = static_cast<ihalf>(fmodl(x, scalar));
-			y = static_cast<ihalf>(fmodl(y, scalar));
-			z = static_cast<ihalf>(fmodl(z, scalar));
+		constexpr ref<offset_3d_t> operator*=(cref<extent_1d_t> extent) noexcept;
 
-			return *this;
-		}
+		constexpr ref<offset_3d_t> operator/=(cref<extent_1d_t> extent) noexcept;
+
+		constexpr ref<offset_3d_t> operator%=(cref<extent_1d_t> extent) noexcept;
+
+		constexpr ref<offset_3d_t> operator+=(cref<extent_2d_t> extent) noexcept;
+
+		constexpr ref<offset_3d_t> operator-=(cref<extent_2d_t> extent) noexcept;
+
+		constexpr ref<offset_3d_t> operator*=(cref<extent_2d_t> extent) noexcept;
+
+		constexpr ref<offset_3d_t> operator/=(cref<extent_2d_t> extent) noexcept;
+
+		constexpr ref<offset_3d_t> operator%=(cref<extent_2d_t> extent) noexcept;
+
+		constexpr ref<offset_3d_t> operator+=(cref<extent_3d_t> extent) noexcept;
+
+		constexpr ref<offset_3d_t> operator-=(cref<extent_3d_t> extent) noexcept;
+
+		constexpr ref<offset_3d_t> operator*=(cref<extent_3d_t> extent) noexcept;
+
+		constexpr ref<offset_3d_t> operator/=(cref<extent_3d_t> extent) noexcept;
+
+		constexpr ref<offset_3d_t> operator%=(cref<extent_3d_t> extent) noexcept;
 
 		constexpr operator std::string() const noexcept { return std::format("[{}, {}, {}]", x, y, z); }
 
@@ -363,7 +387,7 @@ namespace bleak {
 			if (*this == offset_3d_t::zero) {
 				return cardinal_t::Central;
 			} else {
-				cardinal_t result = cardinal_t::Central;
+				cardinal_t result{ cardinal_t::Central };
 
 				if (x != 0) {
 					result += x < 0 ? cardinal_t::West : cardinal_t::East;
@@ -380,6 +404,7 @@ namespace bleak {
 		}
 
 		constexpr explicit operator sdl::point() const noexcept { return { static_cast<i32>(x), static_cast<i32>(y) }; }
+
 		constexpr explicit operator sdl::fpoint() const noexcept { return { static_cast<f32>(x), static_cast<f32>(y) }; }
 
 		constexpr explicit operator offset_1d_t() const noexcept;

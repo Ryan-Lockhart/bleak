@@ -1,12 +1,11 @@
 #pragma once
 
-#include "bleak/primitive.hpp"
 #include "bleak/typedef.hpp"
 
 #include <initializer_list>
 
-#include "bleak/extent/extent.hpp"
-#include "bleak/offset/offset.hpp"
+#include "bleak/extent.hpp"
+#include "bleak/offset.hpp"
 
 namespace bleak {
 	template<typename T> struct fwd_iter_t;
@@ -23,9 +22,9 @@ namespace bleak {
 		using index_t = offset_t::product_t;
 		using position_t = offset_t::scalar_t;
 
-		static constexpr usize size { Size.size() };
+		static constexpr usize size{ Size.size() };
 
-		static constexpr usize byte_size { size * sizeof(T) };
+		static constexpr usize byte_size{ size * sizeof(T) };
 
 		constexpr ptr<T> data_ptr() noexcept { return data; }
 
@@ -34,8 +33,8 @@ namespace bleak {
 		static_assert(size > 0, "array must have a size greater than zero!");
 		static_assert(size * sizeof(T) <= memory::maximum, "array must not exceed the maximum size of an array!");
 
-		static constexpr usize first { 0 };
-		static constexpr usize last { size - 1 };
+		static constexpr usize first{ 0 };
+		static constexpr usize last{ size - 1 };
 
 		using iterator = fwd_iter_t<T>;
 		using const_iterator = fwd_iter_t<const T>;
@@ -59,56 +58,17 @@ namespace bleak {
 
 		static constexpr index_t flatten(offset_t offset) noexcept;
 
-		static constexpr index_t flatten(position_t i) noexcept
-			requires OneDimensional<OffsetType> && OneDimensional<ExtentType>;
-
-		static constexpr index_t flatten(position_t i, position_t j) noexcept
-			requires TwoDimensional<OffsetType> && TwoDimensional<ExtentType>;
-
-		static constexpr index_t flatten(position_t i, position_t j, position_t k) noexcept
-			requires ThreeDimensional<OffsetType> && ThreeDimensional<ExtentType>;
-
 		static constexpr offset_t unflatten(index_t index) noexcept;
 
 		constexpr ref<T> operator[](offset_t offset) noexcept;
 
-		constexpr ref<T> operator[](index_t i) noexcept;
-
-		constexpr ref<T> operator[](index_t i, index_t j) noexcept;
-
-		constexpr ref<T> operator[](index_t i, index_t j, index_t k) noexcept;
-
 		constexpr cref<T> operator[](offset_t offset) const noexcept;
-
-		constexpr cref<T> operator[](index_t i) const noexcept;
-
-		constexpr cref<T> operator[](index_t i, index_t j) const noexcept;
-
-		constexpr cref<T> operator[](index_t i, index_t j, index_t k) const noexcept;
 
 		constexpr bool valid(offset_t offset) const noexcept;
 
-		constexpr bool valid(index_t i) const noexcept;
-
-		constexpr bool valid(index_t i, index_t j) const noexcept;
-
-		constexpr bool valid(index_t i, index_t j, index_t k) const noexcept;
-
 		constexpr ref<T> at(offset_t offset);
 
-		constexpr ref<T> at(index_t i) noexcept;
-
-		constexpr ref<T> at(index_t i, index_t j) noexcept;
-
-		constexpr ref<T> at(index_t i, index_t j, index_t k) noexcept;
-
 		constexpr cref<T> at(offset_t offset) const;
-
-		constexpr ref<T> at(index_t i) const noexcept;
-
-		constexpr ref<T> at(index_t i, index_t j) const noexcept;
-
-		constexpr ref<T> at(index_t i, index_t j, index_t k) const noexcept;
 
 		constexpr ref<T> front() noexcept;
 
@@ -154,3 +114,5 @@ namespace bleak {
 } // namespace bleak
 
 #include "bleak/array/array.tpp" // IWYU pragma: export
+
+#include "bleak/array/iter.hpp" // IWYU pragma: export

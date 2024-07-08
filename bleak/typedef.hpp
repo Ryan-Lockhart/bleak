@@ -188,14 +188,22 @@ namespace bleak {
 
 #endif
 
+	// reference to type
 	template<typename T> using ref = T&;
+	// immutable reference to type
 	template<typename T> using cref = const T&;
+	// rvalue reference to type
 	template<typename T> using rval = T&&;
+	// immutable rvalue reference to type
 	template<typename T> using crval = const T&&;
 
+	// pointer to type
 	template<typename T> using ptr = T*;
+	// pointer to immutable type
 	template<typename T> using cptr = const T*;
+	// immutable pointer to type
 	template<typename T> using ptrc = T* const;
+	// immutable pointer to immutable type
 	template<typename T> using cptrc = const T* const;
 
 	using ubyte = u8;
@@ -229,6 +237,8 @@ namespace bleak {
 
 		return value;
 	}
+
+	template<typename T> constexpr inline T usage(T value, T min, T max) { return (value - min) / (max - min); }
 
 	namespace memory {
 		// size in bytes of one byte

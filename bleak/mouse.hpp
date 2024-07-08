@@ -6,8 +6,8 @@
 
 #include <SDL.h>
 
-#include "input.hpp"
-#include "point.hpp"
+#include "bleak/input.hpp"
+#include "bleak/offset.hpp"
 
 namespace bleak {
 	struct Mouse {
@@ -48,11 +48,11 @@ namespace bleak {
 		static inline std::bitset<button_t::Count> current_state;
 		static inline std::bitset<button_t::Count> previous_state;
 
-		static inline point_t<i32> current_position;
-		static inline point_t<i32> previous_position;
+		static inline offset_2d_t current_position;
+		static inline offset_2d_t previous_position;
 
-		static inline point_t<f32> current_scroll;
-		static inline point_t<f32> previous_scroll;
+		static inline offset_2d_t current_scroll;
+		static inline offset_2d_t previous_scroll;
 
 		static inline bool initialized;
 
@@ -93,12 +93,12 @@ namespace bleak {
 			switch (event.type) {
 			case SDL_MOUSEMOTION:
 				previous_position = current_position;
-				current_position = point_t<i32> { event.motion.x, event.motion.y };
+				current_position = offset_2d_t { event.motion.x, event.motion.y };
 				break;
 
 			case SDL_MOUSEWHEEL:
 				previous_scroll = current_scroll;
-				current_scroll = point_t<f32> { event.wheel.preciseX, event.wheel.preciseY };
+				current_scroll = offset_2d_t { event.wheel.x, event.wheel.y };
 				break;
 
 			default:
@@ -254,9 +254,9 @@ namespace bleak {
 			return false;
 		}
 
-		static inline point_t<i32> get_position() { return current_position; }
+		static inline offset_2d_t get_position() { return current_position; }
 
-		static inline point_t<f32> get_scroll() { return current_scroll; }
+		static inline offset_2d_t get_scroll() { return current_scroll; }
 
 		static inline void show_cursor() { SDL_ShowCursor(SDL_ENABLE); }
 
@@ -309,4 +309,4 @@ namespace bleak {
 	inline bool Mouse::is_button_up(button_t button) { return Mouse::at(button) == input_state_t::Up; }
 
 	inline bool Mouse::is_button_up(int button) { return Mouse::at(button) == input_state_t::Up; }
-} // namespace Bleakdepth
+} // namespace bleak

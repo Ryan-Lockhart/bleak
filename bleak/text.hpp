@@ -1,20 +1,22 @@
 #pragma once
 
-#include "typedef.hpp"
+#include "bleak/typedef.hpp"
 
 #include <string>
 #include <vector>
 
-#include "color.hpp"
-#include "glyph.hpp"
-#include "point.hpp"
+#include "bleak/color.hpp"
+#include "bleak/extent.hpp"
+#include "bleak/glyph.hpp"
+#include "bleak/offset.hpp"
 
 #include "constants/colors.hpp"
+#include "extent/extent_2d.hpp"
 
-namespace Bleakdepth {
+namespace bleak {
 	class runes_t : public std::vector<glyph_t> {
 	  public:
-		static constexpr color_t DEFAULT_COLOR { Colors::White };
+		static constexpr color_t DEFAULT_COLOR{ Colors::White };
 
 		constexpr runes_t(cref<std::string> text, color_t color) {
 			for (auto& ch : text) {
@@ -48,9 +50,9 @@ namespace Bleakdepth {
 
 		// convenience cast, use sparingly as rune strings are not inherently strings
 		constexpr explicit operator std::string() const {
-			std::string casted {};
+			std::string casted{};
 
-			for (auto iter { cbegin() }; iter != cend(); ++iter) {
+			for (auto iter{ cbegin() }; iter != cend(); ++iter) {
 				casted += iter->index;
 			}
 
@@ -59,25 +61,25 @@ namespace Bleakdepth {
 	};
 
 	namespace Text {
-		static constexpr isize HORIZONTAL_TAB_WIDTH { 4 };
+		static constexpr isize HORIZONTAL_TAB_WIDTH{ 4 };
 		static_assert(
 			HORIZONTAL_TAB_WIDTH && ((HORIZONTAL_TAB_WIDTH & (HORIZONTAL_TAB_WIDTH - 1)) == 0 && HORIZONTAL_TAB_WIDTH > 0),
 			"horizontal tab width must be a positive power-of-two!"
 		);
 
-		static constexpr isize VERTICAL_TAB_WIDTH { 4 };
+		static constexpr isize VERTICAL_TAB_WIDTH{ 4 };
 		static_assert(
 			VERTICAL_TAB_WIDTH && ((VERTICAL_TAB_WIDTH & (VERTICAL_TAB_WIDTH - 1)) == 0 && VERTICAL_TAB_WIDTH > 0),
 			"vertical tab width must be a positive power-of-two!"
 		);
 
-		static constexpr size_t<usize> calculate_size(cref<std::string> text) {
+		static constexpr extent_2d_t calculate_size(cref<std::string> text) {
 			if (text.empty()) {
-				return size_t<usize>::Zero;
+				return extent_2d_t::zero;
 			}
 
-			usize current_width { 0 };
-			size_t<usize> size { 0, 1 };
+			usize current_width{ 0 };
+			extent_2d_t size{ 0, 1 };
 
 			for (auto ch : text) {
 				switch (ch) {
@@ -114,13 +116,13 @@ namespace Bleakdepth {
 			return size;
 		}
 
-		static constexpr size_t<usize> calculate_size(cref<runes_t> runes) {
+		static constexpr extent_2d_t calculate_size(cref<runes_t> runes) {
 			if (runes.empty()) {
-				return size_t<usize>::Zero;
+				return extent_2d_t::zero;
 			}
 
-			usize current_width { 0 };
-			size_t<usize> size { 0, 1 };
+			usize current_width{ 0 };
+			extent_2d_t size{ 0, 1 };
 
 			for (auto& rune : runes) {
 				switch (rune.index) {
@@ -157,4 +159,4 @@ namespace Bleakdepth {
 			return size;
 		}
 	} // namespace Text
-} // namespace Bleakdepth
+} // namespace bleak

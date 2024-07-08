@@ -5,7 +5,7 @@
 #include <cmath>
 #include <numbers>
 
-namespace Bleakdepth {
+namespace bleak {
 	enum class wave_type_t { Sine, Square, Triangle, Sawtooth, Cycloid };
 
 	struct wave_t {

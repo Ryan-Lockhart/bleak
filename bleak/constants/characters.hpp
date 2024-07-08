@@ -1,9 +1,9 @@
 #pragma once
 
-#include "typedef.hpp"
+#include "bleak/typedef.hpp"
 
-#include "cardinal.hpp"
-#include "lut.hpp"
+#include "bleak/cardinal.hpp"
+#include "bleak/lut.hpp"
 
 namespace bleak {
 	namespace Characters {
@@ -15,15 +15,15 @@ namespace bleak {
 		constexpr const u8 Floor { 0x4D };
 
 		constexpr const lut_t<cardinal_t, u8, 9> Entity {
-			pair_t { cardinal_t::Northwest, u8 { 0x48 } },
-			pair_t { cardinal_t::North, u8 { 0x41 } },
-			pair_t { cardinal_t::Northeast, u8 { 0x42 } },
-			pair_t { cardinal_t::West, u8 { 0x47 } },
-			pair_t { cardinal_t::Central, u8 { 0x40 } },
-			pair_t { cardinal_t::East, u8 { 0x43 } },
-			pair_t { cardinal_t::Southwest, u8 { 0x46 } },
-			pair_t { cardinal_t::South, u8 { 0x45 } },
-			pair_t { cardinal_t::Southeast, u8 { 0x44 } }
+			{ cardinal_t::Northwest, u8 { 0x48 } },
+			{ cardinal_t::North, u8 { 0x41 } },
+			{ cardinal_t::Northeast, u8 { 0x42 } },
+			{ cardinal_t::West, u8 { 0x47 } },
+			{ cardinal_t::Central, u8 { 0x40 } },
+			{ cardinal_t::East, u8 { 0x43 } },
+			{ cardinal_t::Southwest, u8 { 0x46 } },
+			{ cardinal_t::South, u8 { 0x45 } },
+			{ cardinal_t::Southeast, u8 { 0x44 } }
 		};
 
 		constexpr const u8 Medkit { 0x49 };

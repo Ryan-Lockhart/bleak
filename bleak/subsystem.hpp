@@ -9,7 +9,7 @@
 #include <SDL_net.h>
 #include <SDL_ttf.h>
 
-namespace Bleakdepth {
+namespace bleak {
 	struct Subsystem {
 	  private:
 		static inline bool sdl_initialized;

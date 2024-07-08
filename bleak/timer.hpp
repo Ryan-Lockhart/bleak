@@ -1,10 +1,10 @@
 #pragma once
 
-#include "typedef.hpp"
+#include "bleak/typedef.hpp"
 
-#include "clock.hpp"
+#include "bleak/clock.hpp"
 
-namespace Bleakdepth {
+namespace bleak {
 	class timer_t {
 	  private:
 		const f64 interval;

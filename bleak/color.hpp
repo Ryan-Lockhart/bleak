@@ -10,13 +10,13 @@ extern "C" {
 		union {
 			struct {
 				// 8-bit red component
-				bleak::u8 r { 0x00 };
+				bleak::u8 r{ 0x00 };
 				// 8-bit green component
-				bleak::u8 g { 0x00 };
+				bleak::u8 g{ 0x00 };
 				// 8-bit blue component
-				bleak::u8 b { 0x00 };
+				bleak::u8 b{ 0x00 };
 				// 8-bit alpha component
-				bleak::u8 a { 0x00 };
+				bleak::u8 a{ 0x00 };
 			};
 
 			// 32-bit packed color value
@@ -37,13 +37,13 @@ namespace bleak {
 	  public:
 		constexpr color_t() noexcept {}
 
-		constexpr color_t(u8 r, u8 g, u8 b, u8 a = u8 { 0xFF }) noexcept : c_color_t { .r = r, .g = g, .b = b, .a = a } {}
+		constexpr color_t(u8 r, u8 g, u8 b, u8 a = u8{ 0xFF }) noexcept : c_color_t{ .r = r, .g = g, .b = b, .a = a } {}
 
 		constexpr color_t(f32 r, f32 g, f32 b, f32 a = 1.0f) noexcept :
-			c_color_t { .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) } {}
+			c_color_t{ .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) } {}
 
 		constexpr color_t(f64 r, f64 g, f64 b, f64 a = 1.0) noexcept :
-			c_color_t { .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) } {}
+			c_color_t{ .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) } {}
 
 		constexpr bool operator==(cref<color_t> other) const noexcept { return packed == other.packed; }
 

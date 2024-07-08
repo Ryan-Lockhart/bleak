@@ -11,8 +11,6 @@ elif cpu_family == 'x86_64'
     install_dir = 'C:\\Program Files\\Bleakdepth'
 endif
 
-install_res_dir = install_dir + '\\res'
-
 sdl_dependencies = [
     dependency('sdl2'),
     dependency('sdl2_image'),

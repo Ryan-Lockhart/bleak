@@ -1,11 +1,12 @@
 #pragma once
 
-#include "typedef.hpp"
-
-#include "constants/keys.hpp"
-#include "input.hpp"
+#include "bleak/typedef.hpp"
 
 #include <bitset>
+
+#include "bleak/input.hpp"
+
+#include "bleak/constants/keys.hpp"
 
 namespace bleak {
 	struct Keyboard {

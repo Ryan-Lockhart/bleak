@@ -1,6 +1,6 @@
 #pragma once
 
-#include "typedef.hpp"
+#include "bleak/typedef.hpp"
 
 #include <initializer_list>
 #include <utility>
@@ -10,7 +10,7 @@
 #include <queue>
 #include <stack>
 
-namespace Bleakdepth {
+namespace bleak {
 	template<typename T, usize Branches> struct tree_t;
 	template<typename T, usize Branches> struct branch_t;
 

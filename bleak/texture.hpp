@@ -1,6 +1,7 @@
 #pragma once
 
-#include "typedef.hpp"
+#include "bleak/offset/offset_2d.hpp"
+#include "bleak/typedef.hpp"
 
 #include <format>
 #include <stdexcept>
@@ -8,25 +9,26 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-#include "color.hpp"
-#include "point.hpp"
-#include "renderer.hpp"
+#include "bleak/color.hpp"
+#include "bleak/extent.hpp"
+#include "bleak/renderer.hpp"
 
-#include "constants/colors.hpp"
+#include "bleak/constants/colors.hpp"
+#include "extent/extent_2d.hpp"
 
-namespace Bleakdepth {
+namespace bleak {
 	struct texture_t {
 	  private:
 		struct info_t {
-			const point_t<i32> size;
+			const extent_2d_t size;
 			const i32 access;
 			const u32 channels;
 		};
 
 		static inline ptr<SDL_Texture> load_texture(ref<renderer_t> renderer, cstr path) {
-			ptr<SDL_Texture> texture { IMG_LoadTexture(renderer.handle(), path) };
+			ptr<SDL_Texture> texture{ IMG_LoadTexture(renderer.handle(), path) };
 
-			if (!texture) {
+			if (texture != nullptr) {
 				throw std::runtime_error(std::format("could not load texture: {}", SDL_GetError()));
 			}
 
@@ -34,23 +36,21 @@ namespace Bleakdepth {
 		}
 
 		static inline info_t get_texture_info(ptr<SDL_Texture> texture) {
-			point_t<i32> size;
+			int w, h;
 			i32 access;
 			u32 channels;
 
-			if (SDL_QueryTexture(texture, &channels, &access, &size.x, &size.y) < 0) {
+			if (SDL_QueryTexture(texture, &channels, &access, &w, &h) < 0) {
 				throw std::runtime_error(std::format("could not get texture info: {}", SDL_GetError()));
 			}
 
-			return { size, access, channels };
+			return { extent_2d_t{ extent_2d_t::scalar_cast(w), extent_2d_t::scalar_cast(h) }, access, channels };
 		}
 
 		ref<renderer_t> renderer;
 		ptr<SDL_Texture> texture;
 
-		constexpr inline void copy(cptr<SDL_Rect> src, cptr<SDL_Rect> dst) const { SDL_RenderCopy(renderer.handle(), texture, src, dst); }
-
-		constexpr inline void copy(cptr<SDL_Rect> src, cptr<SDL_FRect> dst) const { SDL_RenderCopyF(renderer.handle(), texture, src, dst); }
+		constexpr inline void copy(cptr<sdl::rect> src, cptr<sdl::rect> dst) const { SDL_RenderCopy(renderer.handle(), texture, src, dst); }
 
 	  public:
 		const info_t info;
@@ -69,18 +69,15 @@ namespace Bleakdepth {
 		constexpr ref<texture_t> operator=(rval<texture_t> other) noexcept = delete;
 
 		inline texture_t(ref<renderer_t> renderer, cstr path) :
-			renderer { renderer },
-			texture { load_texture(renderer, path) },
-			info { get_texture_info(texture) } {
+			renderer{ renderer },
+			texture{ load_texture(renderer, path) },
+			info{ get_texture_info(texture) } {
 			if (texture == nullptr) {
 				throw std::runtime_error(std::format("failed to load texture!"));
 			}
 
-			if (info.size.x <= 0) {
-				throw std::runtime_error("texture width must be greater than zero!");
-			}
-			if (info.size.y <= 0) {
-				throw std::runtime_error("texture width must be greater than zero!");
+			if (info.size <= extent_2d_t::zero) {
+				throw std::runtime_error("texture size must be greater than zero!");
 			}
 
 			if (info.channels == SDL_PIXELFORMAT_UNKNOWN) {
@@ -108,75 +105,36 @@ namespace Bleakdepth {
 
 		constexpr cptr<SDL_Texture> handle() const { return texture; }
 
-		constexpr void draw(cref<point_t<i32>> pos) const {
-			const SDL_Rect dst { pos.x, pos.y, info.size.x, info.size.y };
+		constexpr void draw(cref<offset_2d_t> pos) const {
+			const SDL_Rect dst{ pos.x, pos.y, static_cast<i32>(info.size.w), static_cast<i32>(info.size.h) };
 			copy(nullptr, &dst);
 		}
 
-		constexpr void draw(cref<point_t<f32>> pos) const {
-			const SDL_FRect dst { pos.x, pos.y, static_cast<f32>(info.size.x), static_cast<f32>(info.size.y) };
-			copy(nullptr, &dst);
-		}
-
-		constexpr void draw(cref<point_t<i32>> pos, cref<color_t> color) const {
-			const SDL_Rect dst { pos.x, pos.y, info.size.x, info.size.y };
+		constexpr void draw(cref<offset_2d_t> pos, cref<color_t> color) const {
+			const SDL_Rect dst{ pos.x, pos.y, static_cast<i32>(info.size.w), static_cast<i32>(info.size.h) };
 			set_color(color);
 			copy(nullptr, &dst);
 		}
 
-		constexpr void draw(cref<point_t<f32>> pos, cref<color_t> color) const {
-			const SDL_FRect dst { pos.x, pos.y, static_cast<f32>(info.size.x), static_cast<f32>(info.size.y) };
-			set_color(color);
-			copy(nullptr, &dst);
+		constexpr void draw(cref<rect_t> dst) const {
+			sdl::rect sdl_dst{ (sdl::rect)dst };
+			copy(nullptr, &sdl_dst);
 		}
 
-		constexpr void draw(cptr<SDL_Rect> dst) const { copy(nullptr, (cptr<SDL_Rect>)dst); }
-
-		constexpr void draw(cptr<SDL_FRect> dst) const { copy(nullptr, (cptr<SDL_FRect>)dst); }
-
-		constexpr void draw(cptr<SDL_Rect> dst, cref<color_t> color) const {
+		constexpr void draw(cref<rect_t> dst, cref<color_t> color) const {
 			set_color(color);
-			copy(nullptr, (cptr<SDL_Rect>)dst);
+			draw(dst);
 		}
 
-		constexpr void draw(cptr<SDL_FRect> dst, cref<color_t> color) const {
-			set_color(color);
-			copy(nullptr, (cptr<SDL_FRect>)dst);
+		constexpr void draw(cref<rect_t> src, cref<rect_t> dst) const {
+			sdl::rect sdl_src{ (sdl::rect)src };
+			sdl::rect sdl_dst{ (sdl::rect)dst };
+			copy(&sdl_src, &sdl_dst);
 		}
 
-		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_Rect> dst) const { copy(src, dst); }
-
-		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_FRect> dst) const { copy(src, dst); }
-
-		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_Rect> dst, cref<color_t> color) const {
+		constexpr void draw(cref<rect_t> src, cref<rect_t> dst, cref<color_t> color) const {
 			set_color(color);
-			copy(src, dst);
-		}
-
-		constexpr void draw(cptr<SDL_Rect> src, cptr<SDL_FRect> dst, cref<color_t> color) const {
-			set_color(color);
-			copy(src, dst);
-		}
-
-		constexpr void draw(cptr<rect_t<i32>> dst) const { copy(nullptr, (cptr<SDL_Rect>)dst); }
-
-		constexpr void draw(cptr<rect_t<f32>> dst) const { copy(nullptr, (cptr<SDL_FRect>)dst); }
-
-		constexpr void draw(cptr<rect_t<i32>> dst, cref<color_t> color) const {
-			set_color(color);
-			copy(nullptr, (cptr<SDL_Rect>)dst);
-		}
-
-		constexpr void draw(cptr<rect_t<f32>> dst, cref<color_t> color) const {
-			set_color(color);
-			copy(nullptr, (cptr<SDL_FRect>)dst);
-		}
-
-		constexpr void draw(cptr<rect_t<i32>> src, cptr<rect_t<i32>> dst) const { copy((cptr<SDL_Rect>)src, (cptr<SDL_Rect>)dst); }
-
-		constexpr void draw(cptr<rect_t<i32>> src, cptr<rect_t<i32>> dst, cref<color_t> color) const {
-			set_color(color);
-			copy((cptr<SDL_Rect>)src, (cptr<SDL_Rect>)dst);
+			draw(src, dst);
 		}
 	};
-} // namespace Bleakdepth
+} // namespace bleak

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "typedef.hpp"
+#include "bleak/typedef.hpp"
 
 #include <SDL.h>
 
@@ -145,4 +145,4 @@ namespace bleak {
 			static constexpr key_t ScrollLock = SDL_SCANCODE_SCROLLLOCK;
 		};
 	}; // namespace Keys
-} // namespace Bleakdepth
+} // namespace bleak

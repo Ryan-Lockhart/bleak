@@ -32,6 +32,10 @@ extern "C" {
 
 namespace bleak {
 	struct extent_3d_t : public c_extent_3d_t {
+		template<typename T> static constexpr scalar_t scalar_cast(T value) noexcept { return static_cast<scalar_t>(value); }
+
+		template<typename T> static constexpr product_t product_cast(T value) noexcept { return product_cast(value); }
+
 		static const extent_3d_t zero;
 
 		constexpr extent_3d_t() noexcept {}
@@ -179,6 +183,7 @@ namespace bleak {
 		constexpr operator std::string() const noexcept { return std::format("[{} x {} x {}]", w, h, d); }
 
 		constexpr explicit operator sdl::point() const noexcept { return { static_cast<i32>(w), static_cast<i32>(h) }; }
+
 		constexpr explicit operator sdl::fpoint() const noexcept { return { static_cast<f32>(w), static_cast<f32>(h) }; }
 
 		constexpr explicit operator extent_1d_t() const noexcept;

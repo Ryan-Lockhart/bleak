@@ -27,12 +27,12 @@ AlignConsecutiveMacros:
   AlignCompound:   false
   PadOperators:    false
 AlignConsecutiveShortCaseStatements:
-  Enabled:         false
-  AcrossEmptyLines: false
-  AcrossComments:  false
+  Enabled:         true
+  AcrossEmptyLines: true
+  AcrossComments:  true
   AlignCaseColons: false
 AlignEscapedNewlines: Right
-AlignOperands:   Align
+AlignOperands:   AlignAfterOperator
 AlignTrailingComments:
   Kind:            Always
   OverEmptyLines:  0
@@ -56,6 +56,7 @@ AttributeMacros:
 BinPackArguments: false
 BinPackParameters: false
 BitFieldColonSpacing: Both
+BracedInitializerIndentWidth: 2
 BraceWrapping:
   AfterCaseLabel:  false
   AfterClass:      false
@@ -85,7 +86,7 @@ BreakBeforeBraces: Attach
 BreakBeforeInlineASMColon: OnlyMultiline
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: AfterColon
-BreakInheritanceList: BeforeColon
+BreakInheritanceList: AfterColon
 BreakStringLiterals: true
 ColumnLimit:     160
 CommentPragmas:  '^ IWYU pragma:'
@@ -189,7 +190,7 @@ SpaceAfterTemplateKeyword: false
 SpaceAroundPointerQualifiers: Default
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeCaseColon: false
-SpaceBeforeCpp11BracedList: true
+SpaceBeforeCpp11BracedList: false
 SpaceBeforeCtorInitializerColon: true
 SpaceBeforeInheritanceColon: true
 SpaceBeforeJsonColon: false
@@ -202,8 +203,8 @@ SpaceBeforeParensOptions:
   AfterIfMacros:   true
   AfterOverloadedOperator: false
   AfterPlacementOperator: true
-  AfterRequiresInClause: false
-  AfterRequiresInExpression: false
+  AfterRequiresInClause: true
+  AfterRequiresInExpression: true
   BeforeNonEmptyParentheses: false
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceBeforeSquareBrackets: false
