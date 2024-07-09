@@ -3,9 +3,36 @@
 #include "bleak/array.hpp"
 
 #include "bleak/extent.hpp"
+#include "bleak/extent/extent_1d.hpp"
 #include "bleak/offset.hpp"
+#include "bleak/offset/offset_1d.hpp"
 
 namespace bleak {
+	template<extent_1d_t Size> static constexpr extent_1d_t::product_t flatten(cref<offset_1d_t> offset) noexcept {
+		return extent_1d_t::product_cast(offset.x);
+	}
+
+	template<extent_2d_t Size> static constexpr extent_2d_t::product_t flatten(cref<offset_2d_t> offset) noexcept {
+		return extent_1d_t::product_cast(offset.y * Size.w + offset.x);
+	}
+
+	template<extent_3d_t Size> static constexpr extent_3d_t::product_t flatten(cref<offset_3d_t> offset) noexcept {
+		return extent_1d_t::product_cast(offset.z * Size.area() + offset.y * Size.w + offset.x);
+	}
+
+	template<extent_1d_t Size> static constexpr offset_1d_t unflatten(cref<extent_1d_t::product_t> index) noexcept { return offset_1d_t{ index }; }
+
+	template<extent_2d_t Size> static constexpr offset_2d_t unflatten(cref<extent_2d_t::product_t> index) noexcept {
+		lldiv_t result{ std::lldiv(index, Size.w) };
+		return offset_2d_t{ result.rem, result.quot };
+	}
+
+	template<extent_3d_t Size> static constexpr offset_3d_t unflatten(cref<extent_3d_t::product_t> index) noexcept {
+		lldiv_t outer{ std::lldiv(index, Size.w) };
+		lldiv_t inner{ std::lldiv(outer.quot, Size.area()) };
+		return offset_3d_t{ outer.rem, inner.rem, inner.quot };
+	}
+
 	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
 	constexpr array_t<T, OffsetType, ExtentType, Size>::array_t() : data{ new T[size] } {}
 
@@ -66,23 +93,13 @@ namespace bleak {
 	}
 
 	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr array_t<T, OffsetType, ExtentType, Size>::index_t array_t<T, OffsetType, ExtentType, Size>::flatten(offset_t offset) noexcept {
-		return OffsetType::flatten<Size>(offset);
-	}
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr array_t<T, OffsetType, ExtentType, Size>::offset_t array_t<T, OffsetType, ExtentType, Size>::unflatten(index_t index) noexcept {
-		return OffsetType::unflatten<Size>(index);
-	}
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
 	constexpr ref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](offset_t offset) noexcept {
-		return data[first + flatten(offset)];
+		return data[first + flatten<Size>(offset)];
 	}
 
 	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
 	constexpr cref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](offset_t offset) const noexcept {
-		return data[first + flatten(offset)];
+		return data[first + flatten<Size>(offset)];
 	}
 
 	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>

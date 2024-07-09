@@ -128,27 +128,9 @@ namespace bleak {
 			draw_outline_rect(position, size);
 		}
 
-		inline void draw_outline_rect(cref<offset_2d_t> position, cref<extent_2d_t> size, extent_2d_t::scalar_t thickness) noexcept {
-			draw_line(position, position + extent_2d_t{ size.w, 0 }, thickness);
-			draw_line(position, position + extent_2d_t{ 0, size.h }, thickness);
-			draw_line(position + extent_2d_t{ size.w, 0 }, position + size, thickness);
-			draw_line(position + extent_2d_t{ 0, size.h }, position + size, thickness);
-		}
-
-		inline void draw_outline_rect(cref<offset_2d_t> position, cref<extent_2d_t> size, cref<color_t> color, extent_2d_t::scalar_t thickness) noexcept {
-			set_draw_color(color);
-			draw_outline_rect(position, size, thickness);
-		}
-
 		inline void draw_outline_rect(cref<rect_t> rect) noexcept { draw_outline_rect(rect.position, rect.size); }
 
 		inline void draw_outline_rect(cref<rect_t> rect, cref<color_t> color) noexcept { draw_outline_rect(rect.position, rect.size, color); }
-
-		inline void draw_outline_rect(cref<rect_t> rect, extent_2d_t::scalar_t thickness) noexcept { draw_outline_rect(rect.position, rect.size, thickness); }
-
-		inline void draw_outline_rect(cref<rect_t> rect, cref<color_t> color, extent_2d_t::scalar_t thickness) noexcept {
-			draw_outline_rect(rect.position, rect.size, color, thickness);
-		}
 
 		inline void draw_fill_rect(cref<offset_2d_t> position, cref<extent_2d_t> size) noexcept {
 			sdl::rect sdl_rect{ position.x, position.y, static_cast<int>(size.w), static_cast<int>(size.h) };
@@ -164,28 +146,20 @@ namespace bleak {
 
 		inline void draw_fill_rect(cref<rect_t> rect, cref<color_t> color) noexcept { draw_fill_rect(rect.position, rect.size, color); }
 
-		inline void draw_composite_rect(cref<offset_2d_t> position, cref<extent_2d_t> size, cref<color_t> fill_color, cref<color_t> outline_color, extent_2d_t::scalar_t thickness) noexcept {
-			draw_fill_rect(position, size, fill_color);
-			draw_outline_rect(position, size, outline_color, thickness);
+		inline void draw_composite_rect(
+			cref<offset_2d_t> position, cref<extent_2d_t> size, cref<color_t> fill_color, cref<color_t> outline_color, extent_2d_t::scalar_t thickness
+		) noexcept {
+			draw_fill_rect(position, size, outline_color);
+			draw_fill_rect({ position + thickness / 2, size - thickness }, fill_color);
 		}
 
 		inline void draw_composite_rect(cref<rect_t> rect, cref<color_t> fill_color, cref<color_t> outline_color, extent_2d_t::scalar_t thickness) noexcept {
-			draw_fill_rect(rect, fill_color);
-			draw_outline_rect(rect, outline_color, thickness);
+			draw_fill_rect(rect, outline_color);
+			draw_fill_rect({ rect.position + thickness / 2, rect.size - thickness }, fill_color);
 		}
 
 		inline void draw_circle(cref<offset_2d_t> position, extent_2d_t::scalar_t radius) {
-			extent_2d_t::scalar_t diameter{ radius * 2 };
-			extent_2d_t::product_t radius_sqr{ radius * radius };
-
-			for (extent_2d_t::scalar_t y = 0; y <= diameter; y++) {
-				for (extent_2d_t::scalar_t x = 0; x <= diameter; x++) {
-					offset_2d_t offs{ x, y };
-					if (offs.dot() <= radius_sqr) {
-						draw_point(position + radius - offs);
-					}
-				}
-			}
+			error_log.add("draw_circle not implemented!");
 		}
 
 		inline void draw_circle(cref<offset_2d_t> position, extent_2d_t::scalar_t radius, cref<color_t> color) {

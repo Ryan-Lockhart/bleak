@@ -28,7 +28,7 @@ namespace bleak {
 		static inline ptr<SDL_Texture> load_texture(ref<renderer_t> renderer, cstr path) {
 			ptr<SDL_Texture> texture{ IMG_LoadTexture(renderer.handle(), path) };
 
-			if (texture != nullptr) {
+			if (texture == nullptr) {
 				throw std::runtime_error(std::format("could not load texture: {}", SDL_GetError()));
 			}
 

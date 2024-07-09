@@ -1,5 +1,8 @@
 #pragma once
 
+#include "bleak/offset/offset_2d.hpp"
+#include "bleak/typedef.hpp"
+
 #include <stdexcept>
 #include <utility>
 
@@ -11,12 +14,16 @@
 #include "bleak/extent.hpp"
 #include "bleak/glyph.hpp"
 #include "bleak/offset.hpp"
-#include "bleak/offset/offset_2d.hpp"
 #include "bleak/text.hpp"
 #include "bleak/texture.hpp"
 
 namespace bleak {
 	template<extent_2d_t Size> class atlas_t {
+	  private:
+		layer_t<rect_t, Size> rects;
+
+		texture_t texture;
+
 	  public:
 		// The size of the atlas in glyphs.
 		static constexpr extent_2d_t size{ Size };
@@ -37,6 +44,7 @@ namespace bleak {
 			if (image_size.w <= 0 || image_size.h <= 0) {
 				throw std::runtime_error("image size must be greater than zero!");
 			}
+
 			if (glyph_size.w <= 0 || glyph_size.h <= 0) {
 				throw std::runtime_error("glyph size must be greater than zero!");
 			}
@@ -47,7 +55,8 @@ namespace bleak {
 
 			for (int y = 0; y < size.h; ++y) {
 				for (int x = 0; x < size.w; ++x) {
-					rects[x, y] = { x * glyph_size.w, y * glyph_size.h, glyph_size.w, glyph_size.h };
+					offset_2d_t pos{ x, y };
+					rects[pos] = rect_t{ pos * glyph_size, glyph_size };
 				}
 			}
 		}
@@ -66,9 +75,7 @@ namespace bleak {
 			}
 
 			const offset_2d_t pos = position * glyph_size;
-			const SDL_Rect dst{ pos.x, pos.y, glyph_size.w, glyph_size.h };
-
-			texture.draw(&rects[glyph.index], &dst, glyph.color);
+			texture.draw(rects[glyph.index], rect_t{ pos, glyph_size }, glyph.color);
 		}
 
 		inline void draw(cref<glyph_t> glyph, cref<offset_2d_t> position, cref<extent_2d_t> offset) const {
@@ -77,7 +84,7 @@ namespace bleak {
 			}
 
 			const offset_2d_t pos = position * glyph_size + offset;
-			const SDL_Rect dst{ pos.x, pos.y, glyph_size.w, glyph_size.h };
+			const sdl::rect dst{ pos.x, pos.y, glyph_size.w, glyph_size.h };
 
 			texture.draw(&rects[glyph.index], &dst, glyph.color);
 		}
@@ -243,12 +250,5 @@ namespace bleak {
 				}
 			}
 		}
-
-	  private:
-		static_assert(sizeof(sdl::rect) * Size.w * Size.h <= memory::maximum, "atlas size exceeds memory limit!");
-
-		layer_t<sdl::rect, size> rects;
-
-		texture_t texture;
 	};
 } // namespace bleak

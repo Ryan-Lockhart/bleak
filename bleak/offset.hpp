@@ -82,6 +82,15 @@ namespace bleak {
 	constexpr const offset_2d_t offset_2d_t::southwest{ offset_2d_t::south + offset_2d_t::west };
 	constexpr const offset_2d_t offset_2d_t::southeast{ offset_2d_t::south + offset_2d_t::east };
 
+	constexpr ref<offset_2d_t> offset_2d_t::clamp(cref<extent_2d_t> min, cref<extent_2d_t> max) {
+		x = x < min.w ? min.w : x > max.w ? max.w : x;
+		y = y < min.h ? min.h : y > max.h ? max.h : y;
+
+		return *this;
+	}
+
+	constexpr offset_2d_t offset_2d_t::clamp(offset_2d_t value, cref<extent_2d_t> min, cref<extent_2d_t> max) { return value.clamp(min, max); }
+
 	constexpr offset_2d_t offset_2d_t::operator+(cref<extent_1d_t> extent) const noexcept { return { x + scalar_cast(extent.w), y }; }
 
 	constexpr offset_2d_t offset_2d_t::operator-(cref<extent_1d_t> extent) const noexcept { return { x - scalar_cast(extent.w), y }; }
@@ -233,6 +242,16 @@ namespace bleak {
 
 	constexpr const offset_3d_t offset_3d_t::vertical::down::southwest{ offset_3d_t::southwest + offset_3d_t::down };
 	constexpr const offset_3d_t offset_3d_t::vertical::down::southeast{ offset_3d_t::southeast + offset_3d_t::down };
+
+	constexpr ref<offset_3d_t> offset_3d_t::clamp(cref<extent_3d_t> min, cref<extent_3d_t> max) {
+		x = x < min.w ? min.w : x > max.w ? max.w : x;
+		y = y < min.h ? min.h : y > max.h ? max.h : y;
+		z = z < min.d ? min.d : z > max.d ? max.d : z;
+
+		return *this;
+	}
+
+	constexpr offset_3d_t offset_3d_t::clamp(offset_3d_t value, cref<extent_3d_t> min, cref<extent_3d_t> max) { return value.clamp(min, max); }
 
 	constexpr offset_3d_t offset_3d_t::operator+(cref<extent_1d_t> extent) const noexcept { return { scalar_cast(x + extent.w), y, z }; }
 
@@ -387,28 +406,5 @@ namespace bleak {
 		z %= extent.d;
 
 		return *this;
-	}
-
-	template<extent_1d_t Size> static constexpr extent_1d_t::product_t flatten(cref<offset_1d_t> offset) noexcept { return offset.x; }
-
-	template<extent_2d_t Size> static constexpr extent_2d_t::product_t flatten(cref<offset_2d_t> offset) noexcept { return offset.y * Size.w + offset.x; }
-
-	template<extent_3d_t Size> static constexpr extent_3d_t::product_t flatten(cref<offset_3d_t> offset) noexcept {
-		return offset.z * Size.area() + offset.y * Size.w + offset.x;
-	}
-
-	template<extent_1d_t Size> static constexpr offset_1d_t unflatten(extent_1d_t::product_t index) noexcept {
-		return offset_1d_t{ offset_1d_t::scalar_cast(index) };
-	}
-
-	template<extent_2d_t Size> static constexpr offset_2d_t unflatten(extent_2d_t::product_t index) noexcept {
-		lldiv_t result{ std::lldiv(index, Size.w) };
-		return offset_2d_t{ result.rem, result.quot };
-	}
-
-	template<extent_3d_t Size> static constexpr offset_3d_t unflatten(extent_3d_t::product_t index) noexcept {
-		lldiv_t outer{ std::lldiv(index, Size.w) };
-		lldiv_t inner{ std::lldiv(outer.quot, Size.area()) };
-		return offset_3d_t{ outer.rem, inner.rem, inner.quot };
 	}
 } // namespace bleak

@@ -18,9 +18,9 @@ extern "C" {
 		typedef bleak::uqrtr scalar_t;
 		typedef bleak::usize product_t;
 #endif
-		scalar_t w { 0 };
-		scalar_t h { 0 };
-		scalar_t d { 0 };
+		scalar_t w{ 0 };
+		scalar_t h{ 0 };
+		scalar_t d{ 0 };
 
 		static_assert(
 			(product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max()
@@ -34,15 +34,15 @@ namespace bleak {
 	struct extent_3d_t : public c_extent_3d_t {
 		template<typename T> static constexpr scalar_t scalar_cast(T value) noexcept { return static_cast<scalar_t>(value); }
 
-		template<typename T> static constexpr product_t product_cast(T value) noexcept { return product_cast(value); }
+		template<typename T> static constexpr product_t product_cast(T value) noexcept { return static_cast<product_t>(value); }
 
 		static const extent_3d_t zero;
 
 		constexpr extent_3d_t() noexcept {}
 
-		constexpr extent_3d_t(scalar_t scalar) noexcept : c_extent_3d_t { scalar, scalar, scalar } {}
+		constexpr extent_3d_t(scalar_t scalar) noexcept : c_extent_3d_t{ scalar, scalar, scalar } {}
 
-		constexpr extent_3d_t(scalar_t width, scalar_t height, scalar_t depth) noexcept : c_extent_3d_t { width, height, depth } {}
+		constexpr extent_3d_t(scalar_t width, scalar_t height, scalar_t depth) noexcept : c_extent_3d_t{ width, height, depth } {}
 
 		constexpr product_t area() const noexcept { return (product_t)w * h; }
 
@@ -61,43 +61,43 @@ namespace bleak {
 		constexpr bool operator>=(cref<extent_3d_t> other) const { return volume() >= other.volume(); }
 
 		constexpr extent_3d_t operator+(cref<extent_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(w + other.w), static_cast<scalar_t>(h + other.h), static_cast<scalar_t>(d + other.d) };
+			return { scalar_cast(w + other.w), scalar_cast(h + other.h), scalar_cast(d + other.d) };
 		}
 
 		constexpr extent_3d_t operator-(cref<extent_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(w - other.w), static_cast<scalar_t>(h - other.h), static_cast<scalar_t>(d - other.d) };
+			return { scalar_cast(w - other.w), scalar_cast(h - other.h), scalar_cast(d - other.d) };
 		}
 
 		constexpr extent_3d_t operator*(cref<extent_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(w * other.w), static_cast<scalar_t>(h * other.h), static_cast<scalar_t>(d * other.d) };
+			return { scalar_cast(w * other.w), scalar_cast(h * other.h), scalar_cast(d * other.d) };
 		}
 
 		constexpr extent_3d_t operator/(cref<extent_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(w / other.w), static_cast<scalar_t>(h / other.h), static_cast<scalar_t>(d / other.d) };
+			return { scalar_cast(w / other.w), scalar_cast(h / other.h), scalar_cast(d / other.d) };
 		}
 
 		constexpr extent_3d_t operator%(cref<extent_3d_t> other) const noexcept {
-			return { static_cast<scalar_t>(w % other.w), static_cast<scalar_t>(h % other.h), static_cast<scalar_t>(d % other.d) };
+			return { scalar_cast(w % other.w), scalar_cast(h % other.h), scalar_cast(d % other.d) };
 		}
 
 		constexpr extent_3d_t operator+(scalar_t scalar) const noexcept {
-			return { static_cast<scalar_t>(w + scalar), static_cast<scalar_t>(h + scalar), static_cast<scalar_t>(d + scalar) };
+			return { scalar_cast(w + scalar), scalar_cast(h + scalar), scalar_cast(d + scalar) };
 		}
 
 		constexpr extent_3d_t operator-(scalar_t scalar) const noexcept {
-			return { static_cast<scalar_t>(w - scalar), static_cast<scalar_t>(h - scalar), static_cast<scalar_t>(d - scalar) };
+			return { scalar_cast(w - scalar), scalar_cast(h - scalar), scalar_cast(d - scalar) };
 		}
 
 		constexpr extent_3d_t operator*(scalar_t scalar) const noexcept {
-			return { static_cast<scalar_t>(w * scalar), static_cast<scalar_t>(h * scalar), static_cast<scalar_t>(d * scalar) };
+			return { scalar_cast(w * scalar), scalar_cast(h * scalar), scalar_cast(d * scalar) };
 		}
 
 		constexpr extent_3d_t operator/(scalar_t scalar) const noexcept {
-			return { static_cast<scalar_t>(w / scalar), static_cast<scalar_t>(h / scalar), static_cast<scalar_t>(d / scalar) };
+			return { scalar_cast(w / scalar), scalar_cast(h / scalar), scalar_cast(d / scalar) };
 		}
 
 		constexpr extent_3d_t operator%(scalar_t scalar) const noexcept {
-			return { static_cast<scalar_t>(w % scalar), static_cast<scalar_t>(h % scalar), static_cast<scalar_t>(d % scalar) };
+			return { scalar_cast(w % scalar), scalar_cast(h % scalar), scalar_cast(d % scalar) };
 		}
 
 		constexpr ref<extent_3d_t> operator+=(cref<extent_3d_t> other) noexcept {
@@ -179,6 +179,8 @@ namespace bleak {
 
 			return *this;
 		}
+
+		constexpr product_t size() const noexcept { return volume(); }
 
 		constexpr operator std::string() const noexcept { return std::format("[{} x {} x {}]", w, h, d); }
 

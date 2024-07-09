@@ -1,30 +1,33 @@
 #pragma once
 
-#include "typedef.hpp"
+#include "bleak/offset/offset_2d.hpp"
+#include "bleak/typedef.hpp"
 
-#include "glyph.hpp"
-#include "point.hpp"
+#include "bleak/extent.hpp"
+#include "bleak/glyph.hpp"
+#include "bleak/offset.hpp"
 
-#include "atlas.hpp"
+#include "bleak/atlas.hpp"
+#include "extent/extent_2d.hpp"
 
-namespace Bleakdepth {
+namespace bleak {
 	struct sprite_t {
-		point_t<i32> position;
+		offset_2d_t position;
 		glyph_t glyph;
 
 		constexpr inline sprite_t() noexcept = delete;
 
-		constexpr inline sprite_t(cref<glyph_t> glyph) noexcept : position { 0, 0 }, glyph { glyph } {}
+		constexpr inline sprite_t(cref<glyph_t> glyph) noexcept : position{ 0, 0 }, glyph{ glyph } {}
 
-		constexpr inline sprite_t(rval<glyph_t> glyph) noexcept : position { 0, 0 }, glyph { std::move(glyph) } {}
+		constexpr inline sprite_t(rval<glyph_t> glyph) noexcept : position{ 0, 0 }, glyph{ std::move(glyph) } {}
 
-		constexpr inline sprite_t(cref<glyph_t> glyph, cref<point_t<i32>> position) noexcept : position { position }, glyph { glyph } {}
+		constexpr inline sprite_t(cref<glyph_t> glyph, cref<offset_2d_t> position) noexcept : position{ position }, glyph{ glyph } {}
 
-		constexpr inline sprite_t(rval<glyph_t> glyph, rval<point_t<i32>> position) noexcept : position { std::move(position) }, glyph { std::move(glyph) } {}
+		constexpr inline sprite_t(rval<glyph_t> glyph, rval<offset_2d_t> position) noexcept : position{ std::move(position) }, glyph{ std::move(glyph) } {}
 
-		constexpr inline sprite_t(cref<sprite_t> other) noexcept : position { other.position }, glyph { other.glyph } {}
+		constexpr inline sprite_t(cref<sprite_t> other) noexcept : position{ other.position }, glyph{ other.glyph } {}
 
-		constexpr inline sprite_t(rval<sprite_t> other) noexcept : position { std::move(other.position) }, glyph { std::move(other.glyph) } {}
+		constexpr inline sprite_t(rval<sprite_t> other) noexcept : position{ std::move(other.position) }, glyph{ std::move(other.glyph) } {}
 
 		constexpr inline ~sprite_t() noexcept = default;
 
@@ -46,32 +49,32 @@ namespace Bleakdepth {
 			return *this;
 		}
 
-		template<usize Width, usize Height> constexpr inline void draw(cref<atlas_t<Width, Height>> atlas) const { atlas.draw(glyph, position); }
+		template<extent_2d_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas) const { atlas.draw(glyph, position); }
 
-		template<usize Width, usize Height> constexpr inline void draw(cref<atlas_t<Width, Height>> atlas, cref<point_t<i32>> offset) const {
+		template<extent_2d_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset) const {
 			atlas.draw((glyph_t)glyph, position + offset);
 		}
 	};
 
 	template<usize Length> struct animated_sprite_t {
 		animated_glyph_t<Length> glyph;
-		point_t<i32> position;
+		offset_2d_t position;
 
 		constexpr inline animated_sprite_t() noexcept = delete;
 
-		constexpr inline animated_sprite_t(rval<animated_glyph_t<Length>> glyph) noexcept : glyph { std::move(glyph) }, position { 0, 0 } {}
+		constexpr inline animated_sprite_t(rval<animated_glyph_t<Length>> glyph) noexcept : glyph{ std::move(glyph) }, position{ 0, 0 } {}
 
-		constexpr inline animated_sprite_t(rval<animated_glyph_t<Length>> glyph, cref<point_t<i32>> position) noexcept :
-			glyph { std::move(glyph) },
-			position { position } {}
+		constexpr inline animated_sprite_t(rval<animated_glyph_t<Length>> glyph, cref<offset_2d_t> position) noexcept :
+			glyph{ std::move(glyph) },
+			position{ position } {}
 
-		constexpr inline animated_sprite_t(rval<animated_glyph_t<Length>> glyph, rval<point_t<i32>> position) noexcept :
-			glyph { std::move(glyph) },
-			position { std::move(position) } {}
+		constexpr inline animated_sprite_t(rval<animated_glyph_t<Length>> glyph, rval<offset_2d_t> position) noexcept :
+			glyph{ std::move(glyph) },
+			position{ std::move(position) } {}
 
-		constexpr inline animated_sprite_t(cref<animated_sprite_t> other) noexcept : glyph { other.glyph }, position { other.position } {}
+		constexpr inline animated_sprite_t(cref<animated_sprite_t> other) noexcept : glyph{ other.glyph }, position{ other.position } {}
 
-		constexpr inline animated_sprite_t(rval<animated_sprite_t> other) noexcept : glyph { std::move(other.glyph) }, position { std::move(other.position) } {}
+		constexpr inline animated_sprite_t(rval<animated_sprite_t> other) noexcept : glyph{ std::move(other.glyph) }, position{ std::move(other.position) } {}
 
 		constexpr inline ~animated_sprite_t() noexcept = default;
 
@@ -97,10 +100,10 @@ namespace Bleakdepth {
 			return *this;
 		}
 
-		template<usize Width, usize Height> constexpr inline void draw(cref<atlas_t<Width, Height>> atlas) const { atlas.draw((glyph_t)glyph, position); }
+		template<extent_2d_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas) const { atlas.draw(glyph.current(), position); }
 
-		template<usize Width, usize Height> constexpr inline void draw(cref<atlas_t<Width, Height>> atlas, cref<point_t<i32>> offset) const {
-			atlas.draw((glyph_t)glyph, position + offset);
+		template<extent_2d_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset) const {
+			atlas.draw(glyph.current(), position + offset);
 		}
 	};
-} // namespace Bleakdepth
+} // namespace bleak

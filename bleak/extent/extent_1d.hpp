@@ -17,7 +17,7 @@ extern "C" {
 		typedef bleak::usize scalar_t;
 		typedef bleak::usize product_t;
 #endif
-		scalar_t w { 0 };
+		scalar_t w{ 0 };
 	} c_extent_1d_t;
 }
 
@@ -25,13 +25,13 @@ namespace bleak {
 	struct extent_1d_t : public c_extent_1d_t {
 		template<typename T> static constexpr scalar_t scalar_cast(T value) noexcept { return static_cast<scalar_t>(value); }
 
-		template<typename T> static constexpr product_t product_cast(T value) noexcept { return product_cast(value); }
+		template<typename T> static constexpr product_t product_cast(T value) noexcept { return static_cast<product_t>(value); }
 
 		static const extent_1d_t zero;
 
 		constexpr extent_1d_t() noexcept {}
 
-		constexpr extent_1d_t(scalar_t width) noexcept : c_extent_1d_t { width } {}
+		constexpr extent_1d_t(scalar_t width) noexcept : c_extent_1d_t{ width } {}
 
 		constexpr bool operator==(cref<extent_1d_t> other) const noexcept { return w == other.w; }
 
@@ -128,6 +128,8 @@ namespace bleak {
 
 			return *this;
 		}
+
+		constexpr product_t size() const noexcept { return w; }
 
 		constexpr operator std::string() const noexcept { return std::format("[{}]", w); }
 

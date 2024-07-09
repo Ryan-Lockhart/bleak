@@ -195,6 +195,14 @@ namespace bleak {
 
 		static constexpr offset_3d_t clamp(offset_3d_t value, cref<offset_3d_t> min, cref<offset_3d_t> max) { return value.clamp(min, max); }
 
+		constexpr ref<offset_3d_t> clamp(cref<extent_3d_t> min, cref<extent_3d_t> max);
+
+		static constexpr offset_3d_t clamp(offset_3d_t value, cref<extent_3d_t> min, cref<extent_3d_t> max);
+
+		static constexpr product_t flatten(cref<offset_3d_t> offset) noexcept;
+
+		static constexpr offset_3d_t unflatten(cref<product_t> index) noexcept;
+
 		constexpr bool operator==(cref<offset_3d_t> other) const noexcept { return x == other.x && y == other.y && z == other.z; }
 
 		constexpr bool operator!=(cref<offset_3d_t> other) const noexcept { return x != other.x || y != other.y || z != other.z; }
@@ -209,29 +217,53 @@ namespace bleak {
 
 		constexpr offset_3d_t operator-() const noexcept { return { scalar_cast(-x), scalar_cast(-y), scalar_cast(-z) }; }
 
-		constexpr offset_3d_t operator+(cref<offset_3d_t> other) const noexcept { return { scalar_cast(x + other.x), scalar_cast(y + other.y), scalar_cast(z + other.z) }; }
+		constexpr offset_3d_t operator+(cref<offset_3d_t> other) const noexcept {
+			return { scalar_cast(x + other.x), scalar_cast(y + other.y), scalar_cast(z + other.z) };
+		}
 
-		constexpr offset_3d_t operator-(cref<offset_3d_t> other) const noexcept { return { scalar_cast(x - other.x), scalar_cast(y - other.y), scalar_cast(z - other.z) }; }
+		constexpr offset_3d_t operator-(cref<offset_3d_t> other) const noexcept {
+			return { scalar_cast(x - other.x), scalar_cast(y - other.y), scalar_cast(z - other.z) };
+		}
 
-		constexpr offset_3d_t operator*(cref<offset_3d_t> other) const noexcept { return { scalar_cast(x * other.x), scalar_cast(y * other.y), scalar_cast(z * other.z) }; }
+		constexpr offset_3d_t operator*(cref<offset_3d_t> other) const noexcept {
+			return { scalar_cast(x * other.x), scalar_cast(y * other.y), scalar_cast(z * other.z) };
+		}
 
-		constexpr offset_3d_t operator/(cref<offset_3d_t> other) const noexcept { return { scalar_cast(x / other.x), scalar_cast(y / other.y), scalar_cast(z / other.z) }; }
+		constexpr offset_3d_t operator/(cref<offset_3d_t> other) const noexcept {
+			return { scalar_cast(x / other.x), scalar_cast(y / other.y), scalar_cast(z / other.z) };
+		}
 
-		constexpr offset_3d_t operator%(cref<offset_3d_t> other) const noexcept { return { scalar_cast(x % other.x), scalar_cast(y % other.y), scalar_cast(z % other.z) }; }
+		constexpr offset_3d_t operator%(cref<offset_3d_t> other) const noexcept {
+			return { scalar_cast(x % other.x), scalar_cast(y % other.y), scalar_cast(z % other.z) };
+		}
 
-		template<f32> offset_3d_t operator%(cref<offset_3d_t> other) const noexcept { return { scalar_cast(fmodf(x, other.x)), scalar_cast(fmodf(y, other.y)), scalar_cast(fmodf(z, other.z)) }; }
+		template<f32> offset_3d_t operator%(cref<offset_3d_t> other) const noexcept {
+			return { scalar_cast(fmodf(x, other.x)), scalar_cast(fmodf(y, other.y)), scalar_cast(fmodf(z, other.z)) };
+		}
 
-		template<f64> offset_3d_t operator%(cref<offset_3d_t> other) const noexcept { return { scalar_cast(fmodl(x, other.x)), scalar_cast(fmodl(y, other.y)), scalar_cast(fmodl(z, other.z)) }; }
+		template<f64> offset_3d_t operator%(cref<offset_3d_t> other) const noexcept {
+			return { scalar_cast(fmodl(x, other.x)), scalar_cast(fmodl(y, other.y)), scalar_cast(fmodl(z, other.z)) };
+		}
 
-		constexpr offset_3d_t operator+(scalar_t scalar) const noexcept { return { scalar_cast(x + scalar), scalar_cast(y + scalar), scalar_cast(z + scalar) }; }
+		constexpr offset_3d_t operator+(scalar_t scalar) const noexcept {
+			return { scalar_cast(x + scalar), scalar_cast(y + scalar), scalar_cast(z + scalar) };
+		}
 
-		constexpr offset_3d_t operator-(scalar_t scalar) const noexcept { return { scalar_cast(x - scalar), scalar_cast(y - scalar), scalar_cast(z - scalar) }; }
+		constexpr offset_3d_t operator-(scalar_t scalar) const noexcept {
+			return { scalar_cast(x - scalar), scalar_cast(y - scalar), scalar_cast(z - scalar) };
+		}
 
-		constexpr offset_3d_t operator*(scalar_t scalar) const noexcept { return { scalar_cast(x * scalar), scalar_cast(y * scalar), scalar_cast(z * scalar) }; }
+		constexpr offset_3d_t operator*(scalar_t scalar) const noexcept {
+			return { scalar_cast(x * scalar), scalar_cast(y * scalar), scalar_cast(z * scalar) };
+		}
 
-		constexpr offset_3d_t operator/(scalar_t scalar) const noexcept { return { scalar_cast(x / scalar), scalar_cast(y / scalar), scalar_cast(z / scalar) }; }
+		constexpr offset_3d_t operator/(scalar_t scalar) const noexcept {
+			return { scalar_cast(x / scalar), scalar_cast(y / scalar), scalar_cast(z / scalar) };
+		}
 
-		constexpr offset_3d_t operator%(scalar_t scalar) const noexcept { return { scalar_cast(x % scalar), scalar_cast(y % scalar), scalar_cast(z % scalar) }; }
+		constexpr offset_3d_t operator%(scalar_t scalar) const noexcept {
+			return { scalar_cast(x % scalar), scalar_cast(y % scalar), scalar_cast(z % scalar) };
+		}
 
 		constexpr offset_3d_t operator+(cref<extent_1d_t> extent) const noexcept;
 

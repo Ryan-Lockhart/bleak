@@ -1,4 +1,4 @@
-#include "bleak/extent/extent_2d.hpp"
+#include "bleak/offset/offset_2d.hpp"
 #include "bleak/typedef.hpp"
 
 #include <cassert>
@@ -20,7 +20,6 @@
 #include "bleak/map.hpp"
 #include "bleak/mouse.hpp"
 #include "bleak/offset.hpp"
-#include "bleak/point.hpp"
 #include "bleak/renderer.hpp"
 #include "bleak/sprite.hpp"
 #include "bleak/texture.hpp"
@@ -61,7 +60,7 @@ static atlas_t<ATLAS_SIZE> ui_atlas{ { renderer, "res\\glyphs_8x8.png" } };
 
 static std::minstd_rand random_engine{ std::random_device{}() };
 
-static map_t<GAME_GRID_SIZE.x, GAME_GRID_SIZE.y, 1, 1> game_map{};
+static map_t<GAME_GRID_SIZE, { 1, 1 }> game_map{};
 
 static bool gamepad_enabled{ true };
 
@@ -81,9 +80,11 @@ static void primary_gamepad_reconnected(cptr<gamepad_t> gamepad) {
 }
 
 static cursor_t cursor{ { renderer, "res\\cursor.png" }, Colors::White };
-static grid_cursor_t<16, 16> grid_cursor{ { renderer, "res\\grid_cursor.png" }, { 0 }, Colors::Metals::Gold, { 0, 0 }, GAME_GRID_SIZE - 1 };
+static grid_cursor_t<16, 16> grid_cursor{
+	texture_t{ renderer, "res\\grid_cursor.png" }, offset_2d_t{ 0 }, Colors::Metals::Gold, offset_2d_t{ 0, 0 }, offset_2d_t{ GAME_GRID_SIZE - 1 }
+};
 
-static point_t<i32> camera_position{ 0 };
+static offset_2d_t camera_position{ 0 };
 
 static animated_sprite_t<3> player{ { animated_glyph_t<3>::generate_contiguous_indices<0xB0, 0xB2>(), Colors::Green }, { 0 } };
 
@@ -98,7 +99,7 @@ static wave_t sine_wave{ 1.0, 0.5, 1.0 };
 using namespace bleak;
 
 bool camera_movement() {
-	point_t<> direction{ 0, 0 };
+	offset_2d_t direction{};
 
 	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::North])) {
 		++direction.y;
@@ -113,11 +114,11 @@ bool camera_movement() {
 		--direction.x;
 	}
 
-	if (gamepad_enabled && direction == point_t<>::Zero) {
+	if (gamepad_enabled && direction == offset_2d_t::zero) {
 		direction = primary_gamepad->right_stick.current_state;
 	}
 
-	if (direction != point_t<>::Zero) {
+	if (direction != offset_2d_t::zero) {
 		camera_position -= direction;
 
 		input_timer.record();
@@ -129,7 +130,7 @@ bool camera_movement() {
 }
 
 bool character_movement() {
-	point_t<> direction{ 0, 0 };
+	offset_2d_t direction{};
 
 	if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::North])) {
 		--direction.y;
@@ -144,11 +145,11 @@ bool character_movement() {
 		++direction.x;
 	}
 
-	if (gamepad_enabled && direction == point_t<>::Zero) {
+	if (gamepad_enabled && direction == offset_2d_t::zero) {
 		direction = primary_gamepad->left_stick.current_state;
 	}
 
-	if (direction != point_t<>::Zero) {
+	if (direction != offset_2d_t::zero) {
 		player.position += direction;
 
 		input_timer.record();
@@ -193,13 +194,7 @@ void startup() {
 		gamepad_enabled = false;
 	}
 
-	game_atlas.universal_offset = WINDOW_PADDING / 2;
-	ui_atlas.universal_offset = WINDOW_PADDING / 2;
-
-	game_atlas.universal_foffset = static_cast<point_t<f32>>(WINDOW_PADDING / 2);
-	ui_atlas.universal_foffset = static_cast<point_t<f32>>(WINDOW_PADDING / 2);
-
-	game_map.set<map_region_t::Border>({ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored });
+	game_map.set<map_region_t::Border>(cell_state_t{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored });
 	game_map.randomize<map_region_t::Interior>(
 		random_engine,
 		0.5,
@@ -207,7 +202,7 @@ void startup() {
 		{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored }
 	);
 
-	player.position = static_cast<point_t<i32>>(game_map.find_random_cell_interior(random_engine, cell_trait_t::Open).value());
+	player.position = static_cast<offset_2d_t>(game_map.find_random_cell_interior(random_engine, cell_trait_t::Open).value());
 
 	Mouse::hide_cursor();
 
@@ -260,25 +255,7 @@ void render() {
 	grid_cursor.draw();
 
 	runes_t fps_text{ std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::White };
-	ui_atlas.draw(fps_text, point_t<i32>{ 0, UI_GRID_SIZE.h - 1 });
-
-	runes_t tooltip_text{ "waffle\nboarde", Colors::White };
-	auto tooltip_size{ (point_t<i32>)Text::calculate_size(tooltip_text) };
-
-	auto tooltip_alignment{ (cardinal_t)grid_cursor.get_quadrant() };
-
-	auto tooltip_position{ grid_cursor.position * game_atlas.glyph_size + grid_cursor.size / 2 + point_t<>{ 4, 4 } };
-
-	renderer.draw_rect(tooltip_position, tooltip_size * ui_atlas.glyph_size, tooltip_alignment, Colors::Black, Colors::White);
-	ui_atlas.draw(
-		tooltip_text,
-		grid_cursor.position * game_atlas.glyph_size / ui_atlas.glyph_size,
-		tooltip_alignment,
-		point_t<>{ 4, 4 } + game_atlas.glyph_size / ui_atlas.glyph_size * tooltip_alignment
-	);
-
-	renderer.draw_point(tooltip_position, Colors::Red);
-	renderer.draw_point(grid_cursor.position * game_atlas.glyph_size, Colors::Green);
+	ui_atlas.draw(fps_text, offset_2d_t{ 0, UI_GRID_SIZE.h - 1 });
 
 	renderer.present();
 }

@@ -19,8 +19,8 @@ extern "C" {
 		typedef bleak::usize product_t;
 #endif
 
-		scalar_t w { 0 };
-		scalar_t h { 0 };
+		scalar_t w{ 0 };
+		scalar_t h{ 0 };
 
 		static_assert(
 			(product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max() <= std::numeric_limits<product_t>::max(),
@@ -33,15 +33,15 @@ namespace bleak {
 	struct extent_2d_t : public c_extent_2d_t {
 		template<typename T> static constexpr scalar_t scalar_cast(T value) noexcept { return static_cast<scalar_t>(value); }
 
-		template<typename T> static constexpr product_t product_cast(T value) noexcept { return product_cast(value); }
-		
+		template<typename T> static constexpr product_t product_cast(T value) noexcept { return static_cast<product_t>(value); }
+
 		static const extent_2d_t zero;
 
 		constexpr extent_2d_t() noexcept {}
 
-		constexpr extent_2d_t(scalar_t scalar) noexcept : c_extent_2d_t { scalar, scalar } {}
+		constexpr extent_2d_t(scalar_t scalar) noexcept : c_extent_2d_t{ scalar, scalar } {}
 
-		constexpr extent_2d_t(scalar_t width, scalar_t height) noexcept : c_extent_2d_t { width, height } {}
+		constexpr extent_2d_t(scalar_t width, scalar_t height) noexcept : c_extent_2d_t{ width, height } {}
 
 		constexpr product_t area() const noexcept { return (product_t)w * h; }
 
@@ -147,9 +147,12 @@ namespace bleak {
 			return *this;
 		}
 
+		constexpr product_t size() const noexcept { return area(); }
+
 		constexpr operator std::string() const noexcept { return std::format("[{} x {}]", w, h); }
 
 		constexpr explicit operator sdl::point() const noexcept { return { static_cast<i32>(w), static_cast<i32>(h) }; }
+
 		constexpr explicit operator sdl::fpoint() const noexcept { return { static_cast<f32>(w), static_cast<f32>(h) }; }
 
 		constexpr explicit operator extent_1d_t() const noexcept;

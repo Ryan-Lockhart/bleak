@@ -6,6 +6,7 @@
 
 #include "bleak/array.hpp"
 #include "bleak/color.hpp"
+#include "extent/extent_1d.hpp"
 
 namespace bleak {
 	struct glyph_t {
@@ -17,18 +18,20 @@ namespace bleak {
 		constexpr glyph_t(u16 index, color_t color) noexcept : color{ color }, index{ index } {}
 	};
 
-	template<usize Length> struct animated_glyph_t {
+	template<extent_1d_t Length> struct animated_glyph_t {
 	  private:
 		row_t<u16, Length> indices;
-		usize frame;
+		extent_1d_t::product_t frame;
 
 		constexpr inline void wrap() noexcept { frame %= length; }
 
 	  public:
-		static constexpr usize length{ Length };
+		using index_t = extent_1d_t::product_t;
 
-		static constexpr usize first{ 0 };
-		static constexpr usize last{ length - 1 };
+		static constexpr index_t length{ Length };
+
+		static constexpr index_t first{ 0 };
+		static constexpr index_t last{ length - 1 };
 
 		using iterator = fwd_iter_t<u16>;
 		using const_iterator = fwd_iter_t<const u16>;
@@ -78,9 +81,9 @@ namespace bleak {
 
 		constexpr ~animated_glyph_t() = default;
 
-		constexpr u16 operator[](usize index) const noexcept { return indices[index]; }
+		constexpr u16 operator[](index_t index) const noexcept { return indices[index]; }
 
-		constexpr u16 at(usize index) const {
+		constexpr u16 at(index_t index) const {
 			if (index >= length) {
 				throw std::out_of_range{ "index out of range!" };
 			}
@@ -100,11 +103,13 @@ namespace bleak {
 
 		constexpr void reset() noexcept { frame = 0; }
 
-		constexpr void set(usize index) { frame = index % length; }
+		constexpr void set(index_t index) { frame = index % length; }
 
-		constexpr usize current_frame() const noexcept { return frame; }
+		constexpr index_t current_frame() const noexcept { return frame; }
 
-		constexpr operator glyph_t() const noexcept { return { indices[frame], color }; }
+		constexpr glyph_t current() const noexcept { return { indices[frame], color }; }
+
+		constexpr explicit operator glyph_t() const noexcept { return { indices[frame], color }; }
 
 		constexpr u16 front() const noexcept { return indices.front(); }
 
@@ -148,7 +153,7 @@ namespace bleak {
 
 			static_assert(End - Start + 1 == Length, "lengths of indices and range are not equal!");
 
-			for (usize i = 0; i < Length; ++i) {
+			for (index_t i = 0; i < Length; ++i) {
 				indices[i] = Start + i;
 			}
 

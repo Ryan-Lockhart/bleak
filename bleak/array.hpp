@@ -1,15 +1,25 @@
 #pragma once
 
+#include "bleak/offset/offset_1d.hpp"
 #include "bleak/typedef.hpp"
 
 #include <initializer_list>
 
 #include "bleak/extent.hpp"
 #include "bleak/offset.hpp"
+#include "extent/extent_1d.hpp"
 
 namespace bleak {
 	template<typename T> struct fwd_iter_t;
 	template<typename T> struct rev_iter_t;
+
+	template<extent_1d_t Size> static constexpr extent_1d_t::product_t flatten(cref<offset_1d_t> offset) noexcept;
+	template<extent_2d_t Size> static constexpr extent_2d_t::product_t flatten(cref<offset_2d_t> offset) noexcept;
+	template<extent_3d_t Size> static constexpr extent_3d_t::product_t flatten(cref<offset_3d_t> offset) noexcept;
+
+	template<extent_1d_t Size> static constexpr offset_1d_t unflatten(cref<extent_1d_t::product_t> index) noexcept;
+	template<extent_2d_t Size> static constexpr offset_2d_t unflatten(cref<extent_2d_t::product_t> index) noexcept;
+	template<extent_3d_t Size> static constexpr offset_3d_t unflatten(cref<extent_3d_t::product_t> index) noexcept;
 
 	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> class array_t {
 	  private:
@@ -56,10 +66,6 @@ namespace bleak {
 
 		constexpr ~array_t() noexcept;
 
-		static constexpr index_t flatten(offset_t offset) noexcept;
-
-		static constexpr offset_t unflatten(index_t index) noexcept;
-
 		constexpr ref<T> operator[](offset_t offset) noexcept;
 
 		constexpr cref<T> operator[](offset_t offset) const noexcept;
@@ -102,17 +108,16 @@ namespace bleak {
 
 		constexpr const_reverse_iterator crend() const noexcept;
 	};
-
-	template<typename T, extent_1d_t Size> class array_t<T, offset_1d_t, extent_1d_t, Size>;
-	template<typename T, extent_1d_t Size> using row_t = array_t<T, offset_1d_t, extent_1d_t, Size>;
-
-	template<typename T, extent_2d_t Size> class array_t<T, offset_2d_t, extent_2d_t, Size>;
-	template<typename T, extent_2d_t Size> using layer_t = array_t<T, offset_2d_t, extent_2d_t, Size>;
-
-	template<typename T, extent_3d_t Size> class array_t<T, offset_3d_t, extent_3d_t, Size>;
-	template<typename T, extent_3d_t Size> using volume_t = array_t<T, offset_3d_t, extent_3d_t, Size>;
 } // namespace bleak
 
 #include "bleak/array/array.tpp" // IWYU pragma: export
 
 #include "bleak/array/iter.hpp" // IWYU pragma: export
+
+namespace bleak {
+	template<typename T, extent_1d_t Size> using row_t = array_t<T, offset_1d_t, extent_1d_t, Size>;
+
+	template<typename T, extent_2d_t Size> using layer_t = array_t<T, offset_2d_t, extent_2d_t, Size>;
+
+	template<typename T, extent_3d_t Size> using volume_t = array_t<T, offset_3d_t, extent_3d_t, Size>;
+} // namespace bleak

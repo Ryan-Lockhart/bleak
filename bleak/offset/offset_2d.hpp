@@ -27,7 +27,8 @@ extern "C" {
 		scalar_t y{ 0 };
 
 		static_assert(
-			(product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max() <= std::numeric_limits<product_t>::max(), "product_t is too small for scalar_t"
+			(product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max() <= std::numeric_limits<product_t>::max(),
+			"product_t is too small for scalar_t"
 		);
 	} c_offset_2d_t;
 }
@@ -84,7 +85,7 @@ namespace bleak {
 
 		constexpr product_t dot() const noexcept { return (product_t)x * x + (product_t)y * y; }
 
-		template<typename T>
+		template<typename T = product_t>
 			requires std::is_floating_point<T>::value || std::is_same<T, product_t>::value
 		constexpr T length() const noexcept;
 
@@ -111,7 +112,7 @@ namespace bleak {
 			return (product_t)((float_t)v.i);
 		}
 
-		template<typename T, typename = f32> static constexpr T distance(cref<offset_2d_t> start, cref<offset_2d_t> end) noexcept;
+		template<typename T = product_t> static constexpr T distance(cref<offset_2d_t> start, cref<offset_2d_t> end) noexcept;
 
 		template<> constexpr f32 distance(cref<offset_2d_t> start, cref<offset_2d_t> end) noexcept { return (end - start).length<f32>(); }
 
@@ -119,10 +120,12 @@ namespace bleak {
 
 		template<> constexpr product_t distance(cref<offset_2d_t> start, cref<offset_2d_t> end) noexcept { return (end - start).length<product_t>(); }
 
-		static constexpr offset_2d_t direction(cref<offset_2d_t> start, cref<offset_2d_t> end) noexcept { return (end - start).normalized(); }
+		template<typename T = product_t> static constexpr offset_2d_t direction(cref<offset_2d_t> start, cref<offset_2d_t> end) noexcept {
+			return (end - start).normalized<T>();
+		}
 
-		constexpr ref<offset_2d_t> normalize() noexcept {
-			const auto len = length<product_t>();
+		template<typename T = product_t> constexpr ref<offset_2d_t> normalize() noexcept {
+			const auto len = length<T>();
 
 			if (len != 0) {
 				x = scalar_cast(x / len);
@@ -132,8 +135,8 @@ namespace bleak {
 			return *this;
 		}
 
-		constexpr offset_2d_t normalized() const noexcept {
-			const auto len = length<product_t>();
+		template<typename T = product_t> constexpr offset_2d_t normalized() const noexcept {
+			const auto len = length<T>();
 
 			if (len != 0) {
 				return { scalar_cast(x / len), scalar_cast(y / len) };
@@ -149,7 +152,11 @@ namespace bleak {
 			return *this;
 		}
 
-		static constexpr offset_2d_t clamp(offset_2d_t value, offset_2d_t min, offset_2d_t max) { return value.clamp(min, max); }
+		static constexpr offset_2d_t clamp(offset_2d_t value, cref<offset_2d_t> min, cref<offset_2d_t> max) { return value.clamp(min, max); }
+
+		constexpr ref<offset_2d_t> clamp(cref<extent_2d_t> min, cref<extent_2d_t> max);
+
+		static constexpr offset_2d_t clamp(offset_2d_t value, cref<extent_2d_t> min, cref<extent_2d_t> max);
 
 		constexpr bool operator==(cref<offset_2d_t> other) const noexcept { return x == other.x && y == other.y; }
 
