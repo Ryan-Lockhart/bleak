@@ -1,10 +1,8 @@
 #pragma once
 
-#include "bleak/offset/offset_2d.hpp"
 #include "bleak/typedef.hpp"
 
 #include <stdexcept>
-#include <utility>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -16,6 +14,7 @@
 #include "bleak/offset.hpp"
 #include "bleak/text.hpp"
 #include "bleak/texture.hpp"
+#include "extent/extent_2d.hpp"
 
 namespace bleak {
 	template<extent_2d_t Size> class atlas_t {
@@ -33,11 +32,13 @@ namespace bleak {
 		// The size of each glyph in pixels.
 		const extent_2d_t glyph_size;
 
+		offset_2d_t universal_offset{};
+
 		inline atlas_t() = delete;
 
-		inline atlas_t(rval<texture_t> texture) :
+		inline atlas_t(ref<renderer_t> renderer, cstr path) :
 			rects{},
-			texture{ std::move(texture) },
+			texture{ renderer, path },
 
 			image_size{ this->texture.info.size },
 			glyph_size{ image_size / size } {
@@ -53,10 +54,39 @@ namespace bleak {
 				throw std::runtime_error("image size must be divisible by the atlas size!");
 			}
 
+			extent_2d_t::product_t index{ 0 };
 			for (int y = 0; y < size.h; ++y) {
 				for (int x = 0; x < size.w; ++x) {
-					offset_2d_t pos{ x, y };
-					rects[pos] = rect_t{ pos * glyph_size, glyph_size };
+					rects[index] = rect_t{ offset_2d_t{ x, y } * glyph_size, glyph_size };
+					++index;
+				}
+			}
+		}
+
+		inline atlas_t(ref<renderer_t> renderer, cstr path, cref<offset_2d_t> offset) :
+			rects{},
+			texture{ renderer, path },
+
+			image_size{ this->texture.info.size },
+			glyph_size{ image_size / size },
+			universal_offset{ offset } {
+			if (image_size.w <= 0 || image_size.h <= 0) {
+				throw std::runtime_error("image size must be greater than zero!");
+			}
+
+			if (glyph_size.w <= 0 || glyph_size.h <= 0) {
+				throw std::runtime_error("glyph size must be greater than zero!");
+			}
+
+			if (image_size.w % size.w != 0 || image_size.h % size.h != 0) {
+				throw std::runtime_error("image size must be divisible by the atlas size!");
+			}
+
+			extent_2d_t::product_t index{ 0 };
+			for (int y = 0; y < size.h; ++y) {
+				for (int x = 0; x < size.w; ++x) {
+					rects[index] = rect_t{ offset_2d_t{ x, y } * glyph_size, glyph_size };
+					++index;
 				}
 			}
 		}
@@ -69,27 +99,25 @@ namespace bleak {
 
 		inline ~atlas_t() = default;
 
-		inline void draw(cref<glyph_t> glyph, cref<offset_2d_t> position) const {
+		inline void draw(ref<renderer_t> renderer, cref<glyph_t> glyph, cref<offset_2d_t> position) const noexcept {
 			if (glyph.index < 0 || glyph.index >= rects.size) {
-				throw std::out_of_range("glyph index out of range!");
+				error_log.add("glyph index {} is out of range!", glyph.index);
+				return;
 			}
 
-			const offset_2d_t pos = position * glyph_size;
-			texture.draw(rects[glyph.index], rect_t{ pos, glyph_size }, glyph.color);
+			texture.draw(renderer, rects[glyph.index], rect_t{ position * glyph_size, glyph_size } + universal_offset, glyph.color);
 		}
 
-		inline void draw(cref<glyph_t> glyph, cref<offset_2d_t> position, cref<extent_2d_t> offset) const {
+		inline void draw(ref<renderer_t> renderer, cref<glyph_t> glyph, cref<offset_2d_t> position, cref<extent_2d_t> offset) const noexcept {
 			if (glyph.index < 0 || glyph.index >= rects.size) {
-				throw std::out_of_range("glyph index out of range!");
+				error_log.add("glyph index {} is out of range!", glyph.index);
+				return;
 			}
 
-			const offset_2d_t pos = position * glyph_size + offset;
-			const sdl::rect dst{ pos.x, pos.y, glyph_size.w, glyph_size.h };
-
-			texture.draw(&rects[glyph.index], &dst, glyph.color);
+			texture.draw(renderer, rects[glyph.index], rect_t{ position * glyph_size + offset, glyph_size } + universal_offset, glyph.color);
 		}
 
-		inline void draw(cref<runes_t> runes, cref<offset_2d_t> position) const {
+		inline void draw(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_2d_t> position) const {
 			if (runes.empty()) {
 				return;
 			}
@@ -112,14 +140,14 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				default:
-					draw(rune, position + carriage_pos);
+					draw(renderer, rune, position + carriage_pos);
 					++carriage_pos.x;
 					continue;
 				}
 			}
 		}
 
-		inline void draw(cref<runes_t> runes, cref<offset_2d_t> position, cardinal_t alignment) const {
+		inline void draw(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_2d_t> position, cardinal_t alignment) const {
 			if (runes.empty()) {
 				return;
 			}
@@ -145,14 +173,14 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				default:
-					draw(rune, position + carriage_pos + alignment_offs);
+					draw(renderer, rune, position + carriage_pos + alignment_offs);
 					++carriage_pos.x;
 					continue;
 				}
 			}
 		}
 
-		inline void draw(cref<runes_t> runes, cref<offset_2d_t> position, cardinal_t alignment, cref<offset_2d_t> offset) const {
+		inline void draw(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_2d_t> position, cardinal_t alignment, cref<offset_2d_t> offset) const {
 			if (runes.empty()) {
 				return;
 			}
@@ -178,14 +206,14 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				default:
-					draw(rune, position + carriage_pos + alignment_offs, offset);
+					draw(renderer, rune, position + carriage_pos + alignment_offs, offset);
 					++carriage_pos.x;
 					continue;
 				}
 			}
 		}
 
-		inline void draw(cref<std::string> text, offset_2d_t position, color_t color) const {
+		inline void draw(ref<renderer_t> renderer, cref<std::string> text, offset_2d_t position, color_t color) const {
 			if (text.empty()) {
 				return;
 			}
@@ -211,14 +239,14 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				default:
-					draw({ static_cast<u8>(ch), color }, position + carriage_pos + alignment_offs);
+					draw(renderer, glyph_t{ static_cast<u8>(ch), color }, position + carriage_pos + alignment_offs);
 					++carriage_pos.x;
 					continue;
 				}
 			}
 		}
 
-		inline void draw(cref<std::string> text, offset_2d_t position, color_t color, cardinal_t alignment) const {
+		inline void draw(ref<renderer_t> renderer, cref<std::string> text, offset_2d_t position, color_t color, cardinal_t alignment) const {
 			if (text.empty()) {
 				return;
 			}
@@ -244,7 +272,7 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				default:
-					draw({ static_cast<u8>(ch), color }, position + carriage_pos + alignment_offs);
+					draw(renderer, glyph_t{ static_cast<u8>(ch), color }, position + carriage_pos + alignment_offs);
 					++carriage_pos.x;
 					continue;
 				}

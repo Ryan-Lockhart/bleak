@@ -1,4 +1,4 @@
-#include "bleak/offset/offset_2d.hpp"
+#include "bleak/extent/extent_2d.hpp"
 #include "bleak/typedef.hpp"
 
 #include <cassert>
@@ -47,6 +47,8 @@ constexpr f32 FRAME_TIME = 1000.0f / FRAME_LIMIT;
 constexpr extent_2d_t WINDOW_SIZE{ 640, 480 };
 constexpr extent_2d_t WINDOW_PADDING{ 8, 8 };
 
+constexpr offset_2d_t UNIVERSAL_OFFSET{ WINDOW_PADDING / 2 };
+
 constexpr extent_2d_t GAME_GRID_SIZE{ WINDOW_SIZE / 16 };
 constexpr extent_2d_t UI_GRID_SIZE{ WINDOW_SIZE / 8 };
 
@@ -55,12 +57,14 @@ static renderer_t renderer{ window, RENDERER_FLAGS };
 
 constexpr extent_2d_t ATLAS_SIZE{ 16, 16 };
 
-static atlas_t<ATLAS_SIZE> game_atlas{ { renderer, "res\\glyphs_16x16.png" } };
-static atlas_t<ATLAS_SIZE> ui_atlas{ { renderer, "res\\glyphs_8x8.png" } };
+static atlas_t<ATLAS_SIZE> game_atlas{ renderer, "res\\glyphs_16x16.png", UNIVERSAL_OFFSET };
+static atlas_t<ATLAS_SIZE> ui_atlas{ renderer, "res\\glyphs_8x8.png", UNIVERSAL_OFFSET };
 
 static std::minstd_rand random_engine{ std::random_device{}() };
 
-static map_t<GAME_GRID_SIZE, { 1, 1 }> game_map{};
+constexpr extent_2d_t MAP_SIZE{ GAME_GRID_SIZE };
+
+static map_t<MAP_SIZE, { 2, 2 }> game_map{};
 
 static bool gamepad_enabled{ true };
 
@@ -80,7 +84,7 @@ static void primary_gamepad_reconnected(cptr<gamepad_t> gamepad) {
 }
 
 static cursor_t cursor{ { renderer, "res\\cursor.png" }, Colors::White };
-static grid_cursor_t<16, 16> grid_cursor{
+static grid_cursor_t<{ 16, 16 }> grid_cursor{
 	texture_t{ renderer, "res\\grid_cursor.png" }, offset_2d_t{ 0 }, Colors::Metals::Gold, offset_2d_t{ 0, 0 }, offset_2d_t{ GAME_GRID_SIZE - 1 }
 };
 
@@ -102,16 +106,16 @@ bool camera_movement() {
 	offset_2d_t direction{};
 
 	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::North])) {
-		++direction.y;
-	}
-	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::South])) {
 		--direction.y;
 	}
+	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::South])) {
+		++direction.y;
+	}
 	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::West])) {
-		++direction.x;
+		--direction.x;
 	}
 	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::East])) {
-		--direction.x;
+		++direction.x;
 	}
 
 	if (gamepad_enabled && direction == offset_2d_t::zero) {
@@ -248,14 +252,14 @@ void update() {
 void render() {
 	renderer.clear(Colors::Black);
 
-	game_map.draw(game_atlas, camera_position);
+	game_map.draw(renderer, game_atlas, camera_position);
 
-	player.draw(game_atlas, camera_position);
+	player.draw(renderer, game_atlas, camera_position);
 
-	grid_cursor.draw();
+	grid_cursor.draw(renderer);
 
 	runes_t fps_text{ std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::White };
-	ui_atlas.draw(fps_text, offset_2d_t{ 0, UI_GRID_SIZE.h - 1 });
+	ui_atlas.draw(renderer, fps_text, offset_2d_t{ 0, UI_GRID_SIZE.h - 1 });
 
 	renderer.present();
 }

@@ -12,11 +12,11 @@
 extern "C" {
 	typedef struct c_extent_2d_t {
 #if BLEAKDEPTH_BIG_GRID
-		typedef bleak::usize scalar_t;
-		typedef bleak::uquad product_t;
-#else
 		typedef bleak::uhalf scalar_t;
 		typedef bleak::usize product_t;
+#else
+		typedef bleak::uqrtr scalar_t;
+		typedef bleak::uhalf product_t;
 #endif
 
 		scalar_t w{ 0 };
@@ -57,25 +57,25 @@ namespace bleak {
 
 		constexpr bool operator>=(cref<extent_2d_t> other) const { return area() >= other.area(); }
 
-		constexpr extent_2d_t operator+(cref<extent_2d_t> other) const noexcept { return { w + other.w, h + other.h }; }
+		constexpr extent_2d_t operator+(cref<extent_2d_t> other) const noexcept { return { scalar_cast(w + other.w), scalar_cast(h + other.h) }; }
 
-		constexpr extent_2d_t operator-(cref<extent_2d_t> other) const noexcept { return { w - other.w, h - other.h }; }
+		constexpr extent_2d_t operator-(cref<extent_2d_t> other) const noexcept { return { scalar_cast(w - other.w), scalar_cast(h - other.h) }; }
 
-		constexpr extent_2d_t operator*(cref<extent_2d_t> other) const noexcept { return { w * other.w, h * other.h }; }
+		constexpr extent_2d_t operator*(cref<extent_2d_t> other) const noexcept { return { scalar_cast(w * other.w), scalar_cast(h * other.h) }; }
 
-		constexpr extent_2d_t operator/(cref<extent_2d_t> other) const noexcept { return { w / other.w, h / other.h }; }
+		constexpr extent_2d_t operator/(cref<extent_2d_t> other) const noexcept { return { scalar_cast(w / other.w), scalar_cast(h / other.h) }; }
 
-		constexpr extent_2d_t operator%(cref<extent_2d_t> other) const noexcept { return { w % other.w, h % other.h }; }
+		constexpr extent_2d_t operator%(cref<extent_2d_t> other) const noexcept { return { scalar_cast(w % other.w), scalar_cast(h % other.h) }; }
 
-		constexpr extent_2d_t operator+(scalar_t scalar) const noexcept { return { w + scalar, h + scalar }; }
+		constexpr extent_2d_t operator+(scalar_t scalar) const noexcept { return { scalar_cast(w + scalar), scalar_cast(h + scalar) }; }
 
-		constexpr extent_2d_t operator-(scalar_t scalar) const noexcept { return { w - scalar, h - scalar }; }
+		constexpr extent_2d_t operator-(scalar_t scalar) const noexcept { return { scalar_cast(w - scalar), scalar_cast(h - scalar) }; }
 
-		constexpr extent_2d_t operator*(scalar_t scalar) const noexcept { return { w * scalar, h * scalar }; }
+		constexpr extent_2d_t operator*(scalar_t scalar) const noexcept { return { scalar_cast(w * scalar), scalar_cast(h * scalar) }; }
 
-		constexpr extent_2d_t operator/(scalar_t scalar) const noexcept { return { w / scalar, h / scalar }; }
+		constexpr extent_2d_t operator/(scalar_t scalar) const noexcept { return { scalar_cast(w / scalar), scalar_cast(h / scalar) }; }
 
-		constexpr extent_2d_t operator%(scalar_t scalar) const noexcept { return { w % scalar, h % scalar }; }
+		constexpr extent_2d_t operator%(scalar_t scalar) const noexcept { return { scalar_cast(w % scalar), scalar_cast(h % scalar) }; }
 
 		constexpr ref<extent_2d_t> operator+=(cref<extent_2d_t> other) noexcept {
 			w += other.w;

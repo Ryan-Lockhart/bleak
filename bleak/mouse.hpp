@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/offset/offset_2d.hpp"
 #include "typedef.hpp"
 
 #include <bitset>
@@ -29,11 +30,11 @@ namespace bleak {
 			static const button_t Start;
 			static const button_t End;
 
-			static constexpr usize Count { SDL_BUTTON_X2 + 1 };
+			static constexpr usize Count{ SDL_BUTTON_X2 + 1 };
 
 			constexpr inline button_t() noexcept = delete;
 
-			constexpr inline button_t(i32 value) noexcept : value { value } {}
+			constexpr inline button_t(i32 value) noexcept : value{ value } {}
 
 			constexpr inline operator u8() const noexcept { return value; }
 
@@ -81,9 +82,13 @@ namespace bleak {
 		}
 
 		static inline void update() {
-			u32 state = SDL_GetMouseState(&current_position.x, &current_position.y);
+			int x, y;
+			u32 state = SDL_GetMouseState(&x, &y);
 
-			for (usize i { button_t::Start }; i <= button_t::End; ++i) {
+			previous_position = current_position;
+			current_position = offset_2d_t{ offset_2d_t::scalar_cast(x), offset_2d_t::scalar_cast(y) };
+
+			for (usize i{ button_t::Start }; i <= button_t::End; ++i) {
 				previous_state[i] = current_state[i];
 				current_state[i] = state & SDL_BUTTON(i);
 			}
@@ -93,12 +98,12 @@ namespace bleak {
 			switch (event.type) {
 			case SDL_MOUSEMOTION:
 				previous_position = current_position;
-				current_position = offset_2d_t { event.motion.x, event.motion.y };
+				current_position = offset_2d_t{ event.motion.x, event.motion.y };
 				break;
 
 			case SDL_MOUSEWHEEL:
 				previous_scroll = current_scroll;
-				current_scroll = offset_2d_t { event.wheel.x, event.wheel.y };
+				current_scroll = offset_2d_t{ event.wheel.x, event.wheel.y };
 				break;
 
 			default:
@@ -135,7 +140,7 @@ namespace bleak {
 		static inline bool is_button_up(int button);
 
 		static inline bool any_button_pressed() {
-			for (int i { button_t::Start }; i <= button_t::End; ++i) {
+			for (int i{ button_t::Start }; i <= button_t::End; ++i) {
 				if (is_button_pressed(i)) {
 					return true;
 				}
@@ -145,7 +150,7 @@ namespace bleak {
 		}
 
 		static inline bool any_button_released() {
-			for (int i { button_t::Start }; i <= button_t::End; ++i) {
+			for (int i{ button_t::Start }; i <= button_t::End; ++i) {
 				if (is_button_released(i)) {
 					return true;
 				}
@@ -155,7 +160,7 @@ namespace bleak {
 		}
 
 		static inline bool any_button_down() {
-			for (int i { button_t::Start }; i <= button_t::End; ++i) {
+			for (int i{ button_t::Start }; i <= button_t::End; ++i) {
 				if (is_button_down(i)) {
 					return true;
 				}
@@ -165,7 +170,7 @@ namespace bleak {
 		}
 
 		static inline bool any_button_up() {
-			for (int i { button_t::Start }; i <= button_t::End; ++i) {
+			for (int i{ button_t::Start }; i <= button_t::End; ++i) {
 				if (is_button_up(i)) {
 					return true;
 				}
@@ -263,14 +268,14 @@ namespace bleak {
 		static inline void hide_cursor() { SDL_ShowCursor(SDL_DISABLE); }
 	};
 
-	constexpr const Mouse::button_t Mouse::button_t::Unknown { 0 };
+	constexpr const Mouse::button_t Mouse::button_t::Unknown{ 0 };
 
-	constexpr const Mouse::button_t Mouse::button_t::Left { SDL_BUTTON_LEFT };
-	constexpr const Mouse::button_t Mouse::button_t::Middle { SDL_BUTTON_MIDDLE };
-	constexpr const Mouse::button_t Mouse::button_t::Right { SDL_BUTTON_RIGHT };
+	constexpr const Mouse::button_t Mouse::button_t::Left{ SDL_BUTTON_LEFT };
+	constexpr const Mouse::button_t Mouse::button_t::Middle{ SDL_BUTTON_MIDDLE };
+	constexpr const Mouse::button_t Mouse::button_t::Right{ SDL_BUTTON_RIGHT };
 
-	constexpr const Mouse::button_t Mouse::button_t::SideOne { SDL_BUTTON_X1 };
-	constexpr const Mouse::button_t Mouse::button_t::SideTwo { SDL_BUTTON_X2 };
+	constexpr const Mouse::button_t Mouse::button_t::SideOne{ SDL_BUTTON_X1 };
+	constexpr const Mouse::button_t Mouse::button_t::SideTwo{ SDL_BUTTON_X2 };
 
 	constexpr const Mouse::button_t Mouse::button_t::Start = button_t::Left;
 	constexpr const Mouse::button_t Mouse::button_t::End = button_t::SideTwo;

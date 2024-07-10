@@ -20,15 +20,15 @@ namespace bleak {
 	constexpr const offset_1d_t offset_1d_t::east{ -1 };
 	constexpr const offset_1d_t offset_1d_t::west{ 1 };
 
-	constexpr offset_1d_t offset_1d_t::operator+(cref<extent_1d_t> extent) const noexcept { return { x + scalar_cast(extent.w) }; }
+	constexpr offset_1d_t offset_1d_t::operator+(cref<extent_1d_t> extent) const noexcept { return { scalar_cast(x + extent.w) }; }
 
-	constexpr offset_1d_t offset_1d_t::operator-(cref<extent_1d_t> extent) const noexcept { return { x - scalar_cast(extent.w) }; }
+	constexpr offset_1d_t offset_1d_t::operator-(cref<extent_1d_t> extent) const noexcept { return { scalar_cast(x - extent.w) }; }
 
-	constexpr offset_1d_t offset_1d_t::operator*(cref<extent_1d_t> extent) const noexcept { return { x * scalar_cast(extent.w) }; }
+	constexpr offset_1d_t offset_1d_t::operator*(cref<extent_1d_t> extent) const noexcept { return { scalar_cast(x * extent.w) }; }
 
-	constexpr offset_1d_t offset_1d_t::operator/(cref<extent_1d_t> extent) const noexcept { return { x / scalar_cast(extent.w) }; }
+	constexpr offset_1d_t offset_1d_t::operator/(cref<extent_1d_t> extent) const noexcept { return { scalar_cast(x / extent.w) }; }
 
-	constexpr offset_1d_t offset_1d_t::operator%(cref<extent_1d_t> extent) const noexcept { return { x % scalar_cast(extent.w) }; }
+	constexpr offset_1d_t offset_1d_t::operator%(cref<extent_1d_t> extent) const noexcept { return { scalar_cast(x % extent.w) }; }
 
 	constexpr ref<offset_1d_t> offset_1d_t::operator+=(cref<extent_1d_t> extent) noexcept {
 		x += extent.w;
@@ -91,87 +91,97 @@ namespace bleak {
 
 	constexpr offset_2d_t offset_2d_t::clamp(offset_2d_t value, cref<extent_2d_t> min, cref<extent_2d_t> max) { return value.clamp(min, max); }
 
-	constexpr offset_2d_t offset_2d_t::operator+(cref<extent_1d_t> extent) const noexcept { return { x + scalar_cast(extent.w), y }; }
+	constexpr offset_2d_t offset_2d_t::operator+(cref<extent_1d_t> extent) const noexcept { return offset_2d_t{ scalar_cast(x + extent.w), y }; }
 
-	constexpr offset_2d_t offset_2d_t::operator-(cref<extent_1d_t> extent) const noexcept { return { x - scalar_cast(extent.w), y }; }
+	constexpr offset_2d_t offset_2d_t::operator-(cref<extent_1d_t> extent) const noexcept { return offset_2d_t{ scalar_cast(x - extent.w), y }; }
 
-	constexpr offset_2d_t offset_2d_t::operator*(cref<extent_1d_t> extent) const noexcept { return { x * scalar_cast(extent.w), y }; }
+	constexpr offset_2d_t offset_2d_t::operator*(cref<extent_1d_t> extent) const noexcept { return offset_2d_t{ scalar_cast(x * extent.w), y }; }
 
-	constexpr offset_2d_t offset_2d_t::operator/(cref<extent_1d_t> extent) const noexcept { return { x / scalar_cast(extent.w), y }; }
+	constexpr offset_2d_t offset_2d_t::operator/(cref<extent_1d_t> extent) const noexcept { return offset_2d_t{ scalar_cast(x / extent.w), y }; }
 
-	constexpr offset_2d_t offset_2d_t::operator%(cref<extent_1d_t> extent) const noexcept { return { x % scalar_cast(extent.w), y }; }
+	constexpr offset_2d_t offset_2d_t::operator%(cref<extent_1d_t> extent) const noexcept { return offset_2d_t{ scalar_cast(x % extent.w), y }; }
 
-	constexpr offset_2d_t offset_2d_t::operator+(cref<extent_2d_t> extent) const noexcept { return { x + scalar_cast(extent.w), scalar_cast(y + extent.h) }; }
+	constexpr offset_2d_t offset_2d_t::operator+(cref<extent_2d_t> extent) const noexcept {
+		return offset_2d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h) };
+	}
 
-	constexpr offset_2d_t offset_2d_t::operator-(cref<extent_2d_t> extent) const noexcept { return { x - scalar_cast(extent.w), scalar_cast(y - extent.h) }; }
+	constexpr offset_2d_t offset_2d_t::operator-(cref<extent_2d_t> extent) const noexcept {
+		return offset_2d_t{ scalar_cast(x - extent.w), scalar_cast(y - extent.h) };
+	}
 
-	constexpr offset_2d_t offset_2d_t::operator*(cref<extent_2d_t> extent) const noexcept { return { x * scalar_cast(extent.w), scalar_cast(y * extent.h) }; }
+	constexpr offset_2d_t offset_2d_t::operator*(cref<extent_2d_t> extent) const noexcept {
+		return offset_2d_t{ scalar_cast(x * extent.w), scalar_cast(y * extent.h) };
+	}
 
-	constexpr offset_2d_t offset_2d_t::operator/(cref<extent_2d_t> extent) const noexcept { return { x / scalar_cast(extent.w), scalar_cast(y / extent.h) }; }
+	constexpr offset_2d_t offset_2d_t::operator/(cref<extent_2d_t> extent) const noexcept {
+		return offset_2d_t{ scalar_cast(x / extent.w), scalar_cast(y / extent.h) };
+	}
 
-	constexpr offset_2d_t offset_2d_t::operator%(cref<extent_2d_t> extent) const noexcept { return { x % scalar_cast(extent.w), scalar_cast(y % extent.h) }; }
+	constexpr offset_2d_t offset_2d_t::operator%(cref<extent_2d_t> extent) const noexcept {
+		return offset_2d_t{ scalar_cast(x % extent.w), scalar_cast(y % extent.h) };
+	}
 
 	constexpr ref<offset_2d_t> offset_2d_t::operator+=(cref<extent_1d_t> extent) noexcept {
-		x += scalar_cast(extent.w);
+		x = scalar_cast(x + extent.w);
 
 		return *this;
 	}
 
 	constexpr ref<offset_2d_t> offset_2d_t::operator-=(cref<extent_1d_t> extent) noexcept {
-		x -= scalar_cast(extent.w);
+		x = scalar_cast(x - extent.w);
 
 		return *this;
 	}
 
 	constexpr ref<offset_2d_t> offset_2d_t::operator*=(cref<extent_1d_t> extent) noexcept {
-		x *= scalar_cast(extent.w);
+		x = scalar_cast(x * extent.w);
 
 		return *this;
 	}
 
 	constexpr ref<offset_2d_t> offset_2d_t::operator/=(cref<extent_1d_t> extent) noexcept {
-		x /= scalar_cast(extent.w);
+		x = scalar_cast(x / extent.w);
 
 		return *this;
 	}
 
 	constexpr ref<offset_2d_t> offset_2d_t::operator%=(cref<extent_1d_t> extent) noexcept {
-		x %= scalar_cast(extent.w);
+		x = scalar_cast(x % extent.w);
 
 		return *this;
 	}
 
 	constexpr ref<offset_2d_t> offset_2d_t::operator+=(cref<extent_2d_t> extent) noexcept {
-		x += scalar_cast(extent.w);
-		y += scalar_cast(extent.h);
+		x = scalar_cast(x + extent.w);
+		y = scalar_cast(y + extent.h);
 
 		return *this;
 	}
 
 	constexpr ref<offset_2d_t> offset_2d_t::operator-=(cref<extent_2d_t> extent) noexcept {
-		x -= scalar_cast(extent.w);
-		y -= scalar_cast(extent.h);
+		x = scalar_cast(x - extent.w);
+		y = scalar_cast(y - extent.h);
 
 		return *this;
 	}
 
 	constexpr ref<offset_2d_t> offset_2d_t::operator*=(cref<extent_2d_t> extent) noexcept {
-		x *= scalar_cast(extent.w);
-		y *= scalar_cast(extent.h);
+		x = scalar_cast(x * extent.w);
+		y = scalar_cast(y * extent.h);
 
 		return *this;
 	}
 
 	constexpr ref<offset_2d_t> offset_2d_t::operator/=(cref<extent_2d_t> extent) noexcept {
-		x /= scalar_cast(extent.w);
-		y /= scalar_cast(extent.h);
+		x = scalar_cast(x / extent.w);
+		y = scalar_cast(y / extent.h);
 
 		return *this;
 	}
 
 	constexpr ref<offset_2d_t> offset_2d_t::operator%=(cref<extent_2d_t> extent) noexcept {
-		x %= scalar_cast(extent.w);
-		y %= scalar_cast(extent.h);
+		x = scalar_cast(x % extent.w);
+		y = scalar_cast(y % extent.h);
 
 		return *this;
 	}

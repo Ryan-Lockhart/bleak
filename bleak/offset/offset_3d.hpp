@@ -38,19 +38,19 @@ extern "C" {
 namespace bleak {
 	struct offset_3d_t : c_offset_3d_t {
 		template<typename T>
-			requires std::is_convertible<T, scalar_t>::value && (std::is_same<T, scalar_t>::value == false)
+			requires std::is_convertible<T, scalar_t>::value
 		static constexpr scalar_t scalar_cast(T value) noexcept {
 			return static_cast<scalar_t>(value);
 		}
 
 		template<typename T>
-			requires std::is_convertible<T, product_t>::value && (std::is_same<T, product_t>::value == false)
+			requires std::is_convertible<T, product_t>::value
 		static constexpr product_t product_cast(T value) noexcept {
 			return static_cast<product_t>(value);
 		}
 
 		template<typename T>
-			requires std::is_convertible<T, float_t>::value && (std::is_same<T, float_t>::value == false)
+			requires std::is_convertible<T, float_t>::value
 		static constexpr float_t float_cast(T value) noexcept {
 			return static_cast<float_t>(value);
 		}

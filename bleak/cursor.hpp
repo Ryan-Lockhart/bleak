@@ -32,12 +32,12 @@ namespace bleak {
 
 		inline void update(cref<offset_2d_t> pos) { position = pos; };
 
-		inline void draw() const { texture.draw(position, color); }
+		inline void draw(ref<renderer_t> renderer) const { texture.draw(renderer, position, color); }
 
 		inline cref<offset_2d_t> get_position() const { return position; }
 	};
 
-	template<i32 Width, i32 Height> struct grid_cursor_t {
+	template<extent_2d_t Size> struct grid_cursor_t {
 		texture_t texture;
 
 		offset_2d_t position;
@@ -52,7 +52,7 @@ namespace bleak {
 
 		color_t color;
 
-		static constexpr offset_2d_t size{ Width, Height };
+		static constexpr extent_2d_t size{ Size };
 
 		inline grid_cursor_t() = delete;
 
@@ -99,7 +99,7 @@ namespace bleak {
 		inline void update() {
 			offset_2d_t pos{ Mouse::get_position() / size };
 			if (use_bounds) {
-				position.clamp(pos, min, max);
+				position = offset_2d_t::clamp(pos, min, max);
 			} else {
 				position = pos;
 			}
@@ -114,9 +114,9 @@ namespace bleak {
 			}
 		};
 
-		inline void draw() const { texture.draw(position * size + offset, color); }
+		inline void draw(ref<renderer_t> renderer) const { texture.draw(renderer, position * size + offset, color); }
 
-		inline cref<offset_2d_t> get_position() const { return position; }
+		inline offset_2d_t get_position() const { return position; }
 
 		inline offset_2d_t get_screen_position() const { return position + offset; }
 

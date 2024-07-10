@@ -98,7 +98,7 @@ namespace bleak {
 
 			auto origin{ start + dir * thickness / 2 };
 
-			sdl::rect rect{ origin.x, origin.y, static_cast<i32>(thickness), static_cast<i32>(dst) };
+			sdl::rect rect{ static_cast<i32>(origin.x), static_cast<i32>(origin.y), static_cast<i32>(thickness), static_cast<i32>(dst) };
 
 			SDL_RenderDrawRect(renderer, &rect);
 		}
@@ -119,7 +119,7 @@ namespace bleak {
 		inline void draw_line(cref<line_2d_t> line, extent_2d_t::scalar_t thickness) noexcept { draw_line(line.start, line.end, thickness); }
 
 		inline void draw_outline_rect(cref<offset_2d_t> position, cref<extent_2d_t> size) noexcept {
-			sdl::rect sdl_rect{ position.x, position.y, static_cast<int>(size.w), static_cast<int>(size.h) };
+			sdl::rect sdl_rect{ static_cast<i32>(position.x), static_cast<i32>(position.y), static_cast<int>(size.w), static_cast<int>(size.h) };
 			SDL_RenderDrawRect(renderer, &sdl_rect);
 		}
 
@@ -133,7 +133,7 @@ namespace bleak {
 		inline void draw_outline_rect(cref<rect_t> rect, cref<color_t> color) noexcept { draw_outline_rect(rect.position, rect.size, color); }
 
 		inline void draw_fill_rect(cref<offset_2d_t> position, cref<extent_2d_t> size) noexcept {
-			sdl::rect sdl_rect{ position.x, position.y, static_cast<int>(size.w), static_cast<int>(size.h) };
+			sdl::rect sdl_rect{ static_cast<i32>(position.x), static_cast<i32>(position.y), static_cast<int>(size.w), static_cast<int>(size.h) };
 			SDL_RenderFillRect(renderer, &sdl_rect);
 		}
 

@@ -13,10 +13,10 @@ extern "C" {
 	typedef struct c_extent_3d_t {
 #if BLEAKDEPTH_BIG_GRID
 		typedef bleak::uhalf scalar_t;
-		typedef bleak::uquad product_t;
+		typedef bleak::usize product_t;
 #else
 		typedef bleak::uqrtr scalar_t;
-		typedef bleak::usize product_t;
+		typedef bleak::uhalf product_t;
 #endif
 		scalar_t w{ 0 };
 		scalar_t h{ 0 };
@@ -44,9 +44,9 @@ namespace bleak {
 
 		constexpr extent_3d_t(scalar_t width, scalar_t height, scalar_t depth) noexcept : c_extent_3d_t{ width, height, depth } {}
 
-		constexpr product_t area() const noexcept { return (product_t)w * h; }
+		constexpr product_t area() const noexcept { return product_cast(w) * h; }
 
-		constexpr product_t volume() const noexcept { return (product_t)w * h * d; }
+		constexpr product_t volume() const noexcept { return product_cast(w) * h * d; }
 
 		constexpr bool operator==(cref<extent_3d_t> other) const noexcept { return w == other.w && h == other.h && d == other.d; }
 

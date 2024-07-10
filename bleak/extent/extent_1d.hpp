@@ -11,11 +11,11 @@
 extern "C" {
 	typedef struct c_extent_1d_t {
 #if BLEAKDEPTH_BIG_GRID
-		typedef bleak::uquad scalar_t;
-		typedef bleak::uquad product_t;
-#else
 		typedef bleak::usize scalar_t;
 		typedef bleak::usize product_t;
+#else
+		typedef bleak::uhalf scalar_t;
+		typedef bleak::uhalf product_t;
 #endif
 		scalar_t w{ 0 };
 	} c_extent_1d_t;

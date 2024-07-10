@@ -8,6 +8,7 @@
 #include "bleak/offset.hpp"
 
 #include "bleak/atlas.hpp"
+#include "extent/extent_1d.hpp"
 #include "extent/extent_2d.hpp"
 
 namespace bleak {
@@ -56,7 +57,7 @@ namespace bleak {
 		}
 	};
 
-	template<usize Length> struct animated_sprite_t {
+	template<extent_1d_t Length> struct animated_sprite_t {
 		animated_glyph_t<Length> glyph;
 		offset_2d_t position;
 
@@ -100,10 +101,14 @@ namespace bleak {
 			return *this;
 		}
 
-		template<extent_2d_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas) const { atlas.draw(glyph.current(), position); }
+		template<extent_2d_t AtlasSize> constexpr inline void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas) const {
+			glyph_t current{ glyph.current() };
+			atlas.draw(renderer, current, position);
+		}
 
-		template<extent_2d_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset) const {
-			atlas.draw(glyph.current(), position + offset);
+		template<extent_2d_t AtlasSize> constexpr inline void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset) const {
+			glyph_t current{ glyph.current() };
+			atlas.draw(renderer, current, position + offset);
 		}
 	};
 } // namespace bleak

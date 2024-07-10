@@ -58,22 +58,19 @@ namespace bleak {
 	struct glyph_t;
 
 	template<typename T> constexpr bool is_1d = false;
-	template<typename T>
-	concept Is1D = is_1d<T>;
+	template<typename T> concept Is1D = is_1d<T>;
 
 	template<> inline constexpr bool is_1d<offset_1d_t> = true;
 	template<> inline constexpr bool is_1d<extent_1d_t> = true;
 
 	template<typename T> constexpr bool is_2d = false;
-	template<typename T>
-	concept Is2D = is_2d<T>;
+	template<typename T> concept Is2D = is_2d<T>;
 
 	template<> inline constexpr bool is_2d<offset_2d_t> = true;
 	template<> inline constexpr bool is_2d<extent_2d_t> = true;
 
 	template<typename T> constexpr bool is_3d = false;
-	template<typename T>
-	concept Is3D = is_3d<T>;
+	template<typename T> concept Is3D = is_3d<T>;
 
 	template<> inline constexpr bool is_3d<offset_3d_t> = true;
 	template<> inline constexpr bool is_3d<extent_3d_t> = true;

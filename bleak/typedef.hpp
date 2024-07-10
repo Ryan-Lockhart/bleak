@@ -7,7 +7,7 @@ namespace bleak {
 #define BLEAKDEPTH_32
 #endif
 
-#define BLEAKDEPTH_BIG_GRID 0
+#define BLEAKDEPTH_BIG_GRID 1
 
 #define forever for (;;)
 
