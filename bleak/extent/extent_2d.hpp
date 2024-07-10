@@ -6,6 +6,7 @@
 #include <format>
 #include <limits>
 #include <string>
+#include <type_traits>
 
 #include <SDL.h>
 
@@ -31,6 +32,8 @@ extern "C" {
 
 namespace bleak {
 	struct extent_2d_t : public c_extent_2d_t {
+		using underlying_t = c_extent_2d_t;
+
 		template<typename T> static constexpr scalar_t scalar_cast(T value) noexcept { return static_cast<scalar_t>(value); }
 
 		template<typename T> static constexpr product_t product_cast(T value) noexcept { return static_cast<product_t>(value); }
@@ -42,6 +45,14 @@ namespace bleak {
 		constexpr extent_2d_t(scalar_t scalar) noexcept : c_extent_2d_t{ scalar, scalar } {}
 
 		constexpr extent_2d_t(scalar_t width, scalar_t height) noexcept : c_extent_2d_t{ width, height } {}
+
+		template<typename T>
+			requires std::is_convertible<T, scalar_t>::value
+		constexpr extent_2d_t(T width, T height) noexcept : underlying_t{ scalar_cast(width), scalar_cast(height) } {}
+
+		template<typename W, typename H>
+			requires std::is_convertible<W, scalar_t>::value && std::is_convertible<H, scalar_t>::value
+		constexpr extent_2d_t(W width, H height) noexcept : underlying_t{ scalar_cast(width), scalar_cast(height) } {}
 
 		constexpr product_t area() const noexcept { return (product_t)w * h; }
 

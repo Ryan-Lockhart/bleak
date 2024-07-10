@@ -5,6 +5,7 @@
 #include <cmath>
 #include <format>
 #include <string>
+#include <type_traits>
 
 #include <SDL.h>
 
@@ -23,6 +24,8 @@ extern "C" {
 
 namespace bleak {
 	struct extent_1d_t : public c_extent_1d_t {
+		using underlying_t = c_extent_1d_t;
+
 		template<typename T> static constexpr scalar_t scalar_cast(T value) noexcept { return static_cast<scalar_t>(value); }
 
 		template<typename T> static constexpr product_t product_cast(T value) noexcept { return static_cast<product_t>(value); }
@@ -31,7 +34,11 @@ namespace bleak {
 
 		constexpr extent_1d_t() noexcept {}
 
-		constexpr extent_1d_t(scalar_t width) noexcept : c_extent_1d_t{ width } {}
+		constexpr extent_1d_t(scalar_t width) noexcept : underlying_t{ width } {}
+
+		template<typename T>
+			requires std::is_convertible<T, scalar_t>::value && (std::is_same<T, scalar_t>::value == false)
+		constexpr extent_1d_t(T scalar) noexcept : underlying_t{ scalar_cast(scalar) } {}
 
 		constexpr bool operator==(cref<extent_1d_t> other) const noexcept { return w == other.w; }
 

@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <format>
+#include <limits>
 #include <string>
 #include <type_traits>
 
@@ -37,6 +38,8 @@ extern "C" {
 
 namespace bleak {
 	struct offset_3d_t : c_offset_3d_t {
+		using underlying_t = c_offset_3d_t;
+
 		template<typename T>
 			requires std::is_convertible<T, scalar_t>::value
 		static constexpr scalar_t scalar_cast(T value) noexcept {
@@ -110,15 +113,19 @@ namespace bleak {
 
 		constexpr offset_3d_t() noexcept {}
 
-		constexpr offset_3d_t(scalar_t scalar) noexcept : c_offset_3d_t{ scalar, scalar, scalar } {}
+		constexpr offset_3d_t(scalar_t scalar) noexcept : underlying_t{ scalar, scalar, scalar } {}
 
-		constexpr offset_3d_t(scalar_t x, scalar_t y, scalar_t z) noexcept : c_offset_3d_t{ x, y, z } {}
+		constexpr offset_3d_t(scalar_t x, scalar_t y, scalar_t z) noexcept : underlying_t{ x, y, z } {}
 
 		template<typename T>
-			requires std::is_convertible<T, scalar_t>::value && (std::is_same<T, scalar_t>::value == false)
-		constexpr offset_3d_t(T x, T y, T z) noexcept : c_offset_3d_t{ scalar_cast(x), scalar_cast(y), scalar_cast(z) } {}
+			requires std::is_convertible<T, scalar_t>::value
+		constexpr offset_3d_t(T x, T y, T z) noexcept : underlying_t{ scalar_cast(x), scalar_cast(y), scalar_cast(z) } {}
 
-		constexpr product_t dot() const noexcept { return (product_t)x * x + (product_t)y * y + (product_t)z * z; }
+		template<typename X, typename Y, typename Z>
+			requires std::is_convertible<X, scalar_t>::value && std::is_convertible<Y, scalar_t>::value && std::is_convertible<Z, scalar_t>::value
+		constexpr offset_3d_t(X x, Y y, Z z) noexcept : underlying_t{ scalar_cast(x), scalar_cast(y), scalar_cast(z) } {}
+
+		constexpr product_t dot() const noexcept { return product_cast(x) * x + product_cast(y) * y + product_cast(z) * z; }
 
 		constexpr offset_3d_t cross(cref<offset_3d_t> other) const noexcept {
 			return { scalar_cast(y * other.z - z * other.y), scalar_cast(z * other.x - x * other.z), scalar_cast(x * other.y - y * other.x) };

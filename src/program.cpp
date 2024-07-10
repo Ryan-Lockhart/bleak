@@ -1,4 +1,6 @@
 #include "bleak/extent/extent_2d.hpp"
+#include "bleak/offset/offset_2d.hpp"
+#include "bleak/text.hpp"
 #include "bleak/typedef.hpp"
 
 #include <cassert>
@@ -22,7 +24,6 @@
 #include "bleak/offset.hpp"
 #include "bleak/renderer.hpp"
 #include "bleak/sprite.hpp"
-#include "bleak/texture.hpp"
 #include "bleak/timer.hpp"
 #include "bleak/wave.hpp"
 #include "bleak/window.hpp"
@@ -47,12 +48,12 @@ constexpr f32 FRAME_TIME = 1000.0f / FRAME_LIMIT;
 constexpr extent_2d_t WINDOW_SIZE{ 640, 480 };
 constexpr extent_2d_t WINDOW_PADDING{ 8, 8 };
 
-constexpr offset_2d_t UNIVERSAL_OFFSET{ WINDOW_PADDING / 2 };
+constexpr offset_2d_t UNIVERSAL_OFFSET{ WINDOW_PADDING };
 
 constexpr extent_2d_t GAME_GRID_SIZE{ WINDOW_SIZE / 16 };
 constexpr extent_2d_t UI_GRID_SIZE{ WINDOW_SIZE / 8 };
 
-static window_t window{ GAME_TITLE.c_str(), WINDOW_SIZE + WINDOW_PADDING, WINDOW_FLAGS };
+static window_t window{ GAME_TITLE.c_str(), WINDOW_SIZE + WINDOW_PADDING * 2, WINDOW_FLAGS };
 static renderer_t renderer{ window, RENDERER_FLAGS };
 
 constexpr extent_2d_t ATLAS_SIZE{ 16, 16 };
@@ -65,6 +66,11 @@ static std::minstd_rand random_engine{ std::random_device{}() };
 constexpr extent_2d_t MAP_SIZE{ GAME_GRID_SIZE };
 
 static map_t<MAP_SIZE, { 2, 2 }> game_map{};
+
+constexpr extent_2d_t CELL_SIZE{ 16, 16 };
+
+constexpr offset_2d_t CURSOR_OFFSET{ CELL_SIZE / 2 };
+constexpr offset_2d_t CURSOR_DRAW_OFFSET{ CURSOR_OFFSET / 2 };
 
 static bool gamepad_enabled{ true };
 
@@ -83,17 +89,17 @@ static void primary_gamepad_reconnected(cptr<gamepad_t> gamepad) {
 	primary_gamepad = gamepad;
 }
 
-static cursor_t cursor{ { renderer, "res\\cursor.png" }, Colors::White };
-static grid_cursor_t<{ 16, 16 }> grid_cursor{
-	texture_t{ renderer, "res\\grid_cursor.png" }, offset_2d_t{ 0 }, Colors::Metals::Gold, offset_2d_t{ 0, 0 }, offset_2d_t{ GAME_GRID_SIZE - 1 }
-};
+static cursor_t cursor{ renderer, "res\\cursor.png", Colors::White };
+static grid_cursor_t<CELL_SIZE> grid_cursor{ renderer, "res\\grid_cursor.png", Colors::Metals::Gold, game_map.map_origin, game_map.map_extent };
+
+static bool draw_cursor{ true };
 
 static offset_2d_t camera_position{ 0 };
 
 static animated_sprite_t<3> player{ { animated_glyph_t<3>::generate_contiguous_indices<0xB0, 0xB2>(), Colors::Green }, { 0 } };
 
-static timer_t input_timer{ 125 };
-static timer_t epoch_timer{ 250 };
+static timer_t input_timer{ 250 };
+static timer_t epoch_timer{ 375 };
 static timer_t animation_timer{ 1000.0 / 3 };
 
 static wave_t sine_wave{ 1.0, 0.5, 1.0 };
@@ -200,10 +206,7 @@ void startup() {
 
 	game_map.set<map_region_t::Border>(cell_state_t{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored });
 	game_map.randomize<map_region_t::Interior>(
-		random_engine,
-		0.5,
-		{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored },
-		{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored }
+		random_engine, 0.5, { cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored }, { cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored }
 	);
 
 	player.position = static_cast<offset_2d_t>(game_map.find_random_cell_interior(random_engine, cell_trait_t::Open).value());
@@ -217,8 +220,8 @@ void startup() {
 
 	animation_timer.reset();
 
-	message_log.flush_to_console(std::cout);
-	error_log.flush_to_console(std::cerr);
+	// message_log.flush_to_console(std::cout);
+	// error_log.flush_to_console(std::cerr);
 }
 
 void update() {
@@ -245,8 +248,16 @@ void update() {
 
 	sine_wave.update<wave_type_t::Sine>(Clock::elapsed());
 
-	grid_cursor.color.set_alpha(sine_wave.current_value());
-	grid_cursor.update();
+	auto mouse_pos{ Mouse::get_position() };
+
+	draw_cursor = mouse_pos.x < WINDOW_PADDING.w || mouse_pos.y < WINDOW_PADDING.h || mouse_pos.x >= WINDOW_SIZE.w + WINDOW_PADDING.w || mouse_pos.y >= WINDOW_SIZE.h + WINDOW_PADDING.h;
+
+	if (draw_cursor) {
+		cursor.update();
+	} else {
+		grid_cursor.update(CURSOR_OFFSET);
+		grid_cursor.color.set_alpha(sine_wave.current_value());
+	}
 }
 
 void render() {
@@ -256,10 +267,18 @@ void render() {
 
 	player.draw(renderer, game_atlas, camera_position);
 
-	grid_cursor.draw(renderer);
+	if (draw_cursor) {
+		cursor.draw(renderer);
+	} else {
+		grid_cursor.draw(renderer, CURSOR_DRAW_OFFSET);
+	}
 
 	runes_t fps_text{ std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::White };
-	ui_atlas.draw(renderer, fps_text, offset_2d_t{ 0, UI_GRID_SIZE.h - 1 });
+
+	extent_2d_t fps_text_size{ Text::calculate_size(fps_text) };
+	offset_2d_t fps_text_pos{ UI_GRID_SIZE.w / 2 - fps_text_size.w / 2, UI_GRID_SIZE.h - 1 };
+	renderer.draw_composite_rect(fps_text_pos * ui_atlas.glyph_size + ui_atlas.universal_offset, fps_text_size * ui_atlas.glyph_size, Colors::Black, Colors::Red, 1, true);
+	ui_atlas.draw(renderer, fps_text, fps_text_pos);
 
 	renderer.present();
 }

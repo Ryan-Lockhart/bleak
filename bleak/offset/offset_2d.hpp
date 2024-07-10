@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <format>
+#include <limits>
 #include <string>
 #include <type_traits>
 
@@ -35,6 +36,8 @@ extern "C" {
 
 namespace bleak {
 	struct offset_2d_t : c_offset_2d_t {
+		using underlying_t = c_offset_2d_t;
+
 		template<typename T>
 			requires std::is_convertible<T, scalar_t>::value
 		static constexpr scalar_t scalar_cast(T value) noexcept {
@@ -71,19 +74,23 @@ namespace bleak {
 
 		constexpr offset_2d_t() noexcept {}
 
-		constexpr offset_2d_t(scalar_t scalar) noexcept : c_offset_2d_t{ scalar, scalar } {}
+		constexpr offset_2d_t(scalar_t scalar) noexcept : underlying_t{ scalar, scalar } {}
+
+		constexpr offset_2d_t(scalar_t x, scalar_t y) noexcept : underlying_t{ x, y } {}
 
 		template<typename T>
-			requires std::is_convertible<T, scalar_t>::value && (std::is_same<T, scalar_t>::value == false)
-		constexpr offset_2d_t(T scalar) noexcept : c_offset_2d_t{ scalar_cast(scalar), scalar_cast(scalar) } {}
-
-		constexpr offset_2d_t(scalar_t x, scalar_t y) noexcept : c_offset_2d_t{ x, y } {}
+			requires std::is_convertible<T, scalar_t>::value
+		constexpr offset_2d_t(T scalar) noexcept : underlying_t{ scalar_cast(scalar), scalar_cast(scalar) } {}
 
 		template<typename T>
-			requires std::is_convertible<T, scalar_t>::value && (std::is_same<T, scalar_t>::value == false)
-		constexpr offset_2d_t(T x, T y) noexcept : c_offset_2d_t{ scalar_cast(x), scalar_cast(y) } {}
+			requires std::is_convertible<T, scalar_t>::value
+		constexpr offset_2d_t(T x, T y) noexcept : underlying_t{ scalar_cast(x), scalar_cast(y) } {}
 
-		constexpr product_t dot() const noexcept { return (product_t)x * x + (product_t)y * y; }
+		template<typename X, typename Y>
+			requires std::is_convertible<X, scalar_t>::value && std::is_convertible<Y, scalar_t>::value
+		constexpr offset_2d_t(X x, Y y) noexcept : underlying_t{ scalar_cast(x), scalar_cast(y) } {}
+
+		constexpr product_t dot() const noexcept { return product_cast(x) * x + product_cast(y) * y; }
 
 		template<typename T = product_t>
 			requires std::is_floating_point<T>::value || std::is_same<T, product_t>::value

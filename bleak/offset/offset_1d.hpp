@@ -5,6 +5,7 @@
 #include <cmath>
 #include <format>
 #include <string>
+#include <type_traits>
 
 #include <SDL.h>
 
@@ -27,6 +28,8 @@ extern "C" {
 
 namespace bleak {
 	struct offset_1d_t : public c_offset_1d_t {
+		using underlying_t = c_offset_1d_t;
+
 		template<typename T>
 			requires std::is_convertible<T, scalar_t>::value
 		static constexpr scalar_t scalar_cast(T value) noexcept {
@@ -60,7 +63,7 @@ namespace bleak {
 			requires std::is_convertible<T, scalar_t>::value && (std::is_same<T, scalar_t>::value == false)
 		constexpr offset_1d_t(T scalar) noexcept : c_offset_1d_t{ scalar_cast(scalar) } {}
 
-		constexpr product_t dot() const noexcept { return (product_t)x * x; }
+		constexpr product_t dot() const noexcept { return product_cast(x) * x; }
 
 		template<typename T = product_t>
 			requires std::is_floating_point<T>::value || std::is_same<T, product_t>::value

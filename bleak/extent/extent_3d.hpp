@@ -6,6 +6,7 @@
 #include <format>
 #include <limits>
 #include <string>
+#include <type_traits>
 
 #include <SDL.h>
 
@@ -32,6 +33,8 @@ extern "C" {
 
 namespace bleak {
 	struct extent_3d_t : public c_extent_3d_t {
+		using underlying_t = c_extent_3d_t;
+
 		template<typename T> static constexpr scalar_t scalar_cast(T value) noexcept { return static_cast<scalar_t>(value); }
 
 		template<typename T> static constexpr product_t product_cast(T value) noexcept { return static_cast<product_t>(value); }
@@ -43,6 +46,14 @@ namespace bleak {
 		constexpr extent_3d_t(scalar_t scalar) noexcept : c_extent_3d_t{ scalar, scalar, scalar } {}
 
 		constexpr extent_3d_t(scalar_t width, scalar_t height, scalar_t depth) noexcept : c_extent_3d_t{ width, height, depth } {}
+
+		template<typename T>
+			requires std::is_convertible<T, scalar_t>::value
+		constexpr extent_3d_t(T width, T height, T depth) noexcept : c_extent_3d_t{ scalar_cast(width), scalar_cast(height), scalar_cast(depth) } {}
+
+		template<typename W, typename H, typename D>
+			requires std::is_convertible<W, scalar_t>::value && std::is_convertible<H, scalar_t>::value && std::is_convertible<D, scalar_t>::value
+		constexpr extent_3d_t(W width, H height, D depth) noexcept : c_extent_3d_t{ scalar_cast(width), scalar_cast(height), scalar_cast(depth) } {}
 
 		constexpr product_t area() const noexcept { return product_cast(w) * h; }
 

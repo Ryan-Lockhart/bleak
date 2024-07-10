@@ -421,9 +421,8 @@ namespace bleak {
 
 		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> set(cell_state_t cell_state) noexcept;
 
-		template<map_region_t Region>
-		inline ref<map_t<MapSize, BorderSize>>
-		randomize(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept;
+		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> apply(cell_trait_t cell_trait) noexcept;
+		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> repeal(cell_trait_t cell_trait) noexcept;
 
 		template<> inline ref<map_t<MapSize, BorderSize>> set<map_region_t::All>(cell_state_t cell_state) noexcept {
 			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
@@ -433,9 +432,25 @@ namespace bleak {
 			return *this;
 		}
 
+		template<> inline ref<map_t<MapSize, BorderSize>> apply<map_region_t::All>(cell_trait_t cell_trait) noexcept {
+			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
+				state[i] += cell_trait;
+			}
+
+			return *this;
+		}
+
+		template<> inline ref<map_t<MapSize, BorderSize>> repeal<map_region_t::All>(cell_trait_t cell_trait) noexcept {
+			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
+				state[i] -= cell_trait;
+			}
+
+			return *this;
+		}
+
 		template<> inline ref<map_t<MapSize, BorderSize>> set<map_region_t::Interior>(cell_state_t cell_state) noexcept {
-			for (extent_2d_t::scalar_t y{ interior_origin.y }; y < interior_extent.y; ++y) {
-				for (extent_2d_t::scalar_t x{ interior_origin.x }; x < interior_extent.x; ++x) {
+			for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+				for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 					state[x, y] = cell_state;
 				}
 			}
@@ -443,9 +458,29 @@ namespace bleak {
 			return *this;
 		}
 
+		template<> inline ref<map_t<MapSize, BorderSize>> apply<map_region_t::Interior>(cell_trait_t cell_trait) noexcept {
+			for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+				for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+					state[x, y] += cell_trait;
+				}
+			}
+
+			return *this;
+		}
+
+		template<> inline ref<map_t<MapSize, BorderSize>> repeal<map_region_t::Interior>(cell_trait_t cell_trait) noexcept {
+			for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+				for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+					state[x, y] -= cell_trait;
+				}
+			}
+
+			return *this;
+		}
+
 		template<> inline ref<map_t<MapSize, BorderSize>> set<map_region_t::Border>(cell_state_t cell_state) noexcept {
-			/*for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
-				if (y < border_origin.y || y > border_extent.y) {
+			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
+				if (y < interior_origin.y || y > interior_extent.y) {
 					for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
 						state[x, y] = cell_state;
 					}
@@ -455,12 +490,38 @@ namespace bleak {
 						state[map_extent.x - i, y] = cell_state;
 					}
 				}
-			}*/
+			}
 
+			return *this;
+		}
+
+		template<> inline ref<map_t<MapSize, BorderSize>> apply<map_region_t::Border>(cell_trait_t cell_trait) noexcept {
 			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
-				for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
-					if (within<map_region_t::Border>({ x, y })) {
-						state[x, y] = cell_state;
+				if (y < interior_origin.y || y > interior_extent.y) {
+					for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
+						state[x, y] += cell_trait;
+					}
+				} else {
+					for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+						state[i, y] += cell_trait;
+						state[map_extent.x - i, y] += cell_trait;
+					}
+				}
+			}
+
+			return *this;
+		}
+
+		template<> inline ref<map_t<MapSize, BorderSize>> repeal<map_region_t::Border>(cell_trait_t cell_trait) noexcept {
+			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
+				if (y < interior_origin.y || y > interior_extent.y) {
+					for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
+						state[x, y] -= cell_trait;
+					}
+				} else {
+					for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+						state[i, y] -= cell_trait;
+						state[map_extent.x - i, y] -= cell_trait;
 					}
 				}
 			}
@@ -470,9 +531,15 @@ namespace bleak {
 
 		template<> inline ref<map_t<MapSize, BorderSize>> set<map_region_t::None>(cell_state_t cell_state) noexcept { return *this; }
 
-		template<>
-		inline ref<map_t<MapSize, BorderSize>>
-		randomize<map_region_t::All>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept {
+		template<> inline ref<map_t<MapSize, BorderSize>> apply<map_region_t::None>(cell_trait_t cell_trait) noexcept { return *this; }
+
+		template<> inline ref<map_t<MapSize, BorderSize>> repeal<map_region_t::None>(cell_trait_t cell_trait) noexcept { return *this; }
+
+		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> randomize(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept;
+
+		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> randomize(ref<MapRandomizer> generator, f64 fill_percent, cell_trait_t trait) noexcept;
+
+		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::All>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept {
 			auto dis{ std::bernoulli_distribution{ fill_percent } };
 
 			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
@@ -482,9 +549,19 @@ namespace bleak {
 			return *this;
 		}
 
-		template<>
-		inline ref<map_t<MapSize, BorderSize>>
-		randomize<map_region_t::Interior>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept {
+		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::All>(ref<MapRandomizer> generator, f64 fill_percent, cell_trait_t trait) noexcept {
+			auto dis{ std::bernoulli_distribution{ fill_percent } };
+
+			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
+				if (dis(generator)) {
+					state[i] += trait;
+				}
+			}
+
+			return *this;
+		}
+
+		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::Interior>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept {
 			auto dis{ std::bernoulli_distribution{ fill_percent } };
 
 			for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
@@ -496,9 +573,21 @@ namespace bleak {
 			return *this;
 		}
 
-		template<>
-		inline ref<map_t<MapSize, BorderSize>>
-		randomize<map_region_t::Border>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept {
+		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::Interior>(ref<MapRandomizer> generator, f64 fill_percent, cell_trait_t trait) noexcept {
+			auto dis{ std::bernoulli_distribution{ fill_percent } };
+
+			for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+				for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+					if (dis(generator)) {
+						state[x, y] += trait;
+					}
+				}
+			}
+
+			return *this;
+		}
+
+		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::Border>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept {
 			auto dis{ std::bernoulli_distribution{ fill_percent } };
 
 			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
@@ -517,9 +606,37 @@ namespace bleak {
 			return *this;
 		}
 
-		template<>
-		inline ref<map_t<MapSize, BorderSize>>
-		randomize<map_region_t::None>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept {
+		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::Border>(ref<MapRandomizer> generator, f64 fill_percent, cell_trait_t trait) noexcept {
+			auto dis{ std::bernoulli_distribution{ fill_percent } };
+
+			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
+				if (y < interior_origin.y || y > interior_extent.y) {
+					for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
+						if (dis(generator)) {
+							state[x, y] += trait;
+						}
+					}
+				} else {
+					for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+						if (dis(generator)) {
+							state[i, y] += trait;
+						}
+
+						if (dis(generator)) {
+							state[map_extent.x - i, y] += trait;
+						}
+					}
+				}
+			}
+
+			return *this;
+		}
+
+		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::None>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept {
+			return *this;
+		}
+
+		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::None>(ref<MapRandomizer> generator, f64 fill_percent, cell_trait_t trait) noexcept {
 			return *this;
 		}
 
