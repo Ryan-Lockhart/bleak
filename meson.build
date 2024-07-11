@@ -5,10 +5,19 @@ project(
 )
 
 cpu_family = target_machine.cpu_family()
+
 if cpu_family == 'x86'
     install_dir = 'C:\\Program Files (x86)\\Bleakdepth'
 elif cpu_family == 'x86_64'
     install_dir = 'C:\\Program Files\\Bleakdepth'
+endif
+
+build_type = get_option('buildtype')
+
+if build_type == 'debug'
+    subsystem = 'console'
+else 
+    subsystem = 'windows'
 endif
 
 sdl_dependencies = [
@@ -36,7 +45,11 @@ executable(
 
     install: true,
     install_dir: install_dir,
+    win_subsystem: subsystem,
 )
 
 install_subdir('log', install_dir: install_dir)
 install_subdir('res', install_dir: install_dir)
+
+install_data('log\\message.log', install_dir: install_dir + '\\log')
+install_data('log\\error.log', install_dir: install_dir + '\\log')

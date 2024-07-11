@@ -1,6 +1,3 @@
-#include "bleak/extent/extent_2d.hpp"
-#include "bleak/offset/offset_2d.hpp"
-#include "bleak/text.hpp"
 #include "bleak/typedef.hpp"
 
 #include <cassert>
@@ -24,6 +21,7 @@
 #include "bleak/offset.hpp"
 #include "bleak/renderer.hpp"
 #include "bleak/sprite.hpp"
+#include "bleak/text.hpp"
 #include "bleak/timer.hpp"
 #include "bleak/wave.hpp"
 #include "bleak/window.hpp"
@@ -46,7 +44,7 @@ constexpr u32 FRAME_LIMIT = 60u;
 constexpr f32 FRAME_TIME = 1000.0f / FRAME_LIMIT;
 
 constexpr extent_2d_t WINDOW_SIZE{ 640, 480 };
-constexpr extent_2d_t WINDOW_PADDING{ 8, 8 };
+constexpr extent_2d_t WINDOW_PADDING{ 8, 24 };
 
 constexpr offset_2d_t UNIVERSAL_OFFSET{ WINDOW_PADDING };
 
@@ -69,8 +67,7 @@ static map_t<MAP_SIZE, { 2, 2 }> game_map{};
 
 constexpr extent_2d_t CELL_SIZE{ 16, 16 };
 
-constexpr offset_2d_t CURSOR_OFFSET{ CELL_SIZE / 2 };
-constexpr offset_2d_t CURSOR_DRAW_OFFSET{ CURSOR_OFFSET / 2 };
+constexpr offset_2d_t CURSOR_OFFSET{ UNIVERSAL_OFFSET - CELL_SIZE / 4 };
 
 static bool gamepad_enabled{ true };
 
@@ -99,7 +96,7 @@ static offset_2d_t camera_position{ 0 };
 static animated_sprite_t<3> player{ { animated_glyph_t<3>::generate_contiguous_indices<0xB0, 0xB2>(), Colors::Green }, { 0 } };
 
 static timer_t input_timer{ 250 };
-static timer_t epoch_timer{ 375 };
+static timer_t epoch_timer{ 250 };
 static timer_t animation_timer{ 1000.0 / 3 };
 
 static wave_t sine_wave{ 1.0, 0.5, 1.0 };
@@ -109,6 +106,8 @@ static wave_t sine_wave{ 1.0, 0.5, 1.0 };
 using namespace bleak;
 
 bool camera_movement() {
+	return false;
+
 	offset_2d_t direction{};
 
 	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::North])) {
@@ -140,6 +139,13 @@ bool camera_movement() {
 }
 
 bool character_movement() {
+	if (Keyboard::is_key_pressed(Bindings::Wait)) {
+		input_timer.record();
+		epoch_timer.record();
+
+		return true;
+	}
+
 	offset_2d_t direction{};
 
 	if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::North])) {
@@ -200,13 +206,13 @@ void startup() {
 	GamepadManager::initialize();
 
 	if (primary_gamepad == nullptr) {
-		message_log.add("no gamepad detected\n");
+		message_log.add("no gamepad detected\n", __TIME__);
 		gamepad_enabled = false;
 	}
 
 	game_map.set<map_region_t::Border>(cell_state_t{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored });
-	game_map.randomize<map_region_t::Interior>(
-		random_engine, 0.5, { cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored }, { cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored }
+	game_map.generate<map_region_t::Interior>(
+		random_engine, 0.425, 100, 4, { cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored }, { cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored }
 	);
 
 	player.position = static_cast<offset_2d_t>(game_map.find_random_cell_interior(random_engine, cell_trait_t::Open).value());
@@ -233,7 +239,7 @@ void update() {
 		animation_timer.record();
 	}
 
-	if (Keyboard::is_key_down(SDL_SCANCODE_ESCAPE)) {
+	if (Keyboard::is_key_down(Bindings::Quit)) {
 		window.close();
 		return;
 	}
@@ -255,7 +261,7 @@ void update() {
 	if (draw_cursor) {
 		cursor.update();
 	} else {
-		grid_cursor.update(CURSOR_OFFSET);
+		grid_cursor.update(CURSOR_OFFSET - camera_position);
 		grid_cursor.color.set_alpha(sine_wave.current_value());
 	}
 }
@@ -270,15 +276,20 @@ void render() {
 	if (draw_cursor) {
 		cursor.draw(renderer);
 	} else {
-		grid_cursor.draw(renderer, CURSOR_DRAW_OFFSET);
+		grid_cursor.draw(renderer, CURSOR_OFFSET);
 	}
 
 	runes_t fps_text{ std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::White };
 
 	extent_2d_t fps_text_size{ Text::calculate_size(fps_text) };
-	offset_2d_t fps_text_pos{ UI_GRID_SIZE.w / 2 - fps_text_size.w / 2, UI_GRID_SIZE.h - 1 };
-	renderer.draw_composite_rect(fps_text_pos * ui_atlas.glyph_size + ui_atlas.universal_offset, fps_text_size * ui_atlas.glyph_size, Colors::Black, Colors::Red, 1, true);
+	offset_2d_t fps_text_pos{ UI_GRID_SIZE.w / 2 - fps_text_size.w / 2, UI_GRID_SIZE.h + 1 };
 	ui_atlas.draw(renderer, fps_text, fps_text_pos);
+
+	runes_t title_text{ GAME_TITLE, Colors::White };
+
+	extent_2d_t title_text_size{ Text::calculate_size(title_text) };
+	offset_2d_t title_text_pos{ UI_GRID_SIZE.w / 2 - title_text_size.w / 2, -2 };
+	ui_atlas.draw(renderer, title_text, title_text_pos);
 
 	renderer.present();
 }
