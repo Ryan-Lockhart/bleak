@@ -1,8 +1,5 @@
 #pragma once
 
-#include "SDL_blendmode.h"
-#include "bleak/log.hpp"
-#include "bleak/offset/offset_2d.hpp"
 #include "bleak/typedef.hpp"
 
 #include <format>
@@ -13,10 +10,10 @@
 
 #include "bleak/color.hpp"
 #include "bleak/extent.hpp"
+#include "bleak/log.hpp"
 #include "bleak/renderer.hpp"
 
 #include "bleak/constants/colors.hpp"
-#include "extent/extent_2d.hpp"
 
 namespace bleak {
 	namespace sdl {
@@ -41,7 +38,7 @@ namespace bleak {
 				error_log.add("could not get texture info: {}", sdl::get_error());
 			}
 
-			return { extent_2d_t{ extent_2d_t::scalar_cast(w), extent_2d_t::scalar_cast(h) }, access, channels };
+			return { extent_2d_t{ w, h }, access, channels };
 		}
 
 		static inline void destroy_texture(ref<texture> texture) noexcept {
@@ -78,9 +75,7 @@ namespace bleak {
 		constexpr ref<texture_t> operator=(cref<texture_t> other) noexcept = delete;
 		constexpr ref<texture_t> operator=(rval<texture_t> other) noexcept = delete;
 
-		inline texture_t(ref<renderer_t> renderer, cstr path) :
-			texture{ sdl::img::load_texture(renderer.handle(), path) },
-			info{ sdl::get_texture_info(texture) } {
+		inline texture_t(ref<renderer_t> renderer, cstr path) : texture{ sdl::img::load_texture(renderer.handle(), path) }, info{ sdl::get_texture_info(texture) } {
 			if (texture == nullptr) {
 				throw std::runtime_error(std::format("failed to load texture!"));
 			}
@@ -104,7 +99,7 @@ namespace bleak {
 			SDL_SetTextureAlphaMod(texture, color.a);
 		}
 
-		constexpr inline void set_blend_mode(SDL_BlendMode mode) const { SDL_SetTextureBlendMode(texture, mode); }
+		constexpr inline void set_blend_mode(sdl::blend_mode mode) const { SDL_SetTextureBlendMode(texture, mode); }
 
 		constexpr inline void copy(sdl::renderer renderer, cptr<sdl::rect> src, cptr<sdl::rect> dst) const { SDL_RenderCopy(renderer, texture, src, dst); }
 
@@ -133,7 +128,7 @@ namespace bleak {
 		}
 
 		constexpr void draw(ref<renderer_t> renderer, cref<rect_t> dst) const {
-			sdl::rect sdl_dst{ (sdl::rect)dst };
+			sdl::rect sdl_dst{ static_cast<sdl::rect>(dst) };
 			copy(renderer.handle(), nullptr, &sdl_dst);
 		}
 

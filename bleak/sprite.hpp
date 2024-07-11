@@ -102,13 +102,11 @@ namespace bleak {
 		}
 
 		template<extent_2d_t AtlasSize> constexpr inline void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas) const {
-			glyph_t current{ glyph.current() };
-			atlas.draw(renderer, current, position);
+			atlas.draw(renderer, glyph.current(), position);
 		}
 
 		template<extent_2d_t AtlasSize> constexpr inline void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset) const {
-			glyph_t current{ glyph.current() };
-			atlas.draw(renderer, current, position + offset);
+			atlas.draw(renderer, glyph.current(), position + offset);
 		}
 	};
 } // namespace bleak

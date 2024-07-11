@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/log.hpp"
 #include "bleak/typedef.hpp"
 
 #include <algorithm>
@@ -16,6 +17,7 @@
 #include "bleak/cardinal.hpp"
 #include "bleak/extent.hpp"
 #include "bleak/offset.hpp"
+#include "extent/extent_2d.hpp"
 
 namespace bleak {
 	// generator for map randomization is fixed due to lack of support for function template partial specialization
@@ -318,8 +320,8 @@ namespace bleak {
 
 	template<extent_2d_t MapSize, extent_2d_t BorderSize = { 0, 0 }> class map_t {
 	  private:
-		layer_t<cell_state_t, MapSize> state;
-		layer_t<cell_state_t, MapSize> buffer;
+		layer_t<cell_state_t, MapSize> state{};
+		layer_t<cell_state_t, MapSize> buffer{};
 
 	  public:
 		static constexpr extent_2d_t map_size{ MapSize };
@@ -336,7 +338,21 @@ namespace bleak {
 		static constexpr usize interior_area{ (map_size - border_size).area() };
 		static constexpr usize border_area{ map_area - interior_area };
 
-		inline map_t() : state{}, buffer{} {}
+		inline map_t() {}
+
+		inline map_t(cref<std::string> path, cref<std::string> name) {
+			std::ifstream file{};
+
+			try {
+				file.open(std::format("{}\\{}.map.bin", path, name), std::ios::in | std::ios::binary);
+
+				file.read(reinterpret_cast<str>(state.data_ptr()), state.byte_size);
+
+				file.close();
+			} catch (std::exception e) {
+				error_log.add(e.what(), __TIME_FILE_LINE__);
+			}
+		}
 
 		inline map_t(cref<map_t<MapSize, BorderSize>> other) : state{ other.state }, buffer{} {}
 
@@ -365,14 +381,14 @@ namespace bleak {
 		inline cref<layer_t<cell_state_t, MapSize>> data() const noexcept { return state; }
 
 		inline cptr<layer_t<cell_state_t, MapSize>> data_ptr() const noexcept { return &state; }
+		
+		inline ref<cell_state_t> operator[](extent_2d_t::product_t index) noexcept { return state[index]; }
 
-		inline ref<cell_state_t> operator[](usize index) noexcept { return state[index]; }
+		inline cref<cell_state_t> operator[](extent_2d_t::product_t index) const noexcept { return state[index]; }
 
-		inline cref<cell_state_t> operator[](usize index) const noexcept { return state[index]; }
+		inline ref<cell_state_t> operator[](extent_2d_t::scalar_t x, extent_2d_t::scalar_t y) noexcept { return state[x, y]; }
 
-		inline ref<cell_state_t> operator[](uhalf x, uhalf y) noexcept { return state[x, y]; }
-
-		inline cref<cell_state_t> operator[](uhalf x, uhalf y) const noexcept { return state[x, y]; }
+		inline cref<cell_state_t> operator[](extent_2d_t::scalar_t x, extent_2d_t::scalar_t y) const noexcept { return state[x, y]; }
 
 		inline ref<cell_state_t> operator[](cref<offset_2d_t> position) noexcept { return state[position]; }
 
@@ -756,7 +772,9 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename Generator> inline std::optional<offset_2d_t> find_random_cell(ref<Generator> generator, cell_trait_t trait) const {
+		template<map_region_t Region> inline std::optional<offset_2d_t> find_random_cell(ref<MapRandomizer> generator, cell_trait_t trait) const noexcept;
+
+		template<> inline std::optional<offset_2d_t> find_random_cell<map_region_t::All>(ref<MapRandomizer> generator, cell_trait_t trait) const noexcept {
 			std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, map_extent.x };
 			std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, map_extent.y };
 
@@ -771,7 +789,7 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<typename Generator> inline std::optional<offset_2d_t> find_random_cell_interior(ref<Generator> generator, cell_trait_t trait) const {
+		template<> inline std::optional<offset_2d_t> find_random_cell<map_region_t::Interior>(ref<MapRandomizer> generator, cell_trait_t trait) const noexcept {
 			std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
 			std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
 
@@ -785,6 +803,29 @@ namespace bleak {
 
 			return std::nullopt;
 		}
+
+		template<> inline std::optional<offset_2d_t> find_random_cell<map_region_t::Border>(ref<MapRandomizer> generator, cell_trait_t trait) const noexcept {
+			std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
+			std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
+
+			for (extent_2d_t::product_t i{ 0 }; i < border_area; ++i) {
+				auto x { x_dis(generator) };
+				auto y { y_dis(generator) };
+				
+				x = x < border_size.w ? x : map_extent.x - x;
+				y = y < border_size.h ? y : map_extent.y - y;
+
+				const offset_2d_t pos{ x, y };
+
+				if (state[pos].contains(trait)) {
+					return pos;
+				}
+			}
+
+			return std::nullopt;
+		}
+
+		template<> inline std::optional<offset_2d_t> find_random_cell<map_region_t::None>(ref<MapRandomizer> generator, cell_trait_t trait) const noexcept { return std::nullopt; }
 
 		template<extent_2d_t AtlasSize> inline void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas) const {
 			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
@@ -832,7 +873,7 @@ namespace bleak {
 			}
 		}
 
-		inline bool serialize(cref<std::string> path, cref<std::string> name) const {
+		inline bool serialize(cref<std::string> path, cref<std::string> name) const noexcept {
 			std::ofstream file{};
 
 			try {
@@ -842,7 +883,7 @@ namespace bleak {
 
 				file.close();
 			} catch (std::exception e) {
-				std::cerr << e.what() << std::endl;
+				error_log.add(e.what(), __TIME_FILE_LINE__);
 				return false;
 			}
 

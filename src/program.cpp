@@ -63,7 +63,8 @@ static std::minstd_rand random_engine{ std::random_device{}() };
 
 constexpr extent_2d_t MAP_SIZE{ GAME_GRID_SIZE };
 
-static map_t<MAP_SIZE, { 2, 2 }> game_map{};
+//static map_t<MAP_SIZE, { 2, 2 }> game_map{};
+static map_t<MAP_SIZE, { 2, 2 }> game_map{"res", "test"};
 
 constexpr extent_2d_t CELL_SIZE{ 16, 16 };
 
@@ -74,7 +75,7 @@ static bool gamepad_enabled{ true };
 static void primary_gamepad_disconnected();
 static void primary_gamepad_reconnected(cptr<gamepad_t> gamepad);
 
-static cptr<gamepad_t> primary_gamepad{ GamepadManager::lease(0, &primary_gamepad_disconnected, &primary_gamepad_reconnected) };
+static cptr<gamepad_t> primary_gamepad{ nullptr };
 
 static void primary_gamepad_disconnected() {
 	gamepad_enabled = false;
@@ -184,6 +185,8 @@ void render();
 
 void shutdown();
 
+void terminate_prematurely();
+
 int main(int argc, char* argv[]) {
 	startup();
 
@@ -205,9 +208,11 @@ void startup() {
 
 	GamepadManager::initialize();
 
+	primary_gamepad = GamepadManager::lease(0, &primary_gamepad_disconnected, &primary_gamepad_reconnected);
+	gamepad_enabled = primary_gamepad != nullptr;
+
 	if (primary_gamepad == nullptr) {
-		message_log.add("no gamepad detected\n", __TIME__);
-		gamepad_enabled = false;
+		message_log.add("no gamepad detected\n");
 	}
 
 	game_map.set<map_region_t::Border>(cell_state_t{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored });
@@ -215,7 +220,14 @@ void startup() {
 		random_engine, 0.425, 100, 4, { cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored }, { cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored }
 	);
 
-	player.position = static_cast<offset_2d_t>(game_map.find_random_cell_interior(random_engine, cell_trait_t::Open).value());
+	auto player_position{ game_map.find_random_cell<map_region_t::Interior>(random_engine, cell_trait_t::Open) };
+
+	if (player_position.has_value()) {
+		player.position = player_position.value();
+	} else {
+		error_log.add("no open cells found for player start position\n", __TIME_FILE_LINE__);
+		terminate_prematurely();
+	}
 
 	Mouse::hide_cursor();
 
@@ -226,8 +238,8 @@ void startup() {
 
 	animation_timer.reset();
 
-	// message_log.flush_to_console(std::cout);
-	// error_log.flush_to_console(std::cerr);
+	message_log.flush_to_console(std::cout);
+	error_log.flush_to_console(std::cerr);
 }
 
 void update() {
@@ -279,13 +291,13 @@ void render() {
 		grid_cursor.draw(renderer, CURSOR_OFFSET);
 	}
 
-	runes_t fps_text{ std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::White };
+	runes_t fps_text{ std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::Green };
 
 	extent_2d_t fps_text_size{ Text::calculate_size(fps_text) };
 	offset_2d_t fps_text_pos{ UI_GRID_SIZE.w / 2 - fps_text_size.w / 2, UI_GRID_SIZE.h + 1 };
 	ui_atlas.draw(renderer, fps_text, fps_text_pos);
 
-	runes_t title_text{ GAME_TITLE, Colors::White };
+	runes_t title_text{ GAME_TITLE };
 
 	extent_2d_t title_text_size{ Text::calculate_size(title_text) };
 	offset_2d_t title_text_pos{ UI_GRID_SIZE.w / 2 - title_text_size.w / 2, -2 };
@@ -301,4 +313,11 @@ void shutdown() {
 
 	message_log.flush_to_file();
 	error_log.flush_to_file();
+
+	//game_map.serialize("res", "test");
+}
+
+void terminate_prematurely() {
+	shutdown();
+	exit(EXIT_FAILURE);
 }

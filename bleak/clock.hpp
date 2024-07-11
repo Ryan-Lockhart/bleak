@@ -1,22 +1,26 @@
 #pragma once
 
+#include "SDL_timer.h"
 #include "typedef.hpp"
 
 #include <SDL.h>
 
 namespace bleak {
+	namespace sdl {
+		static inline usize get_performance_counter() noexcept { return SDL_GetPerformanceCounter(); }
+		static inline usize get_performance_frequency() noexcept { return SDL_GetPerformanceFrequency(); }
+	} // namespace sdl
+
 	struct Clock {
 	  private:
 		static inline usize last;
 
 	  public:
-		static inline usize now() { return static_cast<usize>(SDL_GetPerformanceCounter()); }
+		static inline usize now() { return sdl::get_performance_counter(); }
 
-		static inline usize frequency() { return static_cast<usize>(SDL_GetPerformanceFrequency()); }
+		static inline usize frequency() { return sdl::get_performance_frequency(); }
 
-		static inline void tick() {
-			last = now();
-		}
+		static inline void tick() { last = now(); }
 
 		static inline void tick(f64 interval) {
 			last = now();
@@ -29,6 +33,6 @@ namespace bleak {
 
 		static inline f64 frame_time() { return 1000.0 / delta_time(); }
 
-		static inline f64 elapsed() { return (f64)now() / frequency(); }
+		static inline f64 elapsed() { return static_cast<f64>(now()) / frequency(); }
 	};
-} // namespace Bleakdepth
+} // namespace bleak

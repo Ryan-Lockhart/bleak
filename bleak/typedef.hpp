@@ -7,7 +7,14 @@ namespace bleak {
 #define BLEAKDEPTH_32
 #endif
 
+#define __TIME_FILE_LINE__ __TIME__, __FILE__, __LINE__
+
+
+#if defined(BLEAKDEPTH_RELEASE)
 #define BLEAKDEPTH_BIG_GRID 1
+#elif defined(BLEAKDEPTH_DEBUG)
+#define BLEAKDEPTH_BIG_GRID 0
+#endif
 
 #define forever for (;;)
 

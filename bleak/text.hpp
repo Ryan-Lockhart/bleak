@@ -18,6 +18,12 @@ namespace bleak {
 	  public:
 		static constexpr color_t DEFAULT_COLOR{ Colors::White };
 
+		constexpr runes_t(cref<std::string> text) {
+			for (auto& ch : text) {
+				emplace_back(ch, DEFAULT_COLOR);
+			}
+		}
+
 		constexpr runes_t(cref<std::string> text, color_t color) {
 			for (auto& ch : text) {
 				emplace_back(ch, color);
@@ -25,7 +31,7 @@ namespace bleak {
 		}
 
 		constexpr ref<runes_t> operator+=(cref<glyph_t> glyph) {
-			emplace_back(glyph.index, glyph.color);
+			push_back(glyph);
 
 			return *this;
 		}
@@ -73,50 +79,7 @@ namespace bleak {
 			"vertical tab width must be a positive power-of-two!"
 		);
 
-		static constexpr extent_2d_t calculate_size(cref<std::string> text) {
-			if (text.empty()) {
-				return extent_2d_t::zero;
-			}
-
-			usize current_width{ 0 };
-			extent_2d_t size{ 0, 1 };
-
-			for (auto ch : text) {
-				switch (ch) {
-				case '\0':
-					goto superbreak;
-				case '\n':
-					++size.h;
-					if (current_width > size.w) {
-						size.w = current_width;
-					}
-					current_width = 0;
-					continue;
-				case '\t':
-					current_width += (current_width + HORIZONTAL_TAB_WIDTH - 1) & -HORIZONTAL_TAB_WIDTH;
-					continue;
-				case '\v':
-					size.h += (size.h + VERTICAL_TAB_WIDTH - 1) & -VERTICAL_TAB_WIDTH;
-					if (current_width > size.w) {
-						size.w = current_width;
-					}
-					current_width = 0;
-					continue;
-				default:
-					++current_width;
-					continue;
-				}
-			}
-
-		superbreak:
-			if (current_width > size.w) {
-				size.w = current_width;
-			}
-
-			return size;
-		}
-
-		static constexpr extent_2d_t calculate_size(cref<runes_t> runes) {
+		static constexpr extent_2d_t calculate_size(cref<runes_t> runes) noexcept {
 			if (runes.empty()) {
 				return extent_2d_t::zero;
 			}
@@ -157,6 +120,10 @@ namespace bleak {
 			}
 
 			return size;
+		}
+
+		static constexpr extent_2d_t calculate_size(cref<std::string> text) noexcept {
+			return calculate_size(runes_t{ text });
 		}
 	} // namespace Text
 } // namespace bleak

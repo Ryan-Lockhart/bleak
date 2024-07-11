@@ -16,8 +16,10 @@ build_type = get_option('buildtype')
 
 if build_type == 'debug'
     subsystem = 'console'
+    args = ['-DBLEAKDEPTH_DEBUG']
 else 
     subsystem = 'windows'
+    args = ['-DBLEAKDEPTH_RELEASE']
 endif
 
 sdl_dependencies = [
@@ -42,6 +44,9 @@ executable(
         'cpp_std=c++26',
         'cpp_stdlib=libc++',
     ],
+
+    c_args: args,
+    cpp_args: args,
 
     install: true,
     install_dir: install_dir,

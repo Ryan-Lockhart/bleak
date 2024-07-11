@@ -51,12 +51,12 @@ namespace bleak {
 		using button_t = SDL_JoystickButton;
 		using axis_t = SDL_JoystickAxis;
 
-		static constexpr i16 JOYSTICK_DEAD_ZONE { 8000 };
+		static constexpr i16 JOYSTICK_DEAD_ZONE{ 12000 };
 
 		struct stick_t {
 		  private:
 			static inline constexpr cardinal_t to_cardinal(i16 x, i16 y) noexcept {
-				cardinal_t result {};
+				cardinal_t result{};
 
 				if (x < -JOYSTICK_DEAD_ZONE) {
 					result += cardinal_t::West;
@@ -73,16 +73,35 @@ namespace bleak {
 				return result;
 			}
 
+			static inline constexpr cardinal_t to_cardinal(i16 x, i16 y, i16 deadzone) noexcept {
+				cardinal_t result{};
+
+				if (x < -deadzone) {
+					result += cardinal_t::West;
+				} else if (x > deadzone) {
+					result += cardinal_t::East;
+				}
+
+				if (y < -deadzone) {
+					result += cardinal_t::North;
+				} else if (y > deadzone) {
+					result += cardinal_t::South;
+				}
+
+				return result;
+			}
+
 			inline cardinal_t get_state() const noexcept {
-				auto as_ptr { const_cast<ptr<joystick_t>>(joystick) };
-				return to_cardinal(SDL_JoystickGetAxis(as_ptr, x_axis_id), SDL_JoystickGetAxis(as_ptr, y_axis_id));
+				auto as_ptr{ const_cast<ptr<joystick_t>>(joystick) };
+
+				auto x{ SDL_JoystickGetAxis(as_ptr, x_axis_id) };
+				auto y{ SDL_JoystickGetAxis(as_ptr, y_axis_id) };
+
+				return to_cardinal(x, y, JOYSTICK_DEAD_ZONE);
 			}
 
 		  public:
-			inline stick_t(cptrc<joystick_t> joystick, axis_t x_axis_id, axis_t y_axis_id) noexcept :
-				joystick { joystick },
-				x_axis_id { x_axis_id },
-				y_axis_id { y_axis_id } {
+			inline stick_t(cptrc<joystick_t> joystick, axis_t x_axis_id, axis_t y_axis_id) noexcept : joystick{ joystick }, x_axis_id{ x_axis_id }, y_axis_id{ y_axis_id } {
 				if (joystick == nullptr) {
 					error_log.add("nullptr passed to stick [{}, {}] constructor\n", (i32)x_axis_id, (i32)y_axis_id);
 				}
@@ -101,7 +120,7 @@ namespace bleak {
 		};
 
 		struct buttons_t {
-			inline buttons_t(cptrc<joystick_t> joystick) noexcept : joystick { joystick } {
+			inline buttons_t(cptrc<joystick_t> joystick) noexcept : joystick{ joystick } {
 				if (joystick == nullptr) {
 					error_log.add("nullptr passed to buttons constructor\n");
 				}
@@ -113,9 +132,9 @@ namespace bleak {
 			bool previous_state[SDL_NUM_JOYSTICK_BUTTONS];
 
 			inline constexpr void update() noexcept {
-				auto as_ptr { const_cast<ptr<joystick_t>>(joystick) };
+				auto as_ptr{ const_cast<ptr<joystick_t>>(joystick) };
 
-				for (usize i { 0 }; i < SDL_NUM_JOYSTICK_BUTTONS; ++i) {
+				for (usize i{ 0 }; i < SDL_NUM_JOYSTICK_BUTTONS; ++i) {
 					previous_state[i] = current_state[i];
 					current_state[i] = SDL_JoystickGetButton(as_ptr, i);
 				}
@@ -141,7 +160,7 @@ namespace bleak {
 		struct dpad_t {
 		  private:
 			static inline constexpr cardinal_t to_cardinal(cref<buttons_t> buttons) noexcept {
-				cardinal_t result {};
+				cardinal_t result{};
 
 				if (buttons.current_state[SDL_JOYSTICK_BUTTON_UP]) {
 					result += cardinal_t::North;
@@ -161,7 +180,7 @@ namespace bleak {
 			inline cardinal_t get_state(cref<buttons_t> buttons) const noexcept { return to_cardinal(buttons); }
 
 		  public:
-			inline dpad_t(cptrc<joystick_t> joystick) noexcept : joystick { joystick } {
+			inline dpad_t(cptrc<joystick_t> joystick) noexcept : joystick{ joystick } {
 				if (joystick == nullptr) {
 					error_log.add("nullptr passed to dpad constructor\n");
 				}
@@ -188,29 +207,24 @@ namespace bleak {
 		ptr<joystick_t> joystick;
 
 		inline gamepad_t(joystick_t* joystick) noexcept :
-			buttons { joystick },
-			left_stick { joystick, SDL_JOYSTICK_AXIS_LEFTX, SDL_JOYSTICK_AXIS_LEFTY },
-			right_stick { joystick, SDL_JOYSTICK_AXIS_RIGHTX, SDL_JOYSTICK_AXIS_RIGHTY },
-			dpad { joystick },
-			joystick { joystick } {
+			buttons{ joystick },
+			left_stick{ joystick, SDL_JOYSTICK_AXIS_LEFTX, SDL_JOYSTICK_AXIS_LEFTY },
+			right_stick{ joystick, SDL_JOYSTICK_AXIS_RIGHTX, SDL_JOYSTICK_AXIS_RIGHTY },
+			dpad{ joystick },
+			joystick{ joystick } {
 			if (joystick == nullptr) {
 				error_log.add("nullptr passed to gamepad constructor\n");
 			}
 		}
 
-		inline gamepad_t(cref<gamepad_t> other) noexcept :
-			buttons { other.buttons },
-			left_stick { other.left_stick },
-			right_stick { other.right_stick },
-			dpad { other.dpad },
-			joystick { other.joystick } {}
+		inline gamepad_t(cref<gamepad_t> other) noexcept : buttons{ other.buttons }, left_stick{ other.left_stick }, right_stick{ other.right_stick }, dpad{ other.dpad }, joystick{ other.joystick } {}
 
 		inline gamepad_t(rval<gamepad_t> other) noexcept :
-			buttons { std::move(other.buttons) },
-			left_stick { std::move(other.left_stick) },
-			right_stick { std::move(other.right_stick) },
-			dpad { std::move(other.dpad) },
-			joystick { std::move(other.joystick) } {
+			buttons{ std::move(other.buttons) },
+			left_stick{ std::move(other.left_stick) },
+			right_stick{ std::move(other.right_stick) },
+			dpad{ std::move(other.dpad) },
+			joystick{ std::move(other.joystick) } {
 			other.joystick = nullptr;
 		}
 
@@ -230,7 +244,7 @@ namespace bleak {
 		}
 
 		inline constexpr std::string power_level() const noexcept {
-			SDL_JoystickPowerLevel level { SDL_JoystickCurrentPowerLevel(joystick) };
+			SDL_JoystickPowerLevel level{ SDL_JoystickCurrentPowerLevel(joystick) };
 
 			switch (level) {
 			case SDL_JOYSTICK_POWER_UNKNOWN:
@@ -267,7 +281,7 @@ namespace bleak {
 		inline bool is_button_up(int button) const noexcept { return buttons.at(button) == input_state_t::Up; }
 
 		inline bool any_button_pressed() const noexcept {
-			for (int i { 0 }; i < SDL_NUM_JOYSTICK_BUTTONS; ++i) {
+			for (int i{ 0 }; i < SDL_NUM_JOYSTICK_BUTTONS; ++i) {
 				if (is_button_pressed(i)) {
 					return true;
 				}
@@ -277,7 +291,7 @@ namespace bleak {
 		}
 
 		inline bool any_button_released() const noexcept {
-			for (int i { 0 }; i < SDL_NUM_JOYSTICK_BUTTONS; ++i) {
+			for (int i{ 0 }; i < SDL_NUM_JOYSTICK_BUTTONS; ++i) {
 				if (is_button_released(i)) {
 					return true;
 				}
@@ -287,7 +301,7 @@ namespace bleak {
 		}
 
 		inline bool any_button_down() const noexcept {
-			for (int i { 0 }; i < SDL_NUM_JOYSTICK_BUTTONS; ++i) {
+			for (int i{ 0 }; i < SDL_NUM_JOYSTICK_BUTTONS; ++i) {
 				if (is_button_down(i)) {
 					return true;
 				}
@@ -297,7 +311,7 @@ namespace bleak {
 		}
 
 		inline bool any_button_up() const noexcept {
-			for (int i { 0 }; i < SDL_NUM_JOYSTICK_BUTTONS; ++i) {
+			for (int i{ 0 }; i < SDL_NUM_JOYSTICK_BUTTONS; ++i) {
 				if (is_button_up(i)) {
 					return true;
 				}
@@ -390,8 +404,8 @@ namespace bleak {
 	struct gamepad_slot_t {
 		ptr<gamepad_t> gamepad;
 
-		fn_ptr<void> disconnect_callback { nullptr };
-		fn_ptr<void, cptr<gamepad_t>> reconnect_callback { nullptr };
+		fn_ptr<void> disconnect_callback{ nullptr };
+		fn_ptr<void, cptr<gamepad_t>> reconnect_callback{ nullptr };
 
 		inline bool has_callbacks() const noexcept { return disconnect_callback != nullptr || reconnect_callback != nullptr; }
 
@@ -407,22 +421,16 @@ namespace bleak {
 			}
 		}
 
-		inline gamepad_slot_t(ptr<joystick_t> joystick) : gamepad { new gamepad_t { joystick } } {}
+		inline gamepad_slot_t(ptr<joystick_t> joystick) : gamepad{ new gamepad_t{ joystick } } {}
 
 		inline gamepad_slot_t(ptr<joystick_t> joystick, fn_ptr<void> disconnect_callback, fn_ptr<void, cptr<gamepad_t>> reconnect_callback) :
-			gamepad { new gamepad_t { joystick } },
-			disconnect_callback { disconnect_callback },
-			reconnect_callback { reconnect_callback } {}
+			gamepad{ new gamepad_t{ joystick } },
+			disconnect_callback{ disconnect_callback },
+			reconnect_callback{ reconnect_callback } {}
 
-		inline gamepad_slot_t(cref<gamepad_slot_t> other) noexcept :
-			gamepad { other.gamepad },
-			disconnect_callback { other.disconnect_callback },
-			reconnect_callback { other.reconnect_callback } {}
+		inline gamepad_slot_t(cref<gamepad_slot_t> other) noexcept : gamepad{ other.gamepad }, disconnect_callback{ other.disconnect_callback }, reconnect_callback{ other.reconnect_callback } {}
 
-		inline gamepad_slot_t(rval<gamepad_slot_t> other) noexcept :
-			gamepad { std::move(other.gamepad) },
-			disconnect_callback { std::move(other.disconnect_callback) },
-			reconnect_callback { std::move(other.reconnect_callback) } {}
+		inline gamepad_slot_t(rval<gamepad_slot_t> other) noexcept : gamepad{ std::move(other.gamepad) }, disconnect_callback{ std::move(other.disconnect_callback) }, reconnect_callback{ std::move(other.reconnect_callback) } {}
 
 		inline ~gamepad_slot_t() noexcept {
 			if (gamepad != nullptr) {
@@ -453,15 +461,15 @@ namespace bleak {
 				return;
 			}
 
-			int num_controllers { SDL_NumJoysticks() };
+			int num_controllers{ SDL_NumJoysticks() };
 
-			for (i32 i { 0 }; i < num_controllers; ++i) {
+			for (i32 i{ 0 }; i < num_controllers; ++i) {
 				if (!SDL_IsGameController(i)) {
 					error_log.add("joystick {} is not a game controller\n", i);
 					continue;
 				}
 
-				ptr<joystick_t> gamepad { SDL_JoystickOpen(i) };
+				ptr<joystick_t> gamepad{ SDL_JoystickOpen(i) };
 
 				if (gamepad == nullptr) {
 					error_log.add("failed to open joystick {}: {}\n", i, SDL_GetError());
@@ -492,14 +500,14 @@ namespace bleak {
 				return nullptr;
 			}
 
-			auto iter { slots.find(id) };
+			auto iter{ slots.find(id) };
 
 			if (iter == slots.end()) {
 				error_log.add("attempting to lease gamepad that does not exist!\n");
 				return nullptr;
 			}
 
-			ref<gamepad_slot_t> target { iter->second };
+			ref<gamepad_slot_t> target{ iter->second };
 
 			if (target.has_callbacks()) {
 				error_log.add("attempting to lease gamepad that is already leased!\n");
@@ -513,7 +521,7 @@ namespace bleak {
 		}
 
 		static inline void release(i32 id) noexcept {
-			auto iter { slots.find(id) };
+			auto iter{ slots.find(id) };
 
 			if (iter == slots.end()) {
 				error_log.add("attempting to release gamepad that does not exist!\n");
@@ -561,7 +569,7 @@ namespace bleak {
 	};
 
 	inline bool GamepadManager::add_joystick(int id) noexcept {
-		auto it { slots.find(id) };
+		auto it{ slots.find(id) };
 
 		if (it != slots.end() && it->second.gamepad != nullptr) {
 			error_log.add("joystick {} already connected\n", id);
@@ -573,7 +581,7 @@ namespace bleak {
 			return false;
 		}
 
-		ptr<joystick_t> gamepad { SDL_JoystickOpen(id) };
+		ptr<joystick_t> gamepad{ SDL_JoystickOpen(id) };
 
 		if (gamepad == nullptr) {
 			error_log.add("failed to open joystick {}: {}\n", id, SDL_GetError());
@@ -581,7 +589,7 @@ namespace bleak {
 		}
 
 		if (it != slots.end()) {
-			it->second.gamepad = new gamepad_t { gamepad };
+			it->second.gamepad = new gamepad_t{ gamepad };
 			it->second.invoke_reconnect();
 			return true;
 		} else {
@@ -592,7 +600,7 @@ namespace bleak {
 	}
 
 	inline bool GamepadManager::remove_joystick(int id) noexcept {
-		auto it { slots.find(id) };
+		auto it{ slots.find(id) };
 
 		if (it == slots.end()) {
 			error_log.add("joystick {} not found\n", id);
@@ -610,4 +618,4 @@ namespace bleak {
 
 		return true;
 	}
-} // namespace Bleakdepth
+} // namespace bleak

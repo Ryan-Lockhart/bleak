@@ -113,9 +113,9 @@ namespace bleak {
 
 		inline void add(std::string message) { messages.push_back(message); }
 
-		inline void add(cstr message, cstr time, cstr file, usize line) { messages.push_back(std::format("[{}]: \"{}\" ({}): {}", time, file, line, message)); }
+		inline void add(cstr message, cstr time, cstr file, i32 line) { messages.push_back(std::format("[{}]: \"{}\" ({}): {}", time, file, line, message)); }
 
-		inline void add(std::string message, cstr time, cstr file, usize line) {
+		inline void add(std::string message, cstr time, cstr file, i32 line) {
 			messages.push_back(std::format("[{}]: \"{}\" ({}): {}", time, file, line, message));
 		}
 
@@ -123,7 +123,7 @@ namespace bleak {
 			messages.push_back(std::format(format, std::forward<Args>(args)...));
 		}
 
-		template<typename... Args> inline void add(const std::format_string<Args...> format, cstr time, cstr file, usize line, rval<Args>... args) {
+		template<typename... Args> inline void add(const std::format_string<Args...> format, cstr time, cstr file, i32 line, rval<Args>... args) {
 			messages.push_back(std::format(std::format("[{}]: \"{}\" ({}): {}", time, file, line, format), std::forward<Args>(args)...));
 		}
 
