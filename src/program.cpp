@@ -19,15 +19,16 @@
 #include "bleak/glyph.hpp"
 #include "bleak/keyboard.hpp"
 #include "bleak/log.hpp"
-#include "bleak/map.hpp"
 #include "bleak/mouse.hpp"
 #include "bleak/offset.hpp"
+#include "bleak/region.hpp"
 #include "bleak/renderer.hpp"
 #include "bleak/sprite.hpp"
 #include "bleak/text.hpp"
 #include "bleak/timer.hpp"
 #include "bleak/wave.hpp"
 #include "bleak/window.hpp"
+#include "bleak/zone.hpp"
 
 #include "bleak/constants/bindings.hpp"
 #include "bleak/constants/colors.hpp"
@@ -64,11 +65,15 @@ static atlas_t<ATLAS_SIZE> ui_atlas{ renderer, "res\\glyphs_8x8.png", UNIVERSAL_
 
 static std::minstd_rand random_engine{ std::random_device{}() };
 
-constexpr extent_2d_t MAP_SIZE{ GAME_GRID_SIZE };
+constexpr extent_2d_t ZONE_SIZE{ GAME_GRID_SIZE / 2 };
+constexpr extent_2d_t REGION_SIZE{ 2, 2 };
+
 constexpr extent_2d_t BORDER_SIZE{ 2, 2 };
 
-// static map_t<MAP_SIZE, { 2, 2 }> game_map{};
-static map_t<cell_state_t, MAP_SIZE, BORDER_SIZE> game_map{ "res\\test.map.bin" };
+static_assert((REGION_SIZE * ZONE_SIZE).area() == GAME_GRID_SIZE.area(), "region and zone sizes do not match game grid size");
+
+// static zone_t<zone_SIZE, { 2, 2 }> game_map{};
+static region_t<cell_state_t, REGION_SIZE, ZONE_SIZE, BORDER_SIZE> game_map{};
 
 constexpr extent_2d_t CELL_SIZE{ 16, 16 };
 
@@ -92,7 +97,7 @@ static void primary_gamepad_reconnected(cptr<gamepad_t> gamepad) {
 }
 
 static cursor_t cursor{ renderer, "res\\cursor.png", Colors::White };
-static grid_cursor_t<CELL_SIZE> grid_cursor{ renderer, "res\\grid_cursor.png", Colors::Metals::Gold, game_map.map_origin, game_map.map_extent };
+static grid_cursor_t<CELL_SIZE> grid_cursor{ renderer, "res\\grid_cursor.png", Colors::Metals::Gold, game_map.origin, game_map.extent };
 
 static bool draw_cursor{ true };
 
@@ -100,8 +105,8 @@ static offset_2d_t camera_position{ 0 };
 
 static animated_sprite_t<3> player{ { animated_glyph_t<3>::generate_contiguous_indices<0xB0, 0xB2>(), Colors::Green }, { 0 } };
 
-static timer_t input_timer{ 250 };
-static timer_t epoch_timer{ 250 };
+static timer_t input_timer{ 250.0 };
+static timer_t epoch_timer{ 250.0 };
 static timer_t animation_timer{ 1000.0 / 3 };
 
 static wave_t sine_wave{ 1.0, 0.5, 1.0 };
@@ -226,10 +231,12 @@ void startup() {
 	constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored };
 	constexpr cell_state_t closed_state{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored };
 
-	game_map.set<map_region_t::Border>(closed_state);
-	game_map.generate<map_region_t::Interior>(random_engine, 0.425, 100, 4, closed_state, open_state);
+	for (extent_2d_t::product_t i{0}; i < game_map.area; ++i) {
+		game_map[i].set<zone_region_t::Border>(closed_state);
+		game_map[i].generate<zone_region_t::Interior>(random_engine, 0.425, 100, 4, closed_state, open_state);
+	}
 
-	auto player_position{ game_map.find_random<map_region_t::Interior>(random_engine, cell_trait_t::Open) };
+	auto player_position{ game_map[0].find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open) };
 
 	if (player_position.has_value()) {
 		player.position = player_position.value();

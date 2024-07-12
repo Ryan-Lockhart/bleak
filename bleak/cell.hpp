@@ -311,7 +311,7 @@ namespace bleak {
 			);
 		}
 
-		template<extent_2d_t AtlasSize> inline constexpr void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> position) const {
+		template<extent_2d_t AtlasSize> inline constexpr void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> position) const noexcept {
 			if (!explored) {
 				return;
 			}
