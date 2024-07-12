@@ -1,327 +1,67 @@
 #pragma once
 
-#include "bleak/log.hpp"
 #include "bleak/typedef.hpp"
 
-#include <algorithm>
 #include <exception>
-#include <format>
 #include <fstream>
 #include <iostream>
 #include <optional>
-#include <random>
 #include <string>
 
 #include "bleak/array.hpp"
 #include "bleak/atlas.hpp"
 #include "bleak/cardinal.hpp"
 #include "bleak/extent.hpp"
+#include "bleak/log.hpp"
 #include "bleak/offset.hpp"
-#include "extent/extent_2d.hpp"
+#include "bleak/random.hpp"
+#include "bleak/renderer.hpp"
 
 namespace bleak {
-	// generator for map randomization is fixed due to lack of support for function template partial specialization
-	using MapRandomizer = std::minstd_rand;
+	enum class map_region_t : u8 { None = 0, Interior = 1 << 0, Border = 1 << 1, All = Interior | Border };
 
-	enum class cell_trait_t : u8 { Open, Solid, Transperant, Opaque, Seen, Explored, Unseen, Unexplored, Dry, Damp, Cold, Warm, Odorless, Smelly, Safe, Toxic };
+	template<typename T> struct binary_applicator_t {
+		const T true_value;
+		const T false_value;
+		
+		constexpr binary_applicator_t() noexcept = delete;
 
-	struct cell_state_t {
-	  public:
-		bool solid : 1 { false };
-		bool opaque : 1 { false };
-		bool seen : 1 { false };
-		bool explored : 1 { false };
-		bool damp : 1 { false };
-		bool warm : 1 { false };
-		bool smelly : 1 { false };
-		bool toxic : 1 { false };
+		constexpr binary_applicator_t(cref<T> true_value, cref<T> false_value) noexcept : true_value{ true_value }, false_value{ false_value } {}
 
-		constexpr cell_state_t() noexcept = default;
+		constexpr binary_applicator_t(rval<T> true_value, rval<T> false_value) noexcept : true_value{ std::move(true_value) }, false_value{ std::move(false_value) } {}
 
-		constexpr cell_state_t(cref<cell_state_t> other) noexcept :
-			solid{ other.solid },
-			opaque{ other.opaque },
-			seen{ other.seen },
-			explored{ other.explored },
-			damp{ other.damp },
-			warm{ other.warm },
-			smelly{ other.smelly },
-			toxic{ other.toxic } {}
+		constexpr ref<binary_applicator_t<T>> operator=(cref<binary_applicator_t<T>> other) noexcept = delete;
+		constexpr ref<binary_applicator_t<T>> operator=(rval<binary_applicator_t<T>> other) noexcept = delete;
 
-		constexpr cell_state_t(rval<cell_state_t> other) noexcept :
-			solid{ other.solid },
-			opaque{ other.opaque },
-			seen{ other.seen },
-			explored{ other.explored },
-			damp{ other.damp },
-			warm{ other.warm },
-			smelly{ other.smelly },
-			toxic{ other.toxic } {}
+		constexpr ~binary_applicator_t() noexcept {}
 
-		constexpr ref<cell_state_t> operator=(cref<cell_state_t> other) noexcept {
-			if (this == &other) {
-				return *this;
-			}
+		constexpr T operator()(bool condition) const noexcept { return condition ? true_value : false_value; }
 
-			solid = other.solid;
-			opaque = other.opaque;
-			seen = other.seen;
-			explored = other.explored;
-			damp = other.damp;
-			warm = other.warm;
-			smelly = other.smelly;
-			toxic = other.toxic;
-
-			return *this;
-		}
-
-		constexpr ref<cell_state_t> operator=(rval<cell_state_t> other) noexcept {
-			if (this == &other) {
-				return *this;
-			}
-
-			solid = other.solid;
-			opaque = other.opaque;
-			seen = other.seen;
-			explored = other.explored;
-			damp = other.damp;
-			warm = other.warm;
-			smelly = other.smelly;
-			toxic = other.toxic;
-
-			return *this;
-		}
-
-		template<typename... Traits>
-		constexpr cell_state_t(Traits... traits)
-			requires(sizeof...(Traits) > 0) && (std::is_same_v<Traits, cell_trait_t> && ...)
+		template<typename Randomizer>
+		constexpr T operator()(ref<Randomizer> generator, f64 probability) const noexcept
+			requires is_random_engine<Randomizer>::value
 		{
-			for (cell_trait_t trait : { traits... }) {
-				set(trait);
-			}
+			return std::bernoulli_distribution{ probability }(generator) ? true_value : false_value;
 		}
 
-		constexpr inline cell_state_t operator+(cell_trait_t trait) const noexcept {
-			cell_state_t state{ *this };
-
-			state.set(trait);
-
-			return state;
-		}
-
-		constexpr inline ref<cell_state_t> operator+=(cell_trait_t trait) noexcept {
-			set(trait);
-
-			return *this;
-		}
-
-		constexpr inline cell_state_t operator-(cell_trait_t trait) const noexcept {
-			cell_state_t state{ *this };
-
-			state.unset(trait);
-
-			return state;
-		}
-
-		constexpr inline ref<cell_state_t> operator-=(cell_trait_t trait) noexcept {
-			unset(trait);
-
-			return *this;
-		}
-
-		constexpr void set(cell_trait_t trait) noexcept {
-			switch (trait) {
-			case cell_trait_t::Open:
-				solid = false;
-				break;
-			case cell_trait_t::Solid:
-				solid = true;
-				break;
-			case cell_trait_t::Transperant:
-				opaque = false;
-				break;
-			case cell_trait_t::Opaque:
-				opaque = true;
-				break;
-			case cell_trait_t::Unseen:
-				seen = false;
-				break;
-			case cell_trait_t::Seen:
-				seen = true;
-				break;
-			case cell_trait_t::Unexplored:
-				explored = false;
-				break;
-			case cell_trait_t::Explored:
-				explored = true;
-				break;
-			case cell_trait_t::Dry:
-				damp = false;
-				break;
-			case cell_trait_t::Damp:
-				damp = true;
-				break;
-			case cell_trait_t::Cold:
-				warm = false;
-				break;
-			case cell_trait_t::Warm:
-				warm = true;
-				break;
-			case cell_trait_t::Smelly:
-				smelly = true;
-				break;
-			case cell_trait_t::Odorless:
-				smelly = false;
-				break;
-			case cell_trait_t::Toxic:
-				toxic = true;
-				break;
-			case cell_trait_t::Safe:
-				toxic = false;
-				break;
-			default:
-				break;
-			}
-		}
-
-		constexpr void unset(cell_trait_t trait) noexcept {
-			switch (trait) {
-			case cell_trait_t::Open:
-				solid = true;
-				break;
-			case cell_trait_t::Solid:
-				solid = false;
-				break;
-			case cell_trait_t::Transperant:
-				opaque = true;
-				break;
-			case cell_trait_t::Opaque:
-				opaque = false;
-				break;
-			case cell_trait_t::Unseen:
-				seen = true;
-				break;
-			case cell_trait_t::Seen:
-				seen = false;
-				break;
-			case cell_trait_t::Unexplored:
-				explored = true;
-				break;
-			case cell_trait_t::Explored:
-				explored = false;
-				break;
-			case cell_trait_t::Dry:
-				damp = true;
-				break;
-			case cell_trait_t::Damp:
-				damp = false;
-				break;
-			case cell_trait_t::Cold:
-				warm = true;
-				break;
-			case cell_trait_t::Warm:
-				warm = false;
-				break;
-			case cell_trait_t::Smelly:
-				smelly = false;
-				break;
-			case cell_trait_t::Odorless:
-				smelly = true;
-				break;
-			case cell_trait_t::Toxic:
-				toxic = false;
-				break;
-			case cell_trait_t::Safe:
-				toxic = true;
-				break;
-			default:
-				break;
-			}
-		}
-
-		constexpr bool operator==(cref<cell_state_t> other) const noexcept {
-			return solid == other.solid && opaque == other.opaque && seen == other.seen && explored == other.explored && damp == other.damp && warm == other.warm && smelly == other.smelly && toxic == other.toxic;
-		}
-
-		constexpr bool operator!=(cref<cell_state_t> other) const noexcept {
-			return solid != other.solid || opaque != other.opaque || seen != other.seen || explored != other.explored || damp != other.damp || warm != other.warm || smelly != other.smelly || toxic != other.toxic;
-		}
-
-		constexpr bool contains(cell_trait_t trait) const noexcept {
-			switch (trait) {
-			case cell_trait_t::Solid:
-				return solid;
-			case cell_trait_t::Open:
-				return !solid;
-			case cell_trait_t::Opaque:
-				return opaque;
-			case cell_trait_t::Transperant:
-				return !opaque;
-			case cell_trait_t::Seen:
-				return seen;
-			case cell_trait_t::Unseen:
-				return !seen;
-			case cell_trait_t::Explored:
-				return explored;
-			case cell_trait_t::Unexplored:
-				return !explored;
-			case cell_trait_t::Damp:
-				return damp;
-			case cell_trait_t::Dry:
-				return !damp;
-			case cell_trait_t::Warm:
-				return warm;
-			case cell_trait_t::Cold:
-				return !warm;
-			case cell_trait_t::Smelly:
-				return smelly;
-			case cell_trait_t::Odorless:
-				return !smelly;
-			case cell_trait_t::Toxic:
-				return toxic;
-			case cell_trait_t::Safe:
-				return !toxic;
-			default:
-				return false;
-			}
-		}
-
-		inline constexpr std::string to_tooltip() const {
-			return std::format(
-				"The cell is physically {} and visibly {}.\nThe cell is {} and is {} by the player.\nIt is {} and {} to the touch.\nThe air within is {} and "
-				"{}.",
-				solid ? "blocked" : "open",
-				seen ? "blocked" : "open",
-				solid ? "in view" : "not in view",
-				explored ? "explored" : "unexplored",
-				damp ? "damp" : "dry",
-				warm ? "warm" : "cold",
-				smelly ? "pungent" : "odorless",
-				toxic ? "toxic" : "harmless"
-			);
-		}
-
-		inline constexpr operator std::string() const {
-			return std::format(
-				"[{}, {}, {}, {}, {}, {}, {}, {}]",
-				solid ? "Solid" : "Open",
-				opaque ? "Opaque" : "Transperant",
-				seen ? "Seen" : "Unseen",
-				explored ? "Explored" : "Unexplored",
-				damp ? "Damp" : "Dry",
-				warm ? "Warm" : "Cold",
-				smelly ? "Smelly" : "Odorless",
-				toxic ? "Toxic" : "Safe"
-			);
+		template<typename Randomizer, typename Distribution>
+		constexpr T operator()(ref<Randomizer> generator, ref<Distribution> distribution) const noexcept
+			requires is_random_engine<Randomizer>::value && is_random_distribution<Distribution>::value
+		{
+			return distribution(generator) ? true_value : false_value;
 		}
 	};
 
-	enum class map_region_t : u8 { None = 0, Interior = 1 << 0, Border = 1 << 1, All = Interior | Border };
+	template<typename T, extent_2d_t MapSize, extent_2d_t BorderSize = { 0, 0 }> class map_t {
 
-	template<extent_2d_t MapSize, extent_2d_t BorderSize = { 0, 0 }> class map_t {
+		static_assert(is_drawable<T>::value, "Map value type must be drawable.");
+
+		static_assert(MapSize > extent_2d_t::zero, "Map size must be greater than zero.");
+		static_assert(MapSize >= BorderSize, "Map size must be greater than or equal to border size.");
+
 	  private:
-		layer_t<cell_state_t, MapSize> state{};
-		layer_t<cell_state_t, MapSize> buffer{};
+		layer_t<T, MapSize> state{};
+		layer_t<T, MapSize> buffer{};
 
 	  public:
 		static constexpr extent_2d_t map_size{ MapSize };
@@ -340,11 +80,11 @@ namespace bleak {
 
 		inline map_t() {}
 
-		inline map_t(cref<std::string> path, cref<std::string> name) {
+		inline map_t(cref<std::string> path) {
 			std::ifstream file{};
 
 			try {
-				file.open(std::format("{}\\{}.map.bin", path, name), std::ios::in | std::ios::binary);
+				file.open(path, std::ios::in | std::ios::binary);
 
 				file.read(reinterpret_cast<str>(state.data_ptr()), state.byte_size);
 
@@ -354,11 +94,11 @@ namespace bleak {
 			}
 		}
 
-		inline map_t(cref<map_t<MapSize, BorderSize>> other) : state{ other.state }, buffer{} {}
+		inline map_t(cref<map_t<T, MapSize, BorderSize>> other) : state{ other.state }, buffer{} {}
 
-		inline map_t(rval<map_t<MapSize, BorderSize>> other) : state{ std::move(other.state) }, buffer{} {}
+		inline map_t(rval<map_t<T, MapSize, BorderSize>> other) : state{ std::move(other.state) }, buffer{} {}
 
-		inline ref<map_t<MapSize, BorderSize>> operator=(cref<map_t<MapSize, BorderSize>> other) noexcept {
+		inline ref<map_t<T, MapSize, BorderSize>> operator=(cref<map_t<T, MapSize, BorderSize>> other) noexcept {
 			if (this != &other) {
 				state = other.state;
 				buffer = {};
@@ -367,7 +107,7 @@ namespace bleak {
 			return *this;
 		}
 
-		inline ref<map_t<MapSize, BorderSize>> operator=(rval<map_t<MapSize, BorderSize>> other) noexcept {
+		inline ref<map_t<T, MapSize, BorderSize>> operator=(rval<map_t<T, MapSize, BorderSize>> other) noexcept {
 			if (this != &other) {
 				state = std::move(other.state);
 				buffer = {};
@@ -378,21 +118,41 @@ namespace bleak {
 
 		inline ~map_t() noexcept {}
 
-		inline cref<layer_t<cell_state_t, MapSize>> data() const noexcept { return state; }
+		inline cref<layer_t<T, MapSize>> data() const noexcept { return state; }
 
-		inline cptr<layer_t<cell_state_t, MapSize>> data_ptr() const noexcept { return &state; }
-		
-		inline ref<cell_state_t> operator[](extent_2d_t::product_t index) noexcept { return state[index]; }
+		inline cptr<layer_t<T, MapSize>> data_ptr() const noexcept { return &state; }
 
-		inline cref<cell_state_t> operator[](extent_2d_t::product_t index) const noexcept { return state[index]; }
+		inline layer_t<cref<T>, MapSize> view() const {
+			layer_t<cref<T>, MapSize> view{};
 
-		inline ref<cell_state_t> operator[](extent_2d_t::scalar_t x, extent_2d_t::scalar_t y) noexcept { return state[x, y]; }
+			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
+				view[i] = state[i];
+			}
 
-		inline cref<cell_state_t> operator[](extent_2d_t::scalar_t x, extent_2d_t::scalar_t y) const noexcept { return state[x, y]; }
+			return view;
+		}
 
-		inline ref<cell_state_t> operator[](cref<offset_2d_t> position) noexcept { return state[position]; }
+		inline layer_t<ref<T>, MapSize> proxy() {
+			layer_t<ref<T>, MapSize> proxy{};
 
-		inline cref<cell_state_t> operator[](cref<offset_2d_t> position) const noexcept { return state[position]; }
+			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
+				proxy[i] = ref<T>(state[i]);
+			}
+
+			return proxy;
+		}
+
+		inline ref<T> operator[](extent_2d_t::product_t index) noexcept { return state[index]; }
+
+		inline cref<T> operator[](extent_2d_t::product_t index) const noexcept { return state[index]; }
+
+		inline ref<T> operator[](extent_2d_t::scalar_t x, extent_2d_t::scalar_t y) noexcept { return state[x, y]; }
+
+		inline cref<T> operator[](extent_2d_t::scalar_t x, extent_2d_t::scalar_t y) const noexcept { return state[x, y]; }
+
+		inline ref<T> operator[](cref<offset_2d_t> position) noexcept { return state[position]; }
+
+		inline cref<T> operator[](cref<offset_2d_t> position) const noexcept { return state[position]; }
 
 		inline bool on_x_edge(cref<offset_2d_t> position) const noexcept { return position.x == map_origin.x || position.x == map_extent.x; }
 
@@ -422,235 +182,39 @@ namespace bleak {
 			return state;
 		}
 
-		template<map_region_t Region> inline bool within(cref<offset_2d_t> position) const noexcept;
-
-		template<> inline bool within<map_region_t::All>(cref<offset_2d_t> position) const noexcept { return state.valid(position); }
-
-		template<> inline bool within<map_region_t::Interior>(cref<offset_2d_t> position) const noexcept {
-			return position.x >= interior_origin.x && position.x <= interior_extent.x && position.y >= interior_origin.y && position.y <= interior_extent.y;
-		}
-
-		template<> inline bool within<map_region_t::Border>(cref<offset_2d_t> position) const noexcept {
-			return position.x < interior_origin.x || position.x > interior_extent.x || position.y < interior_origin.y || position.y > interior_extent.y;
-		}
-
-		template<> inline bool within<map_region_t::None>(cref<offset_2d_t> position) const noexcept { return false; }
-
-		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> set(cell_state_t cell_state) noexcept;
-
-		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> apply(cell_trait_t cell_trait) noexcept;
-		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> repeal(cell_trait_t cell_trait) noexcept;
-
-		template<> inline ref<map_t<MapSize, BorderSize>> set<map_region_t::All>(cell_state_t cell_state) noexcept {
-			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
-				state[i] = cell_state;
+		template<map_region_t Region> inline bool within(cref<offset_2d_t> position) const noexcept {
+			if constexpr (Region == map_region_t::All) {
+				return state.valid(position);
+			} else if constexpr (Region == map_region_t::Interior) {
+				return position.x >= interior_origin.x && position.x <= interior_extent.x && position.y >= interior_origin.y && position.y <= interior_extent.y;
+			} else if constexpr (Region == map_region_t::Border) {
+				return position.x < interior_origin.x || position.x > interior_extent.x || position.y < interior_origin.y || position.y > interior_extent.y;
 			}
 
-			return *this;
+			return false;
 		}
 
-		template<> inline ref<map_t<MapSize, BorderSize>> apply<map_region_t::All>(cell_trait_t cell_trait) noexcept {
-			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
-				state[i] += cell_trait;
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> repeal<map_region_t::All>(cell_trait_t cell_trait) noexcept {
-			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
-				state[i] -= cell_trait;
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> set<map_region_t::Interior>(cell_state_t cell_state) noexcept {
-			for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-				for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
-					state[x, y] = cell_state;
+		template<map_region_t Region> inline ref<map_t<T, MapSize, BorderSize>> set(cref<T> value) noexcept {
+			if constexpr (Region == map_region_t::All) {
+				for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
+					state[i] = value;
 				}
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> apply<map_region_t::Interior>(cell_trait_t cell_trait) noexcept {
-			for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-				for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
-					state[x, y] += cell_trait;
-				}
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> repeal<map_region_t::Interior>(cell_trait_t cell_trait) noexcept {
-			for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-				for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
-					state[x, y] -= cell_trait;
-				}
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> set<map_region_t::Border>(cell_state_t cell_state) noexcept {
-			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
-				if (y < interior_origin.y || y > interior_extent.y) {
-					for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
-						state[x, y] = cell_state;
-					}
-				} else {
-					for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
-						state[i, y] = cell_state;
-						state[map_extent.x - i, y] = cell_state;
+			} else if constexpr (Region == map_region_t::Interior) {
+				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						state[x, y] = value;
 					}
 				}
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> apply<map_region_t::Border>(cell_trait_t cell_trait) noexcept {
-			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
-				if (y < interior_origin.y || y > interior_extent.y) {
-					for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
-						state[x, y] += cell_trait;
-					}
-				} else {
-					for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
-						state[i, y] += cell_trait;
-						state[map_extent.x - i, y] += cell_trait;
-					}
-				}
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> repeal<map_region_t::Border>(cell_trait_t cell_trait) noexcept {
-			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
-				if (y < interior_origin.y || y > interior_extent.y) {
-					for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
-						state[x, y] -= cell_trait;
-					}
-				} else {
-					for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
-						state[i, y] -= cell_trait;
-						state[map_extent.x - i, y] -= cell_trait;
-					}
-				}
-			}
-
-			return *this;
-		}
-
-		inline void swap() noexcept {
-			std::swap(state, buffer);
-		}
-
-		inline void synchronize() noexcept {
-			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
-				buffer[i] = state[i];
-			}
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> set<map_region_t::None>(cell_state_t cell_state) noexcept { return *this; }
-
-		template<> inline ref<map_t<MapSize, BorderSize>> apply<map_region_t::None>(cell_trait_t cell_trait) noexcept { return *this; }
-
-		template<> inline ref<map_t<MapSize, BorderSize>> repeal<map_region_t::None>(cell_trait_t cell_trait) noexcept { return *this; }
-
-		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> randomize(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept;
-
-		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> randomize(ref<MapRandomizer> generator, f64 fill_percent, cell_trait_t trait) noexcept;
-
-		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::All>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept {
-			auto dis{ std::bernoulli_distribution{ fill_percent } };
-
-			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
-				state[i] = dis(generator) ? true_state : false_state;
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::All>(ref<MapRandomizer> generator, f64 fill_percent, cell_trait_t trait) noexcept {
-			auto dis{ std::bernoulli_distribution{ fill_percent } };
-
-			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
-				if (dis(generator)) {
-					state[i] += trait;
-				}
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::Interior>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept {
-			auto dis{ std::bernoulli_distribution{ fill_percent } };
-
-			for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-				for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
-					state[x, y] = dis(generator) ? true_state : false_state;
-				}
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::Interior>(ref<MapRandomizer> generator, f64 fill_percent, cell_trait_t trait) noexcept {
-			auto dis{ std::bernoulli_distribution{ fill_percent } };
-
-			for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-				for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
-					if (dis(generator)) {
-						state[x, y] += trait;
-					}
-				}
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::Border>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept {
-			auto dis{ std::bernoulli_distribution{ fill_percent } };
-
-			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
-				if (y < interior_origin.y || y > interior_extent.y) {
-					for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
-						state[x, y] = dis(generator) ? true_state : false_state;
-					}
-				} else {
-					for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
-						state[i, y] = dis(generator) ? true_state : false_state;
-						state[map_extent.x - i, y] = dis(generator) ? true_state : false_state;
-					}
-				}
-			}
-
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::Border>(ref<MapRandomizer> generator, f64 fill_percent, cell_trait_t trait) noexcept {
-			auto dis{ std::bernoulli_distribution{ fill_percent } };
-
-			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
-				if (y < interior_origin.y || y > interior_extent.y) {
-					for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
-						if (dis(generator)) {
-							state[x, y] += trait;
+			} else if constexpr (Region == map_region_t::Border) {
+				for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
+							state[x, y] = value;
 						}
-					}
-				} else {
-					for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
-						if (dis(generator)) {
-							state[i, y] += trait;
-						}
-
-						if (dis(generator)) {
-							state[map_extent.x - i, y] += trait;
+					} else {
+						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							state[i, y] = value;
+							state[map_extent.x - i, y] = value;
 						}
 					}
 				}
@@ -659,51 +223,163 @@ namespace bleak {
 			return *this;
 		}
 
-		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::None>(ref<MapRandomizer> generator, f64 fill_percent, cell_state_t true_state, cell_state_t false_state) noexcept { return *this; }
+		inline void swap_buffers() noexcept { std::swap(state, buffer); }
 
-		template<> inline ref<map_t<MapSize, BorderSize>> randomize<map_region_t::None>(ref<MapRandomizer> generator, f64 fill_percent, cell_trait_t trait) noexcept { return *this; }
+		template<bool Buffer = true> inline void synchronize() noexcept {
+			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
+				if constexpr (Buffer) {
+					buffer[i] = state[i];
+				} else {
+					state[i] = buffer[i];
+				}
+			}
+		}
 
-		inline u8 neighbour_count(cref<offset_2d_t> position, cell_state_t mask) const noexcept {
+		template<map_region_t Region, typename Randomizer>
+		inline ref<map_t<T, MapSize, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<T> true_value, cref<T> false_value) noexcept
+			requires is_random_engine<Randomizer>::value
+		{
+			if constexpr (Region == map_region_t::None) {
+				return *this;
+			}
+
+			auto dis{ std::bernoulli_distribution{ fill_percent } };
+
+			if constexpr (Region == map_region_t::All) {
+				for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
+					state[i] = dis(generator) ? true_value : false_value;
+				}
+			} else if constexpr (Region == map_region_t::Interior) {
+				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						state[x, y] = dis(generator) ? true_value : false_value;
+					}
+				}
+			} else if constexpr (Region == map_region_t::Border) {
+				for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
+							state[x, y] = dis(generator) ? true_value : false_value;
+						}
+					} else {
+						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							state[i, y] = dis(generator) ? true_value : false_value;
+							state[map_extent.x - i, y] = dis(generator) ? true_value : false_value;
+						}
+					}
+				}
+			}
+
+			return *this;
+		}
+
+		template<map_region_t Region, typename Randomizer>
+		inline ref<map_t<T, MapSize, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<T>> applicator) noexcept
+			requires is_random_engine<Randomizer>::value
+		{
+			if constexpr (Region == map_region_t::None) {
+				return *this;
+			}
+
+			auto dis{ std::bernoulli_distribution{ fill_percent } };
+
+			if constexpr (Region == map_region_t::All) {
+				for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
+					state[i] = applicator(generator, dis);
+				}
+			} else if constexpr (Region == map_region_t::Interior) {
+				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						state[x, y] = applicator(generator, dis);
+					}
+				}
+			} else if constexpr (Region == map_region_t::Border) {
+				for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
+							state[x, y] = applicator(generator, dis);
+						}
+					} else {
+						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							state[i, y] = applicator(generator, dis);
+							state[map_extent.x - i, y] = applicator(generator, dis);
+						}
+					}
+				}
+			}
+
+			return *this;
+		}
+
+		template<bool Safe = true> inline u8 neighbour_count(cref<offset_2d_t> position, cref<T> value) const noexcept {
 			u8 count{ 0 };
-			cardinal_t edge{ edge_state(position) };
 
-			if (edge == cardinal_t::Northwest || state[position + offset_2d_t::northwest] == mask) {
-				++count;
-			}
+			if constexpr (Safe) {
+				cardinal_t edge{ edge_state(position) };
 
-			if (edge == cardinal_t::North || state[position + offset_2d_t::north] == mask) {
-				++count;
-			}
+				if (edge == cardinal_t::Northwest || state[position + offset_2d_t::northwest] == value) {
+					++count;
+				}
 
-			if (edge == cardinal_t::Northeast || state[position + offset_2d_t::northeast] == mask) {
-				++count;
-			}
+				if (edge == cardinal_t::North || state[position + offset_2d_t::north] == value) {
+					++count;
+				}
 
-			if (edge == cardinal_t::West || state[position + offset_2d_t::west] == mask) {
-				++count;
-			}
+				if (edge == cardinal_t::Northeast || state[position + offset_2d_t::northeast] == value) {
+					++count;
+				}
 
-			if (edge == cardinal_t::East || state[position + offset_2d_t::east] == mask) {
-				++count;
-			}
+				if (edge == cardinal_t::West || state[position + offset_2d_t::west] == value) {
+					++count;
+				}
 
-			if (edge == cardinal_t::Southwest || state[position + offset_2d_t::southwest] == mask) {
-				++count;
-			}
+				if (edge == cardinal_t::East || state[position + offset_2d_t::east] == value) {
+					++count;
+				}
 
-			if (edge == cardinal_t::South || state[position + offset_2d_t::south] == mask) {
-				++count;
-			}
+				if (edge == cardinal_t::Southwest || state[position + offset_2d_t::southwest] == value) {
+					++count;
+				}
 
-			if (edge == cardinal_t::Southeast || state[position + offset_2d_t::southeast] == mask) {
-				++count;
+				if (edge == cardinal_t::South || state[position + offset_2d_t::south] == value) {
+					++count;
+				}
+
+				if (edge == cardinal_t::Southeast || state[position + offset_2d_t::southeast] == value) {
+					++count;
+				}
+			} else {
+				if (state[position + offset_2d_t::northwest] == value) {
+					++count;
+				}
+				if (state[position + offset_2d_t::north] == value) {
+					++count;
+				}
+				if (state[position + offset_2d_t::northeast] == value) {
+					++count;
+				}
+				if (state[position + offset_2d_t::west] == value) {
+					++count;
+				}
+				if (state[position + offset_2d_t::east] == value) {
+					++count;
+				}
+				if (state[position + offset_2d_t::southwest] == value) {
+					++count;
+				}
+				if (state[position + offset_2d_t::south] == value) {
+					++count;
+				}
+				if (state[position + offset_2d_t::southeast] == value) {
+					++count;
+				}
 			}
 
 			return count;
 		}
 
-		inline void modulate(cref<offset_2d_t> position, u8 threshold, cell_state_t true_state, cell_state_t false_state) noexcept {
-			u8 neighbours{ neighbour_count(position, true_state) };
+		template<bool Safe = true> inline void modulate(cref<offset_2d_t> position, u8 threshold, cref<T> true_state, cref<T> false_state) noexcept {
+			u8 neighbours{ neighbour_count<Safe>(position, true_state) };
 
 			if (neighbours > threshold) {
 				buffer[position] = true_state;
@@ -712,140 +388,267 @@ namespace bleak {
 			}
 		}
 
-		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> automatize(u8 threshold, cell_state_t true_state, cell_state_t false_state) noexcept;
+		template<bool Safe = true> inline void modulate(cref<offset_2d_t> position, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
+			u8 neighbours{ neighbour_count<Safe>(position, applicator.true_value) };
 
-		template<> inline ref<map_t<MapSize, BorderSize>> automatize<map_region_t::All>(u8 threshold, cell_state_t true_state, cell_state_t false_state) noexcept {
-			for (extent_2d_t::scalar_t y{ map_origin.y }; y <= map_extent.y; ++y) {
-				for (extent_2d_t::scalar_t x{ map_origin.x }; x <= map_extent.x; ++x) {
-					modulate({ x, y }, threshold, true_state, false_state);
-				}
+			if (neighbours > threshold) {
+				buffer[position] = applicator.true_value;
+			} else if (neighbours < threshold) {
+				buffer[position] = applicator.false_value;
 			}
-
-			return *this;
 		}
 
-		template<> inline ref<map_t<MapSize, BorderSize>> automatize<map_region_t::Interior>(u8 threshold, cell_state_t true_state, cell_state_t false_state) noexcept {
-			for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-				for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
-					modulate({ x, y }, threshold, true_state, false_state);
-				}
+		template<map_region_t Region> inline ref<map_t<T, MapSize, BorderSize>> automatize(u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
+			if constexpr (Region == map_region_t::None) {
+				return *this;
 			}
 
-			return *this;
-		}
-
-		template<> inline ref<map_t<MapSize, BorderSize>> automatize<map_region_t::Border>(u8 threshold, cell_state_t true_state, cell_state_t false_state) noexcept {
-			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
-				if (y < interior_origin.y || y > interior_extent.y) {
-					for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
-						modulate({ x, y }, threshold, true_state, false_state);
-					}
-				} else {
-					for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
-						modulate({ i, y }, threshold, true_state, false_state);
-						modulate({ map_extent.x - i, y }, threshold, true_state, false_state);
+			if constexpr (Region == map_region_t::All) {
+				for (extent_2d_t::scalar_t y{ map_origin.y }; y <= map_extent.y; ++y) {
+					for (extent_2d_t::scalar_t x{ map_origin.x }; x <= map_extent.x; ++x) {
+						modulate({ x, y }, threshold, true_value, false_state);
 					}
 				}
+			} else if constexpr (Region == map_region_t::Interior) {
+				constexpr bool is_not_safe{ border_size.w > 0 && border_size.h > 0 };
+
+				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						modulate<is_not_safe>({ x, y }, threshold, true_value, false_state);
+					}
+				}
+			} else if constexpr (Region == map_region_t::Border) {
+				for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
+							modulate({ x, y }, threshold, true_value, false_state);
+						}
+					} else {
+						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							modulate({ i, y }, threshold, true_value, false_state);
+							modulate({ map_extent.x - i, y }, threshold, true_value, false_state);
+						}
+					}
+				}
 			}
 
 			return *this;
 		}
 
-		template<> inline ref<map_t<MapSize, BorderSize>> automatize<map_region_t::None>(u8 threshold, cell_state_t true_state, cell_state_t false_state) noexcept { return *this; }
+		template<map_region_t Region> inline ref<map_t<T, MapSize, BorderSize>> automatize(u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
+			if constexpr (Region == map_region_t::None) {
+				return *this;
+			}
 
-		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> automatize(u32 iterations, u8 threshold, cell_state_t true_state, cell_state_t false_state) noexcept {
+			if constexpr (Region == map_region_t::All) {
+				for (extent_2d_t::scalar_t y{ map_origin.y }; y <= map_extent.y; ++y) {
+					for (extent_2d_t::scalar_t x{ map_origin.x }; x <= map_extent.x; ++x) {
+						modulate({ x, y }, threshold, applicator);
+					}
+				}
+			} else if constexpr (Region == map_region_t::Interior) {
+				constexpr bool is_not_safe{ border_size.w > 0 && border_size.h > 0 };
+
+				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						modulate<is_not_safe>({ x, y }, threshold, applicator);
+					}
+				}
+			} else if constexpr (Region == map_region_t::Border) {
+				for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
+							modulate({ x, y }, threshold, applicator);
+						}
+					} else {
+						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							modulate({ i, y }, threshold, applicator);
+							modulate({ map_extent.x - i, y }, threshold, applicator);
+						}
+					}
+				}
+			}
+
+			return *this;
+		}
+
+		template<map_region_t Region> inline ref<map_t<T, MapSize, BorderSize>> automatize(u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
+			if constexpr (Region == map_region_t::None) {
+				return *this;
+			}
+
 			for (u32 i{ 0 }; i < iterations; ++i) {
-				automatize<Region>(threshold, true_state, false_state);
-				swap();
+				automatize<Region>(threshold, true_value, false_state);
+				swap_buffers();
 			}
 
 			return *this;
 		}
 
-		template<map_region_t Region> inline ref<map_t<MapSize, BorderSize>> generate(ref<MapRandomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cell_state_t true_state, cell_state_t false_state) noexcept {
-			randomize<Region>(generator, fill_percent, true_state, false_state);
+		template<map_region_t Region> inline ref<map_t<T, MapSize, BorderSize>> automatize(u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
+			if constexpr (Region == map_region_t::None) {
+				return *this;
+			}
+
+			for (u32 i{ 0 }; i < iterations; ++i) {
+				automatize<Region>(threshold, applicator);
+				swap_buffers();
+			}
+
+			return *this;
+		}
+
+		template<map_region_t Region, typename Randomizer>
+		inline ref<map_t<T, MapSize, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept
+			requires is_random_engine<Randomizer>::value
+		{
+			if constexpr (Region == map_region_t::None) {
+				return *this;
+			}
+
+			randomize<Region>(generator, fill_percent, true_value, false_state);
 			synchronize();
-			
-			automatize<Region>(iterations, threshold, true_state, false_state);
-			swap();
+
+			automatize<Region>(iterations, threshold, true_value, false_state);
+			swap_buffers();
 
 			return *this;
 		}
 
-		template<map_region_t Region> inline std::optional<offset_2d_t> find_random_cell(ref<MapRandomizer> generator, cell_trait_t trait) const noexcept;
+		template<map_region_t Region, typename Randomizer>
+		inline ref<map_t<T, MapSize, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept
+			requires is_random_engine<Randomizer>::value
+		{
+			if constexpr (Region == map_region_t::None) {
+				return *this;
+			}
 
-		template<> inline std::optional<offset_2d_t> find_random_cell<map_region_t::All>(ref<MapRandomizer> generator, cell_trait_t trait) const noexcept {
-			std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, map_extent.x };
-			std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, map_extent.y };
+			randomize<Region>(generator, fill_percent, applicator);
+			synchronize();
 
-			for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
-				const offset_2d_t pos{ x_dis(generator), y_dis(generator) };
+			automatize<Region>(iterations, threshold, applicator);
+			swap_buffers();
 
-				if (state[pos].contains(trait)) {
-					return pos;
+			return *this;
+		}
+
+		template<map_region_t Region, typename Randomizer>
+		inline std::optional<offset_2d_t> find_random(ref<Randomizer> generator, cref<T> value) const noexcept
+			requires is_random_engine<Randomizer>::value
+		{
+			if constexpr (Region == map_region_t::None) {
+				return *this;
+			}
+
+			if constexpr (Region == map_region_t::All) {
+				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, map_extent.x };
+				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, map_extent.y };
+
+				for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
+					const offset_2d_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (state[pos] == value) {
+						return pos;
+					}
 				}
+
+				return std::nullopt;
+			} else if constexpr (Region == map_region_t::Interior) {
+				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
+				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
+
+				for (extent_2d_t::product_t i{ 0 }; i < interior_area; ++i) {
+					const offset_2d_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (state[pos] == value) {
+						return pos;
+					}
+				}
+
+				return std::nullopt;
+			} else if constexpr (Region == map_region_t::Border) {
+				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
+				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
+
+				for (extent_2d_t::product_t i{ 0 }; i < border_area; ++i) {
+					auto x{ x_dis(generator) };
+					auto y{ y_dis(generator) };
+
+					x = x < border_size.w ? x : map_extent.x - x;
+					y = y < border_size.h ? y : map_extent.y - y;
+
+					const offset_2d_t pos{ x, y };
+
+					if (state[pos] == value) {
+						return pos;
+					}
+				}
+
+				return std::nullopt;
 			}
 
 			return std::nullopt;
 		}
 
-		template<> inline std::optional<offset_2d_t> find_random_cell<map_region_t::Interior>(ref<MapRandomizer> generator, cell_trait_t trait) const noexcept {
-			std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
-			std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
+		template<map_region_t Region, typename Randomizer, typename U>
+		inline std::optional<offset_2d_t> find_random(ref<Randomizer> generator, cref<U> value) const noexcept
+			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
+		{
+			if constexpr (Region == map_region_t::All) {
+				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, map_extent.x };
+				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, map_extent.y };
 
-			for (extent_2d_t::product_t i{ 0 }; i < interior_area; ++i) {
-				const offset_2d_t pos{ x_dis(generator), y_dis(generator) };
+				for (extent_2d_t::product_t i{ 0 }; i < map_area; ++i) {
+					const offset_2d_t pos{ x_dis(generator), y_dis(generator) };
 
-				if (state[pos].contains(trait)) {
-					return pos;
+					if (state[pos] == value) {
+						return pos;
+					}
 				}
+
+				return std::nullopt;
+			} else if constexpr (Region == map_region_t::Interior) {
+				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
+				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
+
+				for (extent_2d_t::product_t i{ 0 }; i < interior_area; ++i) {
+					const offset_2d_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (state[pos] == value) {
+						return pos;
+					}
+				}
+
+				return std::nullopt;
+			} else if constexpr (Region == map_region_t::Border) {
+				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
+				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
+
+				for (extent_2d_t::product_t i{ 0 }; i < border_area; ++i) {
+					auto x{ x_dis(generator) };
+					auto y{ y_dis(generator) };
+
+					x = x < border_size.w ? x : map_extent.x - x;
+					y = y < border_size.h ? y : map_extent.y - y;
+
+					const offset_2d_t pos{ x, y };
+
+					if (state[pos] == value) {
+						return pos;
+					}
+				}
+
+				return std::nullopt;
 			}
 
 			return std::nullopt;
 		}
-
-		template<> inline std::optional<offset_2d_t> find_random_cell<map_region_t::Border>(ref<MapRandomizer> generator, cell_trait_t trait) const noexcept {
-			std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
-			std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
-
-			for (extent_2d_t::product_t i{ 0 }; i < border_area; ++i) {
-				auto x { x_dis(generator) };
-				auto y { y_dis(generator) };
-				
-				x = x < border_size.w ? x : map_extent.x - x;
-				y = y < border_size.h ? y : map_extent.y - y;
-
-				const offset_2d_t pos{ x, y };
-
-				if (state[pos].contains(trait)) {
-					return pos;
-				}
-			}
-
-			return std::nullopt;
-		}
-
-		template<> inline std::optional<offset_2d_t> find_random_cell<map_region_t::None>(ref<MapRandomizer> generator, cell_trait_t trait) const noexcept { return std::nullopt; }
 
 		template<extent_2d_t AtlasSize> inline void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas) const {
 			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
 				for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
 					const offset_2d_t pos{ x, y };
-					const extent_2d_t::product_t idx{ flatten<map_size>(x, y) };
-					const cell_state_t cell_state{ operator[](idx) };
-
-					if (cell_state.contains(cell_trait_t::Unexplored)) {
-						continue;
-					}
-
-					const bool is_solid{ cell_state.contains(cell_trait_t::Solid) };
-					const bool is_seen{ cell_state.contains(cell_trait_t::Seen) };
-
-					const u8 rgb{ is_solid ? u8{ 0xC0 } : u8{ 0x40 } };
-					const u8 alpha{ is_seen ? u8{ 0xFF } : u8{ 0x80 } };
-					const u8 glyph{ is_solid ? u8{ 0xB2 } : u8{ 0xB0 } };
-
-					atlas.draw(renderer, glyph_t{ glyph, { rgb, rgb, rgb, alpha } }, pos);
+					(*this)[pos].draw(renderer, atlas, pos);
 				}
 			}
 		}
@@ -854,30 +657,16 @@ namespace bleak {
 			for (extent_2d_t::scalar_t y{ 0 }; y < map_size.h; ++y) {
 				for (extent_2d_t::scalar_t x{ 0 }; x < map_size.w; ++x) {
 					const offset_2d_t pos{ x, y };
-					const usize idx{ flatten<map_size>(pos) };
-					const cell_state_t cell_state{ operator[](idx) };
-
-					if (cell_state.contains(cell_trait_t::Unexplored)) {
-						continue;
-					}
-
-					const bool is_solid{ cell_state.contains(cell_trait_t::Solid) };
-					const bool is_seen{ cell_state.contains(cell_trait_t::Seen) };
-
-					const u8 rgb{ is_solid ? u8{ 0xC0 } : u8{ 0x40 } };
-					const u8 alpha{ is_seen ? u8{ 0xFF } : u8{ 0x80 } };
-					const u8 glyph{ is_solid ? u8{ 0xB2 } : u8{ 0xB0 } };
-
-					atlas.draw(renderer, glyph_t{ glyph, { rgb, rgb, rgb, alpha } }, pos + offset);
+					(*this)[pos].draw(renderer, atlas, pos + offset);
 				}
 			}
 		}
 
-		inline bool serialize(cref<std::string> path, cref<std::string> name) const noexcept {
+		inline bool serialize(cref<std::string> path) const noexcept {
 			std::ofstream file{};
 
 			try {
-				file.open(std::format("{}\\{}.map.bin", path, name), std::ios::out | std::ios::binary);
+				file.open(path, std::ios::out | std::ios::binary);
 
 				file.write(reinterpret_cast<cstr>(state.data_ptr()), state.byte_size);
 

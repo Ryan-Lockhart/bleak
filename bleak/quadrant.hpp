@@ -41,7 +41,7 @@ namespace bleak {
 		constexpr quadrant_t(c_quadrant_t quadrant) noexcept : c_quadrant_t{ .value = quadrant.value } {}
 
 		constexpr quadrant_t(cardinal_t direction) noexcept {
-			switch (direction) {
+			switch (static_cast<u8>(direction)) {
 			case cardinal_t::Southeast:
 				upper = false;
 				left = false;

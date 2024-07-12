@@ -6,7 +6,6 @@
 
 #include "bleak/extent.hpp"
 #include "bleak/offset.hpp"
-#include "extent/extent_1d.hpp"
 
 namespace bleak {
 	template<typename T> struct fwd_iter_t;

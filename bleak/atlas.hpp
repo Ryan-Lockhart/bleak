@@ -152,7 +152,7 @@ namespace bleak {
 				return;
 			}
 
-			const extent_2d_t size{ static_cast<extent_2d_t>(Text::calculate_size(runes)) * alignment };
+			const extent_2d_t size{ static_cast<offset_2d_t>(alignment) * Text::calculate_size(runes) };
 			const offset_2d_t alignment_offs{ size - size / 2 };
 
 			offset_2d_t carriage_pos{ 0 };
@@ -185,7 +185,7 @@ namespace bleak {
 				return;
 			}
 
-			const extent_2d_t size{ static_cast<extent_2d_t>(Text::calculate_size(runes)) * alignment };
+			const extent_2d_t size{ static_cast<offset_2d_t>(alignment) * Text::calculate_size(runes) };
 			const extent_2d_t alignment_offs{ size - size / 2 };
 
 			offset_2d_t carriage_pos{ 0 };
@@ -251,7 +251,7 @@ namespace bleak {
 				return;
 			}
 
-			const extent_2d_t size{ static_cast<extent_2d_t>(Text::calculate_size(text)) * alignment };
+			const extent_2d_t size{ static_cast<offset_2d_t>(alignment) * Text::calculate_size(text) };
 			const offset_2d_t alignment_offs{ size - size / 2 };
 
 			offset_2d_t carriage_pos{ 0 };

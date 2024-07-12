@@ -503,14 +503,14 @@ namespace bleak {
 			auto iter{ slots.find(id) };
 
 			if (iter == slots.end()) {
-				error_log.add("attempting to lease gamepad that does not exist!\n");
+				error_log.add("attempting to lease gamepad slot that does not exist!\n");
 				return nullptr;
 			}
 
 			ref<gamepad_slot_t> target{ iter->second };
 
 			if (target.has_callbacks()) {
-				error_log.add("attempting to lease gamepad that is already leased!\n");
+				error_log.add("attempting to lease gamepad slot that is already leased!\n");
 				return nullptr;
 			}
 
@@ -524,12 +524,12 @@ namespace bleak {
 			auto iter{ slots.find(id) };
 
 			if (iter == slots.end()) {
-				error_log.add("attempting to release gamepad that does not exist!\n");
+				error_log.add("attempting to release gamepad slot that does not exist!\n");
 				return;
 			}
 
 			if (!iter->second.has_callbacks()) {
-				error_log.add("attempting to release gamepad that is not leased!\n");
+				error_log.add("attempting to release gamepad slot that is not leased!\n");
 				return;
 			}
 

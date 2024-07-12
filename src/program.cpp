@@ -1,14 +1,17 @@
+#include "bleak/extent/extent_2d.hpp"
 #include "bleak/typedef.hpp"
 
 #include <cassert>
 #include <cstdlib>
 #include <format>
+#include <iostream>
 #include <random>
 
 #include <SDL.h>
 
 #include "bleak/atlas.hpp"
 #include "bleak/cardinal.hpp"
+#include "bleak/cell.hpp"
 #include "bleak/clock.hpp"
 #include "bleak/cursor.hpp"
 #include "bleak/extent.hpp"
@@ -62,9 +65,10 @@ static atlas_t<ATLAS_SIZE> ui_atlas{ renderer, "res\\glyphs_8x8.png", UNIVERSAL_
 static std::minstd_rand random_engine{ std::random_device{}() };
 
 constexpr extent_2d_t MAP_SIZE{ GAME_GRID_SIZE };
+constexpr extent_2d_t BORDER_SIZE{ 2, 2 };
 
-//static map_t<MAP_SIZE, { 2, 2 }> game_map{};
-static map_t<MAP_SIZE, { 2, 2 }> game_map{"res", "test"};
+// static map_t<MAP_SIZE, { 2, 2 }> game_map{};
+static map_t<cell_state_t, MAP_SIZE, BORDER_SIZE> game_map{ "res\\test.map.bin" };
 
 constexpr extent_2d_t CELL_SIZE{ 16, 16 };
 
@@ -102,13 +106,13 @@ static timer_t animation_timer{ 1000.0 / 3 };
 
 static wave_t sine_wave{ 1.0, 0.5, 1.0 };
 
+static cardinal_t direction_test{ cardinal_t::Central };
+
 #define main SDL_main
 
 using namespace bleak;
 
 bool camera_movement() {
-	return false;
-
 	offset_2d_t direction{};
 
 	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::North])) {
@@ -127,6 +131,10 @@ bool camera_movement() {
 	if (gamepad_enabled && direction == offset_2d_t::zero) {
 		direction = primary_gamepad->right_stick.current_state;
 	}
+
+	// test!
+	direction_test = direction;
+	return false;
 
 	if (direction != offset_2d_t::zero) {
 		camera_position -= direction;
@@ -215,12 +223,13 @@ void startup() {
 		message_log.add("no gamepad detected\n");
 	}
 
-	game_map.set<map_region_t::Border>(cell_state_t{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored });
-	game_map.generate<map_region_t::Interior>(
-		random_engine, 0.425, 100, 4, { cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored }, { cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored }
-	);
+	constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored };
+	constexpr cell_state_t closed_state{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored };
 
-	auto player_position{ game_map.find_random_cell<map_region_t::Interior>(random_engine, cell_trait_t::Open) };
+	game_map.set<map_region_t::Border>(closed_state);
+	game_map.generate<map_region_t::Interior>(random_engine, 0.425, 100, 4, closed_state, open_state);
+
+	auto player_position{ game_map.find_random<map_region_t::Interior>(random_engine, cell_trait_t::Open) };
 
 	if (player_position.has_value()) {
 		player.position = player_position.value();
@@ -293,9 +302,10 @@ void render() {
 
 	runes_t fps_text{ std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::Green };
 
-	extent_2d_t fps_text_size{ Text::calculate_size(fps_text) };
-	offset_2d_t fps_text_pos{ UI_GRID_SIZE.w / 2 - fps_text_size.w / 2, UI_GRID_SIZE.h + 1 };
-	ui_atlas.draw(renderer, fps_text, fps_text_pos);
+	// extent_2d_t fps_text_size{ Text::calculate_size(fps_text) };
+	// offset_2d_t fps_text_pos{ UI_GRID_SIZE.w / 2 - fps_text_size.w / 2, UI_GRID_SIZE.h + 1 };
+	offset_2d_t fps_text_pos{ UI_GRID_SIZE.w / 2, UI_GRID_SIZE.h + 1 };
+	ui_atlas.draw(renderer, fps_text, fps_text_pos, direction_test);
 
 	runes_t title_text{ GAME_TITLE };
 
@@ -314,7 +324,7 @@ void shutdown() {
 	message_log.flush_to_file();
 	error_log.flush_to_file();
 
-	//game_map.serialize("res", "test");
+	// game_map.serialize("res", "test");
 }
 
 void terminate_prematurely() {

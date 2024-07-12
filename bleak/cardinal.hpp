@@ -87,7 +87,7 @@ namespace bleak {
 		constexpr cardinal_t operator-() const noexcept { return cardinal_t { (u8) ~(u8) * this }; }
 
 		constexpr cardinal_t operator+(cref<cardinal_t> other) const noexcept {
-			cardinal_t sum { static_cast<cardinal_t>(*this | other) };
+			cardinal_t sum { static_cast<cardinal_t>(static_cast<u8>(*this) | static_cast<u8>(other)) };
 
 			sum.neutralize();
 
@@ -95,7 +95,7 @@ namespace bleak {
 		}
 
 		constexpr cardinal_t operator-(cref<cardinal_t> other) const noexcept {
-			cardinal_t diff { static_cast<cardinal_t>(*this & ~other) };
+			cardinal_t diff { static_cast<cardinal_t>(static_cast<u8>(*this) & ~static_cast<u8>(other)) };
 
 			diff.neutralize();
 
@@ -128,11 +128,11 @@ namespace bleak {
 
 		constexpr bool is_3d() const noexcept { return up || down; }
 
-		constexpr bool is_long_neutral() const noexcept { return north && south; }
+		constexpr bool is_long_neutral() const noexcept { return (north && south) || (!north && !south); }
 
-		constexpr bool is_lat_neutral() const noexcept { return east && west; }
+		constexpr bool is_lat_neutral() const noexcept { return (east && west) || (!east && !west); }
 
-		constexpr bool is_vert_neutral() const noexcept { return up && down; }
+		constexpr bool is_vert_neutral() const noexcept { return (up && down) || (!up && !down); }
 
 		constexpr void clear_long() noexcept { north = south = false; }
 
@@ -154,10 +154,10 @@ namespace bleak {
 			}
 		}
 
-		constexpr operator u8() const noexcept { return value; }
+		constexpr explicit operator u8() const noexcept { return value; }
 
-		constexpr operator std::string() const noexcept {
-			switch (*this) {
+		constexpr explicit operator std::string() const noexcept {
+			switch (static_cast<u8>(*this)) {
 			case cardinal_t::Central:
 				return "central";
 			case cardinal_t::North:

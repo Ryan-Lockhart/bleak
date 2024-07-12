@@ -27,10 +27,7 @@ extern "C" {
 		scalar_t x{ 0 };
 		scalar_t y{ 0 };
 
-		static_assert(
-			(product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max() <= std::numeric_limits<product_t>::max(),
-			"product_t is too small for scalar_t"
-		);
+		static_assert((product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max() <= std::numeric_limits<product_t>::max(), "product_t is too small for scalar_t");
 	} c_offset_2d_t;
 }
 
@@ -79,16 +76,29 @@ namespace bleak {
 		constexpr offset_2d_t(scalar_t x, scalar_t y) noexcept : underlying_t{ x, y } {}
 
 		template<typename T>
-			requires std::is_convertible<T, scalar_t>::value
+			requires std::is_convertible<T, scalar_t>::value && is_numeric<T>::value
 		constexpr offset_2d_t(T scalar) noexcept : underlying_t{ scalar_cast(scalar), scalar_cast(scalar) } {}
 
 		template<typename T>
-			requires std::is_convertible<T, scalar_t>::value
+			requires std::is_convertible<T, scalar_t>::value && is_numeric<T>::value
 		constexpr offset_2d_t(T x, T y) noexcept : underlying_t{ scalar_cast(x), scalar_cast(y) } {}
 
 		template<typename X, typename Y>
-			requires std::is_convertible<X, scalar_t>::value && std::is_convertible<Y, scalar_t>::value
+			requires std::is_convertible<X, scalar_t>::value && std::is_convertible<Y, scalar_t>::value && is_numeric<X>::value && is_numeric<Y>::value
 		constexpr offset_2d_t(X x, Y y) noexcept : underlying_t{ scalar_cast(x), scalar_cast(y) } {}
+
+		constexpr offset_2d_t(cref<cardinal_t> direction) noexcept : underlying_t{} {
+			if (direction == cardinal_t::Central) {
+				return;
+			} else {
+				if (!direction.is_lat_neutral()) {
+					x = direction.east ? 1 : -1;
+				}
+				if (!direction.is_long_neutral()) {
+					y = direction.north ? -1 : 1;
+				}
+			}
+		}
 
 		constexpr product_t dot() const noexcept { return product_cast(x) * x + product_cast(y) * y; }
 
@@ -127,9 +137,7 @@ namespace bleak {
 
 		template<> constexpr product_t distance(cref<offset_2d_t> start, cref<offset_2d_t> end) noexcept { return (end - start).length<product_t>(); }
 
-		template<typename T = product_t> static constexpr offset_2d_t direction(cref<offset_2d_t> start, cref<offset_2d_t> end) noexcept {
-			return (end - start).normalized<T>();
-		}
+		template<typename T = product_t> static constexpr offset_2d_t direction(cref<offset_2d_t> start, cref<offset_2d_t> end) noexcept { return (end - start).normalized<T>(); }
 
 		template<typename T = product_t> constexpr ref<offset_2d_t> normalize() noexcept {
 			const auto len = length<T>();
