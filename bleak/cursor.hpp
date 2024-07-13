@@ -56,9 +56,9 @@ namespace bleak {
 
 		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<color_t> color) : texture{ renderer, path }, position{}, min{}, max{}, use_bounds{ false }, color{ color } {}
 
-		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, offset_2d_t min, offset_2d_t max) : texture{ renderer, path }, position{}, min{ min }, max{ max }, use_bounds{ true }, color{ Colors::White } {}
+		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<offset_2d_t> min, cref<offset_2d_t> max) : texture{ renderer, path }, position{}, min{ min }, max{ max }, use_bounds{ true }, color{ Colors::White } {}
 
-		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<color_t> color, offset_2d_t min, offset_2d_t max) : texture{ renderer, path }, position{}, min{ min }, max{ max }, use_bounds{ true }, color{ color } {}
+		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<color_t> color, cref<offset_2d_t> min, cref<offset_2d_t> max) : texture{ renderer, path }, position{}, min{ min }, max{ max }, use_bounds{ true }, color{ color } {}
 
 		inline void update() {
 			const offset_2d_t pos{ Mouse::get_position() / size };
@@ -70,11 +70,25 @@ namespace bleak {
 		}
 
 		inline void update(cref<offset_2d_t> offset) {
-			const offset_2d_t pos{ (Mouse::get_position() - offset) / size };
+			const offset_2d_t pos{ Mouse::get_position() / size + offset };
 			if (use_bounds) {
 				position = offset_2d_t::clamp(pos, min, max);
 			} else {
 				position = pos;
+			}
+		}
+
+		inline void update(cref<cardinal_t> direction) {
+			if (direction == cardinal_t::Central) {
+				return;
+			}
+
+			const offset_2d_t offset_dir{ direction };
+
+			if (use_bounds) {
+				position = offset_2d_t::clamp(position + offset_dir, min, max);
+			} else {
+				position += offset_dir;
 			}
 		}
 

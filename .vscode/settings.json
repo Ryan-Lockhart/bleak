@@ -1,7 +1,7 @@
 {
     "mesonbuild.configureOnOpen": true,
     "C_Cpp.default.configurationProvider": "mesonbuild.mesonbuild",
-    "C_Cpp.default.compileCommands": "d:\\Development\\Projects\\C++\\Bleakdepth\\build\\compile_commands.json",
+    "C_Cpp.default.compileCommands": "d:\\Development\\Projects\\C++\\Bleakdepth\\build/compile_commands.json",
     "mesonbuild.buildFolder": "build",
     "mesonbuild.configureEnvironment": {
         "CC": "clang",

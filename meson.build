@@ -17,8 +17,8 @@ build_type = get_option('buildtype')
 if build_type == 'debug'
     subsystem = 'console'
     args = ['-DBLEAKDEPTH_DEBUG']
-else 
-    subsystem = 'windows'
+else
+    subsystem = 'console'
     args = ['-DBLEAKDEPTH_RELEASE']
 endif
 
@@ -30,9 +30,62 @@ sdl_dependencies = [
     dependency('sdl2_ttf'),
 ]
 
-sources = [
-    'src/program.cpp'
-]
+array_test = executable(
+    'array',
+    'tests/array.cpp',
+
+    dependencies: [sdl_dependencies],
+
+    override_options: [
+        'cpp_std=c++26',
+        'cpp_stdlib=libc++',
+    ],
+
+    c_args: args,
+    cpp_args: args,
+
+    win_subsystem: 'console',
+)
+
+zone_test = executable(
+    'zone',
+    'tests/zone.cpp',
+
+    dependencies: [sdl_dependencies],
+
+    override_options: [
+        'cpp_std=c++26',
+        'cpp_stdlib=libc++',
+    ],
+
+    c_args: args,
+    cpp_args: args,
+
+    win_subsystem: 'console',
+)
+
+region_test = executable(
+    'region',
+    'tests/region.cpp',
+
+    dependencies: [sdl_dependencies],
+
+    override_options: [
+        'cpp_std=c++26',
+        'cpp_stdlib=libc++',
+    ],
+
+    c_args: args,
+    cpp_args: args,
+
+    win_subsystem: 'console',
+)
+
+test('array', array_test)
+test('zone', zone_test)
+test('region', region_test)
+
+sources = ['src/program.cpp']
 
 executable(
     'bleakdepth',
@@ -50,6 +103,7 @@ executable(
 
     install: true,
     install_dir: install_dir,
+
     win_subsystem: subsystem,
 )
 

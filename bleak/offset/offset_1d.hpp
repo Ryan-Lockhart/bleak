@@ -55,13 +55,13 @@ namespace bleak {
 		static const offset_1d_t east;
 		static const offset_1d_t west;
 
-		constexpr offset_1d_t() noexcept {}
+		constexpr explicit offset_1d_t() noexcept {}
 
-		constexpr offset_1d_t(scalar_t scalar) noexcept : c_offset_1d_t{ scalar } {}
+		constexpr explicit offset_1d_t(scalar_t scalar) noexcept : c_offset_1d_t{ scalar } {}
 
 		template<typename T>
 			requires std::is_convertible<T, scalar_t>::value && (std::is_same<T, scalar_t>::value == false)
-		constexpr offset_1d_t(T scalar) noexcept : c_offset_1d_t{ scalar_cast(scalar) } {}
+		constexpr explicit offset_1d_t(T scalar) noexcept : c_offset_1d_t{ scalar_cast(scalar) } {}
 
 		constexpr product_t dot() const noexcept { return product_cast(x) * x; }
 
@@ -74,6 +74,18 @@ namespace bleak {
 		template<> constexpr f64 length() const noexcept { return static_cast<f64>(x); }
 
 		template<> constexpr product_t length() const noexcept { return product_cast(x); }
+
+		constexpr ref<offset_1d_t> clamp(cref<offset_1d_t> min, cref<offset_1d_t> max) {
+			x = x < min.x ? min.x : x > max.x ? max.x : x;
+
+			return *this;
+		}
+
+		static constexpr offset_1d_t clamp(offset_1d_t value, cref<offset_1d_t> min, cref<offset_1d_t> max) { return value.clamp(min, max); }
+
+		constexpr ref<offset_1d_t> clamp(cref<extent_1d_t> min, cref<extent_1d_t> max);
+
+		static constexpr offset_1d_t clamp(offset_1d_t value, cref<extent_1d_t> min, cref<extent_1d_t> max);
 
 		constexpr bool operator==(cref<offset_1d_t> other) const noexcept { return x == other.x; }
 
@@ -91,25 +103,27 @@ namespace bleak {
 
 		constexpr bool operator>=(cref<offset_1d_t> other) const { return x >= other.x; }
 
-		constexpr offset_1d_t operator+(cref<offset_1d_t> other) const noexcept { return { x + other.x }; }
+		constexpr offset_1d_t operator-() const noexcept { return offset_1d_t{ scalar_cast(-x) }; }
 
-		constexpr offset_1d_t operator-(cref<offset_1d_t> other) const noexcept { return { x - other.x }; }
+		constexpr offset_1d_t operator+(cref<offset_1d_t> other) const noexcept { return offset_1d_t{ x + other.x }; }
 
-		constexpr offset_1d_t operator*(cref<offset_1d_t> other) const noexcept { return { x * other.x }; }
+		constexpr offset_1d_t operator-(cref<offset_1d_t> other) const noexcept { return offset_1d_t{ x - other.x }; }
 
-		constexpr offset_1d_t operator/(cref<offset_1d_t> other) const noexcept { return { x / other.x }; }
+		constexpr offset_1d_t operator*(cref<offset_1d_t> other) const noexcept { return offset_1d_t{ x * other.x }; }
 
-		constexpr offset_1d_t operator%(cref<offset_1d_t> other) const noexcept { return { x % other.x }; }
+		constexpr offset_1d_t operator/(cref<offset_1d_t> other) const noexcept { return offset_1d_t{ x / other.x }; }
 
-		constexpr offset_1d_t operator+(scalar_t scalar) const noexcept { return { x + scalar }; }
+		constexpr offset_1d_t operator%(cref<offset_1d_t> other) const noexcept { return offset_1d_t{ x % other.x }; }
 
-		constexpr offset_1d_t operator-(scalar_t scalar) const noexcept { return { x - scalar }; }
+		constexpr offset_1d_t operator+(scalar_t scalar) const noexcept { return offset_1d_t{ x + scalar }; }
 
-		constexpr offset_1d_t operator*(scalar_t scalar) const noexcept { return { x * scalar }; }
+		constexpr offset_1d_t operator-(scalar_t scalar) const noexcept { return offset_1d_t{ x - scalar }; }
 
-		constexpr offset_1d_t operator/(scalar_t scalar) const noexcept { return { x / scalar }; }
+		constexpr offset_1d_t operator*(scalar_t scalar) const noexcept { return offset_1d_t{ x * scalar }; }
 
-		constexpr offset_1d_t operator%(scalar_t scalar) const noexcept { return { x % scalar }; }
+		constexpr offset_1d_t operator/(scalar_t scalar) const noexcept { return offset_1d_t{ x / scalar }; }
+
+		constexpr offset_1d_t operator%(scalar_t scalar) const noexcept { return offset_1d_t{ x % scalar }; }
 
 		constexpr offset_1d_t operator+(cref<extent_1d_t> extent) const noexcept;
 

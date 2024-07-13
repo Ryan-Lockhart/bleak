@@ -47,9 +47,9 @@ namespace bleak {
 
 		constexpr animated_glyph_t(std::initializer_list<u16> indices, color_t color) noexcept : indices{ indices }, frame{ 0 }, color{ color } {}
 
-		constexpr animated_glyph_t(rval<row_t<u16, Length>> indices) noexcept : indices{ indices }, frame{ 0 }, color{} {}
+		constexpr animated_glyph_t(rval<row_t<u16, Length>> indices) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{} {}
 
-		constexpr animated_glyph_t(rval<row_t<u16, Length>> indices, color_t color) noexcept : indices{ indices }, frame{ 0 }, color{ color } {}
+		constexpr animated_glyph_t(rval<row_t<u16, Length>> indices, color_t color) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{ color } {}
 
 		constexpr animated_glyph_t(cref<animated_glyph_t> other) noexcept : indices{ other.indices }, frame{ other.frame }, color{ other.color } {}
 

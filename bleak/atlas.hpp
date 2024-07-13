@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/offset/offset_2d.hpp"
 #include "bleak/typedef.hpp"
 
 #include <stdexcept>
@@ -108,7 +109,7 @@ namespace bleak {
 			texture.draw(renderer, rects[glyph.index], rect_t{ position * glyph_size, glyph_size } + universal_offset, glyph.color);
 		}
 
-		inline void draw(ref<renderer_t> renderer, cref<glyph_t> glyph, cref<offset_2d_t> position, cref<extent_2d_t> offset) const noexcept {
+		inline void draw(ref<renderer_t> renderer, cref<glyph_t> glyph, cref<offset_2d_t> position, cref<offset_2d_t> offset) const noexcept {
 			if (glyph.index < 0 || glyph.index >= rects.size) {
 				error_log.add("glyph index {} is out of range!", glyph.index);
 				return;
@@ -147,13 +148,15 @@ namespace bleak {
 			}
 		}
 
-		inline void draw(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_2d_t> position, cardinal_t alignment) const {
+		inline void draw(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_2d_t> position, cref<cardinal_t> alignment) const {
 			if (runes.empty()) {
 				return;
 			}
 
-			const extent_2d_t size{ static_cast<offset_2d_t>(alignment) * Text::calculate_size(runes) };
-			const offset_2d_t alignment_offs{ size - size / 2 };
+			const extent_2d_t size{Text::calculate_size(runes)};
+			const offset_2d_t origin{ position - size / 2 };
+			const offset_2d_t size_offs{ static_cast<offset_2d_t>(alignment) * size };
+			const offset_2d_t alignment_offs{ size_offs - size_offs / 2 };
 
 			offset_2d_t carriage_pos{ 0 };
 
@@ -173,20 +176,22 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				default:
-					draw(renderer, rune, position + carriage_pos + alignment_offs);
+					draw(renderer, rune, origin + carriage_pos + alignment_offs);
 					++carriage_pos.x;
 					continue;
 				}
 			}
 		}
 
-		inline void draw(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_2d_t> position, cardinal_t alignment, cref<offset_2d_t> offset) const {
+		inline void draw(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_2d_t> position, cref<cardinal_t> alignment, cref<offset_2d_t> offset) const {
 			if (runes.empty()) {
 				return;
 			}
 
-			const extent_2d_t size{ static_cast<offset_2d_t>(alignment) * Text::calculate_size(runes) };
-			const extent_2d_t alignment_offs{ size - size / 2 };
+			const extent_2d_t size{Text::calculate_size(runes)};
+			const offset_2d_t origin{ position - size / 2 };
+			const offset_2d_t size_offs{ static_cast<offset_2d_t>(alignment) * size };
+			const offset_2d_t alignment_offs{ size_offs - size_offs / 2 };
 
 			offset_2d_t carriage_pos{ 0 };
 
@@ -206,20 +211,17 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				default:
-					draw(renderer, rune, position + carriage_pos + alignment_offs, offset);
+					draw(renderer, rune, origin + carriage_pos + alignment_offs, offset);
 					++carriage_pos.x;
 					continue;
 				}
 			}
 		}
 
-		inline void draw(ref<renderer_t> renderer, cref<std::string> text, offset_2d_t position, color_t color) const {
+		inline void draw(ref<renderer_t> renderer, cref<std::string> text, cref<offset_2d_t> position, cref<color_t> color) const {
 			if (text.empty()) {
 				return;
 			}
-
-			const extent_2d_t size{ static_cast<extent_2d_t>(Text::calculate_size(text)) };
-			const offset_2d_t alignment_offs{ size - size / 2 };
 
 			offset_2d_t carriage_pos{ 0 };
 
@@ -239,20 +241,22 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				default:
-					draw(renderer, glyph_t{ static_cast<u8>(ch), color }, position + carriage_pos + alignment_offs);
+					draw(renderer, glyph_t{ static_cast<u8>(ch), color }, position + carriage_pos);
 					++carriage_pos.x;
 					continue;
 				}
 			}
 		}
 
-		inline void draw(ref<renderer_t> renderer, cref<std::string> text, offset_2d_t position, color_t color, cardinal_t alignment) const {
+		inline void draw(ref<renderer_t> renderer, cref<std::string> text, cref<offset_2d_t> position, cref<color_t> color, cref<cardinal_t> alignment) const {
 			if (text.empty()) {
 				return;
 			}
 
-			const extent_2d_t size{ static_cast<offset_2d_t>(alignment) * Text::calculate_size(text) };
-			const offset_2d_t alignment_offs{ size - size / 2 };
+			const extent_2d_t size{Text::calculate_size(text)};
+			const offset_2d_t origin{ position - size / 2 };
+			const offset_2d_t size_offs{ static_cast<offset_2d_t>(alignment) * size };
+			const offset_2d_t alignment_offs{ size_offs - size_offs / 2 };
 
 			offset_2d_t carriage_pos{ 0 };
 
@@ -272,7 +276,7 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				default:
-					draw(renderer, glyph_t{ static_cast<u8>(ch), color }, position + carriage_pos + alignment_offs);
+					draw(renderer, glyph_t{ static_cast<u8>(ch), color }, origin + carriage_pos + alignment_offs);
 					++carriage_pos.x;
 					continue;
 				}

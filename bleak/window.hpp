@@ -19,12 +19,11 @@ namespace bleak {
 	namespace sdl {
 		using window = ptr<SDL_Window>;
 		using window_flags = SDL_WindowFlags;
+\
+		constexpr window_flags WINDOW_FLAGS_NONE{ SDL_WINDOW_SHOWN };
+		constexpr offset_2d_t WINDOW_POSITION_CENTERED{ SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED };
 
-		constexpr window_flags WINDOW_FLAGS_NONE { SDL_WINDOW_SHOWN };
-		constexpr offset_2d_t WINDOW_POSITION_CENTERED = { SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED };
-
-		static inline window
-		create_window(cstr title, extent_2d_t size, offset_2d_t position = WINDOW_POSITION_CENTERED, window_flags flags = WINDOW_FLAGS_NONE) noexcept {
+		static inline window create_window(cstr title, extent_2d_t size, offset_2d_t position = WINDOW_POSITION_CENTERED, window_flags flags = WINDOW_FLAGS_NONE) noexcept {
 			window handle = SDL_CreateWindow(title, position.x, position.y, size.w, size.h, flags);
 
 			if (handle == nullptr) {
@@ -57,7 +56,7 @@ namespace bleak {
 		bool closing = false;
 
 		inline sdl::window create(cstr title, cref<offset_2d_t> position, cref<extent_2d_t> size, sdl::window_flags flags) noexcept {
-			ptr<SDL_Window> new_window { SDL_CreateWindow(title, position.x, position.y, size.w, size.h, flags) };
+			ptr<SDL_Window> new_window{ SDL_CreateWindow(title, position.x, position.y, size.w, size.h, flags) };
 
 			if (new_window == nullptr) {
 				error_log.add(std::format("failed to create window: {}", SDL_GetError()));
@@ -84,27 +83,13 @@ namespace bleak {
 	  public:
 		inline window_t() = delete;
 
-		inline window_t(cstr title, cref<extent_2d_t> size, sdl::window_flags flags) noexcept :
-			window { create(title, sdl::WINDOW_POSITION_CENTERED, size, flags) },
-			title { title },
-			size { size },
-			flags { flags } {}
+		inline window_t(cstr title, cref<extent_2d_t> size, sdl::window_flags flags) noexcept : window{ create(title, sdl::WINDOW_POSITION_CENTERED, size, flags) }, title{ title }, size{ size }, flags{ flags } {}
 
-		inline window_t(cstr title, cref<offset_2d_t> position, cref<extent_2d_t> size, sdl::window_flags flags) noexcept :
-			window { create(title, position, size, flags) },
-			title { title },
-			size { size },
-			flags { flags } {}
+		inline window_t(cstr title, cref<offset_2d_t> position, cref<extent_2d_t> size, sdl::window_flags flags) noexcept : window{ create(title, position, size, flags) }, title{ title }, size{ size }, flags{ flags } {}
 
 		inline window_t(cref<window_t> other) noexcept = delete;
 
-		inline window_t(rval<window_t> other) noexcept :
-			window(std::move(other.window)),
-			title(std::move(other.title)),
-			size(std::move(other.size)),
-			flags(std::move(other.flags)) {
-			other.window = nullptr;
-		}
+		inline window_t(rval<window_t> other) noexcept : window(std::move(other.window)), title(std::move(other.title)), size(std::move(other.size)), flags(std::move(other.flags)) { other.window = nullptr; }
 
 		inline ref<window_t> operator=(cref<window_t> other) noexcept = delete;
 

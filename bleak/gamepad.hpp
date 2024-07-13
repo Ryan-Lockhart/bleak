@@ -51,22 +51,24 @@ namespace bleak {
 		using button_t = SDL_JoystickButton;
 		using axis_t = SDL_JoystickAxis;
 
-		static constexpr i16 JOYSTICK_DEAD_ZONE{ 12000 };
+		static constexpr i16 JOYSTICK_DEAD_ZONE{ 8000 };
 
 		struct stick_t {
 		  private:
 			static inline constexpr cardinal_t to_cardinal(i16 x, i16 y) noexcept {
-				cardinal_t result{};
+				cardinal_t result{ cardinal_t::Central };
 
 				if (x < -JOYSTICK_DEAD_ZONE) {
 					result += cardinal_t::West;
-				} else if (x > JOYSTICK_DEAD_ZONE) {
+				}
+				if (x > JOYSTICK_DEAD_ZONE) {
 					result += cardinal_t::East;
 				}
 
 				if (y < -JOYSTICK_DEAD_ZONE) {
 					result += cardinal_t::North;
-				} else if (y > JOYSTICK_DEAD_ZONE) {
+				}
+				if (y > JOYSTICK_DEAD_ZONE) {
 					result += cardinal_t::South;
 				}
 
@@ -74,17 +76,19 @@ namespace bleak {
 			}
 
 			static inline constexpr cardinal_t to_cardinal(i16 x, i16 y, i16 deadzone) noexcept {
-				cardinal_t result{};
+				cardinal_t result{ cardinal_t::Central };
 
 				if (x < -deadzone) {
 					result += cardinal_t::West;
-				} else if (x > deadzone) {
+				}
+				if (x > deadzone) {
 					result += cardinal_t::East;
 				}
 
 				if (y < -deadzone) {
 					result += cardinal_t::North;
-				} else if (y > deadzone) {
+				}
+				if (y > deadzone) {
 					result += cardinal_t::South;
 				}
 
@@ -92,22 +96,20 @@ namespace bleak {
 			}
 
 			inline cardinal_t get_state() const noexcept {
-				auto as_ptr{ const_cast<ptr<joystick_t>>(joystick) };
+				i16 x{ SDL_JoystickGetAxis(joystick, x_axis_id) };
+				i16 y{ SDL_JoystickGetAxis(joystick, y_axis_id) };
 
-				auto x{ SDL_JoystickGetAxis(as_ptr, x_axis_id) };
-				auto y{ SDL_JoystickGetAxis(as_ptr, y_axis_id) };
-
-				return to_cardinal(x, y, JOYSTICK_DEAD_ZONE);
+				return to_cardinal(x, y);
 			}
 
 		  public:
-			inline stick_t(cptrc<joystick_t> joystick, axis_t x_axis_id, axis_t y_axis_id) noexcept : joystick{ joystick }, x_axis_id{ x_axis_id }, y_axis_id{ y_axis_id } {
+			inline stick_t(ptr<joystick_t> joystick, axis_t x_axis_id, axis_t y_axis_id) noexcept : joystick{ joystick }, x_axis_id{ x_axis_id }, y_axis_id{ y_axis_id } {
 				if (joystick == nullptr) {
 					error_log.add("nullptr passed to stick [{}, {}] constructor\n", (i32)x_axis_id, (i32)y_axis_id);
 				}
 			}
 
-			cptrc<joystick_t> joystick;
+			ptr<joystick_t> joystick;
 			axis_t x_axis_id, y_axis_id;
 
 			cardinal_t current_state;
@@ -120,23 +122,21 @@ namespace bleak {
 		};
 
 		struct buttons_t {
-			inline buttons_t(cptrc<joystick_t> joystick) noexcept : joystick{ joystick } {
+			inline buttons_t(ptr<joystick_t> joystick) noexcept : joystick{ joystick } {
 				if (joystick == nullptr) {
 					error_log.add("nullptr passed to buttons constructor\n");
 				}
 			}
 
-			cptrc<joystick_t> joystick;
+			ptr<joystick_t> joystick;
 
 			bool current_state[SDL_NUM_JOYSTICK_BUTTONS];
 			bool previous_state[SDL_NUM_JOYSTICK_BUTTONS];
 
 			inline constexpr void update() noexcept {
-				auto as_ptr{ const_cast<ptr<joystick_t>>(joystick) };
-
 				for (usize i{ 0 }; i < SDL_NUM_JOYSTICK_BUTTONS; ++i) {
 					previous_state[i] = current_state[i];
-					current_state[i] = SDL_JoystickGetButton(as_ptr, i);
+					current_state[i] = SDL_JoystickGetButton(joystick, i);
 				}
 			}
 
@@ -160,7 +160,7 @@ namespace bleak {
 		struct dpad_t {
 		  private:
 			static inline constexpr cardinal_t to_cardinal(cref<buttons_t> buttons) noexcept {
-				cardinal_t result{};
+				cardinal_t result{ cardinal_t::Central };
 
 				if (buttons.current_state[SDL_JOYSTICK_BUTTON_UP]) {
 					result += cardinal_t::North;
@@ -180,13 +180,13 @@ namespace bleak {
 			inline cardinal_t get_state(cref<buttons_t> buttons) const noexcept { return to_cardinal(buttons); }
 
 		  public:
-			inline dpad_t(cptrc<joystick_t> joystick) noexcept : joystick{ joystick } {
+			inline dpad_t(ptr<joystick_t> joystick) noexcept : joystick{ joystick } {
 				if (joystick == nullptr) {
 					error_log.add("nullptr passed to dpad constructor\n");
 				}
 			}
 
-			cptrc<joystick_t> joystick;
+			ptr<joystick_t> joystick;
 
 			cardinal_t current_state;
 			cardinal_t previous_state;

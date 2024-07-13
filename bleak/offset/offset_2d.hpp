@@ -69,25 +69,25 @@ namespace bleak {
 		static const offset_2d_t southwest;
 		static const offset_2d_t southeast;
 
-		constexpr offset_2d_t() noexcept {}
+		constexpr explicit offset_2d_t() noexcept {}
 
-		constexpr offset_2d_t(scalar_t scalar) noexcept : underlying_t{ scalar, scalar } {}
+		constexpr explicit offset_2d_t(scalar_t scalar) noexcept : underlying_t{ scalar, scalar } {}
 
-		constexpr offset_2d_t(scalar_t x, scalar_t y) noexcept : underlying_t{ x, y } {}
-
-		template<typename T>
-			requires std::is_convertible<T, scalar_t>::value && is_numeric<T>::value
-		constexpr offset_2d_t(T scalar) noexcept : underlying_t{ scalar_cast(scalar), scalar_cast(scalar) } {}
+		constexpr explicit offset_2d_t(scalar_t x, scalar_t y) noexcept : underlying_t{ x, y } {}
 
 		template<typename T>
 			requires std::is_convertible<T, scalar_t>::value && is_numeric<T>::value
-		constexpr offset_2d_t(T x, T y) noexcept : underlying_t{ scalar_cast(x), scalar_cast(y) } {}
+		constexpr explicit offset_2d_t(T scalar) noexcept : underlying_t{ scalar_cast(scalar), scalar_cast(scalar) } {}
+
+		template<typename T>
+			requires std::is_convertible<T, scalar_t>::value && is_numeric<T>::value
+		constexpr explicit offset_2d_t(T x, T y) noexcept : underlying_t{ scalar_cast(x), scalar_cast(y) } {}
 
 		template<typename X, typename Y>
 			requires std::is_convertible<X, scalar_t>::value && std::is_convertible<Y, scalar_t>::value && is_numeric<X>::value && is_numeric<Y>::value
-		constexpr offset_2d_t(X x, Y y) noexcept : underlying_t{ scalar_cast(x), scalar_cast(y) } {}
+		constexpr explicit offset_2d_t(X x, Y y) noexcept : underlying_t{ scalar_cast(x), scalar_cast(y) } {}
 
-		constexpr offset_2d_t(cref<cardinal_t> direction) noexcept : underlying_t{} {
+		constexpr explicit offset_2d_t(cref<cardinal_t> direction) noexcept : underlying_t{} {
 			if (direction == cardinal_t::Central) {
 				return;
 			} else {
@@ -154,9 +154,9 @@ namespace bleak {
 			const auto len = length<T>();
 
 			if (len != 0) {
-				return { scalar_cast(x / len), scalar_cast(y / len) };
+				return offset_2d_t{ scalar_cast(x / len), scalar_cast(y / len) };
 			} else {
-				return { *this };
+				return offset_2d_t{ *this };
 			}
 		}
 
@@ -185,27 +185,27 @@ namespace bleak {
 
 		constexpr bool operator>=(cref<offset_2d_t> other) const { return x >= other.x && y >= other.y; }
 
-		constexpr offset_2d_t operator-() const noexcept { return { scalar_cast(-x), scalar_cast(-y) }; }
+		constexpr offset_2d_t operator-() const noexcept { return offset_2d_t{ scalar_cast(-x), scalar_cast(-y) }; }
 
-		constexpr offset_2d_t operator+(cref<offset_2d_t> other) const noexcept { return { scalar_cast(x + other.x), scalar_cast(y + other.y) }; }
+		constexpr offset_2d_t operator+(cref<offset_2d_t> other) const noexcept { return offset_2d_t{ scalar_cast(x + other.x), scalar_cast(y + other.y) }; }
 
-		constexpr offset_2d_t operator-(cref<offset_2d_t> other) const noexcept { return { scalar_cast(x - other.x), scalar_cast(y - other.y) }; }
+		constexpr offset_2d_t operator-(cref<offset_2d_t> other) const noexcept { return offset_2d_t{ scalar_cast(x - other.x), scalar_cast(y - other.y) }; }
 
-		constexpr offset_2d_t operator*(cref<offset_2d_t> other) const noexcept { return { scalar_cast(x * other.x), scalar_cast(y * other.y) }; }
+		constexpr offset_2d_t operator*(cref<offset_2d_t> other) const noexcept { return offset_2d_t{ scalar_cast(x * other.x), scalar_cast(y * other.y) }; }
 
-		constexpr offset_2d_t operator/(cref<offset_2d_t> other) const noexcept { return { scalar_cast(x / other.x), scalar_cast(y / other.y) }; }
+		constexpr offset_2d_t operator/(cref<offset_2d_t> other) const noexcept { return offset_2d_t{ scalar_cast(x / other.x), scalar_cast(y / other.y) }; }
 
-		constexpr offset_2d_t operator%(cref<offset_2d_t> other) const noexcept { return { scalar_cast(x % other.x), scalar_cast(y % other.y) }; }
+		constexpr offset_2d_t operator%(cref<offset_2d_t> other) const noexcept { return offset_2d_t{ scalar_cast(x % other.x), scalar_cast(y % other.y) }; }
 
-		constexpr offset_2d_t operator+(scalar_t scalar) const noexcept { return { scalar_cast(x + scalar), scalar_cast(y + scalar) }; }
+		constexpr offset_2d_t operator+(scalar_t scalar) const noexcept { return offset_2d_t{ scalar_cast(x + scalar), scalar_cast(y + scalar) }; }
 
-		constexpr offset_2d_t operator-(scalar_t scalar) const noexcept { return { scalar_cast(x - scalar), scalar_cast(y - scalar) }; }
+		constexpr offset_2d_t operator-(scalar_t scalar) const noexcept { return offset_2d_t{ scalar_cast(x - scalar), scalar_cast(y - scalar) }; }
 
-		constexpr offset_2d_t operator*(scalar_t scalar) const noexcept { return { scalar_cast(x * scalar), scalar_cast(y * scalar) }; }
+		constexpr offset_2d_t operator*(scalar_t scalar) const noexcept { return offset_2d_t{ scalar_cast(x * scalar), scalar_cast(y * scalar) }; }
 
-		constexpr offset_2d_t operator/(scalar_t scalar) const noexcept { return { scalar_cast(x / scalar), scalar_cast(y / scalar) }; }
+		constexpr offset_2d_t operator/(scalar_t scalar) const noexcept { return offset_2d_t{ scalar_cast(x / scalar), scalar_cast(y / scalar) }; }
 
-		constexpr offset_2d_t operator%(scalar_t scalar) const noexcept { return { scalar_cast(x % scalar), scalar_cast(y % scalar) }; }
+		constexpr offset_2d_t operator%(scalar_t scalar) const noexcept { return offset_2d_t{ scalar_cast(x % scalar), scalar_cast(y % scalar) }; }
 
 		constexpr offset_2d_t operator+(cref<extent_1d_t> extent) const noexcept;
 
@@ -226,13 +226,6 @@ namespace bleak {
 		constexpr offset_2d_t operator/(cref<extent_2d_t> extent) const noexcept;
 
 		constexpr offset_2d_t operator%(cref<extent_2d_t> extent) const noexcept;
-
-		constexpr ref<offset_2d_t> operator-() noexcept {
-			x = -x;
-			y = -y;
-
-			return *this;
-		}
 
 		constexpr ref<offset_2d_t> operator+=(cref<offset_2d_t> other) noexcept {
 			x += other.x;

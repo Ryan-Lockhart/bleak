@@ -13,6 +13,7 @@
 #include "bleak/log.hpp"
 #include "bleak/offset.hpp"
 #include "bleak/window.hpp"
+#include "extent/extent_2d.hpp"
 
 namespace bleak {
 	namespace sdl {
@@ -93,10 +94,10 @@ namespace bleak {
 		}
 
 		inline void draw_line(cref<offset_2d_t> start, cref<offset_2d_t> end, extent_2d_t::scalar_t thickness) noexcept {
-			auto dst = offset_2d_t::distance<offset_2d_t::product_t>(start, end);
-			auto dir = offset_2d_t::direction(start, end);
+			offset_2d_t::product_t dst{ offset_2d_t::distance(start, end) };
+			offset_2d_t dir{ offset_2d_t::direction(start, end) };
 
-			auto origin{ start + dir * thickness / 2 };
+			offset_2d_t origin{ start + dir * thickness / 2 };
 
 			sdl::rect rect{ static_cast<i32>(origin.x), static_cast<i32>(origin.y), static_cast<i32>(thickness), static_cast<i32>(dst) };
 
@@ -119,6 +120,23 @@ namespace bleak {
 		inline void draw_outline_rect(cref<offset_2d_t> position, cref<extent_2d_t> size) noexcept {
 			sdl::rect sdl_rect{ static_cast<i32>(position.x), static_cast<i32>(position.y), static_cast<i32>(size.w), static_cast<i32>(size.h) };
 			SDL_RenderDrawRect(renderer, &sdl_rect);
+		}
+
+		inline void draw_outline_rect(cref<offset_2d_t> position, cref<extent_2d_t> size, cref<extent_2d_t> thickness) noexcept {
+			extent_2d_t dbl_thickness{ thickness * 2 };
+			
+			extent_2d_t vertical_size{ size.w, dbl_thickness.h };
+			extent_2d_t horizontal_size{ dbl_thickness.w, size.h - dbl_thickness.h };
+
+			draw_fill_rect(position, vertical_size); // top
+			draw_fill_rect(offset_2d_t{ position.x, position.y + size.h - dbl_thickness.h }, vertical_size); // bottom
+			draw_fill_rect(offset_2d_t{ position.x, position.y + dbl_thickness.h }, horizontal_size); // left
+			draw_fill_rect(offset_2d_t{ position.x + size.w - dbl_thickness.w, position.y + dbl_thickness.h }, horizontal_size); // right
+		}
+
+		inline void draw_outline_rect(cref<offset_2d_t> position, cref<extent_2d_t> size, cref<extent_2d_t> thickness, cref<color_t> color) noexcept {
+			set_draw_color(color);
+			draw_outline_rect(position, size, thickness);
 		}
 
 		inline void draw_outline_rect(cref<offset_2d_t> position, cref<extent_2d_t> size, cref<color_t> color) noexcept {

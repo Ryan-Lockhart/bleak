@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/offset/offset_2d.hpp"
 #include "bleak/typedef.hpp"
 
 #include <exception>
@@ -52,7 +53,7 @@ namespace bleak {
 		}
 	};
 
-	template<typename T, extent_2d_t Size, extent_2d_t BorderSize = { 0, 0 }> class zone_t {
+	template<typename T, extent_2d_t Size, extent_2d_t BorderSize = extent_2d_t{ 0, 0 }> class zone_t {
 		static_assert(Size > extent_2d_t::zero, "Map size must be greater than zero.");
 		static_assert(Size >= BorderSize, "Map size must be greater than or equal to border size.");
 
@@ -403,7 +404,7 @@ namespace bleak {
 			if constexpr (Region == zone_region_t::All) {
 				for (extent_2d_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
 					for (extent_2d_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
-						modulate({ x, y }, threshold, true_value, false_state);
+						modulate(offset_2d_t{ x, y }, threshold, true_value, false_state);
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Interior) {
@@ -411,19 +412,19 @@ namespace bleak {
 
 				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
-						modulate<is_not_safe>({ x, y }, threshold, true_value, false_state);
+						modulate<is_not_safe>(offset_2d_t{ x, y }, threshold, true_value, false_state);
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Border) {
 				for (extent_2d_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_2d_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
-							modulate({ x, y }, threshold, true_value, false_state);
+							modulate(offset_2d_t{ x, y }, threshold, true_value, false_state);
 						}
 					} else {
 						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
-							modulate({ i, y }, threshold, true_value, false_state);
-							modulate({ zone_extent.x - i, y }, threshold, true_value, false_state);
+							modulate(offset_2d_t{ i, y }, threshold, true_value, false_state);
+							modulate(offset_2d_t{ zone_extent.x - i, y }, threshold, true_value, false_state);
 						}
 					}
 				}
@@ -672,7 +673,7 @@ namespace bleak {
 			for (extent_2d_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 				for (extent_2d_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 					const offset_2d_t pos{ x, y };
-					(*this)[pos].draw(renderer, atlas, pos + offset * scale);
+					(*this)[pos].draw(renderer, atlas, pos * scale + offset);
 				}
 			}
 		}
