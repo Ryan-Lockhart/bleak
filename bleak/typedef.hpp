@@ -1,6 +1,7 @@
 #pragma once
 
 #include <concepts>
+#include <limits>
 #include <type_traits>
 
 namespace bleak {
@@ -11,7 +12,6 @@ namespace bleak {
 #endif
 
 #define __TIME_FILE_LINE__ __TIME__, __FILE__, __LINE__
-
 
 #if defined(BLEAKDEPTH_RELEASE)
 #define BLEAKDEPTH_BIG_GRID 1
@@ -232,12 +232,13 @@ namespace bleak {
 	template<typename T, typename Return, typename... Args> using mfn_ptr = Return (T::*)(Args...);
 
 	template<typename T> struct is_numeric {
-		static bool constexpr value = std::is_integral<T>:: value || std::is_floating_point<T>::value;
+		static bool constexpr value = std::numeric_limits<T>::is_integer || std::is_floating_point<T>::value;
 	};
 
 	template<typename T> constexpr bool is_numeric_v = is_numeric<T>::value;
 
-	template<typename T, typename U> concept Equatable = requires(T a, U b) {
+	template<typename T, typename U>
+	concept Equatable = requires(T a, U b) {
 		{ a == b } -> std::convertible_to<bool>;
 		{ a != b } -> std::convertible_to<bool>;
 	};
@@ -248,7 +249,8 @@ namespace bleak {
 
 	template<typename T, typename U> constexpr bool is_equatable_v = is_equatable<T, U>::value;
 
-	template<typename T, typename U> concept Comparable = requires(T a, U b) {
+	template<typename T, typename U>
+	concept Comparable = requires(T a, U b) {
 		{ a < b } -> std::convertible_to<bool>;
 		{ a > b } -> std::convertible_to<bool>;
 		{ a <= b } -> std::convertible_to<bool>;
@@ -290,23 +292,23 @@ namespace bleak {
 
 	namespace memory {
 		// size in bytes of one byte
-		constexpr const usize byte { usize { 1 } << 0 };
+		constexpr const usize byte{ usize{ 1 } << 0 };
 		// size in bytes of one kilobyte
-		constexpr const usize kilobyte { usize { 1 } << 10 };
+		constexpr const usize kilobyte{ usize{ 1 } << 10 };
 		// size in bytes of one megabyte
-		constexpr const usize megabyte { usize { 1 } << 20 };
+		constexpr const usize megabyte{ usize{ 1 } << 20 };
 		// size in bytes of one gigabyte
-		constexpr const usize gigabyte { usize { 1 } << 30 };
+		constexpr const usize gigabyte{ usize{ 1 } << 30 };
 		// size in bytes of one terabyte
-		constexpr const usize terabyte { usize { 1 } << 40 };
+		constexpr const usize terabyte{ usize{ 1 } << 40 };
 		// size in bytes of one petabyte
-		constexpr const usize petabyte { usize { 1 } << 50 };
+		constexpr const usize petabyte{ usize{ 1 } << 50 };
 		// size in bytes of one exabyte
-		constexpr const usize exabyte { usize { 1 } << 60 };
+		constexpr const usize exabyte{ usize{ 1 } << 60 };
 
 		// size in bytes of one zettabyte minus one byte
-		constexpr const usize limit { usize { 0 } - 1 };
+		constexpr const usize limit{ usize{ 0 } - 1 };
 		// size in bytes of the maximum size of an array
-		constexpr const usize maximum { gigabyte * 4 };
+		constexpr const usize maximum{ gigabyte * 4 };
 	}; // namespace memory
 } // namespace bleak
