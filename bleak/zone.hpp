@@ -3,6 +3,7 @@
 #include "bleak/offset/offset_2d.hpp"
 #include "bleak/typedef.hpp"
 
+#include <cstring>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -73,8 +74,10 @@ namespace bleak {
 
 		static constexpr auto zone_area{ zone_size.area() };
 
-		static constexpr usize interior_area{ (zone_size - border_size).area() };
-		static constexpr usize border_area{ zone_area - interior_area };
+		static constexpr extent_2d_t::product_t interior_area{ (zone_size - border_size).area() };
+		static constexpr extent_2d_t::product_t border_area{ zone_area - interior_area };
+
+		static constexpr usize byte_size{ zone_area * sizeof(T) };
 
 		constexpr zone_t() : cells{}, buffer{} {}
 
@@ -678,6 +681,8 @@ namespace bleak {
 			}
 		}
 
+		constexpr cstr serialize() const noexcept { return reinterpret_cast<cstr>(cells.data_ptr()); }
+
 		constexpr bool serialize(cref<std::string> path) const noexcept {
 			std::ofstream file{};
 
@@ -687,12 +692,16 @@ namespace bleak {
 				file.write(reinterpret_cast<cstr>(cells.data_ptr()), cells.byte_size);
 
 				file.close();
-			} catch (std::exception e) {
+			} catch (cref<std::exception> e) {
 				error_log.add(e.what(), __TIME_FILE_LINE__);
 				return false;
 			}
 
 			return true;
+		}
+
+		constexpr void deserialize(cstr binary_data) noexcept {
+			std::memcpy(reinterpret_cast<str>(cells.data_ptr()), binary_data, cells.byte_size);
 		}
 	};
 } // namespace bleak

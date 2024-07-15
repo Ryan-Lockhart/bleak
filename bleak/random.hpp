@@ -1,6 +1,8 @@
-//#include "bleak/typedef.hpp"
+#pragma once
 
-#include <random>
+#include "bleak/typedef.hpp" // IWYU pragma: keep
+
+#include <random> // IWYU pragma: export
 
 namespace bleak {
 	template<typename T> struct is_random_engine {

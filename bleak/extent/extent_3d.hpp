@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bleak/primitive.hpp"
+#include <bleak/primitive.hpp>
 
 #include <cmath>
 #include <format>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bleak/primitive.hpp"
+#include <bleak/primitive.hpp> // IWYU pragma: export
 
 #include <cmath>
 #include <format>

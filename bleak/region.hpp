@@ -1,10 +1,11 @@
 #pragma once
-
-#include "bleak/extent/extent_2d.hpp"
 #include "bleak/typedef.hpp"
 
+#include <fstream>
 #include <utility>
 
+#include "bleak/extent.hpp"
+#include "bleak/offset.hpp"
 #include "bleak/renderer.hpp"
 #include "bleak/zone.hpp"
 
@@ -19,6 +20,8 @@ namespace bleak {
 		layer_t<zone_t<T, ZoneSize, ZoneBorder>, RegionSize> zones;
 
 	  public:
+		using zone_type = zone_t<T, ZoneSize, ZoneBorder>;
+
 		static constexpr extent_2d_t region_size{ RegionSize };
 
 		static constexpr offset_2d_t region_origin{ 0 };
@@ -41,7 +44,39 @@ namespace bleak {
 
 		static constexpr auto area{ size.area() };
 
+		static constexpr usize byte_size{ region_area * zone_type::byte_size };
+
 		constexpr region_t() : zones{} {};
+
+		constexpr region_t(cref<std::string> path) : zones{} {
+			std::ifstream file{};
+			str buffer;
+
+			try {
+				file.open(path, std::ios::in | std::ios::binary);
+
+				buffer = static_cast<str>(std::malloc(zone_type::byte_size));
+
+				for (extent_2d_t::product_t i{ 0 }; i < region_area; ++i) {
+					const extent_1d_t index{ i };
+					file.read(buffer, zone_type::byte_size);
+
+					zones[index].deserialize(buffer);
+				}
+
+				std::free(buffer);
+				buffer = nullptr;
+
+				file.close();
+			} catch (std::exception e) {
+				error_log.add(e.what(), __TIME_FILE_LINE__);
+
+				if (buffer != nullptr) {
+					std::free(buffer);
+					buffer = nullptr;
+				}
+			}
+		}
 
 		constexpr region_t(cref<region_t> other) : zones{ other.zones } {}
 
@@ -115,6 +150,24 @@ namespace bleak {
 					(*this)[pos].draw(renderer, atlas, pos * zone_size + offset, scale);
 				}
 			}
+		}
+
+		constexpr bool serialize(cref<std::string> path) const noexcept {
+			std::ofstream file{};
+
+			try {
+				file.open(path, std::ios::in | std::ios::binary);
+
+				for (extent_2d_t::product_t i{ 0 }; i < region_area; ++i) {
+					file.write(zones[extent_1d_t{ i }].serialize(), zone_type::byte_size);
+				}
+
+				file.close();
+			} catch (std::exception e) {
+				error_log.add(e.what(), __TIME_FILE_LINE__);
+			}
+
+			return true;
 		}
 	};
 } // namespace bleak

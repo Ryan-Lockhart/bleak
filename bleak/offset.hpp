@@ -1,16 +1,16 @@
 #pragma once
 
-#include "bleak/primitive.hpp" // IWYU pragma: export
+#include <bleak/primitive.hpp> // IWYU pragma: export
 
 #include <cmath>
 
 #include <SDL.h>
 
-#include "bleak/offset/offset_1d.hpp" // IWYU pragma: export
-#include "bleak/offset/offset_2d.hpp" // IWYU pragma: export
-#include "bleak/offset/offset_3d.hpp" // IWYU pragma: export
+#include <bleak/offset/offset_1d.hpp> // IWYU pragma: export
+#include <bleak/offset/offset_2d.hpp> // IWYU pragma: export
+#include <bleak/offset/offset_3d.hpp> // IWYU pragma: export
 
-#include "bleak/extent.hpp" // IWYU pragma: export
+#include <bleak/extent.hpp> // IWYU pragma: export
 
 namespace bleak {
 	constexpr const offset_1d_t offset_1d_t::zero{ 0 };

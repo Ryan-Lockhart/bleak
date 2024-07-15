@@ -1,37 +1,37 @@
-#include "bleak/extent/extent_2d.hpp"
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <cassert>
 #include <cstdlib>
 #include <format>
 #include <iostream>
-#include <random>
+#include <string>
 
 #include <SDL.h>
 
-#include "bleak/atlas.hpp"
-#include "bleak/cardinal.hpp"
-#include "bleak/cell.hpp"
-#include "bleak/clock.hpp"
-#include "bleak/cursor.hpp"
-#include "bleak/extent.hpp"
-#include "bleak/gamepad.hpp"
-#include "bleak/glyph.hpp"
-#include "bleak/keyboard.hpp"
-#include "bleak/log.hpp"
-#include "bleak/mouse.hpp"
-#include "bleak/offset.hpp"
-#include "bleak/region.hpp"
-#include "bleak/renderer.hpp"
-#include "bleak/sprite.hpp"
-#include "bleak/text.hpp"
-#include "bleak/timer.hpp"
-#include "bleak/wave.hpp"
-#include "bleak/window.hpp"
-#include "bleak/zone.hpp"
+#include <bleak/atlas.hpp>
+#include <bleak/cardinal.hpp>
+#include <bleak/cell.hpp>
+#include <bleak/clock.hpp>
+#include <bleak/cursor.hpp>
+#include <bleak/extent.hpp>
+#include <bleak/gamepad.hpp>
+#include <bleak/glyph.hpp>
+#include <bleak/keyboard.hpp>
+#include <bleak/log.hpp>
+#include <bleak/mouse.hpp>
+#include <bleak/offset.hpp>
+#include <bleak/random.hpp>
+#include <bleak/region.hpp>
+#include <bleak/renderer.hpp>
+#include <bleak/sprite.hpp>
+#include <bleak/text.hpp>
+#include <bleak/timer.hpp>
+#include <bleak/wave.hpp>
+#include <bleak/window.hpp>
+#include <bleak/zone.hpp>
 
-#include "bleak/constants/bindings.hpp"
-#include "bleak/constants/colors.hpp"
+#include <bleak/constants/bindings.hpp>
+#include <bleak/constants/colors.hpp>
 
 using namespace bleak;
 
@@ -111,15 +111,15 @@ struct game_state {
 	game_state() noexcept :
 		window{ Globals::GameTitle.c_str(), Globals::WindowSize + Globals::WindowBorder * 2, Globals::WindowFlags },
 		renderer{ window, Globals::RendererFlags },
-		game_atlas{ renderer, "res\\glyphs_16x16.png", Globals::UniversalOffset },
-		ui_atlas{ renderer, "res\\glyphs_8x8.png", Globals::UniversalOffset },
+		game_atlas{ renderer, "res\\glyphs\\glyphs_16x16.png", Globals::UniversalOffset },
+		ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png", Globals::UniversalOffset },
 		random_engine{ std::random_device{}() },
-		game_map{},
+		game_map{ "res\\maps\\test_region.map" },
 		gamepad_enabled{ true },
 		primary_gamepad{ nullptr },
 		gamepad_active{ false },
-		cursor{ renderer, "res\\cursor.png", Colors::White },
-		grid_cursor{ renderer, "res\\grid_cursor.png", Colors::Metals::Gold, game_map.region_origin, offset_2d_t{ game_map.region_size * Globals::ZoneSize } - 1 },
+		cursor{ renderer, "res\\sprites\\cursor.png", Colors::White },
+		grid_cursor{ renderer, "res\\sprites\\grid_cursor.png", Colors::Metals::Gold, game_map.region_origin, offset_2d_t{ game_map.region_size * Globals::ZoneSize } - 1 },
 		draw_cursor{ true },
 		camera_position{ 0 },
 		player{ animated_glyph_t<extent_1d_t{ 3 }>{ animated_glyph_t<extent_1d_t{ 3 }>::generate_contiguous_indices<0xB0, 0xB2>(), Colors::Green }, offset_2d_t{ 0 } },
@@ -289,13 +289,13 @@ void startup() {
 		message_log.add("no gamepad detected\n");
 	}
 
-	constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored };
+	/*constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored };
 	constexpr cell_state_t closed_state{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored };
 
 	for (extent_2d_t::product_t i{ 0 }; i < game_state.game_map.region_area; ++i) {
 		game_state.game_map[offset_1d_t{ i }].set<zone_region_t::Border>(closed_state);
 		game_state.game_map[offset_1d_t{ i }].generate<zone_region_t::Interior>(game_state.random_engine, 0.45, 10, 4, closed_state, open_state);
-	}
+	}*/
 
 	auto player_position{ game_state.game_map[offset_1d_t{ 0 }].find_random<zone_region_t::Interior>(game_state.random_engine, cell_trait_t::Open) };
 
@@ -389,7 +389,7 @@ void render() {
 
 	runes_t title_text{ Globals::GameTitle, Colors::Marble };
 
-	game_state.ui_atlas.draw(game_state.renderer, title_text, offset_2d_t{ Globals::UIGridSize.w / 2, 1 }, cardinal_t::Central, offset_2d_t{ 0, -4 });
+	game_state.ui_atlas.draw_label(game_state.renderer, title_text, offset_2d_t{ Globals::UIGridSize.w / 2, 1 }, cardinal_t::Central, offset_2d_t{ 0, -4 }, Colors::Black, Colors::White);
 
 	game_state.renderer.draw_outline_rect(offset_2d_t::zero, Globals::WindowSize + Globals::WindowBorder * 2, Globals::BorderSize, Colors::Black);
 	game_state.renderer.draw_outline_rect(offset_2d_t::zero, Globals::WindowSize + Globals::WindowBorder * 2, Colors::White);
@@ -405,7 +405,7 @@ void shutdown() {
 	message_log.flush_to_file();
 	error_log.flush_to_file();
 
-	// game_map.serialize("res", "test");
+	// game_state.game_map.serialize("res\\maps\\test_region.map");
 }
 
 void terminate_prematurely() {
