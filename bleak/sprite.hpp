@@ -1,15 +1,11 @@
 #pragma once
 
-#include "bleak/offset/offset_2d.hpp"
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
-#include "bleak/extent.hpp"
-#include "bleak/glyph.hpp"
-#include "bleak/offset.hpp"
-
-#include "bleak/atlas.hpp"
-#include "extent/extent_1d.hpp"
-#include "extent/extent_2d.hpp"
+#include <bleak/extent.hpp>
+#include <bleak/glyph.hpp>
+#include <bleak/offset.hpp>
+#include <bleak/atlas.hpp>
 
 namespace bleak {
 	struct sprite_t {

@@ -6,7 +6,6 @@
 
 #include "bleak/array.hpp"
 #include "bleak/color.hpp"
-#include "extent/extent_1d.hpp"
 
 namespace bleak {
 	struct glyph_t {

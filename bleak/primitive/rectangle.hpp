@@ -1,9 +1,10 @@
-#include "bleak/primitive.hpp"
+#pragma once
 
-#include "bleak/extent.hpp"
-#include "bleak/rect.hpp"
+#include <bleak/primitive.hpp>
 
-#include "bleak/color.hpp"
+#include <bleak/color.hpp>
+#include <bleak/extent.hpp>
+#include <bleak/rect.hpp>
 
 namespace bleak {
 	template<> struct primitive_t<primitive_type_t::Line, fill_type_t::Outline> {

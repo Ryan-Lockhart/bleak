@@ -10,7 +10,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/bleakdepth.exe",
             "args": [],
-            "cwd": "${workspaceFolder}"
+            "cwd": "${workspaceFolder}",
+            "expressions": "native"
         }
     ]
 }

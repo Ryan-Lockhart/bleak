@@ -1,8 +1,8 @@
 #pragma once
 
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
-#include "bleak/clock.hpp"
+#include <bleak/clock.hpp>
 
 namespace bleak {
 	class timer_t {

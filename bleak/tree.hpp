@@ -1,12 +1,10 @@
 #pragma once
 
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <initializer_list>
 #include <utility>
-
 #include <iterator>
-
 #include <queue>
 #include <stack>
 

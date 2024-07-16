@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <format>
 #include <string>

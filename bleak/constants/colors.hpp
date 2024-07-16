@@ -1,6 +1,8 @@
 #pragma once
 
-#include "bleak/color.hpp"
+#include <bleak/typedef.hpp>
+
+#include <bleak/color.hpp>
 
 namespace bleak {
 	namespace Colors {

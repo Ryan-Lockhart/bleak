@@ -1,19 +1,8 @@
 {
     "mesonbuild.configureOnOpen": true,
-    "C_Cpp.default.configurationProvider": "mesonbuild.mesonbuild",
-    "C_Cpp.default.compileCommands": "d:\\Development\\Projects\\C++\\Bleakdepth\\build/compile_commands.json",
     "mesonbuild.buildFolder": "build",
     "mesonbuild.configureEnvironment": {
         "CC": "clang",
         "CXX": "clang++"
-    },
-    "mesonbuild.debugOptions": {
-        "setupCommands": [
-            {
-                "description": "Enable pretty-printing for gdb",
-                "text": "-enable-pretty-printing",
-                "ignoreFailures": true
-            }
-        ]
     }
 }

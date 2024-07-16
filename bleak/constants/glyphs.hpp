@@ -1,10 +1,12 @@
 #pragma once
 
-#include "bleak/cardinal.hpp"
-#include "bleak/glyph.hpp"
+#include <bleak/typedef.hpp>
 
-#include "bleak/constants/characters.hpp"
-#include "bleak/constants/colors.hpp"
+#include <bleak/cardinal.hpp>
+#include <bleak/glyph.hpp>
+
+#include <bleak/constants/characters.hpp>
+#include <bleak/constants/colors.hpp>
 
 namespace bleak {
 	namespace Glyphs {

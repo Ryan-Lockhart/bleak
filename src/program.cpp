@@ -275,6 +275,15 @@ int main(int argc, char* argv[]) {
 }
 
 void startup() {
+	int* hellos{ new int[10] };
+
+	for (int i{ 0 }; i < 10; ++i) {
+		hellos[i] = i;
+	}
+
+	delete[] hellos;
+	hellos = nullptr;
+	
 	Subsystem::initialize();
 
 	Mouse::initialize();
@@ -297,10 +306,16 @@ void startup() {
 		game_state.game_map[offset_1d_t{ i }].generate<zone_region_t::Interior>(game_state.random_engine, 0.45, 10, 4, closed_state, open_state);
 	}*/
 
-	auto player_position{ game_state.game_map[offset_1d_t{ 0 }].find_random<zone_region_t::Interior>(game_state.random_engine, cell_trait_t::Open) };
+	auto& fill_zone{ game_state.game_map[offset_2d_t{ 0, 0 }] };
+	const auto& place_zone{ game_state.game_map[offset_2d_t{ 1, 0 }] };
+
+	area_t area{ fill_zone, cell_state_t{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored } };
+	area.set(fill_zone, cell_state_t{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored });
+
+	auto player_position{ place_zone.find_random<zone_region_t::Interior>(game_state.random_engine, cell_trait_t::Open) };
 
 	if (player_position.has_value()) {
-		game_state.player.position = player_position.value();
+		game_state.player.position = player_position.value() + offset_2d_t{ 1, 0 } * Globals::ZoneSize;
 	} else {
 		error_log.add("no open cells found for player start position\n", __TIME_FILE_LINE__);
 		terminate_prematurely();
@@ -409,6 +424,12 @@ void shutdown() {
 }
 
 void terminate_prematurely() {
+	std::cout << "Message Log:\n";
+	message_log.flush_to_console(std::cout);
+
+	std::cerr << "\nError Log:\n";
+	error_log.flush_to_console(std::cerr);
+
 	shutdown();
 	exit(EXIT_FAILURE);
 }

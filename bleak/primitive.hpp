@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bleak/typedef.hpp" // IWYU pragma: export
+#include <bleak/typedef.hpp> // IWYU pragma: export
 
 #include <SDL.h>
 
@@ -44,9 +44,23 @@ namespace bleak {
 	struct offset_2d_t;
 	struct offset_3d_t;
 
+	template<typename T> constexpr bool is_offset = false;
+	template<typename T> concept IsOffset = is_offset<T>;
+
+	template<> inline constexpr bool is_offset<offset_1d_t> = true;
+	template<> inline constexpr bool is_offset<offset_2d_t> = true;
+	template<> inline constexpr bool is_offset<offset_3d_t> = true;
+
 	struct extent_1d_t;
 	struct extent_2d_t;
 	struct extent_3d_t;
+
+	template<typename T> constexpr bool is_extent = false;
+	template<typename T> concept IsExtent = is_extent<T>;
+
+	template<> inline constexpr bool is_extent<extent_1d_t> = true;
+	template<> inline constexpr bool is_extent<extent_2d_t> = true;
+	template<> inline constexpr bool is_extent<extent_3d_t> = true;
 
 	struct line_2d_t;
 	struct line_3d_t;
@@ -94,30 +108,65 @@ namespace bleak {
 	template<primitive_type_t Primitive, fill_type_t Fill> struct primitive_t;
 
 	template<> struct primitive_t<primitive_type_t::Point, fill_type_t::Outline>;
+	using outline_point_t = primitive_t<primitive_type_t::Point, fill_type_t::Outline>;
+
 	template<> struct primitive_t<primitive_type_t::Point, fill_type_t::Fill>;
+	using fill_point_t = primitive_t<primitive_type_t::Point, fill_type_t::Fill>;
+
 	template<> struct primitive_t<primitive_type_t::Point, fill_type_t::Composite>;
+	using composite_point_t = primitive_t<primitive_type_t::Point, fill_type_t::Composite>;
 
 	template<> struct primitive_t<primitive_type_t::Line, fill_type_t::Outline>;
+	using outline_line_t = primitive_t<primitive_type_t::Line, fill_type_t::Outline>;
+
 	template<> struct primitive_t<primitive_type_t::Line, fill_type_t::Fill>;
+	using fill_line_t = primitive_t<primitive_type_t::Line, fill_type_t::Fill>;
+
 	template<> struct primitive_t<primitive_type_t::Line, fill_type_t::Composite>;
+	using composite_line_t = primitive_t<primitive_type_t::Line, fill_type_t::Composite>;
 
 	template<> struct primitive_t<primitive_type_t::Triangle, fill_type_t::Outline>;
+	using outline_triangle_t = primitive_t<primitive_type_t::Triangle, fill_type_t::Outline>;
+
 	template<> struct primitive_t<primitive_type_t::Triangle, fill_type_t::Fill>;
+	using fill_triangle_t = primitive_t<primitive_type_t::Triangle, fill_type_t::Fill>;
+
 	template<> struct primitive_t<primitive_type_t::Triangle, fill_type_t::Composite>;
+	using composite_triangle_t = primitive_t<primitive_type_t::Triangle, fill_type_t::Composite>;
 
 	template<> struct primitive_t<primitive_type_t::Rectangle, fill_type_t::Outline>;
+	using outline_rect_t = primitive_t<primitive_type_t::Rectangle, fill_type_t::Outline>;
+
 	template<> struct primitive_t<primitive_type_t::Rectangle, fill_type_t::Fill>;
+	using fill_rect_t = primitive_t<primitive_type_t::Rectangle, fill_type_t::Fill>;
+
 	template<> struct primitive_t<primitive_type_t::Rectangle, fill_type_t::Composite>;
+	using composite_rect_t = primitive_t<primitive_type_t::Rectangle, fill_type_t::Composite>;
 
 	template<> struct primitive_t<primitive_type_t::Circle, fill_type_t::Outline>;
+	using outline_circle_t = primitive_t<primitive_type_t::Circle, fill_type_t::Outline>;
+
 	template<> struct primitive_t<primitive_type_t::Circle, fill_type_t::Fill>;
+	using fill_circle_t = primitive_t<primitive_type_t::Circle, fill_type_t::Fill>;
+
 	template<> struct primitive_t<primitive_type_t::Circle, fill_type_t::Composite>;
+	using composite_circle_t = primitive_t<primitive_type_t::Circle, fill_type_t::Composite>;
 
 	template<> struct primitive_t<primitive_type_t::Ellipse, fill_type_t::Outline>;
+	using outline_ellipse_t = primitive_t<primitive_type_t::Ellipse, fill_type_t::Outline>;
+
 	template<> struct primitive_t<primitive_type_t::Ellipse, fill_type_t::Fill>;
+	using fill_ellipse_t = primitive_t<primitive_type_t::Ellipse, fill_type_t::Fill>;
+
 	template<> struct primitive_t<primitive_type_t::Ellipse, fill_type_t::Composite>;
+	using composite_ellipse_t = primitive_t<primitive_type_t::Ellipse, fill_type_t::Composite>;
 
 	template<> struct primitive_t<primitive_type_t::Capsule, fill_type_t::Outline>;
+	using outline_capsule_t = primitive_t<primitive_type_t::Capsule, fill_type_t::Outline>;
+
 	template<> struct primitive_t<primitive_type_t::Capsule, fill_type_t::Fill>;
+	using fill_capsule_t = primitive_t<primitive_type_t::Capsule, fill_type_t::Fill>;
+
 	template<> struct primitive_t<primitive_type_t::Capsule, fill_type_t::Composite>;
+	using composite_capsule_t = primitive_t<primitive_type_t::Capsule, fill_type_t::Composite>;
 } // namespace bleak

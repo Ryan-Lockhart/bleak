@@ -1,14 +1,13 @@
 #pragma once
 
-#include "bleak/offset/offset_2d.hpp"
-#include "typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <bitset>
 
 #include <SDL.h>
 
-#include "bleak/input.hpp"
-#include "bleak/offset.hpp"
+#include <bleak/input.hpp>
+#include <bleak/offset.hpp>
 
 namespace bleak {
 	struct Mouse {

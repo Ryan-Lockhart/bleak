@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <format>
 #include <stdexcept>
@@ -8,12 +8,12 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-#include "bleak/color.hpp"
-#include "bleak/extent.hpp"
-#include "bleak/log.hpp"
-#include "bleak/renderer.hpp"
+#include <bleak/color.hpp>
+#include <bleak/extent.hpp>
+#include <bleak/log.hpp>
+#include <bleak/renderer.hpp>
 
-#include "bleak/constants/colors.hpp"
+#include <bleak/constants/colors.hpp>
 
 namespace bleak {
 	namespace sdl {

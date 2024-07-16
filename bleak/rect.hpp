@@ -1,13 +1,13 @@
 #pragma once
 
-#include "bleak/primitive.hpp"
+#include <bleak/primitive.hpp>
 
 #include <utility>
 
 #include <SDL.h>
 
-#include "bleak/extent.hpp"
-#include "bleak/offset.hpp"
+#include <bleak/extent.hpp>
+#include <bleak/offset.hpp>
 
 namespace bleak {
 	struct rect_t {

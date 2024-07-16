@@ -1,13 +1,13 @@
 #pragma once
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <fstream>
 #include <utility>
 
-#include "bleak/extent.hpp"
-#include "bleak/offset.hpp"
-#include "bleak/renderer.hpp"
-#include "bleak/zone.hpp"
+#include <bleak/extent.hpp>
+#include <bleak/offset.hpp>
+#include <bleak/renderer.hpp>
+#include <bleak/zone.hpp>
 
 namespace bleak {
 	struct region_offset_t {

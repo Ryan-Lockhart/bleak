@@ -1,13 +1,13 @@
 #pragma once
 
-#include "SDL_timer.h"
-#include "typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <SDL.h>
 
 namespace bleak {
 	namespace sdl {
 		static inline usize get_performance_counter() noexcept { return SDL_GetPerformanceCounter(); }
+
 		static inline usize get_performance_frequency() noexcept { return SDL_GetPerformanceFrequency(); }
 	} // namespace sdl
 

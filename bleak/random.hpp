@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bleak/typedef.hpp" // IWYU pragma: keep
+#include <bleak/typedef.hpp> // IWYU pragma: keep
 
 #include <random> // IWYU pragma: export
 

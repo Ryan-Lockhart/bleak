@@ -1,17 +1,16 @@
 #pragma once
 
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <string>
 #include <vector>
 
-#include "bleak/color.hpp"
-#include "bleak/extent.hpp"
-#include "bleak/glyph.hpp"
-#include "bleak/offset.hpp"
+#include <bleak/color.hpp>
+#include <bleak/extent.hpp>
+#include <bleak/glyph.hpp>
+#include <bleak/offset.hpp>
 
-#include "constants/colors.hpp"
-#include "extent/extent_2d.hpp"
+#include <bleak/constants/colors.hpp>
 
 namespace bleak {
 	class runes_t : public std::vector<glyph_t> {

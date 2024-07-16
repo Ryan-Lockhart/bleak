@@ -1,15 +1,15 @@
 #pragma once
 
-#include "typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <format>
 #include <map>
 
 #include <SDL.h>
 
-#include "cardinal.hpp"
-#include "input.hpp"
-#include "log.hpp"
+#include <bleak/cardinal.hpp>
+#include <bleak/input.hpp>
+#include <bleak/log.hpp>
 
 extern "C" {
 	typedef enum {

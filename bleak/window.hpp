@@ -1,19 +1,19 @@
 #pragma once
 
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <format>
 
 #include <SDL.h>
 
-#include "bleak/extent.hpp"
-#include "bleak/gamepad.hpp"
-#include "bleak/keyboard.hpp"
-#include "bleak/log.hpp"
-#include "bleak/mouse.hpp"
-#include "bleak/offset.hpp"
-#include "bleak/rect.hpp"
-#include "bleak/subsystem.hpp"
+#include <bleak/extent.hpp>
+#include <bleak/gamepad.hpp>
+#include <bleak/keyboard.hpp>
+#include <bleak/log.hpp>
+#include <bleak/mouse.hpp>
+#include <bleak/offset.hpp>
+#include <bleak/rect.hpp>
+#include <bleak/subsystem.hpp>
 
 namespace bleak {
 	namespace sdl {

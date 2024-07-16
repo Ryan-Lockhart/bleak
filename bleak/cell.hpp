@@ -1,14 +1,14 @@
 #pragma once
 
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <format>
 #include <string>
 
-#include "bleak/atlas.hpp"
-#include "bleak/extent.hpp"
-#include "bleak/offset.hpp"
-#include "bleak/renderer.hpp"
+#include <bleak/atlas.hpp>
+#include <bleak/extent.hpp>
+#include <bleak/offset.hpp>
+#include <bleak/renderer.hpp>
 
 namespace bleak {
 	enum class cell_trait_t : u8 { Open, Solid, Transperant, Opaque, Seen, Explored, Unseen, Unexplored, Dry, Damp, Cold, Warm, Odorless, Smelly, Safe, Toxic };

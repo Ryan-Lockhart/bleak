@@ -1,10 +1,10 @@
 #pragma once
 
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <string>
 
-#include "bleak/cardinal.hpp"
+#include <bleak/cardinal.hpp>
 
 extern "C" {
 	typedef struct c_quadrant_t {

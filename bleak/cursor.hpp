@@ -1,16 +1,16 @@
 #pragma once
 
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
-#include "bleak/cardinal.hpp"
-#include "bleak/color.hpp"
-#include "bleak/extent.hpp"
-#include "bleak/mouse.hpp"
-#include "bleak/offset.hpp"
-#include "bleak/quadrant.hpp"
-#include "bleak/texture.hpp"
+#include <bleak/cardinal.hpp>
+#include <bleak/color.hpp>
+#include <bleak/extent.hpp>
+#include <bleak/mouse.hpp>
+#include <bleak/offset.hpp>
+#include <bleak/quadrant.hpp>
+#include <bleak/texture.hpp>
 
-#include "bleak/constants/colors.hpp"
+#include <bleak/constants/colors.hpp>
 
 namespace bleak {
 	struct cursor_t {

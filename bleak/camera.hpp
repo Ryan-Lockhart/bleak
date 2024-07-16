@@ -1,8 +1,8 @@
 #pragma once
 
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
-#include "bleak/offset.hpp"
+#include <bleak/offset.hpp>
 
 namespace bleak {
 	class camera_t {

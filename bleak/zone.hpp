@@ -1,23 +1,26 @@
 #pragma once
 
-#include "bleak/offset/offset_2d.hpp"
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <cstring>
 #include <exception>
 #include <fstream>
 #include <iostream>
 #include <optional>
+#include <queue>
+#include <random>
 #include <string>
+#include <unordered_set>
 
-#include "bleak/array.hpp"
-#include "bleak/atlas.hpp"
-#include "bleak/cardinal.hpp"
-#include "bleak/extent.hpp"
-#include "bleak/log.hpp"
-#include "bleak/offset.hpp"
-#include "bleak/random.hpp"
-#include "bleak/renderer.hpp"
+#include <bleak/array.hpp>
+#include <bleak/atlas.hpp>
+#include <bleak/cardinal.hpp>
+#include <bleak/extent.hpp>
+#include <bleak/log.hpp>
+#include <bleak/offset.hpp>
+#include <bleak/primitive.hpp>
+#include <bleak/random.hpp>
+#include <bleak/renderer.hpp>
 
 namespace bleak {
 	enum class zone_region_t : u8 { None = 0, Interior = 1 << 0, Border = 1 << 1, All = Interior | Border };
@@ -616,6 +619,7 @@ namespace bleak {
 					const offset_2d_t pos{ x_dis(generator), y_dis(generator) };
 
 					if (cells[pos] == value) {
+						auto hello{ cells[pos] };
 						return pos;
 					}
 				}
@@ -700,8 +704,92 @@ namespace bleak {
 			return true;
 		}
 
-		constexpr void deserialize(cstr binary_data) noexcept {
-			std::memcpy(reinterpret_cast<str>(cells.data_ptr()), binary_data, cells.byte_size);
+		constexpr void deserialize(cstr binary_data) noexcept { std::memcpy(reinterpret_cast<str>(cells.data_ptr()), binary_data, cells.byte_size); }
+	};
+
+	struct area_t : public std::unordered_set<offset_2d_t, offset_2d_t::hasher> {
+		using underlying_t = std::unordered_set<offset_2d_t, offset_2d_t::hasher>;
+
+		template<typename T, extent_2d_t Size, extent_2d_t BorderSize> inline area_t(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value) {
+			for (extent_2d_t::scalar_t y{ 0 }; y < Size.h; ++y) {
+				for (extent_2d_t::scalar_t x{ 0 }; x < Size.w; ++x) {
+					if (zone[x, y] != value) {
+						continue;
+					}
+
+					insert(offset_2d_t{ x, y });
+				}
+			}
+		}
+
+		template<typename T, extent_2d_t Size, extent_2d_t BorderSize> inline area_t(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_2d_t> position, cref<T> value) {
+			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
+				return;
+			}
+
+			std::queue<offset_2d_t> frontier{};
+			frontier.push(position);
+
+			while (!frontier.empty()) {
+				const offset_2d_t current{ frontier.front() };
+				frontier.pop();
+
+				insert(current);
+
+				for (offset_2d_t::scalar_t y{ -1 }; y <= 1; ++y) {
+					for (offset_2d_t::scalar_t x{ -1 }; x <= 1; ++x) {
+						const offset_2d_t neighbour{ current.x + x, current.y + y };
+
+						if (!zone.within<zone_region_t::All>(neighbour) || zone[neighbour] != value || contains(neighbour)) {
+							continue;
+						}
+
+						frontier.push(neighbour);
+					}
+				}
+			}
+		}
+
+		inline bool contains(cref<offset_2d_t> position) const noexcept { return find(position) != end(); }
+
+		template<typename T, extent_2d_t Size, extent_2d_t BorderSize> inline void set(ref<zone_t<T, Size, BorderSize>> zone, cref<T> value) const noexcept {
+			for (cref<offset_2d_t> position : *this) {
+				zone[position] = value;
+			}
+		}
+
+		template<typename T, extent_2d_t Size, extent_2d_t BorderSize> inline void apply(ref<zone_t<T, Size, BorderSize>> zone, cref<T> value) const noexcept {
+			for (cref<offset_2d_t> position : *this) {
+				zone[position] += value;
+			}
+		}
+
+		template<typename T, extent_2d_t Size, extent_2d_t BorderSize> inline void repeal(ref<zone_t<T, Size, BorderSize>> zone, cref<T> value) const noexcept {
+			for (cref<offset_2d_t> position : *this) {
+				zone[position] -= value;
+			}
+		}
+
+		template<typename T, extent_2d_t Size, extent_2d_t BorderSize, typename Generator>
+		inline void randomize(ref<zone_t<T, Size, BorderSize>> zone, ref<Generator> generator, f64 probability, cref<binary_applicator_t<T>> applicator) const noexcept
+			requires is_random_engine<Generator>::value
+		{
+			std::bernoulli_distribution dis{ probability };
+
+			for (cref<offset_2d_t> position : *this) {
+				zone[position] = applicator(generator, dis);
+			}
+		}
+
+		template<typename T, extent_2d_t Size, extent_2d_t BorderSize, typename Generator>
+		inline void randomize(ref<zone_t<T, Size, BorderSize>> zone, ref<Generator> generator, f64 probability, cref<T> true_value, cref<T> false_value) const noexcept
+			requires is_random_engine<Generator>::value
+		{
+			std::bernoulli_distribution dis{ probability };
+
+			for (cref<offset_2d_t> position : *this) {
+				zone[position] = dis(generator) ? true_value : false_value;
+			}
 		}
 	};
 } // namespace bleak

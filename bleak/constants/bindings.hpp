@@ -1,12 +1,15 @@
 #pragma once
 
+#include <bleak/typedef.hpp>
+
 #include <array>
 
-#include "SDL_scancode.h"
-#include "bleak/cardinal.hpp"
-#include "bleak/lut.hpp"
+#include <SDL.h>
 
-#include "bleak/constants/keys.hpp"
+#include <bleak/cardinal.hpp>
+#include <bleak/lut.hpp>
+
+#include <bleak/constants/keys.hpp>
 
 namespace bleak {
 	namespace Bindings {

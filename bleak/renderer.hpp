@@ -1,19 +1,18 @@
 #pragma once
 
-#include "bleak/offset/offset_2d.hpp"
-#include "bleak/typedef.hpp"
+#include <bleak/typedef.hpp>
 
 #include <format>
 
 #include <SDL.h>
 
-#include "bleak/color.hpp"
-#include "bleak/extent.hpp"
-#include "bleak/line.hpp"
-#include "bleak/log.hpp"
-#include "bleak/offset.hpp"
-#include "bleak/window.hpp"
-#include "extent/extent_2d.hpp"
+#include <bleak/color.hpp>
+#include <bleak/extent.hpp>
+#include <bleak/line.hpp>
+#include <bleak/log.hpp>
+#include <bleak/offset.hpp>
+#include <bleak/primitive.hpp>
+#include <bleak/window.hpp>
 
 namespace bleak {
 	namespace sdl {
@@ -42,6 +41,10 @@ namespace bleak {
 				error_log.add("cannot destroy renderer: renderer handle is null!");
 			}
 		}
+
+		static inline void set_render_draw_color(renderer renderer, u8 r, u8 g, u8 b, u8 a) noexcept { SDL_SetRenderDrawColor(renderer, r, g, b, a); }
+
+		static inline void set_render_draw_color(renderer renderer, cref<color_t> color) noexcept { SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a); }
 	} // namespace sdl
 
 	class renderer_t {
@@ -57,9 +60,9 @@ namespace bleak {
 
 		constexpr sdl::const_renderer handle() const noexcept { return renderer; }
 
-		inline void set_draw_color(u8 r, u8 g, u8 b, u8 a) noexcept { SDL_SetRenderDrawColor(renderer, r, g, b, a); }
+		inline void set_draw_color(u8 r, u8 g, u8 b, u8 a) noexcept { sdl::set_render_draw_color(renderer, r, g, b, a); }
 
-		inline void set_draw_color(cref<color_t> color) noexcept { SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a); }
+		inline void set_draw_color(cref<color_t> color) noexcept { sdl::set_render_draw_color(renderer, color); }
 
 		inline void clear() noexcept { SDL_RenderClear(renderer); }
 
@@ -70,7 +73,61 @@ namespace bleak {
 
 		inline void present() noexcept { SDL_RenderPresent(renderer); }
 
-		template<primitive_type_t Primitive, fill_type_t Fill> inline void draw() noexcept;
+		template<primitive_type_t Primitive, fill_type_t Fill> inline void draw(cref<primitive_t<Primitive, Fill>> primitive) noexcept {
+			error_log.add("draw not implemented for primitive: {} {}", (std::string)Primitive, (std::string)Fill);
+			return;
+
+			if constexpr (Primitive == primitive_type_t::Point) {
+				if constexpr (Fill == fill_type_t::Outline) {
+
+				} else if constexpr (Fill == fill_type_t::Fill) {
+
+				} else if constexpr (Fill == fill_type_t::Composite) {
+				}
+			} else if constexpr (Primitive == primitive_type_t::Line) {
+				if constexpr (Fill == fill_type_t::Outline) {
+
+				} else if constexpr (Fill == fill_type_t::Fill) {
+
+				} else if constexpr (Fill == fill_type_t::Composite) {
+				}
+			} else if constexpr (Primitive == primitive_type_t::Triangle) {
+				if constexpr (Fill == fill_type_t::Outline) {
+
+				} else if constexpr (Fill == fill_type_t::Fill) {
+
+				} else if constexpr (Fill == fill_type_t::Composite) {
+				}
+			} else if constexpr (Primitive == primitive_type_t::Rectangle) {
+				if constexpr (Fill == fill_type_t::Outline) {
+
+				} else if constexpr (Fill == fill_type_t::Fill) {
+
+				} else if constexpr (Fill == fill_type_t::Composite) {
+				}
+			} else if constexpr (Primitive == primitive_type_t::Circle) {
+				if constexpr (Fill == fill_type_t::Outline) {
+
+				} else if constexpr (Fill == fill_type_t::Fill) {
+
+				} else if constexpr (Fill == fill_type_t::Composite) {
+				}
+			} else if constexpr (Primitive == primitive_type_t::Ellipse) {
+				if constexpr (Fill == fill_type_t::Outline) {
+
+				} else if constexpr (Fill == fill_type_t::Fill) {
+
+				} else if constexpr (Fill == fill_type_t::Composite) {
+				}
+			} else if constexpr (Primitive == primitive_type_t::Capsule) {
+				if constexpr (Fill == fill_type_t::Outline) {
+
+				} else if constexpr (Fill == fill_type_t::Fill) {
+
+				} else if constexpr (Fill == fill_type_t::Composite) {
+				}
+			}
+		}
 
 		inline void draw_point(offset_2d_t::scalar_t x, offset_2d_t::scalar_t y) noexcept { SDL_RenderDrawPoint(renderer, x, y); }
 
@@ -124,13 +181,13 @@ namespace bleak {
 
 		inline void draw_outline_rect(cref<offset_2d_t> position, cref<extent_2d_t> size, cref<extent_2d_t> thickness) noexcept {
 			extent_2d_t dbl_thickness{ thickness * 2 };
-			
+
 			extent_2d_t vertical_size{ size.w, dbl_thickness.h };
 			extent_2d_t horizontal_size{ dbl_thickness.w, size.h - dbl_thickness.h };
 
-			draw_fill_rect(position, vertical_size); // top
-			draw_fill_rect(offset_2d_t{ position.x, position.y + size.h - dbl_thickness.h }, vertical_size); // bottom
-			draw_fill_rect(offset_2d_t{ position.x, position.y + dbl_thickness.h }, horizontal_size); // left
+			draw_fill_rect(position, vertical_size);																			 // top
+			draw_fill_rect(offset_2d_t{ position.x, position.y + size.h - dbl_thickness.h }, vertical_size);					 // bottom
+			draw_fill_rect(offset_2d_t{ position.x, position.y + dbl_thickness.h }, horizontal_size);							 // left
 			draw_fill_rect(offset_2d_t{ position.x + size.w - dbl_thickness.w, position.y + dbl_thickness.h }, horizontal_size); // right
 		}
 
