@@ -5,15 +5,6 @@
 #include <bleak/offset.hpp>
 
 namespace bleak {
-	struct octant_t {
-		offset_2d_t position;
-		offset_2d_t delta;
-
-		constexpr octant_t() : position{}, delta{} {}
-
-		constexpr octant_t(cref<offset_2d_t> position, cref<offset_2d_t> delta) : position{ position }, delta{ delta } {}
-	};
-
 	template<typename T>
 		requires is_numeric<T>::value
 	struct creeper_t {

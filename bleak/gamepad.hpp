@@ -423,6 +423,11 @@ namespace bleak {
 
 		inline gamepad_slot_t(ptr<joystick_t> joystick) : gamepad{ new gamepad_t{ joystick } } {}
 
+		inline gamepad_slot_t(fn_ptr<void> disconnect_callback, fn_ptr<void, cptr<gamepad_t>> reconnect_callback) :
+			gamepad{ nullptr },
+			disconnect_callback{ disconnect_callback },
+			reconnect_callback{ reconnect_callback } {}
+
 		inline gamepad_slot_t(ptr<joystick_t> joystick, fn_ptr<void> disconnect_callback, fn_ptr<void, cptr<gamepad_t>> reconnect_callback) :
 			gamepad{ new gamepad_t{ joystick } },
 			disconnect_callback{ disconnect_callback },
@@ -502,8 +507,9 @@ namespace bleak {
 
 			auto iter{ slots.find(id) };
 
+			// should allow for preemptive leasing
 			if (iter == slots.end()) {
-				error_log.add("attempting to lease gamepad slot that does not exist!\n");
+				slots.emplace(id, gamepad_slot_t{ disconnected_callback, reconnected_callback });
 				return nullptr;
 			}
 
@@ -573,11 +579,6 @@ namespace bleak {
 
 		if (it != slots.end() && it->second.gamepad != nullptr) {
 			error_log.add("joystick {} already connected\n", id);
-			return false;
-		}
-
-		if (!SDL_IsGameController(id)) {
-			error_log.add("joystick {} is not supported\n", id);
 			return false;
 		}
 

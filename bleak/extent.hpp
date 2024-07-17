@@ -10,6 +10,8 @@
 
 #include <SDL.h>
 
+#include <bleak/hash.hpp>
+
 extern "C" {
 	typedef struct c_extent_1d_t {
 #if BLEAKDEPTH_BIG_GRID
@@ -501,6 +503,7 @@ namespace bleak {
 } // namespace bleak
 
 #include <bleak/offset.hpp> // IWYU pragma: export
+
 namespace bleak {
     constexpr const extent_1d_t extent_1d_t::zero{ extent_1d_t::scalar_t{ 0 } };
 

@@ -2,12 +2,13 @@
 
 #include <bleak/typedef.hpp>
 
-#include <initializer_list>
 #include <cassert>
+#include <initializer_list>
 
 #include <bleak/extent.hpp>
-#include <bleak/offset.hpp>
 #include <bleak/iter.hpp>
+#include <bleak/offset.hpp>
+#include <bleak/utility.hpp>
 
 namespace bleak {
 	template<extent_1d_t Size> static inline constexpr extent_1d_t::product_t flatten(cref<offset_1d_t> offset) noexcept;
@@ -170,7 +171,7 @@ namespace bleak {
 
 		constexpr const_reverse_iterator crend() const noexcept;
 	};
-	
+
 	template<extent_1d_t Size> static constexpr extent_1d_t::product_t flatten(cref<offset_1d_t> offset) noexcept { return extent_1d_t::product_cast(offset.x); }
 
 	template<extent_1d_t Size> static inline constexpr extent_1d_t::product_t flatten(cref<offset_1d_t::scalar_t> i) noexcept { return extent_1d_t::product_cast(i); }
@@ -515,7 +516,7 @@ namespace bleak {
 	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::const_reverse_iterator array_t<T, OffsetType, ExtentType, Extent>::crend() const noexcept {
 		return const_reverse_iterator{ data - 1 };
 	}
-	
+
 	template<typename T, extent_1d_t Size> using row_t = array_t<T, offset_1d_t, extent_1d_t, Size>;
 
 	template<typename T, extent_2d_t Size> using layer_t = array_t<T, offset_2d_t, extent_2d_t, Size>;

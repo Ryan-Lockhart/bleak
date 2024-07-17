@@ -1,13 +1,14 @@
 #pragma once
 
-#include <stdexcept>
-#include <string>
+#include <bleak/typedef.hpp>
 
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
 #include <SDL_net.h>
 #include <SDL_ttf.h>
+
+#include <bleak/log.hpp>
 
 namespace bleak {
 	struct Subsystem {
@@ -18,72 +19,67 @@ namespace bleak {
 		static inline bool sdl_net_initialized;
 		static inline bool sdl_ttf_initialized;
 
-		static inline void initialize_sdl() {
+		static inline void initialize_sdl() noexcept {
 			if (sdl_initialized) {
 				return;
 			}
 
 			sdl_initialized = SDL_Init(SDL_INIT_VIDEO) == 0;
-			std::string sdl_error { SDL_GetError() };
 
 			if (!sdl_initialized) {
-				throw std::runtime_error("failed to initialize sdl: " + sdl_error);
+				error_log.add("failed to initialize sdl: {}", SDL_GetError());
 			}
 		}
 
-		static inline void initialize_sdl_image() {
+		static inline void initialize_sdl_image() noexcept {
 			if (sdl_image_initialized) {
 				return;
 			}
 
 			sdl_image_initialized = IMG_Init(IMG_INIT_PNG) != 0;
-			std::string sdl_image_error { IMG_GetError() };
 
 			if (!sdl_image_initialized) {
-				throw std::runtime_error("failed to initialize sdl-image: " + sdl_image_error);
+				error_log.add("failed to initialize sdl-image: {}", IMG_GetError());
 			}
 		}
 
-		static inline void initialize_sdl_mixer() {
+		static inline void initialize_sdl_mixer() noexcept {
 			if (sdl_mixer_initialized) {
 				return;
 			}
 
 			sdl_mixer_initialized = Mix_Init(MIX_INIT_OGG) != 0;
-			std::string sdl_mixer_error { Mix_GetError() };
 
 			if (!sdl_mixer_initialized) {
-				throw std::runtime_error("failed to initialize sdl-mixer: " + sdl_mixer_error);
+				error_log.add("failed to initialize sdl-mixer: {}", Mix_GetError());
 			}
 		}
 
-		static inline void initialize_sdl_net() {
+		static inline void initialize_sdl_net() noexcept {
 			if (sdl_net_initialized) {
 				return;
 			}
 
 			sdl_net_initialized = SDLNet_Init() == 0;
-			std::string sdl_net_error { SDLNet_GetError() };
 
 			if (!sdl_net_initialized) {
-				throw std::runtime_error("failed to initialize sdl-net: " + sdl_net_error);
+				error_log.add("failed to initialize sdl-net: {}", SDLNet_GetError());
 			}
 		}
 
-		static inline void initialize_sdl_ttf() {
+		static inline void initialize_sdl_ttf() noexcept {
 			if (sdl_ttf_initialized) {
 				return;
 			}
 
 			sdl_ttf_initialized = TTF_Init() == 0;
-			std::string sdl_ttf_error { TTF_GetError() };
 
 			if (!sdl_ttf_initialized) {
-				throw std::runtime_error("failed to initialize sdl-ttf: " + sdl_ttf_error);
+				error_log.add("failed to initialize sdl-ttf: {}", TTF_GetError());
 			}
 		}
 
-		static inline void terminate_sdl() {
+		static inline void terminate_sdl() noexcept {
 			if (!sdl_initialized) {
 				return;
 			}
@@ -92,7 +88,7 @@ namespace bleak {
 			sdl_initialized = false;
 		}
 
-		static inline void terminate_sdl_image() {
+		static inline void terminate_sdl_image() noexcept {
 			if (!sdl_image_initialized) {
 				return;
 			}
@@ -101,7 +97,7 @@ namespace bleak {
 			sdl_image_initialized = false;
 		}
 
-		static inline void terminate_sdl_mixer() {
+		static inline void terminate_sdl_mixer() noexcept {
 			if (!sdl_mixer_initialized) {
 				return;
 			}
@@ -110,7 +106,7 @@ namespace bleak {
 			sdl_mixer_initialized = false;
 		}
 
-		static inline void terminate_sdl_net() {
+		static inline void terminate_sdl_net() noexcept {
 			if (!sdl_net_initialized) {
 				return;
 			}
@@ -119,7 +115,7 @@ namespace bleak {
 			sdl_net_initialized = false;
 		}
 
-		static inline void terminate_sdl_ttf() {
+		static inline void terminate_sdl_ttf() noexcept {
 			if (!sdl_ttf_initialized) {
 				return;
 			}
@@ -129,7 +125,7 @@ namespace bleak {
 		}
 
 	  public:
-		static inline void initialize() {
+		static inline void initialize() noexcept {
 			if (is_initialized()) {
 				return;
 			}
@@ -141,7 +137,7 @@ namespace bleak {
 			initialize_sdl_ttf();
 		}
 
-		static inline void terminate() {
+		static inline void terminate() noexcept {
 			if (!is_initialized()) {
 				return;
 			}
@@ -153,9 +149,6 @@ namespace bleak {
 			terminate_sdl();
 		}
 
-		static inline bool is_initialized() {
-			return sdl_initialized && sdl_image_initialized && sdl_mixer_initialized && sdl_net_initialized
-				   && sdl_ttf_initialized;
-		}
+		static inline bool is_initialized() noexcept { return sdl_initialized && sdl_image_initialized && sdl_mixer_initialized && sdl_net_initialized && sdl_ttf_initialized; }
 	};
-} // namespace Bleakdepth
+} // namespace bleak

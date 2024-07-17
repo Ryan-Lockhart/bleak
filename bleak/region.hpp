@@ -1,6 +1,8 @@
 #pragma once
+#include "bleak/log.hpp"
 #include <bleak/typedef.hpp>
 
+#include <cstring>
 #include <fstream>
 #include <utility>
 
@@ -15,7 +17,7 @@ namespace bleak {
 		offset_2d_t cell;
 	};
 
-	template<typename T, extent_2d_t RegionSize, extent_2d_t ZoneSize, extent_2d_t ZoneBorder = extent_2d_t{ 0, 0 }> struct region_t {
+	template<typename T, extent_2d_t RegionSize, extent_2d_t ZoneSize, extent_2d_t ZoneBorder> struct region_t {
 	  private:
 		layer_t<zone_t<T, ZoneSize, ZoneBorder>, RegionSize> zones;
 
@@ -57,18 +59,21 @@ namespace bleak {
 
 				buffer = static_cast<str>(std::malloc(zone_type::byte_size));
 
-				for (extent_2d_t::product_t i{ 0 }; i < region_area; ++i) {
-					const extent_1d_t index{ i };
-					file.read(buffer, zone_type::byte_size);
+				if (buffer == nullptr) {
+					error_log.add("failed to allocate buffer for reading region file.", __TIME_FILE_LINE__);
+					throw std::bad_alloc();
+				}
 
-					zones[index].deserialize(buffer);
+				for (extent_2d_t::product_t i{ 0 }; i < region_area; ++i) {
+					file.read(buffer, zone_type::byte_size);
+					zones[extent_1d_t{ i }].deserialize(buffer);
 				}
 
 				std::free(buffer);
 				buffer = nullptr;
 
 				file.close();
-			} catch (std::exception e) {
+			} catch (cref<std::exception> e) {
 				error_log.add(e.what(), __TIME_FILE_LINE__);
 
 				if (buffer != nullptr) {
@@ -116,6 +121,38 @@ namespace bleak {
 
 		constexpr cref<T> operator[](cref<region_offset_t> position) const noexcept { return zones[position.zone][position.cell]; }
 
+		constexpr zone_t<T, RegionSize * ZoneSize, ZoneBorder> compile() const noexcept {
+			zone_t<T, RegionSize * ZoneSize, ZoneBorder> zone{};
+
+			for (extent_2d_t::scalar_t region_y{ 0 }; region_y < region_size.h; ++region_y) {
+				for (extent_2d_t::scalar_t region_x{ 0 }; region_x < region_size.w; ++region_x) {
+					const offset_2d_t region_pos{ region_x, region_y };
+					for (extent_2d_t::scalar_t zone_y{ 0 }; zone_y < zone_size.h; ++zone_y) {
+						for (extent_2d_t::scalar_t zone_x{ 0 }; zone_x < zone_size.w; ++zone_x) {
+							const offset_2d_t zone_pos{ zone_x, zone_y };
+							zone[region_pos * zone_size + zone_pos] = zones[region_pos][zone_pos];
+						}
+					}
+				}
+			}
+
+			return zone;
+		}
+
+		constexpr void compile(ref<zone_t<T, RegionSize * ZoneSize, ZoneBorder>> zone) const noexcept {
+			for (extent_2d_t::scalar_t region_y{ 0 }; region_y < region_size.h; ++region_y) {
+				for (extent_2d_t::scalar_t region_x{ 0 }; region_x < region_size.w; ++region_x) {
+					const offset_2d_t region_pos{ region_x, region_y };
+					for (extent_2d_t::scalar_t zone_y{ 0 }; zone_y < zone_size.h; ++zone_y) {
+						for (extent_2d_t::scalar_t zone_x{ 0 }; zone_x < zone_size.w; ++zone_x) {
+							const offset_2d_t zone_pos{ zone_x, zone_y };
+							zone[region_pos * zone_size + zone_pos] = zones[region_pos][zone_pos];
+						}
+					}
+				}
+			}
+		}
+
 		template<extent_2d_t AtlasSize>
 		constexpr void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas)
 			requires is_drawable<T>::value
@@ -129,25 +166,25 @@ namespace bleak {
 		}
 
 		template<extent_2d_t AtlasSize>
-		constexpr void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset)
+		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset)
 			requires is_drawable<T>::value
 		{
 			for (extent_2d_t::scalar_t y{ 0 }; y < region_size.h; ++y) {
 				for (extent_2d_t::scalar_t x{ 0 }; x < region_size.w; ++x) {
 					const offset_2d_t pos{ x, y };
-					(*this)[pos].draw(renderer, atlas, pos * zone_size + offset);
+					(*this)[pos].draw(atlas, pos * zone_size + offset);
 				}
 			}
 		}
 
 		template<extent_2d_t AtlasSize>
-		constexpr void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset, cref<extent_2d_t> scale)
+		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset, cref<extent_2d_t> scale)
 			requires is_drawable<T>::value
 		{
 			for (extent_2d_t::scalar_t y{ 0 }; y < region_size.h; ++y) {
 				for (extent_2d_t::scalar_t x{ 0 }; x < region_size.w; ++x) {
 					const offset_2d_t pos{ x, y };
-					(*this)[pos].draw(renderer, atlas, pos * zone_size + offset, scale);
+					(*this)[pos].draw(atlas, pos * zone_size + offset, scale);
 				}
 			}
 		}

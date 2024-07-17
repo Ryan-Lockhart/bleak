@@ -8,6 +8,7 @@
 
 #include <SDL.h>
 
+#include <bleak/area.hpp>
 #include <bleak/atlas.hpp>
 #include <bleak/cardinal.hpp>
 #include <bleak/cell.hpp>
@@ -30,6 +31,7 @@
 #include <bleak/window.hpp>
 #include <bleak/zone.hpp>
 
+#include "bleak/constants/glyphs.hpp"
 #include <bleak/constants/bindings.hpp>
 #include <bleak/constants/colors.hpp>
 
@@ -61,7 +63,8 @@ namespace Globals {
 	constexpr extent_2d_t UIGridSize{ WindowSize / 8 };
 	constexpr extent_2d_t GameGridSize{ WindowSize / 16 };
 
-	constexpr extent_2d_t AtlasSize{ 16, 16 };
+	constexpr extent_2d_t GlyphsetSize{ 16, 16 };
+	constexpr extent_2d_t TilesetSize{ 16, 5 };
 
 	constexpr extent_2d_t ZoneSize{ 64, 64 };
 	constexpr extent_2d_t RegionSize{ 4, 4 };
@@ -71,18 +74,21 @@ namespace Globals {
 	constexpr extent_2d_t CellSize{ 16, 16 };
 
 	constexpr offset_2d_t CursorOffset{ UniversalOffset - CellSize / 4 };
+
+	constexpr offset_2d_t CameraExtent{ offset_2d_t{ RegionSize * ZoneSize } - offset_2d_t{ Globals::GameGridSize } };
 } // namespace Globals
 
 struct game_state {
 	window_t window;
 	renderer_t renderer;
 
-	atlas_t<Globals::AtlasSize> game_atlas;
-	atlas_t<Globals::AtlasSize> ui_atlas;
+	atlas_t<Globals::TilesetSize> game_atlas;
+	atlas_t<Globals::GlyphsetSize> ui_atlas;
 
 	std::mt19937 random_engine;
 
-	region_t<cell_state_t, Globals::RegionSize, Globals::ZoneSize, Globals::BorderSize> game_map;
+	zone_t<cell_state_t, Globals::RegionSize * Globals::ZoneSize, Globals::BorderSize> game_map;
+	zone_t<glyph_t, Globals::GameGridSize> glyph_map;
 
 	bool gamepad_enabled;
 
@@ -97,7 +103,11 @@ struct game_state {
 
 	offset_2d_t camera_position;
 
-	animated_sprite_t<extent_1d_t{ 3 }> player;
+	// animated_sprite_t<extent_1d_t{ 3 }> player;
+	sprite_t player;
+	area_t player_fov;
+
+	bool camera_locked;
 
 	timer_t input_timer;
 	timer_t cursor_timer;
@@ -111,18 +121,23 @@ struct game_state {
 	game_state() noexcept :
 		window{ Globals::GameTitle.c_str(), Globals::WindowSize + Globals::WindowBorder * 2, Globals::WindowFlags },
 		renderer{ window, Globals::RendererFlags },
-		game_atlas{ renderer, "res\\glyphs\\glyphs_16x16.png", Globals::UniversalOffset },
+		game_atlas{ renderer, "res\\tiles\\tileset_16x16.png", Globals::UniversalOffset },
+		// game_atlas{ renderer, "res\\glyphs\\glyphs_16x16.png", Globals::UniversalOffset },
 		ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png", Globals::UniversalOffset },
 		random_engine{ std::random_device{}() },
 		game_map{ "res\\maps\\test_region.map" },
+		glyph_map{},
 		gamepad_enabled{ true },
 		primary_gamepad{ nullptr },
 		gamepad_active{ false },
 		cursor{ renderer, "res\\sprites\\cursor.png", Colors::White },
-		grid_cursor{ renderer, "res\\sprites\\grid_cursor.png", Colors::Metals::Gold, game_map.region_origin, offset_2d_t{ game_map.region_size * Globals::ZoneSize } - 1 },
+		grid_cursor{ renderer, "res\\sprites\\grid_cursor.png", Colors::Metals::Gold, game_map.zone_origin, game_map.zone_extent },
 		draw_cursor{ true },
 		camera_position{ 0 },
-		player{ animated_glyph_t<extent_1d_t{ 3 }>{ animated_glyph_t<extent_1d_t{ 3 }>::generate_contiguous_indices<0xB0, 0xB2>(), Colors::Green }, offset_2d_t{ 0 } },
+		// player{ animated_glyph_t<extent_1d_t{ 3 }>{ animated_glyph_t<extent_1d_t{ 3 }>::generate_contiguous_indices<0xB0, 0xB2>(), Colors::Green }, offset_2d_t{ 0 } },
+		player{ Glyphs::Player, offset_2d_t{ 0, 0 } },
+		player_fov{},
+		camera_locked{ true },
 		input_timer{ 125.0 },
 		cursor_timer{ 125.0 },
 		epoch_timer{ 250.0 },
@@ -149,9 +164,19 @@ void mouse_keyboard_active() { game_state.gamepad_active = false; }
 
 using namespace bleak;
 
+void center_camera(cref<offset_2d_t> position);
 void constrain_camera();
 
 bool camera_movement() {
+	if (game_state.camera_locked) {
+		offset_2d_t previous_position{ game_state.camera_position };
+
+		center_camera(game_state.player.position);
+		constrain_camera();
+
+		return previous_position != game_state.camera_position;
+	}
+
 	offset_2d_t direction{};
 
 	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::North])) {
@@ -198,7 +223,9 @@ bool camera_movement() {
 	return false;
 }
 
-void constrain_camera() { game_state.camera_position.clamp(offset_2d_t::zero, offset_2d_t{ game_state.game_map.size } - offset_2d_t{ Globals::GameGridSize }); }
+void center_camera(cref<offset_2d_t> position) { game_state.camera_position = position - Globals::GameGridSize / 2; }
+
+void constrain_camera() { game_state.camera_position.clamp(offset_2d_t::zero, Globals::CameraExtent); }
 
 bool character_movement() {
 	if (Keyboard::is_key_pressed(Bindings::Wait)) {
@@ -275,15 +302,6 @@ int main(int argc, char* argv[]) {
 }
 
 void startup() {
-	int* hellos{ new int[10] };
-
-	for (int i{ 0 }; i < 10; ++i) {
-		hellos[i] = i;
-	}
-
-	delete[] hellos;
-	hellos = nullptr;
-	
 	Subsystem::initialize();
 
 	Mouse::initialize();
@@ -298,28 +316,35 @@ void startup() {
 		message_log.add("no gamepad detected\n");
 	}
 
+	region_t<cell_state_t, Globals::RegionSize, Globals::ZoneSize, Globals::BorderSize> region{ "res\\maps\\test_region.map" };
+
 	/*constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored };
 	constexpr cell_state_t closed_state{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored };
 
-	for (extent_2d_t::product_t i{ 0 }; i < game_state.game_map.region_area; ++i) {
-		game_state.game_map[offset_1d_t{ i }].set<zone_region_t::Border>(closed_state);
-		game_state.game_map[offset_1d_t{ i }].generate<zone_region_t::Interior>(game_state.random_engine, 0.45, 10, 4, closed_state, open_state);
-	}*/
+	for (extent_2d_t::product_t i{ 0 }; i < region.region_area; ++i) {
+		region[offset_1d_t{ i }].set<zone_region_t::Border>(closed_state);
+		region[offset_1d_t{ i }].generate<zone_region_t::Interior>(game_state.random_engine, 0.45, 10, 4, closed_state, open_state);
+	}
 
-	auto& fill_zone{ game_state.game_map[offset_2d_t{ 0, 0 }] };
-	const auto& place_zone{ game_state.game_map[offset_2d_t{ 1, 0 }] };
+	auto& fill_zone{ region[offset_2d_t{ 0, 0 }] };
 
 	area_t area{ fill_zone, cell_state_t{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored } };
-	area.set(fill_zone, cell_state_t{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored });
+	area.set(fill_zone, cell_state_t{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored });*/
 
-	auto player_position{ place_zone.find_random<zone_region_t::Interior>(game_state.random_engine, cell_trait_t::Open) };
+	region.compile(game_state.game_map);
+
+	game_state.game_map.set<zone_region_t::All>(cell_trait_t::Unseen);
+
+	/*auto player_position{ game_state.game_map.find_random<zone_region_t::Interior>(game_state.random_engine, cell_trait_t::Open) };
 
 	if (player_position.has_value()) {
 		game_state.player.position = player_position.value() + offset_2d_t{ 1, 0 } * Globals::ZoneSize;
 	} else {
 		error_log.add("no open cells found for player start position\n", __TIME_FILE_LINE__);
 		terminate_prematurely();
-	}
+	}*/
+
+	game_state.player.position = offset_2d_t{ 0, 0 };
 
 	Mouse::hide_cursor();
 
@@ -345,7 +370,7 @@ void update() {
 	game_state.window.poll_events();
 
 	if (game_state.animation_timer.ready()) {
-		game_state.player.glyph.advance();
+		// game_state.player.glyph.advance();
 		game_state.animation_timer.record();
 	}
 
@@ -355,11 +380,17 @@ void update() {
 	}
 
 	if (game_state.input_timer.ready()) {
-		camera_movement();
-
 		if (game_state.epoch_timer.ready()) {
-			character_movement();
+			if (character_movement()) {
+				game_state.player_fov.set(game_state.game_map, cell_trait_t::Unseen);
+
+				game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f);
+
+				game_state.player_fov.set(game_state.game_map, cell_trait_t::Seen);
+			}
 		}
+
+		camera_movement();
 	}
 
 	game_state.sine_wave.update<wave_type_t::Sine>(Clock::elapsed());
@@ -388,19 +419,19 @@ void update() {
 void render() {
 	game_state.renderer.clear(Colors::Black);
 
-	game_state.game_map.draw(game_state.renderer, game_state.game_atlas, -game_state.camera_position);
+	game_state.game_map.draw(game_state.game_atlas, -game_state.camera_position);
 
-	game_state.player.draw(game_state.renderer, game_state.game_atlas, -game_state.camera_position);
+	game_state.player.draw(game_state.game_atlas, -game_state.camera_position);
 
 	if (game_state.draw_cursor) {
-		game_state.cursor.draw(game_state.renderer);
+		game_state.cursor.draw();
 	} else {
-		game_state.grid_cursor.draw(game_state.renderer, Globals::CursorOffset - game_state.camera_position * Globals::CellSize);
+		game_state.grid_cursor.draw(Globals::CursorOffset - game_state.camera_position * Globals::CellSize);
 	}
 
 	runes_t fps_text{ std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::Green };
 
-	game_state.ui_atlas.draw(game_state.renderer, fps_text, offset_2d_t{ Globals::UIGridSize.w - 1, 1 }, cardinal_t::West, offset_2d_t{ 0, -4 });
+	game_state.ui_atlas.draw(fps_text, offset_2d_t{ Globals::UIGridSize.w - 1, 1 }, cardinal_t::West, offset_2d_t{ 0, -4 });
 
 	runes_t title_text{ Globals::GameTitle, Colors::Marble };
 
@@ -416,6 +447,13 @@ void shutdown() {
 	if (game_state.primary_gamepad != nullptr) {
 		GamepadManager::release(0);
 	}
+
+	GamepadManager::terminate();
+
+	Keyboard::terminate();
+	Mouse::terminate();
+
+	Subsystem::terminate();
 
 	message_log.flush_to_file();
 	error_log.flush_to_file();

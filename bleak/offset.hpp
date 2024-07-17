@@ -10,7 +10,10 @@
 
 #include <SDL.h>
 
-#include "bleak/cardinal.hpp"
+#include <bleak/bitdef.hpp>
+#include <bleak/cardinal.hpp>
+#include <bleak/concepts.hpp>
+#include <bleak/hash.hpp>
 
 extern "C" {
 	typedef struct c_offset_1d_t {
@@ -25,7 +28,7 @@ extern "C" {
 #endif
 		scalar_t x{ 0 };
 	} c_offset_1d_t;
-	
+
 	typedef struct c_offset_2d_t {
 #if BLEAKDEPTH_BIG_GRID
 		typedef bleak::isize scalar_t;
@@ -40,13 +43,9 @@ extern "C" {
 		scalar_t x{ 0 };
 		scalar_t y{ 0 };
 
-		static_assert(
-			(product_t)std::numeric_limits<scalar_t>::max() *
-			(product_t)std::numeric_limits<scalar_t>::max() <=
-			std::numeric_limits<product_t>::max(), "product_t is too small for scalar_t"
-		);
+		static_assert((product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max() <= std::numeric_limits<product_t>::max(), "product_t is too small for scalar_t");
 	} c_offset_2d_t;
-	
+
 	typedef struct c_offset_3d_t {
 #if BLEAKDEPTH_BIG_GRID
 		typedef bleak::ihalf scalar_t;
@@ -63,10 +62,7 @@ extern "C" {
 		scalar_t z{ 0 };
 
 		static_assert(
-			(product_t)std::numeric_limits<scalar_t>::max() *
-			(product_t)std::numeric_limits<scalar_t>::max() *
-			(product_t)std::numeric_limits<scalar_t>::max() <=
-			std::numeric_limits<product_t>::max(), "product_t is too small for scalar_t"
+			(product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max() <= std::numeric_limits<product_t>::max(), "product_t is too small for scalar_t"
 		);
 	} c_offset_3d_t;
 }
@@ -268,12 +264,10 @@ namespace bleak {
 		constexpr explicit operator offset_3d_t() const noexcept;
 
 		struct hasher {
-			constexpr usize operator()(cref<offset_1d_t> offset) const noexcept {
-				return hash_combine(offset.x);
-			}
+			constexpr usize operator()(cref<offset_1d_t> offset) const noexcept { return hash_combine(offset.x); }
 		};
 	};
-	
+
 	struct offset_2d_t : c_offset_2d_t {
 		using underlying_t = c_offset_2d_t;
 
@@ -590,12 +584,10 @@ namespace bleak {
 		constexpr explicit operator extent_3d_t() const noexcept;
 
 		struct hasher {
-			constexpr usize operator()(cref<offset_2d_t> offset) const noexcept {
-				return hash_combine(offset.x, offset.y);
-			}
+			constexpr usize operator()(cref<offset_2d_t> offset) const noexcept { return hash_combine(offset.x, offset.y); }
 		};
 	};
-	
+
 	struct offset_3d_t : c_offset_3d_t {
 		using underlying_t = c_offset_3d_t;
 
@@ -995,9 +987,7 @@ namespace bleak {
 		constexpr explicit operator extent_3d_t() const noexcept;
 
 		struct hasher {
-			constexpr usize operator()(cref<offset_3d_t> offset) const noexcept {
-				return hash_combine(offset.x, offset.y, offset.z);
-			}
+			constexpr usize operator()(cref<offset_3d_t> offset) const noexcept { return hash_combine(offset.x, offset.y, offset.z); }
 		};
 	};
 } // namespace bleak
@@ -1062,9 +1052,7 @@ namespace bleak {
 
 	constexpr offset_1d_t::operator offset_2d_t() const noexcept { return offset_2d_t{ static_cast<offset_2d_t::scalar_t>(x) }; }
 
-	constexpr offset_1d_t::operator offset_3d_t() const noexcept {
-		return offset_3d_t{ static_cast<offset_3d_t::scalar_t>(x), offset_3d_t::scalar_t{ 0 }, offset_3d_t::scalar_t{ 0 } };
-	}
+	constexpr offset_1d_t::operator offset_3d_t() const noexcept { return offset_3d_t{ static_cast<offset_3d_t::scalar_t>(x), offset_3d_t::scalar_t{ 0 }, offset_3d_t::scalar_t{ 0 } }; }
 
 	constexpr const offset_2d_t offset_2d_t::zero{ 0 };
 
@@ -1101,25 +1089,15 @@ namespace bleak {
 
 	constexpr offset_2d_t offset_2d_t::operator%(cref<extent_1d_t> extent) const noexcept { return offset_2d_t{ scalar_cast(x % extent.w), y }; }
 
-	constexpr offset_2d_t offset_2d_t::operator+(cref<extent_2d_t> extent) const noexcept {
-		return offset_2d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h) };
-	}
+	constexpr offset_2d_t offset_2d_t::operator+(cref<extent_2d_t> extent) const noexcept { return offset_2d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h) }; }
 
-	constexpr offset_2d_t offset_2d_t::operator-(cref<extent_2d_t> extent) const noexcept {
-		return offset_2d_t{ scalar_cast(x - extent.w), scalar_cast(y - extent.h) };
-	}
+	constexpr offset_2d_t offset_2d_t::operator-(cref<extent_2d_t> extent) const noexcept { return offset_2d_t{ scalar_cast(x - extent.w), scalar_cast(y - extent.h) }; }
 
-	constexpr offset_2d_t offset_2d_t::operator*(cref<extent_2d_t> extent) const noexcept {
-		return offset_2d_t{ scalar_cast(x * extent.w), scalar_cast(y * extent.h) };
-	}
+	constexpr offset_2d_t offset_2d_t::operator*(cref<extent_2d_t> extent) const noexcept { return offset_2d_t{ scalar_cast(x * extent.w), scalar_cast(y * extent.h) }; }
 
-	constexpr offset_2d_t offset_2d_t::operator/(cref<extent_2d_t> extent) const noexcept {
-		return offset_2d_t{ scalar_cast(x / extent.w), scalar_cast(y / extent.h) };
-	}
+	constexpr offset_2d_t offset_2d_t::operator/(cref<extent_2d_t> extent) const noexcept { return offset_2d_t{ scalar_cast(x / extent.w), scalar_cast(y / extent.h) }; }
 
-	constexpr offset_2d_t offset_2d_t::operator%(cref<extent_2d_t> extent) const noexcept {
-		return offset_2d_t{ scalar_cast(x % extent.w), scalar_cast(y % extent.h) };
-	}
+	constexpr offset_2d_t offset_2d_t::operator%(cref<extent_2d_t> extent) const noexcept { return offset_2d_t{ scalar_cast(x % extent.w), scalar_cast(y % extent.h) }; }
 
 	constexpr ref<offset_2d_t> offset_2d_t::operator+=(cref<extent_1d_t> extent) noexcept {
 		x = scalar_cast(x + extent.w);
@@ -1188,23 +1166,17 @@ namespace bleak {
 
 	constexpr offset_2d_t::operator offset_1d_t() const noexcept { return offset_1d_t{ static_cast<offset_1d_t::scalar_t>(x) }; }
 
-	constexpr offset_2d_t::operator offset_3d_t() const noexcept {
-		return offset_3d_t{ static_cast<offset_3d_t::scalar_t>(x), static_cast<offset_3d_t::scalar_t>(y), offset_3d_t::scalar_t{ 0 } };
-	}
+	constexpr offset_2d_t::operator offset_3d_t() const noexcept { return offset_3d_t{ static_cast<offset_3d_t::scalar_t>(x), static_cast<offset_3d_t::scalar_t>(y), offset_3d_t::scalar_t{ 0 } }; }
 
 	constexpr offset_2d_t::operator extent_2d_t() const noexcept { return extent_2d_t{ static_cast<extent_2d_t::scalar_t>(x), static_cast<extent_2d_t::scalar_t>(y) }; }
 
-	constexpr offset_2d_t::operator extent_3d_t() const noexcept {
-		return extent_3d_t{ static_cast<extent_3d_t::scalar_t>(x), static_cast<extent_3d_t::scalar_t>(y), extent_3d_t::scalar_t{ 0 } };
-	}
+	constexpr offset_2d_t::operator extent_3d_t() const noexcept { return extent_3d_t{ static_cast<extent_3d_t::scalar_t>(x), static_cast<extent_3d_t::scalar_t>(y), extent_3d_t::scalar_t{ 0 } }; }
 
 	constexpr offset_3d_t::operator offset_2d_t() const noexcept { return offset_2d_t{ static_cast<offset_2d_t::scalar_t>(x), static_cast<offset_2d_t::scalar_t>(y) }; }
 
 	constexpr offset_3d_t::operator extent_2d_t() const noexcept { return extent_2d_t{ static_cast<extent_2d_t::scalar_t>(x), static_cast<extent_2d_t::scalar_t>(y) }; }
 
-	constexpr offset_3d_t::operator extent_3d_t() const noexcept {
-		return extent_3d_t{ static_cast<extent_3d_t::scalar_t>(x), static_cast<extent_3d_t::scalar_t>(y), static_cast<extent_3d_t::scalar_t>(z) };
-	}
+	constexpr offset_3d_t::operator extent_3d_t() const noexcept { return extent_3d_t{ static_cast<extent_3d_t::scalar_t>(x), static_cast<extent_3d_t::scalar_t>(y), static_cast<extent_3d_t::scalar_t>(z) }; }
 
 	constexpr const offset_3d_t offset_3d_t::zero{ 0 };
 
@@ -1273,45 +1245,25 @@ namespace bleak {
 
 	constexpr offset_3d_t offset_3d_t::operator%(cref<extent_1d_t> extent) const noexcept { return offset_3d_t{ scalar_cast(x + extent.w), y, z }; }
 
-	constexpr offset_3d_t offset_3d_t::operator+(cref<extent_2d_t> extent) const noexcept {
-		return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), z };
-	}
+	constexpr offset_3d_t offset_3d_t::operator+(cref<extent_2d_t> extent) const noexcept { return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), z }; }
 
-	constexpr offset_3d_t offset_3d_t::operator-(cref<extent_2d_t> extent) const noexcept {
-		return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), z };
-	}
+	constexpr offset_3d_t offset_3d_t::operator-(cref<extent_2d_t> extent) const noexcept { return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), z }; }
 
-	constexpr offset_3d_t offset_3d_t::operator*(cref<extent_2d_t> extent) const noexcept {
-		return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), z };
-	}
+	constexpr offset_3d_t offset_3d_t::operator*(cref<extent_2d_t> extent) const noexcept { return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), z }; }
 
-	constexpr offset_3d_t offset_3d_t::operator/(cref<extent_2d_t> extent) const noexcept {
-		return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), z };
-	}
+	constexpr offset_3d_t offset_3d_t::operator/(cref<extent_2d_t> extent) const noexcept { return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), z }; }
 
-	constexpr offset_3d_t offset_3d_t::operator%(cref<extent_2d_t> extent) const noexcept {
-		return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), z };
-	}
+	constexpr offset_3d_t offset_3d_t::operator%(cref<extent_2d_t> extent) const noexcept { return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), z }; }
 
-	constexpr offset_3d_t offset_3d_t::operator+(cref<extent_3d_t> extent) const noexcept {
-		return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), scalar_cast(z + extent.d) };
-	}
+	constexpr offset_3d_t offset_3d_t::operator+(cref<extent_3d_t> extent) const noexcept { return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), scalar_cast(z + extent.d) }; }
 
-	constexpr offset_3d_t offset_3d_t::operator-(cref<extent_3d_t> extent) const noexcept {
-		return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), scalar_cast(z + extent.d) };
-	}
+	constexpr offset_3d_t offset_3d_t::operator-(cref<extent_3d_t> extent) const noexcept { return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), scalar_cast(z + extent.d) }; }
 
-	constexpr offset_3d_t offset_3d_t::operator*(cref<extent_3d_t> extent) const noexcept {
-		return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), scalar_cast(z + extent.d) };
-	}
+	constexpr offset_3d_t offset_3d_t::operator*(cref<extent_3d_t> extent) const noexcept { return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), scalar_cast(z + extent.d) }; }
 
-	constexpr offset_3d_t offset_3d_t::operator/(cref<extent_3d_t> extent) const noexcept {
-		return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), scalar_cast(z + extent.d) };
-	}
+	constexpr offset_3d_t offset_3d_t::operator/(cref<extent_3d_t> extent) const noexcept { return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), scalar_cast(z + extent.d) }; }
 
-	constexpr offset_3d_t offset_3d_t::operator%(cref<extent_3d_t> extent) const noexcept {
-		return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), scalar_cast(z + extent.d) };
-	}
+	constexpr offset_3d_t offset_3d_t::operator%(cref<extent_3d_t> extent) const noexcept { return offset_3d_t{ scalar_cast(x + extent.w), scalar_cast(y + extent.h), scalar_cast(z + extent.d) }; }
 
 	constexpr ref<offset_3d_t> offset_3d_t::operator+=(cref<extent_1d_t> extent) noexcept {
 		x += extent.w;

@@ -45,7 +45,8 @@ namespace bleak {
 	struct offset_3d_t;
 
 	template<typename T> constexpr bool is_offset = false;
-	template<typename T> concept IsOffset = is_offset<T>;
+	template<typename T>
+	concept IsOffset = is_offset<T>;
 
 	template<> inline constexpr bool is_offset<offset_1d_t> = true;
 	template<> inline constexpr bool is_offset<offset_2d_t> = true;
@@ -56,7 +57,8 @@ namespace bleak {
 	struct extent_3d_t;
 
 	template<typename T> constexpr bool is_extent = false;
-	template<typename T> concept IsExtent = is_extent<T>;
+	template<typename T>
+	concept IsExtent = is_extent<T>;
 
 	template<> inline constexpr bool is_extent<extent_1d_t> = true;
 	template<> inline constexpr bool is_extent<extent_2d_t> = true;
@@ -72,19 +74,22 @@ namespace bleak {
 	struct glyph_t;
 
 	template<typename T> constexpr bool is_1d = false;
-	template<typename T> concept Is1D = is_1d<T>;
+	template<typename T>
+	concept Is1D = is_1d<T>;
 
 	template<> inline constexpr bool is_1d<offset_1d_t> = true;
 	template<> inline constexpr bool is_1d<extent_1d_t> = true;
 
 	template<typename T> constexpr bool is_2d = false;
-	template<typename T> concept Is2D = is_2d<T>;
+	template<typename T>
+	concept Is2D = is_2d<T>;
 
 	template<> inline constexpr bool is_2d<offset_2d_t> = true;
 	template<> inline constexpr bool is_2d<extent_2d_t> = true;
 
 	template<typename T> constexpr bool is_3d = false;
-	template<typename T> concept Is3D = is_3d<T>;
+	template<typename T>
+	concept Is3D = is_3d<T>;
 
 	template<> inline constexpr bool is_3d<offset_3d_t> = true;
 	template<> inline constexpr bool is_3d<extent_3d_t> = true;

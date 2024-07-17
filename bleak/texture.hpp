@@ -49,7 +49,7 @@ namespace bleak {
 		}
 
 		namespace img {
-			static inline texture load_texture(renderer renderer, cstr path) noexcept {
+			static inline texture load_texture(sdl::renderer renderer, cstr path) noexcept {
 				texture texture{ IMG_LoadTexture(renderer, path) };
 
 				if (texture == nullptr) {
@@ -66,7 +66,7 @@ namespace bleak {
 
 		constexpr texture_t(cref<texture_t> other) noexcept = delete;
 
-		constexpr texture_t(rval<texture_t> other) noexcept : texture(std::move(other.texture)), info(other.info) {
+		constexpr texture_t(rval<texture_t> other) noexcept : renderer{ other.renderer }, texture(std::move(other.texture)), info(other.info) {
 			other.texture = nullptr;
 			set_blend_mode(SDL_BLENDMODE_BLEND);
 			set_color(Colors::White);
@@ -75,7 +75,7 @@ namespace bleak {
 		constexpr ref<texture_t> operator=(cref<texture_t> other) noexcept = delete;
 		constexpr ref<texture_t> operator=(rval<texture_t> other) noexcept = delete;
 
-		inline texture_t(ref<renderer_t> renderer, cstr path) : texture{ sdl::img::load_texture(renderer.handle(), path) }, info{ sdl::get_texture_info(texture) } {
+		inline texture_t(ref<renderer_t> renderer, cstr path) : renderer{ renderer }, texture{ sdl::img::load_texture(renderer.handle(), path) }, info{ sdl::get_texture_info(texture) } {
 			if (texture == nullptr) {
 				throw std::runtime_error(std::format("failed to load texture!"));
 			}
@@ -101,54 +101,56 @@ namespace bleak {
 
 		constexpr inline void set_blend_mode(sdl::blend_mode mode) const { SDL_SetTextureBlendMode(texture, mode); }
 
-		constexpr inline void copy(sdl::renderer renderer, cptr<sdl::rect> src, cptr<sdl::rect> dst) const { SDL_RenderCopy(renderer, texture, src, dst); }
+		constexpr inline void copy(cptr<sdl::rect> src, cptr<sdl::rect> dst) const { SDL_RenderCopy(renderer.handle(), texture, src, dst); }
 
 		constexpr sdl::texture handle() { return texture; }
 
 		constexpr sdl::const_texture handle() const { return texture; }
 
-		constexpr void draw(ref<renderer_t> renderer, cref<offset_2d_t> pos) const {
+		constexpr void draw(cref<offset_2d_t> pos) const {
 			const SDL_Rect dst{ static_cast<i32>(pos.x), static_cast<i32>(pos.y), static_cast<i32>(info.size.w), static_cast<i32>(info.size.h) };
-			copy(renderer.handle(), nullptr, &dst);
+			copy(nullptr, &dst);
 		}
 
-		constexpr void draw(ref<renderer_t> renderer, cref<offset_2d_t> pos, cref<color_t> color) const {
+		constexpr void draw(cref<offset_2d_t> pos, cref<color_t> color) const {
 			set_color(color);
-			draw(renderer, pos);
+			draw(pos);
 		}
 
-		constexpr void draw(ref<renderer_t> renderer, cref<offset_2d_t> pos, cref<extent_2d_t> size) const {
+		constexpr void draw(cref<offset_2d_t> pos, cref<extent_2d_t> size) const {
 			const SDL_Rect dst{ static_cast<i32>(pos.x), static_cast<i32>(pos.y), static_cast<i32>(size.w), static_cast<i32>(size.h) };
-			copy(renderer.handle(), nullptr, &dst);
+			copy(nullptr, &dst);
 		}
 
-		constexpr void draw(ref<renderer_t> renderer, cref<offset_2d_t> pos, cref<extent_2d_t> size, cref<color_t> color) const {
+		constexpr void draw(cref<offset_2d_t> pos, cref<extent_2d_t> size, cref<color_t> color) const {
 			set_color(color);
-			draw(renderer, pos, size);
+			draw(pos, size);
 		}
 
-		constexpr void draw(ref<renderer_t> renderer, cref<rect_t> dst) const {
+		constexpr void draw(cref<rect_t> dst) const {
 			sdl::rect sdl_dst{ static_cast<sdl::rect>(dst) };
-			copy(renderer.handle(), nullptr, &sdl_dst);
+			copy(nullptr, &sdl_dst);
 		}
 
-		constexpr void draw(ref<renderer_t> renderer, cref<rect_t> dst, cref<color_t> color) const {
+		constexpr void draw(cref<rect_t> dst, cref<color_t> color) const {
 			set_color(color);
-			draw(renderer, dst);
+			draw(dst);
 		}
 
-		constexpr void draw(ref<renderer_t> renderer, cref<rect_t> src, cref<rect_t> dst) const {
+		constexpr void draw(cref<rect_t> src, cref<rect_t> dst) const {
 			sdl::rect sdl_src{ static_cast<sdl::rect>(src) };
 			sdl::rect sdl_dst{ static_cast<sdl::rect>(dst) };
-			copy(renderer.handle(), &sdl_src, &sdl_dst);
+			copy(&sdl_src, &sdl_dst);
 		}
 
-		constexpr void draw(ref<renderer_t> renderer, cref<rect_t> src, cref<rect_t> dst, cref<color_t> color) const {
+		constexpr void draw(cref<rect_t> src, cref<rect_t> dst, cref<color_t> color) const {
 			set_color(color);
-			draw(renderer, src, dst);
+			draw(src, dst);
 		}
 
 	  private:
+		ref<renderer_t> renderer;
+
 		sdl::texture texture;
 
 	  public:

@@ -1,5 +1,4 @@
 #pragma once
-
 #include <bleak/typedef.hpp>
 
 #include <format>
@@ -9,6 +8,8 @@
 #include <bleak/extent.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/renderer.hpp>
+
+#include "constants/characters.hpp"
 
 namespace bleak {
 	enum class cell_trait_t : u8 { Open, Solid, Transperant, Opaque, Seen, Explored, Unseen, Unexplored, Dry, Damp, Cold, Warm, Odorless, Smelly, Safe, Toxic };
@@ -227,6 +228,11 @@ namespace bleak {
 			}
 		}
 
+		constexpr ref<cell_state_t> operator=(cref<cell_trait_t> other) noexcept {
+			set(other);
+			return *this;
+		}
+
 		constexpr bool operator==(cref<cell_state_t> other) const noexcept {
 			return solid == other.solid && opaque == other.opaque && seen == other.seen && explored == other.explored && damp == other.damp && warm == other.warm && smelly == other.smelly && toxic == other.toxic;
 		}
@@ -235,13 +241,9 @@ namespace bleak {
 			return solid != other.solid || opaque != other.opaque || seen != other.seen || explored != other.explored || damp != other.damp || warm != other.warm || smelly != other.smelly || toxic != other.toxic;
 		}
 
-		constexpr bool operator==(cref<cell_trait_t> other) const noexcept {
-			return contains(other);
-		}
+		constexpr bool operator==(cref<cell_trait_t> other) const noexcept { return contains(other); }
 
-		constexpr bool operator!=(cref<cell_trait_t> other) const noexcept {
-			return !contains(other);
-		}
+		constexpr bool operator!=(cref<cell_trait_t> other) const noexcept { return !contains(other); }
 
 		constexpr bool contains(cell_trait_t trait) const noexcept {
 			switch (trait) {
@@ -311,16 +313,16 @@ namespace bleak {
 			);
 		}
 
-		template<extent_2d_t AtlasSize> inline constexpr void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> position) const noexcept {
+		template<extent_2d_t AtlasSize> inline constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> position) const noexcept {
 			if (!explored) {
 				return;
 			}
 
 			const u8 rgb{ solid ? u8{ 0xC0 } : u8{ 0x40 } };
 			const u8 alpha{ seen ? u8{ 0xFF } : u8{ 0x80 } };
-			const u8 glyph{ solid ? u8{ 0xB2 } : u8{ 0xB0 } };
+			const u8 glyph{ solid ? Characters::Wall : Characters::Floor };
 
-			atlas.draw(renderer, glyph_t{ glyph, { rgb, rgb, rgb, alpha } }, position);
+			atlas.draw(glyph_t{ glyph, { rgb, rgb, rgb, alpha } }, position);
 		}
 	};
 

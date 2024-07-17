@@ -31,7 +31,9 @@ namespace bleak {
 
 		inline void update(cref<offset_2d_t> pos) { position = pos; };
 
-		inline void draw(ref<renderer_t> renderer) const { texture.draw(renderer, position, color); }
+		inline void draw() const { texture.draw(position, color); }
+
+		inline void draw(cref<offset_2d_t> offset) const { texture.draw(position + offset, color); }
 
 		inline cref<offset_2d_t> get_position() const { return position; }
 	};
@@ -98,9 +100,9 @@ namespace bleak {
 
 		inline offset_2d_t upper_third() const { return offset_2d_t{ (max - min) / 3 * 2 }; }
 
-		inline void draw(ref<renderer_t> renderer) const { texture.draw(renderer, position * size, color); }
+		inline void draw() const { texture.draw(position * size, color); }
 
-		inline void draw(ref<renderer_t> renderer, cref<offset_2d_t> offset) const { texture.draw(renderer, position * size + offset, color); }
+		inline void draw(cref<offset_2d_t> offset) const { texture.draw(position * size + offset, color); }
 
 		inline offset_2d_t get_position() const { return position; }
 
