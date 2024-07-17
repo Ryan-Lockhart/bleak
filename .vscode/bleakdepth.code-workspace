@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"mesonbuild.configureOnOpen": true,
+		"mesonbuild.buildFolder": "build",
+		"mesonbuild.configureEnvironment": {
+			"CC": "clang",
+			"CXX": "clang++"
+		},
+		"task.quickOpen.showAll": true,
+		"task.autoDetect": "on",
+	}
+}

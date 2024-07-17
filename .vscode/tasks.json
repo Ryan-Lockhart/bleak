@@ -2,44 +2,46 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "meson-build",
 			"type": "meson",
 			"mode": "build",
+			"target": "bleakdepth:executable",
 			"problemMatcher": [
 				"$meson-gcc"
 			],
 			"group": "build",
-			"label": "Meson: Build",
+			"detail": "builds the project in the current configuration"
 		},
 		{
-			"label": "Meson: Configure for Release",
+			"label": "meson-reconfigure-debug",
 			"type": "shell",
 			"command": "meson",
 			"args": [
-			  "setup",
-			  "--reconfigure",
-			  "${workspaceFolder}\\build",
-			  "${workspaceFolder}",
-			  "--buildtype",
-			  "release",
-			],
-			"group": "build",
-			"problemMatcher": [],
-		  },
-		  {
-			  "label": "Meson: Configure for Debug",
-			  "type": "shell",
-			  "command": "meson",
-			  "args": [
 				"setup",
 				"--reconfigure",
 				"${workspaceFolder}\\build",
 				"${workspaceFolder}",
 				"--buildtype",
 				"debug",
-				"--debug",
-			  ],
-			  "group": "build",
-			  "problemMatcher": [],
-			},
+				"--debug"
+			],
+			"group": "build",
+			"detail": "reconfigures the project for building in debug mode"
+		},
+		{
+			"label": "meson-reconfigure-release",
+			"type": "shell",
+			"command": "meson",
+			"args": [
+				"setup",
+				"--reconfigure",
+				"${workspaceFolder}\\build",
+				"${workspaceFolder}",
+				"--buildtype",
+				"release"
+			],
+			"group": "build",
+			"detail": "reconfigures the project for building in release mode"
+		},
 	]
 }

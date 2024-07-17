@@ -1,8 +1,0 @@
-{
-    "mesonbuild.configureOnOpen": true,
-    "mesonbuild.buildFolder": "build",
-    "mesonbuild.configureEnvironment": {
-        "CC": "clang",
-        "CXX": "clang++"
-    }
-}

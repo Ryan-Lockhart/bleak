@@ -79,71 +79,42 @@ namespace Globals {
 } // namespace Globals
 
 struct game_state {
-	window_t window;
-	renderer_t renderer;
+	window_t window{ Globals::GameTitle.c_str(), Globals::WindowSize + Globals::WindowBorder * 2, Globals::WindowFlags };
+	renderer_t renderer{ window, Globals::RendererFlags };
 
-	atlas_t<Globals::TilesetSize> game_atlas;
-	atlas_t<Globals::GlyphsetSize> ui_atlas;
+	atlas_t<Globals::TilesetSize> game_atlas{ renderer, "res\\tiles\\tileset_16x16.png", Globals::UniversalOffset };
+	atlas_t<Globals::GlyphsetSize> ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png", Globals::UniversalOffset };
 
-	std::mt19937 random_engine;
+	std::mt19937 random_engine{ std::random_device{}() };
 
-	zone_t<cell_state_t, Globals::RegionSize * Globals::ZoneSize, Globals::BorderSize> game_map;
-	zone_t<glyph_t, Globals::GameGridSize> glyph_map;
+	zone_t<cell_state_t, Globals::RegionSize * Globals::ZoneSize, Globals::BorderSize> game_map{ "res\\maps\\test_region.map" };
+	zone_t<glyph_t, Globals::GameGridSize> glyph_map{};
 
-	bool gamepad_enabled;
+	bool gamepad_enabled{ true };
 
-	cptr<gamepad_t> primary_gamepad;
+	cptr<gamepad_t> primary_gamepad{ nullptr };
 
-	bool gamepad_active;
+	bool gamepad_active{ false };
 
-	cursor_t cursor;
-	grid_cursor_t<Globals::CellSize> grid_cursor;
+	cursor_t cursor{ renderer, "res\\sprites\\cursor.png", Colors::White };
+	grid_cursor_t<Globals::CellSize> grid_cursor{ renderer, "res\\sprites\\grid_cursor.png", Colors::Metals::Gold, game_map.zone_origin, game_map.zone_extent };
 
-	bool draw_cursor;
+	bool draw_cursor{ true };
 
-	offset_2d_t camera_position;
+	offset_2d_t camera_position{ 0 };
 
 	// animated_sprite_t<extent_1d_t{ 3 }> player;
-	sprite_t player;
-	area_t player_fov;
+	sprite_t player{ Glyphs::Player };
+	area_t player_fov{};
 
-	bool camera_locked;
+	bool camera_locked{ true };
 
-	timer_t input_timer;
-	timer_t cursor_timer;
-	timer_t epoch_timer;
-	timer_t animation_timer;
+	timer_t input_timer{ 125.0 };
+	timer_t cursor_timer{ 125.0 };
+	timer_t epoch_timer{ 250.0 };
+	timer_t animation_timer{ 1000.0 / 3 };
 
-	wave_t sine_wave;
-
-	cardinal_t direction_test;
-
-	game_state() noexcept :
-		window{ Globals::GameTitle.c_str(), Globals::WindowSize + Globals::WindowBorder * 2, Globals::WindowFlags },
-		renderer{ window, Globals::RendererFlags },
-		game_atlas{ renderer, "res\\tiles\\tileset_16x16.png", Globals::UniversalOffset },
-		// game_atlas{ renderer, "res\\glyphs\\glyphs_16x16.png", Globals::UniversalOffset },
-		ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png", Globals::UniversalOffset },
-		random_engine{ std::random_device{}() },
-		game_map{ "res\\maps\\test_region.map" },
-		glyph_map{},
-		gamepad_enabled{ true },
-		primary_gamepad{ nullptr },
-		gamepad_active{ false },
-		cursor{ renderer, "res\\sprites\\cursor.png", Colors::White },
-		grid_cursor{ renderer, "res\\sprites\\grid_cursor.png", Colors::Metals::Gold, game_map.zone_origin, game_map.zone_extent },
-		draw_cursor{ true },
-		camera_position{ 0 },
-		// player{ animated_glyph_t<extent_1d_t{ 3 }>{ animated_glyph_t<extent_1d_t{ 3 }>::generate_contiguous_indices<0xB0, 0xB2>(), Colors::Green }, offset_2d_t{ 0 } },
-		player{ Glyphs::Player, offset_2d_t{ 0, 0 } },
-		player_fov{},
-		camera_locked{ true },
-		input_timer{ 125.0 },
-		cursor_timer{ 125.0 },
-		epoch_timer{ 250.0 },
-		animation_timer{ 1000.0 / 3 },
-		sine_wave{ 1.0, 0.5, 1.0 },
-		direction_test{ cardinal_t::Central } {}
+	wave_t sine_wave{ 1.0, 0.5, 1.0 };
 } static game_state{};
 
 void primary_gamepad_disconnected() {
@@ -251,6 +222,16 @@ bool character_movement() {
 	}
 
 	if (direction != offset_2d_t::zero) {
+		offset_2d_t target_position{ game_state.player.position + direction };
+
+		if (!game_state.game_map.within<zone_region_t::Interior>(target_position)) {
+			return false;
+		}
+
+		if (game_state.game_map[target_position].solid) {
+			return false;
+		}
+
 		game_state.player.position += direction;
 
 		game_state.input_timer.record();
@@ -335,14 +316,14 @@ void startup() {
 
 	game_state.game_map.set<zone_region_t::All>(cell_trait_t::Unseen);
 
-	/*auto player_position{ game_state.game_map.find_random<zone_region_t::Interior>(game_state.random_engine, cell_trait_t::Open) };
+	auto player_position{ game_state.game_map.find_random<zone_region_t::Interior>(game_state.random_engine, cell_trait_t::Open) };
 
 	if (player_position.has_value()) {
-		game_state.player.position = player_position.value() + offset_2d_t{ 1, 0 } * Globals::ZoneSize;
+		game_state.player.position = player_position.value();
 	} else {
 		error_log.add("no open cells found for player start position\n", __TIME_FILE_LINE__);
 		terminate_prematurely();
-	}*/
+	}
 
 	game_state.player.position = offset_2d_t{ 0, 0 };
 
@@ -429,7 +410,7 @@ void render() {
 		game_state.grid_cursor.draw(Globals::CursorOffset - game_state.camera_position * Globals::CellSize);
 	}
 
-	runes_t fps_text{ std::format("FPS: {}", static_cast<u32>(Clock::frame_time())), Colors::Green };
+	runes_t fps_text{ std::format("FPS:{:4}", static_cast<u32>(Clock::frame_time())), Colors::Green };
 
 	game_state.ui_atlas.draw(fps_text, offset_2d_t{ Globals::UIGridSize.w - 1, 1 }, cardinal_t::West, offset_2d_t{ 0, -4 });
 
