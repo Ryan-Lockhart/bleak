@@ -8,11 +8,11 @@ namespace bleak {
 	template<typename T>
 		requires is_numeric<T>::value
 	struct creeper_t {
-		offset_2d_t position;
+		offset_t position;
 		T distance;
 
 		constexpr creeper_t() : position{}, distance{} {}
 
-		constexpr creeper_t(cref<offset_2d_t> position, cref<T> distance) : position{ position }, distance{ distance } {}
+		constexpr creeper_t(cref<offset_t> position, cref<T> distance) : position{ position }, distance{ distance } {}
 	};
 } // namespace bleak

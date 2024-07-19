@@ -14,10 +14,7 @@ extern "C" {
 				bool east : 1 { false };
 				bool west : 1 { false };
 
-				bool up : 1 { false };
-				bool down : 1 { false };
-
-				bool : 2;
+				bool : 4;
 			};
 
 			unsigned char value;
@@ -45,40 +42,6 @@ namespace bleak {
 
 		static constexpr u8 Southwest { cardinal_t::South | cardinal_t::West };
 		static constexpr u8 Southeast { cardinal_t::South | cardinal_t::East };
-
-		struct Vertical {
-			struct Up {
-				static constexpr u8 Central { cardinal_t::Up };
-
-				static constexpr u8 North { cardinal_t::Up | cardinal_t::North };
-				static constexpr u8 South { cardinal_t::Up | cardinal_t::South };
-
-				static constexpr u8 East { cardinal_t::Up | cardinal_t::East };
-				static constexpr u8 West { cardinal_t::Up | cardinal_t::West };
-
-				static constexpr u8 Northwest { cardinal_t::Up | cardinal_t::North | cardinal_t::West };
-				static constexpr u8 Northeast { cardinal_t::Up | cardinal_t::North | cardinal_t::East };
-
-				static constexpr u8 Southwest { cardinal_t::Up | cardinal_t::South | cardinal_t::West };
-				static constexpr u8 Southeast { cardinal_t::Up | cardinal_t::South | cardinal_t::East };
-			};
-
-			struct Down {
-				static constexpr u8 Central { cardinal_t::Down };
-
-				static constexpr u8 North { cardinal_t::Down | cardinal_t::North };
-				static constexpr u8 South { cardinal_t::Down | cardinal_t::South };
-
-				static constexpr u8 East { cardinal_t::Down | cardinal_t::East };
-				static constexpr u8 West { cardinal_t::Down | cardinal_t::West };
-
-				static constexpr u8 Northwest { cardinal_t::Down | cardinal_t::North | cardinal_t::West };
-				static constexpr u8 Northeast { cardinal_t::Down | cardinal_t::North | cardinal_t::East };
-
-				static constexpr u8 Southwest { cardinal_t::Down | cardinal_t::South | cardinal_t::West };
-				static constexpr u8 Southeast { cardinal_t::Down | cardinal_t::South | cardinal_t::East };
-			};
-		};
 
 		constexpr cardinal_t() : c_cardinal_t {} {}
 
@@ -126,19 +89,13 @@ namespace bleak {
 
 		constexpr bool operator!=(u8 other) const noexcept { return (u8) * this != other; }
 
-		constexpr bool is_3d() const noexcept { return up || down; }
-
 		constexpr bool is_long_neutral() const noexcept { return (north && south) || (!north && !south); }
 
 		constexpr bool is_lat_neutral() const noexcept { return (east && west) || (!east && !west); }
 
-		constexpr bool is_vert_neutral() const noexcept { return (up && down) || (!up && !down); }
-
 		constexpr void clear_long() noexcept { north = south = false; }
 
 		constexpr void clear_lat() noexcept { east = west = false; }
-
-		constexpr void clear_vert() noexcept { up = down = false; }
 
 		constexpr void neutralize() noexcept {
 			if (is_long_neutral()) {
@@ -147,10 +104,6 @@ namespace bleak {
 
 			if (is_lat_neutral()) {
 				clear_lat();
-			}
-
-			if (is_vert_neutral()) {
-				clear_vert();
 			}
 		}
 
@@ -176,42 +129,6 @@ namespace bleak {
 				return "southwest";
 			case cardinal_t::Southeast:
 				return "southeast";
-			case cardinal_t::Vertical::Up::Central:
-				return "ascending";
-			case cardinal_t::Vertical::Up::North:
-				return "ascending north";
-			case cardinal_t::Vertical::Up::East:
-				return "ascending east";
-			case cardinal_t::Vertical::Up::South:
-				return "ascending south";
-			case cardinal_t::Vertical::Up::West:
-				return "ascending west";
-			case cardinal_t::Vertical::Up::Northwest:
-				return "ascending northwest";
-			case cardinal_t::Vertical::Up::Northeast:
-				return "ascending northeast";
-			case cardinal_t::Vertical::Up::Southwest:
-				return "ascending southwest";
-			case cardinal_t::Vertical::Up::Southeast:
-				return "ascending southeast";
-			case cardinal_t::Vertical::Down::Central:
-				return "descending";
-			case cardinal_t::Vertical::Down::North:
-				return "descending north";
-			case cardinal_t::Vertical::Down::East:
-				return "descending east";
-			case cardinal_t::Vertical::Down::South:
-				return "descending south";
-			case cardinal_t::Vertical::Down::West:
-				return "descending west";
-			case cardinal_t::Vertical::Down::Northwest:
-				return "descending northwest";
-			case cardinal_t::Vertical::Down::Northeast:
-				return "descending northeast";
-			case cardinal_t::Vertical::Down::Southwest:
-				return "descending southwest";
-			case cardinal_t::Vertical::Down::Southeast:
-				return "descending southeast";
 			default:
 				return "unknown";
 			}

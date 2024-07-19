@@ -11,29 +11,18 @@
 #include <bleak/utility.hpp>
 
 namespace bleak {
-	template<extent_1d_t Size> static inline constexpr extent_1d_t::product_t flatten(cref<offset_1d_t> offset) noexcept;
-	template<extent_1d_t Size> static inline constexpr extent_1d_t::product_t flatten(cref<offset_1d_t::scalar_t> i) noexcept;
+	template<extent_t Size> static inline constexpr extent_t::product_t flatten(cref<offset_t> offset) noexcept;
+	template<extent_t Size> static inline constexpr extent_t::product_t flatten(cref<offset_t::scalar_t> i, cref<offset_t::scalar_t> j) noexcept;
 
-	template<extent_2d_t Size> static inline constexpr extent_2d_t::product_t flatten(cref<offset_2d_t> offset) noexcept;
-	template<extent_2d_t Size> static inline constexpr extent_2d_t::product_t flatten(cref<offset_2d_t::scalar_t> i, cref<offset_2d_t::scalar_t> j) noexcept;
+	template<extent_t Size> static inline constexpr offset_t unflatten(cref<extent_t::product_t> index) noexcept;
 
-	template<extent_3d_t Size> static inline constexpr extent_3d_t::product_t flatten(cref<offset_3d_t> offset) noexcept;
-	template<extent_3d_t Size> static inline constexpr extent_3d_t::product_t flatten(cref<offset_3d_t::scalar_t> i, cref<offset_3d_t::scalar_t> j, cref<offset_3d_t::scalar_t> k) noexcept;
-
-	template<extent_1d_t Size> static inline constexpr offset_1d_t unflatten(cref<extent_1d_t::product_t> index) noexcept;
-	template<extent_2d_t Size> static inline constexpr offset_2d_t unflatten(cref<extent_2d_t::product_t> index) noexcept;
-	template<extent_3d_t Size> static inline constexpr offset_3d_t unflatten(cref<extent_3d_t::product_t> index) noexcept;
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> class array_t {
+	template<typename T, extent_t Size> class array_t {
 	  private:
 		ptr<T> data;
 
 	  public:
-		using offset_t = OffsetType;
-		using extent_t = ExtentType;
-
-		using index_t = offset_t::product_t;
-		using position_t = offset_t::scalar_t;
+	  	static constexpr extent_t::scalar_t width{ Size.w };
+		static constexpr extent_t::scalar_t height{ Size.h };
 
 		static constexpr usize size{ Size.size() };
 
@@ -73,71 +62,31 @@ namespace bleak {
 
 		constexpr cref<T> operator[](cref<offset_t> offset) const noexcept;
 
-		constexpr ref<T> operator[](cref<index_t> index) noexcept
-			requires(is_2d<OffsetType> && is_2d<ExtentType>) || (is_3d<OffsetType> && is_3d<ExtentType>);
+		constexpr ref<T> operator[](cref<offset_t::product_t> index) noexcept;
 
-		constexpr cref<T> operator[](cref<index_t> index) const noexcept
-			requires(is_2d<OffsetType> && is_2d<ExtentType>) || (is_3d<OffsetType> && is_3d<ExtentType>);
+		constexpr cref<T> operator[](cref<offset_t::product_t> index) const noexcept;
 
-		constexpr ref<T> operator[](offset_1d_t::scalar_t i) noexcept
-			requires is_1d<OffsetType> && is_1d<ExtentType>;
+		constexpr ref<T> operator[](offset_t::scalar_t i, offset_t::scalar_t j) noexcept;
 
-		constexpr ref<T> operator[](offset_2d_t::scalar_t i, offset_2d_t::scalar_t j) noexcept
-			requires is_2d<OffsetType> && is_2d<ExtentType>;
-
-		constexpr ref<T> operator[](offset_3d_t::scalar_t i, offset_3d_t::scalar_t j, offset_3d_t::scalar_t k) noexcept
-			requires is_3d<OffsetType> && is_3d<ExtentType>;
-
-		constexpr cref<T> operator[](offset_1d_t::scalar_t i) const noexcept
-			requires is_1d<OffsetType> && is_1d<ExtentType>;
-
-		constexpr cref<T> operator[](offset_2d_t::scalar_t i, offset_2d_t::scalar_t j) const noexcept
-			requires is_2d<OffsetType> && is_2d<ExtentType>;
-
-		constexpr cref<T> operator[](offset_3d_t::scalar_t i, offset_3d_t::scalar_t j, offset_3d_t::scalar_t k) const noexcept
-			requires is_3d<OffsetType> && is_3d<ExtentType>;
+		constexpr cref<T> operator[](offset_t::scalar_t i, offset_t::scalar_t j) const noexcept;
 
 		constexpr bool valid(cref<offset_t> offset) const noexcept;
 
-		constexpr bool valid(cref<index_t> index) const noexcept
-			requires(is_2d<OffsetType> && is_2d<ExtentType>) || (is_3d<OffsetType> && is_3d<ExtentType>);
+		constexpr bool valid(cref<offset_t::product_t> index) const noexcept;
 
-		constexpr bool valid(offset_1d_t::scalar_t i) const noexcept
-			requires is_1d<OffsetType> && is_1d<ExtentType>;
-
-		constexpr bool valid(offset_2d_t::scalar_t i, offset_2d_t::scalar_t j) const noexcept
-			requires is_2d<OffsetType> && is_2d<ExtentType>;
-
-		constexpr bool valid(offset_3d_t::scalar_t i, offset_3d_t::scalar_t j, offset_3d_t::scalar_t k) const noexcept
-			requires is_3d<OffsetType> && is_3d<ExtentType>;
+		constexpr bool valid(offset_t::scalar_t i, offset_t::scalar_t j) const noexcept;
 
 		constexpr ref<T> at(cref<offset_t> offset);
 
 		constexpr cref<T> at(cref<offset_t> offset) const;
 
-		constexpr ref<T> at(cref<index_t> index)
-			requires(is_2d<OffsetType> && is_2d<ExtentType>) || (is_3d<OffsetType> && is_3d<ExtentType>);
+		constexpr ref<T> at(cref<offset_t::product_t> index);
 
-		constexpr cref<T> at(cref<index_t> index) const
-			requires(is_2d<OffsetType> && is_2d<ExtentType>) || (is_3d<OffsetType> && is_3d<ExtentType>);
+		constexpr cref<T> at(cref<offset_t::product_t> index) const;
 
-		constexpr ref<T> at(offset_1d_t::scalar_t i)
-			requires is_1d<OffsetType> && is_1d<ExtentType>;
+		constexpr ref<T> at(offset_t::scalar_t i, offset_t::scalar_t j);
 
-		constexpr ref<T> at(offset_2d_t::scalar_t i, offset_2d_t::scalar_t j)
-			requires is_2d<OffsetType> && is_2d<ExtentType>;
-
-		constexpr ref<T> at(offset_3d_t::scalar_t i, offset_3d_t::scalar_t j, offset_3d_t::scalar_t k)
-			requires is_3d<OffsetType> && is_3d<ExtentType>;
-
-		constexpr cref<T> at(offset_1d_t::scalar_t i) const
-			requires is_1d<OffsetType> && is_1d<ExtentType>;
-
-		constexpr cref<T> at(offset_2d_t::scalar_t i, offset_2d_t::scalar_t j) const
-			requires is_2d<OffsetType> && is_2d<ExtentType>;
-
-		constexpr cref<T> at(offset_3d_t::scalar_t i, offset_3d_t::scalar_t j, offset_3d_t::scalar_t k) const
-			requires is_3d<OffsetType> && is_3d<ExtentType>;
+		constexpr cref<T> at(offset_t::scalar_t i, offset_t::scalar_t j) const;
 
 		constexpr ref<T> front() noexcept;
 
@@ -172,36 +121,18 @@ namespace bleak {
 		constexpr const_reverse_iterator crend() const noexcept;
 	};
 
-	template<extent_1d_t Size> static constexpr extent_1d_t::product_t flatten(cref<offset_1d_t> offset) noexcept { return extent_1d_t::product_cast(offset.x); }
+	template<extent_t Size> static constexpr extent_t::product_t flatten(cref<offset_t> offset) noexcept { return extent_t::product_cast(offset.y * Size.w + offset.x); }
 
-	template<extent_1d_t Size> static inline constexpr extent_1d_t::product_t flatten(cref<offset_1d_t::scalar_t> i) noexcept { return extent_1d_t::product_cast(i); }
+	template<extent_t Size> static inline constexpr extent_t::product_t flatten(cref<offset_t::scalar_t> i, cref<offset_t::scalar_t> j) noexcept { return extent_t::product_cast(j * Size.w + i); }
 
-	template<extent_2d_t Size> static constexpr extent_2d_t::product_t flatten(cref<offset_2d_t> offset) noexcept { return extent_2d_t::product_cast(offset.y * Size.w + offset.x); }
-
-	template<extent_2d_t Size> static inline constexpr extent_2d_t::product_t flatten(cref<offset_2d_t::scalar_t> i, cref<offset_2d_t::scalar_t> j) noexcept { return extent_2d_t::product_cast(j * Size.w + i); }
-
-	template<extent_3d_t Size> static constexpr extent_3d_t::product_t flatten(cref<offset_3d_t> offset) noexcept { return extent_3d_t::product_cast(offset.z * Size.area() + offset.y * Size.w + offset.x); }
-
-	template<extent_3d_t Size> static inline constexpr extent_3d_t::product_t flatten(cref<offset_3d_t::scalar_t> i, cref<offset_3d_t::scalar_t> j, cref<offset_3d_t::scalar_t> k) noexcept {
-		return extent_3d_t::product_cast(k * Size.area() + j * Size.w + i);
-	}
-
-	template<extent_1d_t Size> static constexpr offset_1d_t unflatten(cref<extent_1d_t::product_t> index) noexcept { return offset_1d_t{ index }; }
-
-	template<extent_2d_t Size> static constexpr offset_2d_t unflatten(cref<extent_2d_t::product_t> index) noexcept {
+	template<extent_t Size> static constexpr offset_t unflatten(cref<extent_t::product_t> index) noexcept {
 		lldiv_t result{ std::lldiv(index, Size.w) };
-		return offset_2d_t{ result.rem, result.quot };
+		return offset_t{ result.rem, result.quot };
 	}
 
-	template<extent_3d_t Size> static constexpr offset_3d_t unflatten(cref<extent_3d_t::product_t> index) noexcept {
-		lldiv_t outer{ std::lldiv(index, Size.w) };
-		lldiv_t inner{ std::lldiv(outer.quot, Size.area()) };
-		return offset_3d_t{ outer.rem, inner.rem, inner.quot };
-	}
+	template<typename T, extent_t Size> constexpr array_t<T, Size>::array_t() : data{ new T[size] } {}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr array_t<T, OffsetType, ExtentType, Size>::array_t() : data{ new T[size] } {}
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr array_t<T, OffsetType, ExtentType, Size>::array_t(std::initializer_list<T> elements) : data{ new T[size] } {
+	template<typename T, extent_t Size> constexpr array_t<T, Size>::array_t(std::initializer_list<T> elements) : data{ new T[size] } {
 		if (elements.size() != size) {
 			throw std::invalid_argument("initializer list size mismatch!");
 		}
@@ -213,16 +144,16 @@ namespace bleak {
 		}
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr array_t<T, OffsetType, ExtentType, Size>::array_t(cref<array_t> other) : data{ new T[size] } {
+	template<typename T, extent_t Size> constexpr array_t<T, Size>::array_t(cref<array_t> other) : data{ new T[size] } {
 		for (usize i{ 0 }; i < size; ++i) {
 			assert(i < size);
 			data[i] = other.data[i];
 		}
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr array_t<T, OffsetType, ExtentType, Size>::array_t(rval<array_t> other) noexcept : data{ std::move(other.data) } { other.data = nullptr; }
+	template<typename T, extent_t Size> constexpr array_t<T, Size>::array_t(rval<array_t> other) noexcept : data{ std::move(other.data) } { other.data = nullptr; }
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr ref<array_t<T, OffsetType, ExtentType, Size>> array_t<T, OffsetType, ExtentType, Size>::operator=(cref<array_t> other) noexcept {
+	template<typename T, extent_t Size> constexpr ref<array_t<T, Size>> array_t<T, Size>::operator=(cref<array_t> other) noexcept {
 		if (this == &other) {
 			return *this;
 		}
@@ -235,7 +166,7 @@ namespace bleak {
 		return *this;
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr ref<array_t<T, OffsetType, ExtentType, Size>> array_t<T, OffsetType, ExtentType, Size>::operator=(rval<array_t> other) noexcept {
+	template<typename T, extent_t Size> constexpr ref<array_t<T, Size>> array_t<T, Size>::operator=(rval<array_t> other) noexcept {
 		if (this == &other) {
 			return *this;
 		}
@@ -246,118 +177,66 @@ namespace bleak {
 		return *this;
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr array_t<T, OffsetType, ExtentType, Size>::~array_t() noexcept {
+	template<typename T, extent_t Size> constexpr array_t<T, Size>::~array_t() noexcept {
 		if (data != nullptr) {
 			delete[] data;
 			data = nullptr;
 		}
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr ref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](cref<offset_t> offset) noexcept {
+	template<typename T, extent_t Size> constexpr ref<T> array_t<T, Size>::operator[](cref<offset_t> offset) noexcept {
 		assert(flatten<Size>(offset) < size);
 		return data[first + flatten<Size>(offset)];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr cref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](cref<offset_t> offset) const noexcept {
+	template<typename T, extent_t Size> constexpr cref<T> array_t<T, Size>::operator[](cref<offset_t> offset) const noexcept {
 		assert(flatten<Size>(offset) < size);
 		return data[first + flatten<Size>(offset)];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr ref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](cref<index_t> index) noexcept
-		requires(is_2d<OffsetType> && is_2d<ExtentType>) || (is_3d<OffsetType> && is_3d<ExtentType>)
+	template<typename T, extent_t Size>
+	constexpr ref<T> array_t<T, Size>::operator[](cref<offset_t::product_t> index) noexcept
 	{
 		assert(valid(index));
 		return data[first + index];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr cref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](cref<index_t> index) const noexcept
-		requires(is_2d<OffsetType> && is_2d<ExtentType>) || (is_3d<OffsetType> && is_3d<ExtentType>)
+	template<typename T, extent_t Size>
+	constexpr cref<T> array_t<T, Size>::operator[](cref<offset_t::product_t> index) const noexcept
 	{
 		assert(valid(index));
 		return data[first + index];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr ref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](offset_1d_t::scalar_t i) noexcept
-		requires is_1d<OffsetType> && is_1d<ExtentType>
-	{
-		assert(valid(flatten<Size>(i)));
-		return data[first + flatten<Size>(i)];
-	}
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr ref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](offset_2d_t::scalar_t i, offset_2d_t::scalar_t j) noexcept
-		requires is_2d<OffsetType> && is_2d<ExtentType>
+	template<typename T, extent_t Size>
+	constexpr ref<T> array_t<T, Size>::operator[](offset_t::scalar_t i, offset_t::scalar_t j) noexcept
 	{
 		assert(valid(flatten<Size>(i, j)));
 		return data[first + flatten<Size>(i, j)];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr ref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](offset_3d_t::scalar_t i, offset_3d_t::scalar_t j, offset_3d_t::scalar_t k) noexcept
-		requires is_3d<OffsetType> && is_3d<ExtentType>
-	{
-		assert(valid(flatten<Size>(i, j, k)));
-		return data[first + flatten<Size>(i, j, k)];
-	}
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr cref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](offset_1d_t::scalar_t i) const noexcept
-		requires is_1d<OffsetType> && is_1d<ExtentType>
-	{
-		assert(valid(flatten<Size>(i)));
-		return data[first + flatten<Size>(i)];
-	}
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr cref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](offset_2d_t::scalar_t i, offset_2d_t::scalar_t j) const noexcept
-		requires is_2d<OffsetType> && is_2d<ExtentType>
+	template<typename T, extent_t Size>
+	constexpr cref<T> array_t<T, Size>::operator[](offset_t::scalar_t i, offset_t::scalar_t j) const noexcept
 	{
 		assert(valid(flatten<Size>(i, j)));
 		return data[first + flatten<Size>(i, j)];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr cref<T> array_t<T, OffsetType, ExtentType, Size>::operator[](offset_3d_t::scalar_t i, offset_3d_t::scalar_t j, offset_3d_t::scalar_t k) const noexcept
-		requires is_3d<OffsetType> && is_3d<ExtentType>
-	{
-		assert(valid(flatten<Size>(i, j, k)));
-		return data[first + flatten<Size>(i, j, k)];
-	}
+	template<typename T, extent_t Size> constexpr bool array_t<T, Size>::valid(cref<offset_t> offset) const noexcept { return flatten<Size>(offset) < size; }
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr bool array_t<T, OffsetType, ExtentType, Size>::valid(cref<offset_t> offset) const noexcept { return flatten<Size>(offset) < size; }
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr bool array_t<T, OffsetType, ExtentType, Size>::valid(cref<index_t> index) const noexcept
-		requires(is_2d<OffsetType> && is_2d<ExtentType>) || (is_3d<OffsetType> && is_3d<ExtentType>)
+	template<typename T, extent_t Size>
+	constexpr bool array_t<T, Size>::valid(cref<offset_t::product_t> index) const noexcept
 	{
 		return index < size;
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr bool array_t<T, OffsetType, ExtentType, Size>::valid(offset_1d_t::scalar_t i) const noexcept
-		requires is_1d<OffsetType> && is_1d<ExtentType>
-	{
-		return flatten<Size>(i) < size;
-	}
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr bool array_t<T, OffsetType, ExtentType, Size>::valid(offset_2d_t::scalar_t i, offset_2d_t::scalar_t j) const noexcept
-		requires is_2d<OffsetType> && is_2d<ExtentType>
+	template<typename T, extent_t Size>
+	constexpr bool array_t<T, Size>::valid(offset_t::scalar_t i, offset_t::scalar_t j) const noexcept
 	{
 		return flatten<Size>(i, j) < size;
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr bool array_t<T, OffsetType, ExtentType, Size>::valid(offset_3d_t::scalar_t i, offset_3d_t::scalar_t j, offset_3d_t::scalar_t k) const noexcept
-		requires is_3d<OffsetType> && is_3d<ExtentType>
-	{
-		return flatten<Size>(i, j, k) < size;
-	}
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr ref<T> array_t<T, OffsetType, ExtentType, Size>::at(cref<offset_t> offset) {
+	template<typename T, extent_t Size> constexpr ref<T> array_t<T, Size>::at(cref<offset_t> offset) {
 		if (!valid(offset)) {
 			throw std::out_of_range("offset out of range!");
 		}
@@ -365,7 +244,7 @@ namespace bleak {
 		return data[first + flatten<Size>(offset)];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size> constexpr cref<T> array_t<T, OffsetType, ExtentType, Size>::at(cref<offset_t> offset) const {
+	template<typename T, extent_t Size> constexpr cref<T> array_t<T, Size>::at(cref<offset_t> offset) const {
 		if (!valid(offset)) {
 			throw std::out_of_range("offset out of range!");
 		}
@@ -373,9 +252,8 @@ namespace bleak {
 		return data[first + flatten<Size>(offset)];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr ref<T> array_t<T, OffsetType, ExtentType, Size>::at(cref<index_t> index)
-		requires(is_2d<OffsetType> && is_2d<ExtentType>) || (is_3d<OffsetType> && is_3d<ExtentType>)
+	template<typename T, extent_t Size>
+	constexpr ref<T> array_t<T, Size>::at(cref<offset_t::product_t> index)
 	{
 		if (!valid(index)) {
 			throw std::out_of_range("offset out of range!");
@@ -384,9 +262,8 @@ namespace bleak {
 		return data[first + index];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr cref<T> array_t<T, OffsetType, ExtentType, Size>::at(cref<index_t> index) const
-		requires(is_2d<OffsetType> && is_2d<ExtentType>) || (is_3d<OffsetType> && is_3d<ExtentType>)
+	template<typename T, extent_t Size>
+	constexpr cref<T> array_t<T, Size>::at(cref<offset_t::product_t> index) const
 	{
 		if (!valid(index)) {
 			throw std::out_of_range("offset out of range!");
@@ -395,20 +272,8 @@ namespace bleak {
 		return data[first + index];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr ref<T> array_t<T, OffsetType, ExtentType, Size>::at(offset_1d_t::scalar_t i)
-		requires is_1d<OffsetType> && is_1d<ExtentType>
-	{
-		if (!valid(i)) {
-			throw std::out_of_range("indices out of range!");
-		}
-
-		return data[first + flatten<Size>(i)];
-	}
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr ref<T> array_t<T, OffsetType, ExtentType, Size>::at(offset_2d_t::scalar_t i, offset_2d_t::scalar_t j)
-		requires is_2d<OffsetType> && is_2d<ExtentType>
+	template<typename T, extent_t Size>
+	constexpr ref<T> array_t<T, Size>::at(offset_t::scalar_t i, offset_t::scalar_t j)
 	{
 		if (!valid(i, j)) {
 			throw std::out_of_range("indices out of range!");
@@ -417,31 +282,8 @@ namespace bleak {
 		return data[first + flatten<Size>(i, j)];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr ref<T> array_t<T, OffsetType, ExtentType, Size>::at(offset_3d_t::scalar_t i, offset_3d_t::scalar_t j, offset_3d_t::scalar_t k)
-		requires is_3d<OffsetType> && is_3d<ExtentType>
-	{
-		if (!valid(i, j, k)) {
-			throw std::out_of_range("indices out of range!");
-		}
-
-		return data[first + flatten<Size>(i, j, k)];
-	}
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr cref<T> array_t<T, OffsetType, ExtentType, Size>::at(offset_1d_t::scalar_t i) const
-		requires is_1d<OffsetType> && is_1d<ExtentType>
-	{
-		if (!valid(i)) {
-			throw std::out_of_range("indices out of range!");
-		}
-
-		return data[first + flatten<Size>(i)];
-	}
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr cref<T> array_t<T, OffsetType, ExtentType, Size>::at(offset_2d_t::scalar_t i, offset_2d_t::scalar_t j) const
-		requires is_2d<OffsetType> && is_2d<ExtentType>
+	template<typename T, extent_t Size>
+	constexpr cref<T> array_t<T, Size>::at(offset_t::scalar_t i, offset_t::scalar_t j) const
 	{
 		if (!valid(i, j)) {
 			throw std::out_of_range("indices out of range!");
@@ -450,76 +292,59 @@ namespace bleak {
 		return data[first + flatten<Size>(i, j)];
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Size>
-	constexpr cref<T> array_t<T, OffsetType, ExtentType, Size>::at(offset_3d_t::scalar_t i, offset_3d_t::scalar_t j, offset_3d_t::scalar_t k) const
-		requires is_3d<OffsetType> && is_3d<ExtentType>
-	{
-		if (!valid(i, j, k)) {
-			throw std::out_of_range("indices out of range!");
-		}
+	template<typename T, extent_t Size> inline constexpr ref<T> array_t<T, Size>::front() noexcept { return data[first]; }
 
-		return data[first + flatten<Size>(i, j, k)];
-	}
+	template<typename T, extent_t Size> inline constexpr cref<T> array_t<T, Size>::front() const noexcept { return data[first]; }
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr ref<T> array_t<T, OffsetType, ExtentType, Extent>::front() noexcept { return data[first]; }
+	template<typename T, extent_t Size> inline constexpr ref<T> array_t<T, Size>::back() noexcept { return data[last]; }
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr cref<T> array_t<T, OffsetType, ExtentType, Extent>::front() const noexcept { return data[first]; }
+	template<typename T, extent_t Size> inline constexpr cref<T> array_t<T, Size>::back() const noexcept { return data[last]; }
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr ref<T> array_t<T, OffsetType, ExtentType, Extent>::back() noexcept { return data[last]; }
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr cref<T> array_t<T, OffsetType, ExtentType, Extent>::back() const noexcept { return data[last]; }
-
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::iterator array_t<T, OffsetType, ExtentType, Extent>::begin() noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::iterator array_t<T, Size>::begin() noexcept {
 		return iterator{ data };
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::iterator array_t<T, OffsetType, ExtentType, Extent>::end() noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::iterator array_t<T, Size>::end() noexcept {
 		return iterator{ data + size };
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::const_iterator array_t<T, OffsetType, ExtentType, Extent>::begin() const noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::const_iterator array_t<T, Size>::begin() const noexcept {
 		return const_iterator{ data };
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::const_iterator array_t<T, OffsetType, ExtentType, Extent>::end() const noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::const_iterator array_t<T, Size>::end() const noexcept {
 		return const_iterator{ data + size };
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::const_iterator array_t<T, OffsetType, ExtentType, Extent>::cbegin() const noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::const_iterator array_t<T, Size>::cbegin() const noexcept {
 		return const_iterator{ data };
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::const_iterator array_t<T, OffsetType, ExtentType, Extent>::cend() const noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::const_iterator array_t<T, Size>::cend() const noexcept {
 		return const_iterator{ data + size };
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::reverse_iterator array_t<T, OffsetType, ExtentType, Extent>::rbegin() noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::reverse_iterator array_t<T, Size>::rbegin() noexcept {
 		return reverse_iterator{ data + size - 1 };
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::reverse_iterator array_t<T, OffsetType, ExtentType, Extent>::rend() noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::reverse_iterator array_t<T, Size>::rend() noexcept {
 		return reverse_iterator{ data - 1 };
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::const_reverse_iterator array_t<T, OffsetType, ExtentType, Extent>::rbegin() const noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::const_reverse_iterator array_t<T, Size>::rbegin() const noexcept {
 		return const_reverse_iterator{ data + size - 1 };
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::const_reverse_iterator array_t<T, OffsetType, ExtentType, Extent>::rend() const noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::const_reverse_iterator array_t<T, Size>::rend() const noexcept {
 		return const_reverse_iterator{ data - 1 };
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::const_reverse_iterator array_t<T, OffsetType, ExtentType, Extent>::crbegin() const noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::const_reverse_iterator array_t<T, Size>::crbegin() const noexcept {
 		return const_reverse_iterator{ data + size - 1 };
 	}
 
-	template<typename T, typename OffsetType, typename ExtentType, ExtentType Extent> inline constexpr array_t<T, OffsetType, ExtentType, Extent>::const_reverse_iterator array_t<T, OffsetType, ExtentType, Extent>::crend() const noexcept {
+	template<typename T, extent_t Size> inline constexpr array_t<T, Size>::const_reverse_iterator array_t<T, Size>::crend() const noexcept {
 		return const_reverse_iterator{ data - 1 };
 	}
-
-	template<typename T, extent_1d_t Size> using row_t = array_t<T, offset_1d_t, extent_1d_t, Size>;
-
-	template<typename T, extent_2d_t Size> using layer_t = array_t<T, offset_2d_t, extent_2d_t, Size>;
-
-	template<typename T, extent_3d_t Size> using volume_t = array_t<T, offset_3d_t, extent_3d_t, Size>;
 } // namespace bleak

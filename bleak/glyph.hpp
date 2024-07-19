@@ -17,15 +17,17 @@ namespace bleak {
 		constexpr glyph_t(u16 index, color_t color) noexcept : color{ color }, index{ index } {}
 	};
 
-	template<extent_1d_t Length> struct animated_glyph_t {
+	template<extent_t::product_t Length> struct animated_glyph_t {
 	  private:
-		row_t<u16, Length> indices;
-		extent_1d_t::product_t frame;
+	  	static constexpr extent_t size{ Length, 1 };
+
+		array_t<u16, size> indices;
+		extent_t::product_t frame;
 
 		constexpr inline void wrap() noexcept { frame %= length; }
 
 	  public:
-		using index_t = extent_1d_t::product_t;
+		using index_t = extent_t::product_t;
 
 		static constexpr index_t length{ Length };
 
@@ -46,9 +48,9 @@ namespace bleak {
 
 		constexpr animated_glyph_t(std::initializer_list<u16> indices, color_t color) noexcept : indices{ indices }, frame{ 0 }, color{ color } {}
 
-		constexpr animated_glyph_t(rval<row_t<u16, Length>> indices) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{} {}
+		constexpr animated_glyph_t(rval<array_t<u16, size>> indices) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{} {}
 
-		constexpr animated_glyph_t(rval<row_t<u16, Length>> indices, color_t color) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{ color } {}
+		constexpr animated_glyph_t(rval<array_t<u16, size>> indices, color_t color) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{ color } {}
 
 		constexpr animated_glyph_t(cref<animated_glyph_t> other) noexcept : indices{ other.indices }, frame{ other.frame }, color{ other.color } {}
 
@@ -147,8 +149,8 @@ namespace bleak {
 		constexpr bool operator<=(cref<animated_glyph_t> other) const noexcept = delete;
 		constexpr bool operator>=(cref<animated_glyph_t> other) const noexcept = delete;
 
-		template<u16 Start, u16 End> constexpr static row_t<u16, Length> generate_contiguous_indices() noexcept {
-			row_t<u16, Length> indices{};
+		template<u16 Start, u16 End> constexpr static array_t<u16, size> generate_contiguous_indices() noexcept {
+			array_t<u16, size> indices{};
 
 			static_assert(End - Start + 1 == Length, "lengths of indices and range are not equal!");
 

@@ -9,7 +9,7 @@
 
 namespace bleak {
 	struct sprite_t {
-		offset_2d_t position;
+		offset_t position;
 		glyph_t glyph;
 
 		constexpr inline sprite_t() noexcept = delete;
@@ -18,9 +18,9 @@ namespace bleak {
 
 		constexpr inline sprite_t(rval<glyph_t> glyph) noexcept : position{ 0, 0 }, glyph{ std::move(glyph) } {}
 
-		constexpr inline sprite_t(cref<glyph_t> glyph, cref<offset_2d_t> position) noexcept : position{ position }, glyph{ glyph } {}
+		constexpr inline sprite_t(cref<glyph_t> glyph, cref<offset_t> position) noexcept : position{ position }, glyph{ glyph } {}
 
-		constexpr inline sprite_t(rval<glyph_t> glyph, rval<offset_2d_t> position) noexcept : position{ std::move(position) }, glyph{ std::move(glyph) } {}
+		constexpr inline sprite_t(rval<glyph_t> glyph, rval<offset_t> position) noexcept : position{ std::move(position) }, glyph{ std::move(glyph) } {}
 
 		constexpr inline sprite_t(cref<sprite_t> other) noexcept : position{ other.position }, glyph{ other.glyph } {}
 
@@ -46,26 +46,26 @@ namespace bleak {
 			return *this;
 		}
 
-		template<extent_2d_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas) const { atlas.draw(glyph, position); }
+		template<extent_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas) const { atlas.draw(glyph, position); }
 
-		template<extent_2d_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset) const {
+		template<extent_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset) const {
 			atlas.draw((glyph_t)glyph, position + offset);
 		}
 	};
 
-	template<extent_1d_t Length> struct animated_sprite_t {
+	template<extent_t::product_t Length> struct animated_sprite_t {
 		animated_glyph_t<Length> glyph;
-		offset_2d_t position;
+		offset_t position;
 
 		constexpr inline animated_sprite_t() noexcept = delete;
 
 		constexpr inline animated_sprite_t(rval<animated_glyph_t<Length>> glyph) noexcept : glyph{ std::move(glyph) }, position{ 0, 0 } {}
 
-		constexpr inline animated_sprite_t(rval<animated_glyph_t<Length>> glyph, cref<offset_2d_t> position) noexcept :
+		constexpr inline animated_sprite_t(rval<animated_glyph_t<Length>> glyph, cref<offset_t> position) noexcept :
 			glyph{ std::move(glyph) },
 			position{ position } {}
 
-		constexpr inline animated_sprite_t(rval<animated_glyph_t<Length>> glyph, rval<offset_2d_t> position) noexcept :
+		constexpr inline animated_sprite_t(rval<animated_glyph_t<Length>> glyph, rval<offset_t> position) noexcept :
 			glyph{ std::move(glyph) },
 			position{ std::move(position) } {}
 
@@ -97,11 +97,11 @@ namespace bleak {
 			return *this;
 		}
 
-		template<extent_2d_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas) const {
+		template<extent_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas) const {
 			atlas.draw(glyph.current(), position);
 		}
 
-		template<extent_2d_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset) const {
+		template<extent_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset) const {
 			atlas.draw(glyph.current(), position + offset);
 		}
 	};

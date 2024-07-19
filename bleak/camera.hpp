@@ -7,6 +7,6 @@
 namespace bleak {
 	class camera_t {
 	  private:
-		offset_2d_t position;
+		offset_t position;
 	};
 } // namespace bleak

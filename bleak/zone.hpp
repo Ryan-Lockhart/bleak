@@ -25,7 +25,7 @@
 #include <bleak/constants/numeric.hpp>
 
 namespace bleak {
-	template<typename T, extent_2d_t RegionSize, extent_2d_t ZoneSize, extent_2d_t ZoneBorder = extent_2d_t{ 0, 0 }> struct region_t;
+	template<typename T, extent_t RegionSize, extent_t ZoneSize, extent_t ZoneBorder = extent_t::Zero> struct region_t;
 
 	enum class zone_region_t : u8 { None = 0, Interior = 1 << 0, Border = 1 << 1, All = Interior | Border };
 
@@ -61,34 +61,33 @@ namespace bleak {
 		}
 	};
 
-	template<typename T, extent_2d_t Size, extent_2d_t BorderSize = extent_2d_t{ 0, 0 }> class zone_t {
-		static_assert(Size > extent_2d_t::zero, "Map size must be greater than zero.");
+	template<typename T, extent_t Size, extent_t BorderSize = extent_t{ 0, 0 }> class zone_t {
+		static_assert(Size > extent_t::Zero, "Map size must be greater than zero.");
 		static_assert(Size >= BorderSize, "Map size must be greater than or equal to border size.");
 
 	  private:
-		layer_t<T, Size> cells;
-		layer_t<T, Size> buffer;
+		array_t<T, Size> cells;
 
 	  public:
-		static constexpr extent_2d_t zone_size{ Size };
-		static constexpr extent_2d_t border_size{ BorderSize };
+		static constexpr extent_t zone_size{ Size };
+		static constexpr extent_t border_size{ BorderSize };
 
-		static constexpr offset_2d_t zone_origin{ 0 };
-		static constexpr offset_2d_t zone_extent{ zone_size - 1 };
+		static constexpr offset_t zone_origin{ 0 };
+		static constexpr offset_t zone_extent{ zone_size - 1 };
 
-		static constexpr offset_2d_t interior_origin{ zone_origin + border_size };
-		static constexpr offset_2d_t interior_extent{ zone_extent - border_size };
+		static constexpr offset_t interior_origin{ zone_origin + border_size };
+		static constexpr offset_t interior_extent{ zone_extent - border_size };
 
 		static constexpr auto zone_area{ zone_size.area() };
 
-		static constexpr extent_2d_t::product_t interior_area{ (zone_size - border_size).area() };
-		static constexpr extent_2d_t::product_t border_area{ zone_area - interior_area };
+		static constexpr extent_t::product_t interior_area{ (zone_size - border_size).area() };
+		static constexpr extent_t::product_t border_area{ zone_area - interior_area };
 
 		static constexpr usize byte_size{ zone_area * sizeof(T) };
 
-		constexpr zone_t() : cells{}, buffer{} {}
+		constexpr zone_t() : cells{} {}
 
-		constexpr zone_t(cref<std::string> path) : cells{}, buffer{} {
+		constexpr zone_t(cref<std::string> path) : cells{} {
 			std::ifstream file{};
 
 			try {
@@ -102,14 +101,13 @@ namespace bleak {
 			}
 		}
 
-		constexpr zone_t(cref<zone_t<T, Size, BorderSize>> other) : cells{ other.cells }, buffer{ other.buffer } {};
+		constexpr zone_t(cref<zone_t<T, Size, BorderSize>> other) : cells{ other.cells } {};
 
-		constexpr zone_t(rval<zone_t<T, Size, BorderSize>> other) : cells{ std::move(other.cells) }, buffer{ std::move(other.buffer) } {}
+		constexpr zone_t(rval<zone_t<T, Size, BorderSize>> other) : cells{ std::move(other.cells) } {}
 
 		constexpr ref<zone_t<T, Size, BorderSize>> operator=(cref<zone_t<T, Size, BorderSize>> other) noexcept {
 			if (this != &other) {
 				cells = other.cells;
-				buffer = other.buffer;
 			}
 
 			return *this;
@@ -118,7 +116,6 @@ namespace bleak {
 		constexpr ref<zone_t<T, Size, BorderSize>> operator=(rval<zone_t<T, Size, BorderSize>> other) noexcept {
 			if (this != &other) {
 				cells = std::move(other.cells);
-				buffer = std::move(other.buffer);
 			}
 
 			return *this;
@@ -126,49 +123,49 @@ namespace bleak {
 
 		constexpr ~zone_t() noexcept {}
 
-		constexpr cref<layer_t<T, Size>> data() const noexcept { return cells; }
+		constexpr cref<array_t<T, Size>> data() const noexcept { return cells; }
 
-		constexpr cptr<layer_t<T, Size>> data_ptr() const noexcept { return &cells; }
+		constexpr cptr<array_t<T, Size>> data_ptr() const noexcept { return &cells; }
 
-		constexpr layer_t<cref<T>, Size> view() const {
-			layer_t<cref<T>, Size> view{};
+		constexpr array_t<cref<T>, Size> view() const {
+			array_t<cref<T>, Size> view{};
 
-			for (extent_2d_t::product_t i{ 0 }; i < zone_area; ++i) {
+			for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 				view[i] = cells[i];
 			}
 
 			return view;
 		}
 
-		constexpr layer_t<ref<T>, Size> proxy() {
-			layer_t<ref<T>, Size> proxy{};
+		constexpr array_t<ref<T>, Size> proxy() {
+			array_t<ref<T>, Size> proxy{};
 
-			for (extent_2d_t::product_t i{ 0 }; i < zone_area; ++i) {
+			for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 				proxy[i] = ref<T>(cells[i]);
 			}
 
 			return proxy;
 		}
 
-		constexpr ref<T> operator[](extent_2d_t::product_t index) noexcept { return cells[index]; }
+		constexpr ref<T> operator[](extent_t::product_t index) noexcept { return cells[index]; }
 
-		constexpr cref<T> operator[](extent_2d_t::product_t index) const noexcept { return cells[index]; }
+		constexpr cref<T> operator[](extent_t::product_t index) const noexcept { return cells[index]; }
 
-		constexpr ref<T> operator[](extent_2d_t::scalar_t x, extent_2d_t::scalar_t y) noexcept { return cells[x, y]; }
+		constexpr ref<T> operator[](extent_t::scalar_t x, extent_t::scalar_t y) noexcept { return cells[x, y]; }
 
-		constexpr cref<T> operator[](extent_2d_t::scalar_t x, extent_2d_t::scalar_t y) const noexcept { return cells[x, y]; }
+		constexpr cref<T> operator[](extent_t::scalar_t x, extent_t::scalar_t y) const noexcept { return cells[x, y]; }
 
-		constexpr ref<T> operator[](cref<offset_2d_t> position) noexcept { return cells[position]; }
+		constexpr ref<T> operator[](cref<offset_t> position) noexcept { return cells[position]; }
 
-		constexpr cref<T> operator[](cref<offset_2d_t> position) const noexcept { return cells[position]; }
+		constexpr cref<T> operator[](cref<offset_t> position) const noexcept { return cells[position]; }
 
-		constexpr bool on_x_edge(cref<offset_2d_t> position) const noexcept { return position.x == zone_origin.x || position.x == zone_extent.x; }
+		constexpr bool on_x_edge(cref<offset_t> position) const noexcept { return position.x == zone_origin.x || position.x == zone_extent.x; }
 
-		constexpr bool on_y_edge(cref<offset_2d_t> position) const noexcept { return position.y == zone_origin.y || position.y == zone_extent.y; }
+		constexpr bool on_y_edge(cref<offset_t> position) const noexcept { return position.y == zone_origin.y || position.y == zone_extent.y; }
 
-		constexpr bool on_edge(cref<offset_2d_t> position) const noexcept { return on_x_edge(position) || on_y_edge(position); }
+		constexpr bool on_edge(cref<offset_t> position) const noexcept { return on_x_edge(position) || on_y_edge(position); }
 
-		constexpr cardinal_t edge_state(cref<offset_2d_t> position) const noexcept {
+		constexpr cardinal_t edge_state(cref<offset_t> position) const noexcept {
 			cardinal_t state{ cardinal_t::Central };
 
 			if (!on_edge(position)) {
@@ -190,7 +187,7 @@ namespace bleak {
 			return state;
 		}
 
-		template<zone_region_t Region> constexpr bool within(cref<offset_2d_t> position) const noexcept {
+		template<zone_region_t Region> constexpr bool within(cref<offset_t> position) const noexcept {
 			if constexpr (Region == zone_region_t::All) {
 				return cells.valid(position);
 			} else if constexpr (Region == zone_region_t::Interior) {
@@ -204,23 +201,23 @@ namespace bleak {
 
 		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> set(cref<T> value) noexcept {
 			if constexpr (Region == zone_region_t::All) {
-				for (extent_2d_t::product_t i{ 0 }; i < zone_area; ++i) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = value;
 				}
 			} else if constexpr (Region == zone_region_t::Interior) {
-				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = value;
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Border) {
-				for (extent_2d_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
-						for (extent_2d_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 							cells[x, y] = value;
 						}
 					} else {
-						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
 							cells[i, y] = value;
 							cells[zone_extent.x - i, y] = value;
 						}
@@ -235,23 +232,23 @@ namespace bleak {
 			requires std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> set(cref<U> value) noexcept {
 			if constexpr (Region == zone_region_t::All) {
-				for (extent_2d_t::product_t i{ 0 }; i < zone_area; ++i) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = value;
 				}
 			} else if constexpr (Region == zone_region_t::Interior) {
-				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = value;
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Border) {
-				for (extent_2d_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
-						for (extent_2d_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 							cells[x, y] = value;
 						}
 					} else {
-						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
 							cells[i, y] = value;
 							cells[zone_extent.x - i, y] = value;
 						}
@@ -262,15 +259,11 @@ namespace bleak {
 			return *this;
 		}
 
-		constexpr void swap_buffers() noexcept { std::swap(cells, buffer); }
+		constexpr void swap(ref<array_t<T, Size>> buffer) noexcept { std::swap(cells, buffer); }
 
-		template<bool Buffer = true> constexpr void synchronize() noexcept {
-			for (extent_2d_t::product_t i{ 0 }; i < zone_area; ++i) {
-				if constexpr (Buffer) {
-					buffer[i] = cells[i];
-				} else {
-					cells[i] = buffer[i];
-				}
+		constexpr void sync(cref<array_t<T, Size>> buffer) noexcept {
+			for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+				cells[i] = buffer[i];
 			}
 		}
 
@@ -285,23 +278,23 @@ namespace bleak {
 			auto dis{ std::bernoulli_distribution{ fill_percent } };
 
 			if constexpr (Region == zone_region_t::All) {
-				for (extent_2d_t::product_t i{ 0 }; i < zone_area; ++i) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = dis(generator) ? true_value : false_value;
 				}
 			} else if constexpr (Region == zone_region_t::Interior) {
-				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = dis(generator) ? true_value : false_value;
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Border) {
-				for (extent_2d_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
-						for (extent_2d_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 							cells[x, y] = dis(generator) ? true_value : false_value;
 						}
 					} else {
-						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
 							cells[i, y] = dis(generator) ? true_value : false_value;
 							cells[zone_extent.x - i, y] = dis(generator) ? true_value : false_value;
 						}
@@ -323,23 +316,23 @@ namespace bleak {
 			auto dis{ std::bernoulli_distribution{ fill_percent } };
 
 			if constexpr (Region == zone_region_t::All) {
-				for (extent_2d_t::product_t i{ 0 }; i < zone_area; ++i) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = applicator(generator, dis);
 				}
 			} else if constexpr (Region == zone_region_t::Interior) {
-				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = applicator(generator, dis);
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Border) {
-				for (extent_2d_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
-						for (extent_2d_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 							cells[x, y] = applicator(generator, dis);
 						}
 					} else {
-						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
 							cells[i, y] = applicator(generator, dis);
 							cells[zone_extent.x - i, y] = applicator(generator, dis);
 						}
@@ -350,66 +343,66 @@ namespace bleak {
 			return *this;
 		}
 
-		template<bool Safe = true> constexpr u8 neighbour_count(cref<offset_2d_t> position, cref<T> value) const noexcept {
+		template<bool Safe = true> constexpr u8 neighbour_count(cref<offset_t> position, cref<T> value) const noexcept {
 			u8 count{ 0 };
 
 			if constexpr (Safe) {
 				cardinal_t edge{ edge_state(position) };
 
-				if (edge == cardinal_t::Northwest || cells[position + offset_2d_t::northwest] == value) {
+				if (edge == cardinal_t::Northwest || cells[position + offset_t::Northwest] == value) {
 					++count;
 				}
 
-				if (edge == cardinal_t::North || cells[position + offset_2d_t::north] == value) {
+				if (edge == cardinal_t::North || cells[position + offset_t::North] == value) {
 					++count;
 				}
 
-				if (edge == cardinal_t::Northeast || cells[position + offset_2d_t::northeast] == value) {
+				if (edge == cardinal_t::Northeast || cells[position + offset_t::Northeast] == value) {
 					++count;
 				}
 
-				if (edge == cardinal_t::West || cells[position + offset_2d_t::west] == value) {
+				if (edge == cardinal_t::West || cells[position + offset_t::West] == value) {
 					++count;
 				}
 
-				if (edge == cardinal_t::East || cells[position + offset_2d_t::east] == value) {
+				if (edge == cardinal_t::East || cells[position + offset_t::East] == value) {
 					++count;
 				}
 
-				if (edge == cardinal_t::Southwest || cells[position + offset_2d_t::southwest] == value) {
+				if (edge == cardinal_t::Southwest || cells[position + offset_t::Southwest] == value) {
 					++count;
 				}
 
-				if (edge == cardinal_t::South || cells[position + offset_2d_t::south] == value) {
+				if (edge == cardinal_t::South || cells[position + offset_t::South] == value) {
 					++count;
 				}
 
-				if (edge == cardinal_t::Southeast || cells[position + offset_2d_t::southeast] == value) {
+				if (edge == cardinal_t::Southeast || cells[position + offset_t::Southeast] == value) {
 					++count;
 				}
 			} else {
-				if (cells[position + offset_2d_t::northwest] == value) {
+				if (cells[position + offset_t::Northwest] == value) {
 					++count;
 				}
-				if (cells[position + offset_2d_t::north] == value) {
+				if (cells[position + offset_t::North] == value) {
 					++count;
 				}
-				if (cells[position + offset_2d_t::northeast] == value) {
+				if (cells[position + offset_t::Northeast] == value) {
 					++count;
 				}
-				if (cells[position + offset_2d_t::west] == value) {
+				if (cells[position + offset_t::West] == value) {
 					++count;
 				}
-				if (cells[position + offset_2d_t::east] == value) {
+				if (cells[position + offset_t::East] == value) {
 					++count;
 				}
-				if (cells[position + offset_2d_t::southwest] == value) {
+				if (cells[position + offset_t::Southwest] == value) {
 					++count;
 				}
-				if (cells[position + offset_2d_t::south] == value) {
+				if (cells[position + offset_t::South] == value) {
 					++count;
 				}
-				if (cells[position + offset_2d_t::southeast] == value) {
+				if (cells[position + offset_t::Southeast] == value) {
 					++count;
 				}
 			}
@@ -417,7 +410,7 @@ namespace bleak {
 			return count;
 		}
 
-		template<bool Safe = true> constexpr void modulate(cref<offset_2d_t> position, u8 threshold, cref<T> true_state, cref<T> false_state) noexcept {
+		template<bool Safe = true> constexpr void modulate(ref<array_t<T, Size>> buffer, cref<offset_t> position, u8 threshold, cref<T> true_state, cref<T> false_state) const noexcept {
 			u8 neighbours{ neighbour_count<Safe>(position, true_state) };
 
 			if (neighbours > threshold) {
@@ -427,7 +420,7 @@ namespace bleak {
 			}
 		}
 
-		template<bool Safe = true> constexpr void modulate(cref<offset_2d_t> position, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
+		template<bool Safe = true> constexpr void modulate(ref<array_t<T, Size>> buffer, cref<offset_t> position, u8 threshold, cref<binary_applicator_t<T>> applicator) const noexcept {
 			u8 neighbours{ neighbour_count<Safe>(position, applicator.true_value) };
 
 			if (neighbours > threshold) {
@@ -437,35 +430,35 @@ namespace bleak {
 			}
 		}
 
-		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
+		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<T> true_value, cref<T> false_state) const noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
 
 			if constexpr (Region == zone_region_t::All) {
-				for (extent_2d_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
-					for (extent_2d_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
-						modulate(offset_2d_t{ x, y }, threshold, true_value, false_state);
+				for (extent_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
+					for (extent_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
+						modulate(buffer, offset_t{ x, y }, threshold, true_value, false_state);
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Interior) {
 				constexpr bool is_not_safe{ border_size.w > 0 && border_size.h > 0 };
 
-				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
-						modulate<is_not_safe>(offset_2d_t{ x, y }, threshold, true_value, false_state);
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						modulate<is_not_safe>(buffer, offset_t{ x, y }, threshold, true_value, false_state);
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Border) {
-				for (extent_2d_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
-						for (extent_2d_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
-							modulate(offset_2d_t{ x, y }, threshold, true_value, false_state);
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							modulate(buffer, offset_t{ x, y }, threshold, true_value, false_state);
 						}
 					} else {
-						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
-							modulate(offset_2d_t{ i, y }, threshold, true_value, false_state);
-							modulate(offset_2d_t{ zone_extent.x - i, y }, threshold, true_value, false_state);
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							modulate(buffer, offset_t{ i, y }, threshold, true_value, false_state);
+							modulate(buffer, offset_t{ zone_extent.x - i, y }, threshold, true_value, false_state);
 						}
 					}
 				}
@@ -474,35 +467,35 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
+		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<binary_applicator_t<T>> applicator) const noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
 
 			if constexpr (Region == zone_region_t::All) {
-				for (extent_2d_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
-					for (extent_2d_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
-						modulate({ x, y }, threshold, applicator);
+				for (extent_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
+					for (extent_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
+						modulate(buffer, { x, y }, threshold, applicator);
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Interior) {
 				constexpr bool is_not_safe{ border_size.w > 0 && border_size.h > 0 };
 
-				for (extent_2d_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
-					for (extent_2d_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
-						modulate<is_not_safe>({ x, y }, threshold, applicator);
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						modulate<is_not_safe>(buffer, { x, y }, threshold, applicator);
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Border) {
-				for (extent_2d_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
-						for (extent_2d_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
-							modulate({ x, y }, threshold, applicator);
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							modulate(buffer, { x, y }, threshold, applicator);
 						}
 					} else {
-						for (extent_2d_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
-							modulate({ i, y }, threshold, applicator);
-							modulate({ zone_extent.x - i, y }, threshold, applicator);
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							modulate(buffer, { i, y }, threshold, applicator);
+							modulate(buffer, { zone_extent.x - i, y }, threshold, applicator);
 						}
 					}
 				}
@@ -511,27 +504,27 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
+		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
 
 			for (u32 i{ 0 }; i < iterations; ++i) {
-				automatize<Region>(threshold, true_value, false_state);
-				swap_buffers();
+				automatize<Region>(buffer, threshold, true_value, false_state);
+				swap(buffer);
 			}
 
 			return *this;
 		}
 
-		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
+		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
 
 			for (u32 i{ 0 }; i < iterations; ++i) {
-				automatize<Region>(threshold, applicator);
-				swap_buffers();
+				automatize<Region>(buffer, threshold, applicator);
+				swap(buffer);
 			}
 
 			return *this;
@@ -546,10 +539,11 @@ namespace bleak {
 			}
 
 			randomize<Region>(generator, fill_percent, true_value, false_state);
-			synchronize();
+
+			array_t<T, Size> buffer{ cells };
 
 			automatize<Region>(iterations, threshold, true_value, false_state);
-			swap_buffers();
+			swap(buffer);
 
 			return *this;
 		}
@@ -563,16 +557,53 @@ namespace bleak {
 			}
 
 			randomize<Region>(generator, fill_percent, applicator);
-			synchronize();
+
+			array_t<T, Size> buffer{ cells };
 
 			automatize<Region>(iterations, threshold, applicator);
-			swap_buffers();
+			swap(buffer);
 
 			return *this;
 		}
 
 		template<zone_region_t Region, typename Randomizer>
-		constexpr std::optional<offset_2d_t> find_random(ref<Randomizer> generator, cref<T> value) const noexcept
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept
+			requires is_random_engine<Randomizer>::value
+		{
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			randomize<Region>(generator, fill_percent, true_value, false_state);
+
+			buffer = cells;
+
+			automatize<Region>(iterations, threshold, true_value, false_state);
+			swap(buffer);
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer>
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept
+			requires is_random_engine<Randomizer>::value
+		{
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			randomize<Region>(generator, fill_percent, applicator);
+
+			buffer = cells;
+
+			automatize<Region>(iterations, threshold, applicator);
+			swap(buffer);
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer>
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value) const noexcept
 			requires is_random_engine<Randomizer>::value
 		{
 			if constexpr (Region == zone_region_t::None) {
@@ -580,11 +611,11 @@ namespace bleak {
 			}
 
 			if constexpr (Region == zone_region_t::All) {
-				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, zone_extent.x };
-				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, zone_extent.y };
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
 
-				for (extent_2d_t::product_t i{ 0 }; i < zone_area; ++i) {
-					const offset_2d_t pos{ x_dis(generator), y_dis(generator) };
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
 
 					if (cells[pos] == value) {
 						return pos;
@@ -593,11 +624,11 @@ namespace bleak {
 
 				return std::nullopt;
 			} else if constexpr (Region == zone_region_t::Interior) {
-				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
-				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
 
-				for (extent_2d_t::product_t i{ 0 }; i < interior_area; ++i) {
-					const offset_2d_t pos{ x_dis(generator), y_dis(generator) };
+				for (extent_t::product_t i{ 0 }; i < interior_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
 
 					if (cells[pos] == value) {
 						return pos;
@@ -606,17 +637,17 @@ namespace bleak {
 
 				return std::nullopt;
 			} else if constexpr (Region == zone_region_t::Border) {
-				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
-				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
 
-				for (extent_2d_t::product_t i{ 0 }; i < border_area; ++i) {
+				for (extent_t::product_t i{ 0 }; i < border_area; ++i) {
 					auto x{ x_dis(generator) };
 					auto y{ y_dis(generator) };
 
 					x = x < border_size.w ? x : zone_extent.x - x;
 					y = y < border_size.h ? y : zone_extent.y - y;
 
-					const offset_2d_t pos{ x, y };
+					const offset_t pos{ x, y };
 
 					if (cells[pos] == value) {
 						return pos;
@@ -630,15 +661,15 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, typename Randomizer, typename U>
-		constexpr std::optional<offset_2d_t> find_random(ref<Randomizer> generator, cref<U> value) const noexcept
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value) const noexcept
 			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
 		{
 			if constexpr (Region == zone_region_t::All) {
-				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, zone_extent.x };
-				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, zone_extent.y };
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
 
-				for (extent_2d_t::product_t i{ 0 }; i < zone_area; ++i) {
-					const offset_2d_t pos{ x_dis(generator), y_dis(generator) };
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
 
 					if (cells[pos] == value) {
 						return pos;
@@ -647,11 +678,11 @@ namespace bleak {
 
 				return std::nullopt;
 			} else if constexpr (Region == zone_region_t::Interior) {
-				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
-				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
 
-				for (extent_2d_t::product_t i{ 0 }; i < interior_area; ++i) {
-					const offset_2d_t pos{ x_dis(generator), y_dis(generator) };
+				for (extent_t::product_t i{ 0 }; i < interior_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
 
 					if (cells[pos] == value) {
 						auto hello{ cells[pos] };
@@ -661,17 +692,17 @@ namespace bleak {
 
 				return std::nullopt;
 			} else if constexpr (Region == zone_region_t::Border) {
-				std::uniform_int_distribution<offset_2d_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
-				std::uniform_int_distribution<offset_2d_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
 
-				for (extent_2d_t::product_t i{ 0 }; i < border_area; ++i) {
+				for (extent_t::product_t i{ 0 }; i < border_area; ++i) {
 					auto x{ x_dis(generator) };
 					auto y{ y_dis(generator) };
 
 					x = x < border_size.w ? x : zone_extent.x - x;
 					y = y < border_size.h ? y : zone_extent.y - y;
 
-					const offset_2d_t pos{ x, y };
+					const offset_t pos{ x, y };
 
 					if (cells[pos] == value) {
 						return pos;
@@ -684,37 +715,37 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<extent_2d_t AtlasSize>
+		template<extent_t AtlasSize>
 		constexpr void draw(cref<atlas_t<AtlasSize>> atlas) const noexcept
 			requires is_drawable<T>::value
 		{
-			for (extent_2d_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
-				for (extent_2d_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
-					const offset_2d_t pos{ x, y };
+			for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+				for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+					const offset_t pos{ x, y };
 					(*this)[pos].draw(atlas, pos);
 				}
 			}
 		}
 
-		template<extent_2d_t AtlasSize>
-		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset) const noexcept
+		template<extent_t AtlasSize>
+		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset) const noexcept
 			requires is_drawable<T>::value
 		{
-			for (extent_2d_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
-				for (extent_2d_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
-					const offset_2d_t pos{ x, y };
+			for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+				for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+					const offset_t pos{ x, y };
 					(*this)[pos].draw(atlas, pos + offset);
 				}
 			}
 		}
 
-		template<extent_2d_t AtlasSize>
-		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_2d_t> offset, cref<extent_2d_t> scale) const noexcept
+		template<extent_t AtlasSize>
+		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset, cref<extent_t> scale) const noexcept
 			requires is_drawable<T>::value
 		{
-			for (extent_2d_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
-				for (extent_2d_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
-					const offset_2d_t pos{ x, y };
+			for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+				for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+					const offset_t pos{ x, y };
 					(*this)[pos].draw(atlas, pos + offset, scale);
 				}
 			}

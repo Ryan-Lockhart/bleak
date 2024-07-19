@@ -17,19 +17,17 @@
 
 namespace bleak {
 	namespace sdl {
-		using texture = ptr<SDL_Texture>;
-		using const_texture = cptr<SDL_Texture>;
-
+		using texture = SDL_Texture;
 		using blend_mode = SDL_BlendMode;
 
 		struct texture_info {
-			const extent_2d_t size;
+			const extent_t size;
 
 			const i32 access;
 			const u32 channels;
 		};
 
-		static inline texture_info get_texture_info(texture texture) noexcept {
+		static inline texture_info get_texture_info(ptr<texture> texture) noexcept {
 			int w, h;
 			i32 access;
 			u32 channels;
@@ -38,10 +36,10 @@ namespace bleak {
 				error_log.add("could not get texture info: {}", sdl::get_error());
 			}
 
-			return { extent_2d_t{ w, h }, access, channels };
+			return { extent_t{ w, h }, access, channels };
 		}
 
-		static inline void destroy_texture(ref<texture> texture) noexcept {
+		static inline void destroy_texture(ref<ptr<texture>> texture) noexcept {
 			if (texture != nullptr) {
 				SDL_DestroyTexture(texture);
 				texture = nullptr;
@@ -49,8 +47,8 @@ namespace bleak {
 		}
 
 		namespace img {
-			static inline texture load_texture(sdl::renderer renderer, cstr path) noexcept {
-				texture texture{ IMG_LoadTexture(renderer, path) };
+			static inline ptr<texture> load_texture(ptr<sdl::renderer> renderer, cstr path) noexcept {
+				ptr<texture> texture{ IMG_LoadTexture(renderer, path) };
 
 				if (texture == nullptr) {
 					error_log.add("could not load texture: {}", sdl::get_error());
@@ -80,7 +78,7 @@ namespace bleak {
 				throw std::runtime_error(std::format("failed to load texture!"));
 			}
 
-			if (info.size <= extent_2d_t::zero) {
+			if (info.size <= extent_t::Zero) {
 				throw std::runtime_error("texture size must be greater than zero!");
 			}
 
@@ -103,26 +101,26 @@ namespace bleak {
 
 		constexpr inline void copy(cptr<sdl::rect> src, cptr<sdl::rect> dst) const { SDL_RenderCopy(renderer.handle(), texture, src, dst); }
 
-		constexpr sdl::texture handle() { return texture; }
+		constexpr ptr<sdl::texture> handle() { return texture; }
 
-		constexpr sdl::const_texture handle() const { return texture; }
+		constexpr cptr<sdl::texture> handle() const { return texture; }
 
-		constexpr void draw(cref<offset_2d_t> pos) const {
+		constexpr void draw(cref<offset_t> pos) const {
 			const SDL_Rect dst{ static_cast<i32>(pos.x), static_cast<i32>(pos.y), static_cast<i32>(info.size.w), static_cast<i32>(info.size.h) };
 			copy(nullptr, &dst);
 		}
 
-		constexpr void draw(cref<offset_2d_t> pos, cref<color_t> color) const {
+		constexpr void draw(cref<offset_t> pos, cref<color_t> color) const {
 			set_color(color);
 			draw(pos);
 		}
 
-		constexpr void draw(cref<offset_2d_t> pos, cref<extent_2d_t> size) const {
+		constexpr void draw(cref<offset_t> pos, cref<extent_t> size) const {
 			const SDL_Rect dst{ static_cast<i32>(pos.x), static_cast<i32>(pos.y), static_cast<i32>(size.w), static_cast<i32>(size.h) };
 			copy(nullptr, &dst);
 		}
 
-		constexpr void draw(cref<offset_2d_t> pos, cref<extent_2d_t> size, cref<color_t> color) const {
+		constexpr void draw(cref<offset_t> pos, cref<extent_t> size, cref<color_t> color) const {
 			set_color(color);
 			draw(pos, size);
 		}
@@ -151,7 +149,7 @@ namespace bleak {
 	  private:
 		ref<renderer_t> renderer;
 
-		sdl::texture texture;
+		ptr<sdl::texture> texture;
 
 	  public:
 		const sdl::texture_info info;

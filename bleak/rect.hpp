@@ -11,12 +11,12 @@
 
 namespace bleak {
 	struct rect_t {
-		offset_2d_t position;
-		extent_2d_t size;
+		offset_t position;
+		extent_t size;
 
 		constexpr rect_t() noexcept : position{}, size{} {}
 
-		constexpr rect_t(cref<offset_2d_t> position, cref<extent_2d_t> size) noexcept : position{ position }, size{ size } {}
+		constexpr rect_t(cref<offset_t> position, cref<extent_t> size) noexcept : position{ position }, size{ size } {}
 
 		constexpr rect_t(cref<rect_t> other) noexcept : position{ other.position }, size{ other.size } {}
 
@@ -24,19 +24,19 @@ namespace bleak {
 
 		constexpr rect_t(cref<sdl::rect> other) noexcept :
 			position{ std::move(other.x), std::move(other.y) },
-			size{ extent_2d_t::scalar_cast(std::move(other.w)), extent_2d_t::scalar_cast(std::move(other.h)) } {}
+			size{ extent_t::scalar_cast(std::move(other.w)), extent_t::scalar_cast(std::move(other.h)) } {}
 
 		constexpr rect_t(rval<sdl::rect> other) noexcept :
 			position{ std::move(other.x), std::move(other.y) },
-			size{ extent_2d_t::scalar_cast(std::move(other.w)), extent_2d_t::scalar_cast(std::move(other.h)) } {}
+			size{ extent_t::scalar_cast(std::move(other.w)), extent_t::scalar_cast(std::move(other.h)) } {}
 
 		constexpr explicit rect_t(cref<sdl::frect> other) noexcept :
-			position{ offset_2d_t::scalar_cast(other.x), offset_2d_t::scalar_cast(other.y) },
-			size{ extent_2d_t::scalar_cast(other.w), extent_2d_t::scalar_cast(other.h) } {}
+			position{ offset_t::scalar_cast(other.x), offset_t::scalar_cast(other.y) },
+			size{ extent_t::scalar_cast(other.w), extent_t::scalar_cast(other.h) } {}
 
 		constexpr explicit rect_t(rval<sdl::frect> other) noexcept :
-			position{ offset_2d_t::scalar_cast(std::move(other.x)), offset_2d_t::scalar_cast(std::move(other.y)) },
-			size{ extent_2d_t::scalar_cast(std::move(other.w)), extent_2d_t::scalar_cast(std::move(other.h)) } {}
+			position{ offset_t::scalar_cast(std::move(other.x)), offset_t::scalar_cast(std::move(other.y)) },
+			size{ extent_t::scalar_cast(std::move(other.w)), extent_t::scalar_cast(std::move(other.h)) } {}
 
 		constexpr ref<rect_t> operator=(cref<rect_t> other) noexcept {
 			if (this == &other) {
@@ -81,52 +81,52 @@ namespace bleak {
 		}
 
 		constexpr ref<rect_t> operator=(cref<sdl::frect> other) noexcept {
-			position.x = offset_2d_t::scalar_cast(other.x);
-			position.y = offset_2d_t::scalar_cast(other.y);
+			position.x = offset_t::scalar_cast(other.x);
+			position.y = offset_t::scalar_cast(other.y);
 
-			size.w = extent_2d_t::scalar_cast(other.w);
-			size.h = extent_2d_t::scalar_cast(other.h);
+			size.w = extent_t::scalar_cast(other.w);
+			size.h = extent_t::scalar_cast(other.h);
 
 			return *this;
 		}
 
 		constexpr ref<rect_t> operator=(rval<sdl::frect> other) noexcept {
-			position.x = offset_2d_t::scalar_cast(std::move(other.x));
-			position.y = offset_2d_t::scalar_cast(std::move(other.y));
+			position.x = offset_t::scalar_cast(std::move(other.x));
+			position.y = offset_t::scalar_cast(std::move(other.y));
 
-			size.w = extent_2d_t::scalar_cast(std::move(other.w));
-			size.h = extent_2d_t::scalar_cast(std::move(other.h));
+			size.w = extent_t::scalar_cast(std::move(other.w));
+			size.h = extent_t::scalar_cast(std::move(other.h));
 
 			return *this;
 		}
 
-		constexpr rect_t operator+(cref<offset_2d_t> offset) const noexcept { return rect_t{ position + offset, size }; }
+		constexpr rect_t operator+(cref<offset_t> offset) const noexcept { return rect_t{ position + offset, size }; }
 
-		constexpr rect_t operator-(cref<offset_2d_t> offset) const noexcept { return rect_t{ position - offset, size }; }
+		constexpr rect_t operator-(cref<offset_t> offset) const noexcept { return rect_t{ position - offset, size }; }
 
-		constexpr rect_t operator+(cref<extent_2d_t> extent) const noexcept { return rect_t{ position, size + extent }; }
+		constexpr rect_t operator+(cref<extent_t> extent) const noexcept { return rect_t{ position, size + extent }; }
 
-		constexpr rect_t operator-(cref<extent_2d_t> extent) const noexcept { return rect_t{ position, size - extent }; }
+		constexpr rect_t operator-(cref<extent_t> extent) const noexcept { return rect_t{ position, size - extent }; }
 
-		constexpr ref<rect_t> operator+=(cref<offset_2d_t> offset) noexcept {
+		constexpr ref<rect_t> operator+=(cref<offset_t> offset) noexcept {
 			position += offset;
 
 			return *this;
 		}
 
-		constexpr ref<rect_t> operator-=(cref<offset_2d_t> offset) noexcept {
+		constexpr ref<rect_t> operator-=(cref<offset_t> offset) noexcept {
 			position -= offset;
 
 			return *this;
 		}
 
-		constexpr ref<rect_t> operator+=(cref<extent_2d_t> extent) noexcept {
+		constexpr ref<rect_t> operator+=(cref<extent_t> extent) noexcept {
 			size += extent;
 
 			return *this;
 		}
 
-		constexpr ref<rect_t> operator-=(cref<extent_2d_t> extent) noexcept {
+		constexpr ref<rect_t> operator-=(cref<extent_t> extent) noexcept {
 			size -= extent;
 
 			return *this;
@@ -142,9 +142,9 @@ namespace bleak {
 		constexpr bool operator>(cref<rect_t> other) = delete;
 		constexpr bool operator>=(cref<rect_t> other) = delete;
 
-		constexpr offset_2d_t center() const noexcept { return position + size / 2; }
+		constexpr offset_t center() const noexcept { return position + size / 2; }
 
-		constexpr extent_2d_t::product_t area() const noexcept { return size.area(); }
+		constexpr extent_t::product_t area() const noexcept { return size.area(); }
 
 		constexpr operator sdl::rect() const noexcept {
 			return sdl::rect{ static_cast<i32>(position.x), static_cast<i32>(position.y), static_cast<i32>(size.w), static_cast<i32>(size.h) };

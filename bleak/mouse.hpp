@@ -48,11 +48,11 @@ namespace bleak {
 		static inline std::bitset<button_t::Count> current_state;
 		static inline std::bitset<button_t::Count> previous_state;
 
-		static inline offset_2d_t current_position;
-		static inline offset_2d_t previous_position;
+		static inline offset_t current_position;
+		static inline offset_t previous_position;
 
-		static inline offset_2d_t current_scroll;
-		static inline offset_2d_t previous_scroll;
+		static inline offset_t current_scroll;
+		static inline offset_t previous_scroll;
 
 		static inline bool initialized;
 
@@ -85,7 +85,7 @@ namespace bleak {
 			u32 state = SDL_GetMouseState(&x, &y);
 
 			previous_position = current_position;
-			current_position = offset_2d_t{ offset_2d_t::scalar_cast(x), offset_2d_t::scalar_cast(y) };
+			current_position = offset_t{ offset_t::scalar_cast(x), offset_t::scalar_cast(y) };
 
 			for (usize i{ button_t::Start }; i <= button_t::End; ++i) {
 				previous_state[i] = current_state[i];
@@ -97,12 +97,12 @@ namespace bleak {
 			switch (event.type) {
 			case SDL_MOUSEMOTION:
 				previous_position = current_position;
-				current_position = offset_2d_t{ event.motion.x, event.motion.y };
+				current_position = offset_t{ event.motion.x, event.motion.y };
 				break;
 
 			case SDL_MOUSEWHEEL:
 				previous_scroll = current_scroll;
-				current_scroll = offset_2d_t{ event.wheel.x, event.wheel.y };
+				current_scroll = offset_t{ event.wheel.x, event.wheel.y };
 				break;
 
 			default:
@@ -258,9 +258,9 @@ namespace bleak {
 			return false;
 		}
 
-		static inline offset_2d_t get_position() { return current_position; }
+		static inline offset_t get_position() { return current_position; }
 
-		static inline offset_2d_t get_scroll() { return current_scroll; }
+		static inline offset_t get_scroll() { return current_scroll; }
 
 		static inline void show_cursor() { SDL_ShowCursor(SDL_ENABLE); }
 

@@ -6,22 +6,22 @@
 
 namespace bleak {
 	struct octant_t {
-		offset_2d_t position;
-		offset_2d_t delta;
+		offset_t position;
+		offset_t delta;
 
 		constexpr octant_t() : position{}, delta{} {}
 
-		constexpr octant_t(cref<offset_2d_t> position, cref<offset_2d_t> delta) : position{ position }, delta{ delta } {}
+		constexpr octant_t(cref<offset_t> position, cref<offset_t> delta) : position{ position }, delta{ delta } {}
 	};
 
 	template<typename T>
 		requires is_numeric<T>::value
 	struct creeper_t {
-		offset_2d_t position;
+		offset_t position;
 		T distance;
 
 		constexpr creeper_t() : position{}, distance{} {}
 
-		constexpr creeper_t(cref<offset_2d_t> position, cref<T> distance) : position{ position }, distance{ distance } {}
+		constexpr creeper_t(cref<offset_t> position, cref<T> distance) : position{ position }, distance{ distance } {}
 	};
 } // namespace bleak

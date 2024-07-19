@@ -16,7 +16,7 @@ namespace bleak {
 	struct cursor_t {
 	  private:
 		texture_t texture;
-		offset_2d_t position;
+		offset_t position;
 
 	  public:
 		color_t color;
@@ -29,28 +29,28 @@ namespace bleak {
 
 		inline void update() { position = Mouse::get_position(); }
 
-		inline void update(cref<offset_2d_t> pos) { position = pos; };
+		inline void update(cref<offset_t> pos) { position = pos; };
 
 		inline void draw() const { texture.draw(position, color); }
 
-		inline void draw(cref<offset_2d_t> offset) const { texture.draw(position + offset, color); }
+		inline void draw(cref<offset_t> offset) const { texture.draw(position + offset, color); }
 
-		inline cref<offset_2d_t> get_position() const { return position; }
+		inline cref<offset_t> get_position() const { return position; }
 	};
 
-	template<extent_2d_t Size> struct grid_cursor_t {
+	template<extent_t Size> struct grid_cursor_t {
 		texture_t texture;
 
-		offset_2d_t position;
+		offset_t position;
 
-		const extent_2d_t min;
-		const extent_2d_t max;
+		const extent_t min;
+		const extent_t max;
 
 		const bool use_bounds;
 
 		color_t color;
 
-		static constexpr extent_2d_t size{ Size };
+		static constexpr extent_t size{ Size };
 
 		inline grid_cursor_t() = delete;
 
@@ -58,23 +58,23 @@ namespace bleak {
 
 		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<color_t> color) : texture{ renderer, path }, position{}, min{}, max{}, use_bounds{ false }, color{ color } {}
 
-		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<offset_2d_t> min, cref<offset_2d_t> max) : texture{ renderer, path }, position{}, min{ min }, max{ max }, use_bounds{ true }, color{ Colors::White } {}
+		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<offset_t> min, cref<offset_t> max) : texture{ renderer, path }, position{}, min{ min }, max{ max }, use_bounds{ true }, color{ Colors::White } {}
 
-		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<color_t> color, cref<offset_2d_t> min, cref<offset_2d_t> max) : texture{ renderer, path }, position{}, min{ min }, max{ max }, use_bounds{ true }, color{ color } {}
+		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<color_t> color, cref<offset_t> min, cref<offset_t> max) : texture{ renderer, path }, position{}, min{ min }, max{ max }, use_bounds{ true }, color{ color } {}
 
 		inline void update() {
-			const offset_2d_t pos{ Mouse::get_position() / size };
+			const offset_t pos{ Mouse::get_position() / size };
 			if (use_bounds) {
-				position = offset_2d_t::clamp(pos, min, max);
+				position = offset_t::clamp(pos, min, max);
 			} else {
 				position = pos;
 			}
 		}
 
-		inline void update(cref<offset_2d_t> offset) {
-			const offset_2d_t pos{ Mouse::get_position() / size + offset };
+		inline void update(cref<offset_t> offset) {
+			const offset_t pos{ Mouse::get_position() / size + offset };
 			if (use_bounds) {
-				position = offset_2d_t::clamp(pos, min, max);
+				position = offset_t::clamp(pos, min, max);
 			} else {
 				position = pos;
 			}
@@ -85,26 +85,26 @@ namespace bleak {
 				return;
 			}
 
-			const offset_2d_t offset_dir{ direction };
+			const offset_t offset_dir{ direction };
 
 			if (use_bounds) {
-				position = offset_2d_t::clamp(position + offset_dir, min, max);
+				position = offset_t::clamp(position + offset_dir, min, max);
 			} else {
 				position += offset_dir;
 			}
 		}
 
-		inline offset_2d_t midpoint() const { return offset_2d_t{ (max - min) / 2 }; }
+		inline offset_t midpoint() const { return offset_t{ (max - min) / 2 }; }
 
-		inline offset_2d_t lower_third() const { return offset_2d_t{ (max - min) / 3 }; }
+		inline offset_t lower_third() const { return offset_t{ (max - min) / 3 }; }
 
-		inline offset_2d_t upper_third() const { return offset_2d_t{ (max - min) / 3 * 2 }; }
+		inline offset_t upper_third() const { return offset_t{ (max - min) / 3 * 2 }; }
 
 		inline void draw() const { texture.draw(position * size, color); }
 
-		inline void draw(cref<offset_2d_t> offset) const { texture.draw(position * size + offset, color); }
+		inline void draw(cref<offset_t> offset) const { texture.draw(position * size + offset, color); }
 
-		inline offset_2d_t get_position() const { return position; }
+		inline offset_t get_position() const { return position; }
 
 		inline quadrant_t get_quadrant() const {
 			const auto mid{ midpoint() };

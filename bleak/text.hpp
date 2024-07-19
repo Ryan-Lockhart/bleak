@@ -78,13 +78,13 @@ namespace bleak {
 			"vertical tab width must be a positive power-of-two!"
 		);
 
-		static constexpr extent_2d_t calculate_size(cref<runes_t> runes) noexcept {
+		static constexpr extent_t calculate_size(cref<runes_t> runes) noexcept {
 			if (runes.empty()) {
-				return extent_2d_t::zero;
+				return extent_t::Zero;
 			}
 
 			usize current_width{ 0 };
-			extent_2d_t size{ 0, 1 };
+			extent_t size{ 0, 1 };
 
 			for (auto& rune : runes) {
 				switch (rune.index) {
@@ -121,7 +121,7 @@ namespace bleak {
 			return size;
 		}
 
-		static constexpr extent_2d_t calculate_size(cref<std::string> text) noexcept {
+		static constexpr extent_t calculate_size(cref<std::string> text) noexcept {
 			return calculate_size(runes_t{ text });
 		}
 	} // namespace Text

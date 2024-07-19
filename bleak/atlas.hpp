@@ -17,22 +17,22 @@
 #include <bleak/texture.hpp>
 
 namespace bleak {
-	template<extent_2d_t Size> class atlas_t {
+	template<extent_t Size> class atlas_t {
 	  private:
-		layer_t<rect_t, Size> rects;
+		array_t<rect_t, Size> rects;
 
 		texture_t texture;
 
 	  public:
 		// The size of the atlas in glyphs.
-		static constexpr extent_2d_t size{ Size };
+		static constexpr extent_t size{ Size };
 
 		// The size of the image in pixels.
-		const extent_2d_t image_size;
+		const extent_t image_size;
 		// The size of each glyph in pixels.
-		const extent_2d_t glyph_size;
+		const extent_t glyph_size;
 
-		offset_2d_t universal_offset{};
+		offset_t universal_offset{};
 
 		inline atlas_t() = delete;
 
@@ -54,16 +54,15 @@ namespace bleak {
 				throw std::runtime_error("image size must be divisible by the atlas size!");
 			}
 
-			extent_2d_t::product_t index{ 0 };
+			extent_t::product_t index{ 0 };
 			for (int y = 0; y < size.h; ++y) {
 				for (int x = 0; x < size.w; ++x) {
-					rects[index] = rect_t{ offset_2d_t{ x, y } * glyph_size, glyph_size };
-					++index;
+					rects[index++] = rect_t{ offset_t{ x, y } * glyph_size, glyph_size };
 				}
 			}
 		}
 
-		inline atlas_t(ref<renderer_t> renderer, cstr path, cref<offset_2d_t> offset) :
+		inline atlas_t(ref<renderer_t> renderer, cstr path, cref<offset_t> offset) :
 			rects{},
 			texture{ renderer, path },
 
@@ -82,10 +81,10 @@ namespace bleak {
 				throw std::runtime_error("image size must be divisible by the atlas size!");
 			}
 
-			extent_2d_t::product_t index{ 0 };
+			extent_t::product_t index{ 0 };
 			for (int y = 0; y < size.h; ++y) {
 				for (int x = 0; x < size.w; ++x) {
-					rects[index] = rect_t{ offset_2d_t{ x, y } * glyph_size, glyph_size };
+					rects[index] = rect_t{ offset_t{ x, y } * glyph_size, glyph_size };
 					++index;
 				}
 			}
@@ -99,7 +98,7 @@ namespace bleak {
 
 		inline ~atlas_t() = default;
 
-		inline void draw(cref<glyph_t> glyph, cref<offset_2d_t> position) const noexcept {
+		inline void draw(cref<glyph_t> glyph, cref<offset_t> position) const noexcept {
 			if (glyph.index < 0 || glyph.index >= rects.size) {
 				error_log.add("glyph index {} is out of range!", glyph.index);
 				return;
@@ -108,7 +107,7 @@ namespace bleak {
 			texture.draw(rects[glyph.index], rect_t{ position * glyph_size, glyph_size } + universal_offset, glyph.color);
 		}
 
-		inline void draw(cref<glyph_t> glyph, cref<offset_2d_t> position, cref<offset_2d_t> offset) const noexcept {
+		inline void draw(cref<glyph_t> glyph, cref<offset_t> position, cref<offset_t> offset) const noexcept {
 			if (glyph.index < 0 || glyph.index >= rects.size) {
 				error_log.add("glyph index {} is out of range!", glyph.index);
 				return;
@@ -117,12 +116,12 @@ namespace bleak {
 			texture.draw(rects[glyph.index], rect_t{ position * glyph_size + offset, glyph_size } + universal_offset, glyph.color);
 		}
 
-		inline void draw(cref<runes_t> runes, cref<offset_2d_t> position) const {
+		inline void draw(cref<runes_t> runes, cref<offset_t> position) const {
 			if (runes.empty()) {
 				return;
 			}
 
-			offset_2d_t carriage_pos{ 0 };
+			offset_t carriage_pos{ 0 };
 
 			for (auto& rune : runes) {
 				switch (rune.index) {
@@ -147,17 +146,17 @@ namespace bleak {
 			}
 		}
 
-		inline void draw(cref<runes_t> runes, cref<offset_2d_t> position, cref<cardinal_t> alignment) const {
+		inline void draw(cref<runes_t> runes, cref<offset_t> position, cref<cardinal_t> alignment) const {
 			if (runes.empty()) {
 				return;
 			}
 
-			const extent_2d_t size{ Text::calculate_size(runes) };
-			const offset_2d_t origin{ position - size / 2 };
-			const offset_2d_t size_offs{ static_cast<offset_2d_t>(alignment) * size };
-			const offset_2d_t alignment_offs{ size_offs - size_offs / 2 };
+			const extent_t size{ Text::calculate_size(runes) };
+			const offset_t origin{ position - size / 2 };
+			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+			const offset_t alignment_offs{ size_offs - size_offs / 2 };
 
-			offset_2d_t carriage_pos{ 0 };
+			offset_t carriage_pos{ 0 };
 
 			for (auto& rune : runes) {
 				switch (rune.index) {
@@ -182,17 +181,17 @@ namespace bleak {
 			}
 		}
 
-		inline void draw(cref<runes_t> runes, cref<offset_2d_t> position, cref<cardinal_t> alignment, cref<offset_2d_t> offset) const {
+		inline void draw(cref<runes_t> runes, cref<offset_t> position, cref<cardinal_t> alignment, cref<offset_t> offset) const {
 			if (runes.empty()) {
 				return;
 			}
 
-			const extent_2d_t size{ Text::calculate_size(runes) };
-			const offset_2d_t origin{ position - size / 2 };
-			const offset_2d_t size_offs{ static_cast<offset_2d_t>(alignment) * size };
-			const offset_2d_t alignment_offs{ size_offs - size_offs / 2 };
+			const extent_t size{ Text::calculate_size(runes) };
+			const offset_t origin{ position - size / 2 };
+			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+			const offset_t alignment_offs{ size_offs - size_offs / 2 };
 
-			offset_2d_t carriage_pos{ 0 };
+			offset_t carriage_pos{ 0 };
 
 			for (auto& rune : runes) {
 				switch (rune.index) {
@@ -217,12 +216,12 @@ namespace bleak {
 			}
 		}
 
-		inline void draw(cref<std::string> text, cref<offset_2d_t> position, cref<color_t> color) const {
+		inline void draw(cref<std::string> text, cref<offset_t> position, cref<color_t> color) const {
 			if (text.empty()) {
 				return;
 			}
 
-			offset_2d_t carriage_pos{ 0 };
+			offset_t carriage_pos{ 0 };
 
 			for (auto& ch : text) {
 				switch (ch) {
@@ -247,17 +246,17 @@ namespace bleak {
 			}
 		}
 
-		inline void draw(cref<std::string> text, cref<offset_2d_t> position, cref<color_t> color, cref<cardinal_t> alignment) const {
+		inline void draw(cref<std::string> text, cref<offset_t> position, cref<color_t> color, cref<cardinal_t> alignment) const {
 			if (text.empty()) {
 				return;
 			}
 
-			const extent_2d_t size{ Text::calculate_size(text) };
-			const offset_2d_t origin{ position - size / 2 };
-			const offset_2d_t size_offs{ static_cast<offset_2d_t>(alignment) * size };
-			const offset_2d_t alignment_offs{ size_offs - size_offs / 2 };
+			const extent_t size{ Text::calculate_size(text) };
+			const offset_t origin{ position - size / 2 };
+			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+			const offset_t alignment_offs{ size_offs - size_offs / 2 };
 
-			offset_2d_t carriage_pos{ 0 };
+			offset_t carriage_pos{ 0 };
 
 			for (auto& ch : text) {
 				switch (ch) {
@@ -282,14 +281,14 @@ namespace bleak {
 			}
 		}
 
-		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_2d_t> position, cref<color_t> background, cref<color_t> outline) const {
+		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_t> position, cref<color_t> background, cref<color_t> outline) const {
 			if (runes.empty()) {
 				return;
 			}
 
 			renderer.draw_composite_rect(rect_t{ position * glyph_size, Text::calculate_size(runes) * glyph_size }, background, outline, 1);
 
-			offset_2d_t carriage_pos{ 0 };
+			offset_t carriage_pos{ 0 };
 
 			for (auto& rune : runes) {
 				switch (rune.index) {
@@ -314,19 +313,19 @@ namespace bleak {
 			}
 		}
 
-		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_2d_t> position, cref<cardinal_t> alignment, cref<color_t> background, cref<color_t> outline) const {
+		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_t> position, cref<cardinal_t> alignment, cref<color_t> background, cref<color_t> outline) const {
 			if (runes.empty()) {
 				return;
 			}
 
-			const extent_2d_t size{ Text::calculate_size(runes) };
-			const offset_2d_t origin{ position - size / 2 };
-			const offset_2d_t size_offs{ static_cast<offset_2d_t>(alignment) * size };
-			const offset_2d_t alignment_offs{ size_offs - size_offs / 2 };
+			const extent_t size{ Text::calculate_size(runes) };
+			const offset_t origin{ position - size / 2 };
+			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+			const offset_t alignment_offs{ size_offs - size_offs / 2 };
 
 			renderer.draw_composite_rect(rect_t{ origin + alignment_offs * glyph_size, size * glyph_size }, background, outline, 1);
 
-			offset_2d_t carriage_pos{ 0 };
+			offset_t carriage_pos{ 0 };
 
 			for (auto& rune : runes) {
 				switch (rune.index) {
@@ -351,19 +350,19 @@ namespace bleak {
 			}
 		}
 
-		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_2d_t> position, cref<cardinal_t> alignment, cref<offset_2d_t> offset, cref<color_t> background, cref<color_t> outline) const {
+		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_t> position, cref<cardinal_t> alignment, cref<offset_t> offset, cref<color_t> background, cref<color_t> outline) const {
 			if (runes.empty()) {
 				return;
 			}
 
-			const extent_2d_t size{ Text::calculate_size(runes) };
-			const offset_2d_t origin{ position - size / 2 };
-			const offset_2d_t size_offs{ static_cast<offset_2d_t>(alignment) * size };
-			const offset_2d_t alignment_offs{ size_offs - size_offs / 2 };
+			const extent_t size{ Text::calculate_size(runes) };
+			const offset_t origin{ position - size / 2 };
+			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+			const offset_t alignment_offs{ size_offs - size_offs / 2 };
 
 			renderer.draw_composite_rect(rect_t{ origin + alignment_offs * glyph_size + offset, size * glyph_size }, background, outline, 1);
 
-			offset_2d_t carriage_pos{ 0 };
+			offset_t carriage_pos{ 0 };
 
 			for (auto& rune : runes) {
 				switch (rune.index) {
@@ -388,14 +387,14 @@ namespace bleak {
 			}
 		}
 
-		inline void draw_label(ref<renderer_t> renderer, cref<std::string> text, cref<offset_2d_t> position, cref<color_t> color, cref<color_t> background, cref<color_t> outline) const {
+		inline void draw_label(ref<renderer_t> renderer, cref<std::string> text, cref<offset_t> position, cref<color_t> color, cref<color_t> background, cref<color_t> outline) const {
 			if (text.empty()) {
 				return;
 			}
 
 			renderer.draw_composite_rect(rect_t{ position * glyph_size, Text::calculate_size(text) * glyph_size }, background, outline, 1);
 
-			offset_2d_t carriage_pos{ 0 };
+			offset_t carriage_pos{ 0 };
 
 			for (auto& ch : text) {
 				switch (ch) {
@@ -420,19 +419,19 @@ namespace bleak {
 			}
 		}
 
-		inline void draw_label(ref<renderer_t> renderer, cref<std::string> text, cref<offset_2d_t> position, cref<color_t> color, cref<cardinal_t> alignment, cref<color_t> background, cref<color_t> outline) const {
+		inline void draw_label(ref<renderer_t> renderer, cref<std::string> text, cref<offset_t> position, cref<color_t> color, cref<cardinal_t> alignment, cref<color_t> background, cref<color_t> outline) const {
 			if (text.empty()) {
 				return;
 			}
 
-			const extent_2d_t size{ Text::calculate_size(text) };
-			const offset_2d_t origin{ position - size / 2 };
-			const offset_2d_t size_offs{ static_cast<offset_2d_t>(alignment) * size };
-			const offset_2d_t alignment_offs{ size_offs - size_offs / 2 };
+			const extent_t size{ Text::calculate_size(text) };
+			const offset_t origin{ position - size / 2 };
+			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+			const offset_t alignment_offs{ size_offs - size_offs / 2 };
 
 			renderer.draw_composite_rect(rect_t{ origin + alignment_offs * glyph_size, size * glyph_size }, background, outline, 1);
 
-			offset_2d_t carriage_pos{ 0 };
+			offset_t carriage_pos{ 0 };
 
 			for (auto& ch : text) {
 				switch (ch) {

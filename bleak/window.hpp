@@ -17,14 +17,15 @@
 
 namespace bleak {
 	namespace sdl {
-		using window = ptr<SDL_Window>;
-		using window_flags = SDL_WindowFlags;
-\
-		constexpr window_flags WINDOW_FLAGS_NONE{ SDL_WINDOW_SHOWN };
-		constexpr offset_2d_t WINDOW_POSITION_CENTERED{ SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED };
+		using window = SDL_Window;
 
-		static inline window create_window(cstr title, extent_2d_t size, offset_2d_t position = WINDOW_POSITION_CENTERED, window_flags flags = WINDOW_FLAGS_NONE) noexcept {
-			window handle = SDL_CreateWindow(title, position.x, position.y, size.w, size.h, flags);
+		using window_flags = SDL_WindowFlags;
+
+		constexpr window_flags WINDOW_FLAGS_NONE{ SDL_WINDOW_SHOWN };
+		constexpr i32 WINDOW_POSITION_CENTERED{ SDL_WINDOWPOS_CENTERED };
+
+		static inline ptr<window> create_window(cstr title, cref<extent_t> size) noexcept {
+			ptr<window> handle = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, static_cast<i32>(size.w), static_cast<i32>(size.h), WINDOW_FLAGS_NONE);
 
 			if (handle == nullptr) {
 				error_log.add("failed to create window: {}", get_error());
@@ -33,7 +34,27 @@ namespace bleak {
 			return handle;
 		}
 
-		static inline void destroy_window(ref<window> handle) noexcept {
+		static inline ptr<window> create_window(cstr title, cref<extent_t> size, window_flags flags) noexcept {
+			ptr<window> handle = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, static_cast<i32>(size.w), static_cast<i32>(size.h), flags);
+
+			if (handle == nullptr) {
+				error_log.add("failed to create window: {}", get_error());
+			}
+
+			return handle;
+		}
+
+		static inline ptr<window> create_window(cstr title, cref<extent_t> size, cref<offset_t> position, window_flags flags) noexcept {
+			ptr<window> handle = SDL_CreateWindow(title, static_cast<i32>(position.x), static_cast<i32>(position.y), static_cast<i32>(size.w), static_cast<i32>(size.h), flags);
+
+			if (handle == nullptr) {
+				error_log.add("failed to create window: {}", get_error());
+			}
+
+			return handle;
+		}
+
+		static inline void destroy_window(ref<ptr<window>> handle) noexcept {
 			if (handle != nullptr) {
 				SDL_DestroyWindow(handle);
 				handle = nullptr;
@@ -45,47 +66,22 @@ namespace bleak {
 
 	class window_t {
 	  private:
-		sdl::window window;
+		ptr<sdl::window> window;
 
 	  public:
 		const cstr title;
-		const extent_2d_t size;
+		const extent_t size;
 		const u32 flags;
 
 	  private:
 		bool closing = false;
 
-		inline sdl::window create(cstr title, cref<offset_2d_t> position, cref<extent_2d_t> size, sdl::window_flags flags) noexcept {
-			ptr<SDL_Window> new_window{ SDL_CreateWindow(title, position.x, position.y, size.w, size.h, flags) };
-
-			if (new_window == nullptr) {
-				error_log.add(std::format("failed to create window: {}", SDL_GetError()));
-			}
-
-			return new_window;
-		}
-
-		static inline void destroy(ptr<SDL_Window> window) noexcept {
-			if (window != nullptr) {
-				SDL_DestroyWindow(window);
-				window = nullptr;
-			}
-
-			GamepadManager::terminate();
-
-			Keyboard::terminate();
-
-			Mouse::terminate();
-
-			Subsystem::terminate();
-		}
-
 	  public:
 		inline window_t() = delete;
 
-		inline window_t(cstr title, cref<extent_2d_t> size, sdl::window_flags flags) noexcept : window{ create(title, sdl::WINDOW_POSITION_CENTERED, size, flags) }, title{ title }, size{ size }, flags{ flags } {}
+		inline window_t(cstr title, cref<extent_t> size, sdl::window_flags flags) noexcept : window{ sdl::create_window(title, size, flags) }, title{ title }, size{ size }, flags{ flags } {}
 
-		inline window_t(cstr title, cref<offset_2d_t> position, cref<extent_2d_t> size, sdl::window_flags flags) noexcept : window{ create(title, position, size, flags) }, title{ title }, size{ size }, flags{ flags } {}
+		inline window_t(cstr title, cref<offset_t> position, cref<extent_t> size, sdl::window_flags flags) noexcept : window{ sdl::create_window(title, size, position, flags) }, title{ title }, size{ size }, flags{ flags } {}
 
 		inline window_t(cref<window_t> other) noexcept = delete;
 
@@ -95,7 +91,7 @@ namespace bleak {
 
 		inline ref<window_t> operator=(rval<window_t> other) noexcept = delete;
 
-		inline ~window_t() { destroy(window); }
+		inline ~window_t() { sdl::destroy_window(window); }
 
 		inline void poll_events() {
 			if (!is_valid()) {
@@ -138,15 +134,15 @@ namespace bleak {
 
 		constexpr void close() noexcept { closing = true; }
 
-		constexpr ptr<SDL_Window> handle() noexcept { return window; }
+		constexpr ptr<sdl::window> handle() noexcept { return window; }
 
-		constexpr cptr<SDL_Window> handle() const noexcept { return window; }
+		constexpr cptr<sdl::window> handle() const noexcept { return window; }
 
-		constexpr offset_2d_t origin() const noexcept { return offset_2d_t::zero; }
+		constexpr offset_t origin() const noexcept { return offset_t::Zero; }
 
-		constexpr offset_2d_t center() const noexcept { return origin() + size / 2; }
+		constexpr offset_t center() const noexcept { return origin() + size / 2; }
 
-		constexpr offset_2d_t extents() const noexcept { return origin() + size - 1; }
+		constexpr offset_t extents() const noexcept { return origin() + size - 1; }
 
 		constexpr rect_t bounds() const noexcept { return { origin(), size }; }
 	};
