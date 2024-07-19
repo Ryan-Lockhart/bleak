@@ -27,59 +27,13 @@ namespace bleak {
 
 		constexpr cell_state_t() noexcept = default;
 
-		constexpr cell_state_t(cref<cell_state_t> other) noexcept :
-			solid{ other.solid },
-			opaque{ other.opaque },
-			seen{ other.seen },
-			explored{ other.explored },
-			damp{ other.damp },
-			warm{ other.warm },
-			smelly{ other.smelly },
-			toxic{ other.toxic } {}
+		constexpr cell_state_t(cref<cell_state_t> other) noexcept = default;
 
-		constexpr cell_state_t(rval<cell_state_t> other) noexcept :
-			solid{ other.solid },
-			opaque{ other.opaque },
-			seen{ other.seen },
-			explored{ other.explored },
-			damp{ other.damp },
-			warm{ other.warm },
-			smelly{ other.smelly },
-			toxic{ other.toxic } {}
+		constexpr cell_state_t(rval<cell_state_t> other) noexcept = default;
 
-		constexpr ref<cell_state_t> operator=(cref<cell_state_t> other) noexcept {
-			if (this == &other) {
-				return *this;
-			}
+		constexpr ref<cell_state_t> operator=(cref<cell_state_t> other) noexcept = default;
 
-			solid = other.solid;
-			opaque = other.opaque;
-			seen = other.seen;
-			explored = other.explored;
-			damp = other.damp;
-			warm = other.warm;
-			smelly = other.smelly;
-			toxic = other.toxic;
-
-			return *this;
-		}
-
-		constexpr ref<cell_state_t> operator=(rval<cell_state_t> other) noexcept {
-			if (this == &other) {
-				return *this;
-			}
-
-			solid = other.solid;
-			opaque = other.opaque;
-			seen = other.seen;
-			explored = other.explored;
-			damp = other.damp;
-			warm = other.warm;
-			smelly = other.smelly;
-			toxic = other.toxic;
-
-			return *this;
-		}
+		constexpr ref<cell_state_t> operator=(rval<cell_state_t> other) noexcept = default;
 
 		template<typename... Traits>
 		constexpr cell_state_t(Traits... traits)
@@ -98,18 +52,18 @@ namespace bleak {
 			return state;
 		}
 
-		constexpr inline ref<cell_state_t> operator+=(cell_trait_t trait) noexcept {
-			set(trait);
-
-			return *this;
-		}
-
 		constexpr inline cell_state_t operator-(cell_trait_t trait) const noexcept {
 			cell_state_t state{ *this };
 
 			state.unset(trait);
 
 			return state;
+		}
+
+		constexpr inline ref<cell_state_t> operator+=(cell_trait_t trait) noexcept {
+			set(trait);
+
+			return *this;
 		}
 
 		constexpr inline ref<cell_state_t> operator-=(cell_trait_t trait) noexcept {
@@ -156,17 +110,17 @@ namespace bleak {
 			case cell_trait_t::Warm:
 				warm = true;
 				break;
-			case cell_trait_t::Smelly:
-				smelly = true;
-				break;
 			case cell_trait_t::Odorless:
 				smelly = false;
 				break;
-			case cell_trait_t::Toxic:
-				toxic = true;
+			case cell_trait_t::Smelly:
+				smelly = true;
 				break;
 			case cell_trait_t::Safe:
 				toxic = false;
+				break;
+			case cell_trait_t::Toxic:
+				toxic = true;
 				break;
 			default:
 				break;
@@ -211,17 +165,17 @@ namespace bleak {
 			case cell_trait_t::Warm:
 				warm = false;
 				break;
-			case cell_trait_t::Smelly:
-				smelly = false;
-				break;
 			case cell_trait_t::Odorless:
 				smelly = true;
 				break;
-			case cell_trait_t::Toxic:
-				toxic = false;
+			case cell_trait_t::Smelly:
+				smelly = false;
 				break;
 			case cell_trait_t::Safe:
 				toxic = true;
+				break;
+			case cell_trait_t::Toxic:
+				toxic = false;
 				break;
 			default:
 				break;
@@ -229,7 +183,10 @@ namespace bleak {
 		}
 
 		constexpr ref<cell_state_t> operator=(cref<cell_trait_t> other) noexcept {
+			*this = cell_state_t{};
+
 			set(other);
+			
 			return *this;
 		}
 

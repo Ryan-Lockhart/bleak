@@ -15,6 +15,12 @@ namespace bleak {
 #define BLEAKDEPTH_BIG_GRID 0
 #endif
 
+#define rauto auto&
+#define crauto const auto&
+
+#define rvauto auto&&
+#define crvauto const auto&&
+
 #define forever for (;;)
 
 	using u8 = unsigned char;

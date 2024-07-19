@@ -10,6 +10,7 @@
 
 #include <bleak/area.hpp>
 #include <bleak/atlas.hpp>
+#include <bleak/camera.hpp>
 #include <bleak/cardinal.hpp>
 #include <bleak/cell.hpp>
 #include <bleak/clock.hpp>
@@ -31,9 +32,9 @@
 #include <bleak/window.hpp>
 #include <bleak/zone.hpp>
 
-#include "bleak/constants/glyphs.hpp"
 #include <bleak/constants/bindings.hpp>
 #include <bleak/constants/colors.hpp>
+#include <bleak/constants/glyphs.hpp>
 
 using namespace bleak;
 
@@ -50,7 +51,7 @@ namespace Globals {
 	constexpr u32 FrameLimit{ 60u };
 	constexpr f32 FrameTime{ 1000.0f / FrameLimit };
 
-	constexpr bool UseFrameLimit{ false };
+	constexpr bool UseFrameLimit{ true };
 
 	constexpr extent_t WindowSize{ 640, 480 };
 	constexpr extent_t WindowBorder{ 8, 8 };
@@ -69,13 +70,15 @@ namespace Globals {
 	constexpr extent_t ZoneSize{ 64, 64 };
 	constexpr extent_t RegionSize{ 4, 4 };
 
+	constexpr extent_t MapSize{ RegionSize * ZoneSize };
+
 	constexpr extent_t BorderSize{ 4, 4 };
 
 	constexpr extent_t CellSize{ 16, 16 };
 
 	constexpr offset_t CursorOffset{ UniversalOffset - CellSize / 4 };
 
-	constexpr offset_t CameraExtent{ offset_t{ RegionSize * ZoneSize } - offset_t{ Globals::GameGridSize } };
+	constexpr extent_t CameraExtent{ MapSize - Globals::GameGridSize };
 } // namespace Globals
 
 struct game_state {
@@ -101,12 +104,10 @@ struct game_state {
 
 	bool draw_cursor{ true };
 
-	offset_t camera_position{ 0 };
-
-	// animated_sprite_t<extent_1d_t{ 3 }> player;
 	sprite_t player{ Glyphs::Player };
 	area_t player_fov{};
 
+	camera_t camera{ Globals::GameGridSize, extent_t::Zero, Globals::CameraExtent };
 	bool camera_locked{ true };
 
 	timer_t input_timer{ 125.0 };
@@ -135,44 +136,28 @@ void mouse_keyboard_active() { game_state.gamepad_active = false; }
 
 using namespace bleak;
 
-void center_camera(cref<offset_t> position);
-void constrain_camera();
-
 bool update_camera() {
 	if (game_state.camera_locked) {
-		offset_t previous_position{ game_state.camera_position };
-
-		center_camera(game_state.player.position);
-		constrain_camera();
-
-		return previous_position != game_state.camera_position;
+		return game_state.camera.center_on(game_state.player.position);
 	}
 
 	offset_t direction{};
 
 	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::North])) {
 		--direction.y;
-	}
-	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::South])) {
+	} if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::South])) {
 		++direction.y;
-	}
-	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::West])) {
+	} if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::West])) {
 		--direction.x;
-	}
-	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::East])) {
+	} if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::East])) {
 		++direction.x;
 	}
 
 	if (direction != offset_t::Zero) {
-		game_state.camera_position += direction * 2;
-
 		game_state.input_timer.record();
-
 		mouse_keyboard_active();
 
-		constrain_camera();
-
-		return true;
+		return game_state.camera.move(direction * 2);
 	}
 
 	if (game_state.gamepad_enabled && direction == offset_t::Zero) {
@@ -180,23 +165,14 @@ bool update_camera() {
 	}
 
 	if (direction != offset_t::Zero) {
-		game_state.camera_position += direction * 2;
-
 		game_state.input_timer.record();
-
 		primary_gamepad_active();
 
-		constrain_camera();
-
-		return true;
+		return game_state.camera.move(direction * 2);
 	}
 
 	return false;
 }
-
-void center_camera(cref<offset_t> position) { game_state.camera_position = position - Globals::GameGridSize / 2; }
-
-void constrain_camera() { game_state.camera_position.clamp(offset_t::Zero, Globals::CameraExtent); }
 
 bool character_movement() {
 	if (Keyboard::is_key_pressed(Bindings::Wait)) {
@@ -210,14 +186,11 @@ bool character_movement() {
 
 	if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::North])) {
 		--direction.y;
-	}
-	if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::South])) {
+	} if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::South])) {
 		++direction.y;
-	}
-	if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::West])) {
+	} if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::West])) {
 		--direction.x;
-	}
-	if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::East])) {
+	} if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::East])) {
 		++direction.x;
 	}
 
@@ -316,7 +289,7 @@ void startup() {
 
 	region.compile(game_state.game_map);
 
-	game_state.game_map.set<zone_region_t::All>(cell_trait_t::Unseen);
+	game_state.game_map.apply<zone_region_t::All>(cell_trait_t::Unseen, cell_trait_t::Unexplored);
 
 	auto player_position{ game_state.game_map.find_random<zone_region_t::Interior>(game_state.random_engine, cell_trait_t::Open) };
 
@@ -327,9 +300,9 @@ void startup() {
 		terminate_prematurely();
 	}
 
-	game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f);
+	game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f, true);
 
-	game_state.player_fov.set(game_state.game_map, cell_trait_t::Seen);
+	game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
 
 	update_camera();
 
@@ -367,11 +340,11 @@ void update() {
 	if (game_state.input_timer.ready()) {
 		if (game_state.epoch_timer.ready()) {
 			if (character_movement()) {
-				game_state.player_fov.set(game_state.game_map, cell_trait_t::Unseen);
+				game_state.player_fov.repeal(game_state.game_map, cell_trait_t::Seen);
 
-				game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f);
+				game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f, true);
 
-				game_state.player_fov.set(game_state.game_map, cell_trait_t::Seen);
+				game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
 			}
 		}
 
@@ -394,7 +367,7 @@ void update() {
 				game_state.cursor_timer.record();
 			}
 		} else {
-			game_state.grid_cursor.update(game_state.camera_position);
+			game_state.grid_cursor.update(game_state.camera.get_position());
 		}
 
 		game_state.grid_cursor.color.set_alpha(game_state.sine_wave.current_value());
@@ -404,14 +377,14 @@ void update() {
 void render() {
 	game_state.renderer.clear(Colors::Black);
 
-	game_state.game_map.draw(game_state.game_atlas, -game_state.camera_position);
+	game_state.game_map.draw(game_state.game_atlas, -game_state.camera.get_position());
 
-	game_state.player.draw(game_state.game_atlas, -game_state.camera_position);
+	game_state.player.draw(game_state.game_atlas, -game_state.camera.get_position());
 
 	if (game_state.draw_cursor) {
 		game_state.cursor.draw();
 	} else {
-		game_state.grid_cursor.draw(Globals::CursorOffset - game_state.camera_position * Globals::CellSize);
+		game_state.grid_cursor.draw(Globals::CursorOffset - game_state.camera.get_position() * Globals::CellSize);
 	}
 
 	runes_t fps_text{ std::format("FPS:{:4}", static_cast<u32>(Clock::frame_time())), Colors::Green };
