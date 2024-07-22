@@ -2,6 +2,10 @@
 
 #include <bleak/typedef.hpp>
 
+#include <cmath>
+
+#include <bleak/concepts.hpp>
+
 namespace bleak {
 	template<typename T> constexpr inline T min(T a, T b) { return a < b ? a : b; }
 
@@ -19,6 +23,21 @@ namespace bleak {
 
 		return value;
 	}
+
+	template<Integer T> constexpr inline T wrap(T value, T target) { return (value % target + target) % target; }
+
+	template<FloatingPoint T> constexpr inline T wrap(T value, T target) {
+		while (value < 0) {
+			value += target;
+		}
+		while (value >= target) {
+			value -= target;
+		}
+
+		return value;
+	}
+
+	template<typename T> constexpr inline T lerp(T a, T b, T t) { return a + (b - a) * t; }
 
 	template<typename T> constexpr inline T usage(T value, T min, T max) { return (value - min) / (max - min); }
 

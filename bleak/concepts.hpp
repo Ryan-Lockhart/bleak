@@ -7,8 +7,29 @@
 #include <type_traits>
 
 namespace bleak {
+	template<typename T>
+	concept Integer = std::numeric_limits<T>::is_integer;
+
+	template<typename T> struct is_integer {
+		static bool constexpr value = Integer<T>;
+	};
+
+	template<typename T> constexpr bool is_integer_v = is_integer<T>::value;
+
+	template<typename T>
+	concept FloatingPoint = std::is_floating_point<T>::value;
+
+	template<typename T> struct is_floating_point {
+		static bool constexpr value = FloatingPoint<T>;
+	};
+
+	template<typename T> constexpr bool is_floating_point_v = is_floating_point<T>::value;
+
+	template<typename T>
+	concept Numeric = std::numeric_limits<T>::is_integer || std::is_floating_point<T>::value;
+
 	template<typename T> struct is_numeric {
-		static bool constexpr value = std::numeric_limits<T>::is_integer || std::is_floating_point<T>::value;
+		static bool constexpr value = Numeric<T>;
 	};
 
 	template<typename T> constexpr bool is_numeric_v = is_numeric<T>::value;

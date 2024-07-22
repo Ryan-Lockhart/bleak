@@ -2,6 +2,7 @@
 #include <bleak/typedef.hpp>
 
 #include <bleak/concepts.hpp>
+#include <bleak/memory.hpp>
 #include <bleak/offset.hpp>
 
 namespace bleak {
@@ -14,5 +15,18 @@ namespace bleak {
 		constexpr creeper_t() : position{}, distance{} {}
 
 		constexpr creeper_t(cref<offset_t> position, cref<T> distance) : position{ position }, distance{ distance } {}
+	};
+
+	template<typename T>
+		requires is_numeric<T>::value
+	struct memory_creeper_t {
+		rememberance_t<offset_t> position;
+		T distance;
+
+		constexpr memory_creeper_t() : position{}, distance{} {}
+
+		constexpr memory_creeper_t(cref<offset_t> current, cref<offset_t> previous, cref<T> distance) : position{ current, previous }, distance{ distance } {}
+
+		constexpr bool is_origin() const { return *this == memory_creeper_t<T>{}; }
 	};
 } // namespace bleak

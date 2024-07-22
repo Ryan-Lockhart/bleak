@@ -300,7 +300,8 @@ void startup() {
 		terminate_prematurely();
 	}
 
-	game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f, true);
+	//game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f, true);
+	game_state.player_fov.shadow_cast(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f,  90.0, 180.0);
 
 	game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
 
@@ -342,7 +343,8 @@ void update() {
 			if (character_movement()) {
 				game_state.player_fov.repeal(game_state.game_map, cell_trait_t::Seen);
 
-				game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f, true);
+				//game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f, true);
+				game_state.player_fov.shadow_cast(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f,  90.0, 180.0);
 
 				game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
 			}
