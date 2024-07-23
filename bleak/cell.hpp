@@ -37,7 +37,7 @@ namespace bleak {
 
 		template<typename... Traits>
 		constexpr cell_state_t(Traits... traits)
-			requires(sizeof...(Traits) > 1) && (std::is_same_v<Traits, cell_trait_t> && ...)
+			requires is_homogeneous<cell_trait_t, Traits...>::value && is_plurary<Traits...>::value
 		{
 			for (cell_trait_t trait : { traits... }) {
 				set(trait);

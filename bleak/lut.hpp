@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <utility>
 
+#include <bleak/concepts.hpp>
+
 namespace bleak {
 	template<typename Key, typename Value> struct pair_t {
 		Key key;
@@ -72,17 +74,18 @@ namespace bleak {
 	  public:
 		constexpr lut_t() noexcept = default;
 
-		constexpr lut_t(std::initializer_list<KeyValue> elements) : lookup{}, values{} {
-			if (elements.size() != size) {
-				throw std::invalid_argument("initializer list size mismatch!");
-			}
-
+		template<typename... Params>
+			requires is_homogeneous<KeyValue, Params...>::value && is_plurary<Params...>::value && (sizeof...(Params) == Size)
+		inline constexpr lut_t(cref<Params>... elements) : lookup{}, values{} {
 			usize i{ 0 };
-			for (const auto& element : elements) {
-				lookup[i] = { element.key, i };
-				values[i] = element.value;
-				++i;
-			}
+			((lookup[i] = KeyIndex{ elements.key, i }, values[i] = elements.value, ++i), ...);
+		}
+
+		template<typename... Params>
+			requires is_homogeneous<KeyValue, Params...>::value && is_plurary<Params...>::value && (sizeof...(Params) == Size)
+		inline constexpr lut_t(rval<Params>... elements) : lookup{}, values{} {
+			usize i{ 0 };
+			((lookup[i] = KeyIndex{ std::move(elements.key), i }, values[i] = std::move(elements.value), ++i), ...);
 		}
 
 		constexpr lut_t(cref<lut_t> other) noexcept : lookup{ other.lookup }, values{ other.values } {}

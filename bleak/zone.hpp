@@ -291,9 +291,9 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region, typename... U>
-			requires(is_operable<T, U, operator_t::Addition>::value, ...) && (sizeof...(U) > 1)
-		constexpr ref<zone_t<T, Size, BorderSize>> apply(cref<U>... values) noexcept {
+		template<zone_region_t Region, typename... Params>
+			requires (is_operable<T, Params, operator_t::Addition>::value, ...) && is_plurary<Params...>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> apply(cref<Params>... values) noexcept {
 			if constexpr (Region == zone_region_t::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					for (auto value : { values... }) {
@@ -392,9 +392,9 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region, typename... U>
-			requires(is_operable<T, U, operator_t::Subtraction>::value, ...) && (sizeof...(U) > 1)
-		constexpr ref<zone_t<T, Size, BorderSize>> repeal(cref<U>... values) noexcept {
+		template<zone_region_t Region, typename... Params>
+			requires(is_operable<T, Params, operator_t::Subtraction>::value, ...) && is_plurary<Params...>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> repeal(cref<Params>... values) noexcept {
 			if constexpr (Region == zone_region_t::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					for (auto value : { values... }) {

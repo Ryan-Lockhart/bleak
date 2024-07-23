@@ -4,10 +4,13 @@
 #include <cstdlib>
 
 int main(int argc, char* argv[]) {
-    using namespace bleak;
+    bleak::cenotaph<int> memory_bank{ 0 };
 
-    cenotaph<i32> memory_bank{};
-    assert(memory_bank.is_empty());
+    memory_bank.memorialize(1);
+    memory_bank.memorialize(2);
+    memory_bank.memorialize(3);
+    memory_bank.memorialize(4);
+    memory_bank.memorialize(5, 6, 7);
 
     
     return EXIT_SUCCESS;

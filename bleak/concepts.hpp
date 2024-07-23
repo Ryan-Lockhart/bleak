@@ -34,13 +34,7 @@ namespace bleak {
 
 	template<typename T> constexpr bool is_numeric_v = is_numeric<T>::value;
 
-	enum class operator_t {
-		Addition,
-		Subtraction,
-		Multiplication,
-		Division,
-		Modulus
-	};
+	enum class operator_t { Addition, Subtraction, Multiplication, Division, Modulus };
 
 	template<typename T, typename U>
 	concept Addable = requires(T a, U b) {
@@ -56,7 +50,7 @@ namespace bleak {
 
 	template<typename T, typename U>
 	concept Multiplicable = requires(T a, U b) {
-		{ a * b } -> std::convertible_to<T>;
+		{ a* b } -> std::convertible_to<T>;
 		{ a *= b } -> std::convertible_to<ref<T>>;
 	};
 
@@ -100,14 +94,7 @@ namespace bleak {
 
 	template<typename T, operator_t Operator> constexpr bool is_operable_unary_v = is_operable_unary<T, Operator>::value;
 
-	enum class comparator_t {
-		Less,
-		Greater,
-		LessEq,
-		GreaterEq,
-		Equatable,
-		Comparable
-	};
+	enum class comparator_t { Less, Greater, LessEq, GreaterEq, Equatable, Comparable };
 
 	template<typename T, typename U>
 	concept Less = requires(T a, U b) {
@@ -164,15 +151,49 @@ namespace bleak {
 	};
 
 	template<typename T, typename U> struct is_comparable<T, U, comparator_t::Comparable> {
-		static bool constexpr value =
-			is_comparable<T, U, comparator_t::Less>::value &&
-			is_comparable<T, U, comparator_t::Greater>::value &&
-			is_comparable<T, U, comparator_t::LessEq>::value &&
-			is_comparable<T, U, comparator_t::GreaterEq>::value &&
-			is_comparable<T, U, comparator_t::Equatable>::value;
+		static bool constexpr value = is_comparable<T, U, comparator_t::Less>::value && is_comparable<T, U, comparator_t::Greater>::value && is_comparable<T, U, comparator_t::LessEq>::value
+								   && is_comparable<T, U, comparator_t::GreaterEq>::value && is_comparable<T, U, comparator_t::Equatable>::value;
 	};
 
 	template<typename T, typename U, comparator_t Comparator> constexpr bool is_comparable_v = is_comparable<T, U, Comparator>::value;
+
+	template<typename T, typename... Params> struct is_homogeneous {
+		static bool constexpr value = (std::is_same<T, Params>::value && ...);
+	};
+
+	static_assert(is_homogeneous<i32, i32>::value == true);
+
+	static_assert(is_homogeneous<i32, f32>::value == false);
+
+	template<typename T, typename... Params> constexpr bool is_homogeneous_v = is_homogeneous<T, Params...>::value;
+
+	template<typename T, typename... Params> struct is_heterogeneous {
+		static bool constexpr value = (!std::is_same<T, Params>::value || ...);
+	};
+
+	static_assert(is_heterogeneous<i32, f32>::value == true);
+
+	static_assert(is_heterogeneous<i32, i32>::value == false);
+
+	template<typename T, typename... Params> constexpr bool is_heterogeneous_v = is_heterogeneous<T, Params...>::value;
+
+	template<typename... Params> struct is_empty {
+		static bool constexpr value = sizeof...(Params) == 0;
+	};
+
+	template<typename... Params> constexpr bool is_empty_v = is_empty<Params...>::value;
+
+	template<typename... Params> struct is_unary {
+		static bool constexpr value = sizeof...(Params) == 1;
+	};
+
+	template<typename... Params> constexpr bool is_unary_v = is_unary<Params...>::value;
+
+	template<typename... Params> struct is_plurary {
+		static bool constexpr value = sizeof...(Params) > 1;
+	};
+
+	template<typename... Params> constexpr bool is_plurary_v = is_plurary<Params...>::value;
 
 	template<typename T> struct is_drawable {
 		static bool constexpr value = false;

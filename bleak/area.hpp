@@ -383,9 +383,9 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize, typename... U>
-			requires(is_operable<T, U, operator_t::Addition>::value, ...) && (sizeof...(U) > 1)
-		inline cref<area_t> apply(ref<zone_t<T, Size, BorderSize>> zone, cref<U>... values) const noexcept {
+		template<typename T, extent_t Size, extent_t BorderSize, typename... Params>
+			requires(is_operable<T, Params, operator_t::Addition>::value, ...) && is_plurary<Params...>::value
+		inline cref<area_t> apply(ref<zone_t<T, Size, BorderSize>> zone, cref<Params>... values) const noexcept {
 			for (cref<offset_t> position : *this) {
 				for (crauto value : { values... }) {
 					zone[position] += value;
@@ -415,9 +415,9 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize, typename... U>
-			requires(is_operable<T, U, operator_t::Subtraction>::value, ...) && (sizeof...(U) > 1)
-		inline cref<area_t> repeal(ref<zone_t<T, Size, BorderSize>> zone, cref<U>... values) const noexcept {
+		template<typename T, extent_t Size, extent_t BorderSize, typename... Params>
+			requires(is_operable<T, Params, operator_t::Subtraction>::value, ...) && is_plurary<Params...>::value
+		inline cref<area_t> repeal(ref<zone_t<T, Size, BorderSize>> zone, cref<Params>... values) const noexcept {
 			for (cref<offset_t> position : *this) {
 				for (crauto value : { values... }) {
 					zone[position] -= value;

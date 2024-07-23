@@ -1,11 +1,11 @@
 #include <bleak/typedef.hpp>
 
 #include <algorithm>
-#include <type_traits>
 #include <utility>
+#include <vector>
 
 #include <bleak/concepts.hpp>
-#include <vector>
+#include <bleak/utility.hpp>
 
 namespace bleak {
 	template<typename T> struct rememberance_t {
@@ -26,7 +26,7 @@ namespace bleak {
 
 		constexpr bool is_new(cref<T> value) const { return value != current; }
 
-		constexpr ref<T> remember(cref<T> value) {
+		constexpr ref<rememberance_t<T>> remember(cref<T> value) {
 			if (!is_new(value)) {
 				return *this;
 			}
@@ -37,7 +37,7 @@ namespace bleak {
 			return *this;
 		}
 
-		constexpr ref<T> remember(rval<T> value) {
+		constexpr ref<rememberance_t<T>> remember(rval<T> value) {
 			if (!is_new(value)) {
 				return *this;
 			}
@@ -62,33 +62,39 @@ namespace bleak {
 
 		constexpr cref<rememberance_t<T>> primary() const { return memories.back(); }
 
-		constexpr ref<T> memorialize(cref<T> value) {
+		constexpr ref<cenotaph<T>> memorialize(cref<T> value) {
 			memories.push_back(primary().perpetuate(value));
 
 			return *this;
 		}
 
-		constexpr ref<T> memorialize(rval<T> value) {
+		constexpr ref<cenotaph<T>> memorialize(rval<T> value) {
 			memories.push_back(primary().perpetuate(std::move(value)));
 
 			return *this;
 		}
 
-		template<typename... Memories> requires (std::is_same<T, Memories>::value, ...) && (sizeof...(Memories) > 1) constexpr ref<T> memorialize(cref<Memories>... values) {
-            for (crauto value : { values... }) {
-                memorialize(value);
-            }
+		template<typename... Memories>
+			requires is_homogeneous<T, Memories...>::value && is_plurary<Memories...>::value
+		constexpr ref<cenotaph<T>> memorialize(cref<Memories>... values) {
+			for (crauto value : { values... }) {
+				memorialize(value);
+			}
 
 			return *this;
 		}
 
-		template<typename... Memories> requires (std::is_same<T, Memories>::value, ...) && (sizeof...(Memories) > 1) constexpr ref<T> memorialize(rval<Memories>... values) {
-            for (rvauto value : { values... }) {
-                memorialize(std::move(value));
-            }
+		template<typename... Memories>
+			requires is_homogeneous<T, Memories...>::value && is_plurary<Memories...>::value
+		constexpr ref<cenotaph<T>> memorialize(rval<Memories>... values) {
+			for (rvauto value : { values... }) {
+				memorialize(std::move(value));
+			}
 
 			return *this;
 		}
+
+		DEFINE_ITERATORS(constexpr, std::vector<rememberance_t<T>>, memories);
 
 	  private:
 		std::vector<rememberance_t<T>> memories;
