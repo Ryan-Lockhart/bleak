@@ -67,7 +67,7 @@ namespace bleak {
 		constexpr texture_t(rval<texture_t> other) noexcept : renderer{ other.renderer }, texture(std::move(other.texture)), info(other.info) {
 			other.texture = nullptr;
 			set_blend_mode(SDL_BLENDMODE_BLEND);
-			set_color(Colors::White);
+			set_color(colors::White);
 		}
 
 		constexpr ref<texture_t> operator=(cref<texture_t> other) noexcept = delete;
@@ -87,7 +87,7 @@ namespace bleak {
 			}
 
 			set_blend_mode(SDL_BLENDMODE_BLEND);
-			set_color(Colors::White);
+			set_color(colors::White);
 		}
 
 		inline ~texture_t() noexcept { sdl::destroy_texture(texture); }

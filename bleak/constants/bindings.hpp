@@ -12,7 +12,7 @@
 #include <bleak/constants/keys.hpp>
 
 namespace bleak {
-	namespace Bindings {
+	namespace bindings {
 		constexpr sdl::key nullkey = SDL_SCANCODE_UNKNOWN;
 		template<usize Count> using key_collection_t = std::array<sdl::key, Count>;
 

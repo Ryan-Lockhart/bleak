@@ -15,7 +15,7 @@
 namespace bleak {
 	class runes_t : public std::vector<glyph_t> {
 	  public:
-		static constexpr color_t DEFAULT_COLOR{ Colors::White };
+		static constexpr color_t DEFAULT_COLOR{ colors::White };
 
 		constexpr runes_t(cref<std::string> text) {
 			for (auto& ch : text) {

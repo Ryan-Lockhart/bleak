@@ -23,7 +23,7 @@ namespace bleak {
 
 		inline cursor_t() = delete;
 
-		inline cursor_t(ref<renderer_t> renderer, cstr path) : texture{ renderer, path }, position{ 0, 0 }, color{ Colors::White } {}
+		inline cursor_t(ref<renderer_t> renderer, cstr path) : texture{ renderer, path }, position{ 0, 0 }, color{ colors::White } {}
 
 		inline cursor_t(ref<renderer_t> renderer, cstr path, cref<color_t> color) : texture{ renderer, path }, position{ 0, 0 }, color{ color } {}
 
@@ -54,11 +54,11 @@ namespace bleak {
 
 		inline grid_cursor_t() = delete;
 
-		inline grid_cursor_t(ref<renderer_t> renderer, cstr path) : texture{ renderer, path }, position{}, min{}, max{}, use_bounds{ false }, color{ Colors::White } {}
+		inline grid_cursor_t(ref<renderer_t> renderer, cstr path) : texture{ renderer, path }, position{}, min{}, max{}, use_bounds{ false }, color{ colors::White } {}
 
 		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<color_t> color) : texture{ renderer, path }, position{}, min{}, max{}, use_bounds{ false }, color{ color } {}
 
-		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<offset_t> min, cref<offset_t> max) : texture{ renderer, path }, position{}, min{ min }, max{ max }, use_bounds{ true }, color{ Colors::White } {}
+		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<offset_t> min, cref<offset_t> max) : texture{ renderer, path }, position{}, min{ min }, max{ max }, use_bounds{ true }, color{ colors::White } {}
 
 		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, cref<color_t> color, cref<offset_t> min, cref<offset_t> max) : texture{ renderer, path }, position{}, min{ min }, max{ max }, use_bounds{ true }, color{ color } {}
 

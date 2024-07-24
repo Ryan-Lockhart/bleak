@@ -229,10 +229,15 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> shadow_cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, f64 radius) {
+		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius) {
 			clear();
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
+				return *this;
+			}
+
+			if (radius == 0) {
+				insert(position);
 				return *this;
 			}
 
@@ -240,10 +245,14 @@ namespace bleak {
 				for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
 					const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
 
-					if (zone.within<zone_region_t::All>(neighbour) && zone[neighbour] == value) {
+					if (zone.within<zone_region_t::All>(neighbour)) {
 						insert(neighbour);
 					}
 				}
+			}
+
+			if (radius == 1) {
+				return *this;
 			}
 
 			for (cref<octant_t> octant : Octants) {
@@ -255,10 +264,15 @@ namespace bleak {
 
 		template<typename T, typename U, extent_t Size, extent_t BorderSize>
 			requires is_equatable<T, U>::value
-		inline ref<area_t> shadow_cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, f64 radius) {
+		inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius) {
 			clear();
 
 			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
+				return *this;
+			}
+
+			if (radius == 0) {
+				insert(position);
 				return *this;
 			}
 
@@ -266,10 +280,14 @@ namespace bleak {
 				for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
 					const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
 
-					if (zone.template within<zone_region_t::All>(neighbour) && zone[neighbour] == value) {
+					if (zone.template within<zone_region_t::All>(neighbour)) {
 						insert(neighbour);
 					}
 				}
+			}
+
+			if (radius == 1) {
+				return *this;
 			}
 
 			for (cref<octant_t> octant : Octants) {
@@ -279,16 +297,22 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> shadow_cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, f64 radius, f64 angle, f64 span) {
+		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius, f64 angle, f64 span) {
 			clear();
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
+			if (radius == 0) {
+				insert(position);
+				return *this;
+			}
+
 			bool is_nan = std::isnan(angle) || std::isnan(span);
 
 			if (!is_nan) {
+				angle -= 90.0;
 				angle = (angle > 360.0 || angle < 0.0 ? wrap(angle, 360.0) : angle) * PercentOfCircle;
 				span *= PercentOfCircle;
 			}
@@ -297,10 +321,14 @@ namespace bleak {
 				for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
 					const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
 
-					if (zone.within<zone_region_t::All>(neighbour) && zone[neighbour] == value) {
+					if (zone.within<zone_region_t::All>(neighbour)) {
 						insert(neighbour);
 					}
 				}
+			}
+
+			if (radius == 1) {
+				return *this;
 			}
 
 			for (cref<octant_t> octant : Octants) {
@@ -312,16 +340,22 @@ namespace bleak {
 
 		template<typename T, typename U, extent_t Size, extent_t BorderSize>
 			requires is_equatable<T, U>::value
-		inline ref<area_t> shadow_cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, f64 radius, f64 angle, f64 span) {
+		inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius, f64 angle, f64 span) {
 			clear();
 
 			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
+			if (radius == 0) {
+				insert(position);
+				return *this;
+			}
+
 			bool is_nan = std::isnan(angle) || std::isnan(span);
 
 			if (!is_nan) {
+				angle -= 90.0;
 				angle = (angle > 360.0 || angle < 0.0 ? wrap(angle, 360.0) : angle) * PercentOfCircle;
 				span *= PercentOfCircle;
 			}
@@ -330,10 +364,14 @@ namespace bleak {
 				for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
 					const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
 
-					if (zone.template within<zone_region_t::All>(neighbour) && zone[neighbour] == value) {
+					if (zone.template within<zone_region_t::All>(neighbour)) {
 						insert(neighbour);
 					}
 				}
+			}
+
+			if (radius == 1) {
+				return *this;
 			}
 
 			for (cref<octant_t> octant : Octants) {
@@ -576,9 +614,8 @@ namespace bleak {
 				f64 dy = -distance;
 
 				for (f64 dx = -distance; dx <= 0.0; ++dx) {
-					const offset_t delta{ dx, dy };
-
-					const offset_t position{ origin.x + delta.x * octant.position.x + delta.y * octant.delta.x, origin.y + delta.x * octant.position.y + delta.y * octant.delta.y };
+					const offset_t position{ origin.x + dx * octant.position.x + dy * octant.delta.x, origin.y + dx * octant.position.y + dy * octant.delta.y };
+					const offset_t delta{ position - origin };
 
 					f64 left_slope{ (dx - 0.5) / (dy + 0.5) };
 					f64 right_slope{ (dx + 0.5) / (dy - 0.5) };
@@ -633,9 +670,8 @@ namespace bleak {
 				f64 dy = -distance;
 
 				for (f64 dx = -distance; dx <= 0.0; ++dx) {
-					const offset_t delta{ dx, dy };
-
-					const offset_t position{ origin.x + delta.x * octant.position.x + delta.y * octant.delta.x, origin.y + delta.x * octant.position.y + delta.y * octant.delta.y };
+					const offset_t position{ origin.x + dx * octant.position.x + dy * octant.delta.x, origin.y + dx * octant.position.y + dy * octant.delta.y };
+					const offset_t delta{ position - origin };
 
 					f64 left_slope{ (dx - 0.5) / (dy + 0.5) };
 					f64 right_slope{ (dx + 0.5) / (dy - 0.5) };

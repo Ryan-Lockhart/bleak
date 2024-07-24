@@ -5,7 +5,7 @@
 #include <bleak/color.hpp>
 
 namespace bleak {
-	namespace Colors {
+	namespace colors {
 		static constexpr color_t White{ u8{ 0xFF }, u8{ 0xFF }, u8{ 0xFF } };
 		static constexpr color_t Black{ u8{ 0x00 }, u8{ 0x00 }, u8{ 0x00 } };
 		static constexpr color_t Grey{ u8{ 0x80 }, u8{ 0x80 }, u8{ 0x80 } };
@@ -25,7 +25,7 @@ namespace bleak {
 		static constexpr color_t Yellow{ u8{ 0xFF }, u8{ 0xFF }, u8{ 0x00 } };
 		static constexpr color_t Orange{ u8{ 0xFF }, u8{ 0x80 }, u8{ 0x00 } };
 
-		namespace Light {
+		namespace light {
 			static constexpr color_t Grey{ u8{ 0xC0 }, u8{ 0xC0 }, u8{ 0xC0 } };
 
 			static constexpr color_t Red{ u8{ 0xFF }, u8{ 0x80 }, u8{ 0x80 } };
@@ -39,9 +39,9 @@ namespace bleak {
 			static constexpr color_t Magenta{ u8{ 0xFF }, u8{ 0x80 }, u8{ 0xFF } };
 			static constexpr color_t Yellow{ u8{ 0xFF }, u8{ 0xFF }, u8{ 0x80 } };
 			static constexpr color_t Orange{ u8{ 0xC0 }, u8{ 0x80 }, u8{ 0x00 } };
-		} // namespace Light
+		} // namespace light
 
-		namespace Dark {
+		namespace dark {
 			static constexpr color_t Grey{ u8{ 0x40 }, u8{ 0x40 }, u8{ 0x40 } };
 
 			static constexpr color_t Red{ u8{ 0x80 }, u8{ 0x00 }, u8{ 0x00 } };
@@ -56,12 +56,12 @@ namespace bleak {
 			static constexpr color_t Magenta{ u8{ 0x80 }, u8{ 0x00 }, u8{ 0x80 } };
 			static constexpr color_t Yellow{ u8{ 0x80 }, u8{ 0x80 }, u8{ 0x00 } };
 			static constexpr color_t Orange{ u8{ 0x80 }, u8{ 0x40 }, u8{ 0x00 } };
-		} // namespace Dark
+		} // namespace dark
 
-		namespace Materials {
+		namespace materials {
 			static constexpr color_t Blood{ u8{ 157 }, u8{ 34 }, u8{ 53 } };
-			static constexpr color_t LightBlood{ u8{ 177 }, u8{ 34 }, u8{ 53 } };
-			static constexpr color_t DarkBlood{ u8{ 137 }, u8{ 14 }, u8{ 33 } };
+			static constexpr color_t lightBlood{ u8{ 177 }, u8{ 34 }, u8{ 53 } };
+			static constexpr color_t darkBlood{ u8{ 137 }, u8{ 14 }, u8{ 33 } };
 
 			static constexpr color_t Ebony{ u8{ 40 }, u8{ 44 }, u8{ 52 } };
 			static constexpr color_t Ivory{ u8{ 255 }, u8{ 255 }, u8{ 240 } };
@@ -69,9 +69,9 @@ namespace bleak {
 			static constexpr color_t Oak{ u8{ 120 }, u8{ 81 }, u8{ 45 } };
 			static constexpr color_t Willow{ u8{ 168 }, u8{ 172 }, u8{ 155 } };
 			static constexpr color_t Birch{ u8{ 234 }, u8{ 225 }, u8{ 216 } };
-		} // namespace Materials
+		} // namespace materials
 
-		namespace Metals {
+		namespace metals {
 			static constexpr color_t Iron{ u8{ 58 }, u8{ 60 }, u8{ 64 } };
 			static constexpr color_t Steel{ u8{ 113 }, u8{ 121 }, u8{ 126 } };
 
@@ -84,6 +84,6 @@ namespace bleak {
 
 			static constexpr color_t Zinc{ u8{ 186 }, u8{ 196 }, u8{ 200 } };
 			static constexpr color_t Brass{ u8{ 181 }, u8{ 166 }, u8{ 66 } };
-		} // namespace Metals
-	} // namespace Colors
+		} // namespace metals
+	} // namespace colors
 } // namespace bleak

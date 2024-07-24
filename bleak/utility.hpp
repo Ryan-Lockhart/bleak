@@ -3,7 +3,6 @@
 #include <bleak/typedef.hpp>
 
 #include <cmath>
-#include <tuple>
 
 #include <bleak/concepts.hpp>
 #include <bleak/iter.hpp>
@@ -42,8 +41,6 @@ namespace bleak {
 	template<typename T> constexpr inline T lerp(T a, T b, T t) { return a + (b - a) * t; }
 
 	template<typename T> constexpr inline T usage(T value, T min, T max) { return (value - min) / (max - min); }
-
-	template<usize N, typename... Args> auto template_at(rval<Args>... args) { return std::get<N>(std::tuple{ std::forward<Args>(args)... }); }
 
 	namespace memory {
 		// size in bytes of one byte

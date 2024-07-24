@@ -1,3 +1,4 @@
+#include "bleak/constants/numeric.hpp"
 #include <bleak/typedef.hpp>
 
 #include <cassert>
@@ -38,7 +39,7 @@
 
 using namespace bleak;
 
-namespace Globals {
+namespace globals {
 	constexpr cstr GameName{ "Bleakdepth" };
 	constexpr cstr GameVersion{ "0.0.1" };
 	constexpr cstr GameAuthor{ "Ryan Lockhart" };
@@ -78,20 +79,22 @@ namespace Globals {
 
 	constexpr offset_t CursorOffset{ UniversalOffset - CellSize / 4 };
 
-	constexpr extent_t CameraExtent{ MapSize - Globals::GameGridSize };
-} // namespace Globals
+	constexpr extent_t CameraExtent{ MapSize - globals::GameGridSize };
+
+	constexpr u32 ViewDistance{ 8 };
+} // namespace globals
 
 struct game_state {
-	window_t window{ Globals::GameTitle.c_str(), Globals::WindowSize + Globals::WindowBorder * 2, Globals::WindowFlags };
-	renderer_t renderer{ window, Globals::RendererFlags };
+	window_t window{ globals::GameTitle.c_str(), globals::WindowSize + globals::WindowBorder * 2, globals::WindowFlags };
+	renderer_t renderer{ window, globals::RendererFlags };
 
-	atlas_t<Globals::TilesetSize> game_atlas{ renderer, "res\\tiles\\tileset_16x16.png", Globals::UniversalOffset };
-	atlas_t<Globals::GlyphsetSize> ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png", Globals::UniversalOffset };
+	atlas_t<globals::TilesetSize> game_atlas{ renderer, "res\\tiles\\tileset_16x16.png", globals::UniversalOffset };
+	atlas_t<globals::GlyphsetSize> ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png", globals::UniversalOffset };
 
 	std::mt19937 random_engine{ std::random_device{}() };
 
-	zone_t<cell_state_t, Globals::RegionSize * Globals::ZoneSize, Globals::BorderSize> game_map{ "res\\maps\\test_region.map" };
-	zone_t<glyph_t, Globals::GameGridSize> glyph_map{};
+	zone_t<cell_state_t, globals::RegionSize * globals::ZoneSize, globals::BorderSize> game_map{ "res\\maps\\test_region.map" };
+	zone_t<glyph_t, globals::GameGridSize> glyph_map{};
 
 	bool gamepad_enabled{ true };
 
@@ -99,15 +102,16 @@ struct game_state {
 
 	bool gamepad_active{ false };
 
-	cursor_t cursor{ renderer, "res\\sprites\\cursor.png", Colors::White };
-	grid_cursor_t<Globals::CellSize> grid_cursor{ renderer, "res\\sprites\\grid_cursor.png", Colors::Metals::Gold, game_map.zone_origin, game_map.zone_extent };
+	cursor_t cursor{ renderer, "res\\sprites\\cursor.png", colors::White };
+	grid_cursor_t<globals::CellSize> grid_cursor{ renderer, "res\\sprites\\grid_cursor.png", colors::metals::Gold, game_map.zone_origin, game_map.zone_extent };
 
 	bool draw_cursor{ true };
 
-	sprite_t player{ Glyphs::Player };
 	area_t player_fov{};
+	sprite_t player{ Glyphs::Player };
+	cardinal_t player_direction{ cardinal_t::North };
 
-	camera_t camera{ Globals::GameGridSize, extent_t::Zero, Globals::CameraExtent };
+	camera_t camera{ globals::GameGridSize, extent_t::Zero, globals::CameraExtent };
 	bool camera_locked{ true };
 
 	timer_t input_timer{ 125.0 };
@@ -143,13 +147,13 @@ bool update_camera() {
 
 	offset_t direction{};
 
-	if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::North])) {
+	if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::North])) {
 		--direction.y;
-	} if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::South])) {
+	} if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::South])) {
 		++direction.y;
-	} if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::West])) {
+	} if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::West])) {
 		--direction.x;
-	} if (Keyboard::is_key_pressed(Bindings::CameraMovement[cardinal_t::East])) {
+	} if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::East])) {
 		++direction.x;
 	}
 
@@ -175,7 +179,7 @@ bool update_camera() {
 }
 
 bool character_movement() {
-	if (Keyboard::is_key_pressed(Bindings::Wait)) {
+	if (Keyboard::is_key_pressed(bindings::Wait)) {
 		game_state.input_timer.record();
 		game_state.epoch_timer.record();
 
@@ -184,17 +188,19 @@ bool character_movement() {
 
 	offset_t direction{};
 
-	if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::North])) {
+	if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::North])) {
 		--direction.y;
-	} if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::South])) {
+	} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::South])) {
 		++direction.y;
-	} if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::West])) {
+	} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::West])) {
 		--direction.x;
-	} if (Keyboard::any_keys_pressed(Bindings::CharacterMovement[cardinal_t::East])) {
+	} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::East])) {
 		++direction.x;
 	}
 
 	if (direction != offset_t::Zero) {
+		game_state.player_direction = static_cast<cardinal_t>(direction);
+
 		offset_t target_position{ game_state.player.position + direction };
 
 		if (!game_state.game_map.within<zone_region_t::Interior>(target_position)) {
@@ -272,7 +278,7 @@ void startup() {
 		message_log.add("no gamepad detected\n");
 	}
 
-	region_t<cell_state_t, Globals::RegionSize, Globals::ZoneSize, Globals::BorderSize> region{ "res\\maps\\test_region.map" };
+	region_t<cell_state_t, globals::RegionSize, globals::ZoneSize, globals::BorderSize> region{ "res\\maps\\test_region.map" };
 
 	/*constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored };
 	constexpr cell_state_t closed_state{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored };
@@ -300,8 +306,7 @@ void startup() {
 		terminate_prematurely();
 	}
 
-	//game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f, true);
-	game_state.player_fov.shadow_cast(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f,  90.0, 180.0);
+	game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, globals::ViewDistance, direction_to_angle(game_state.player_direction), 180.0);
 
 	game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
 
@@ -320,8 +325,8 @@ void startup() {
 }
 
 void update() {
-	if constexpr (Globals::UseFrameLimit) {
-		Clock::tick(Globals::FrameTime);
+	if constexpr (globals::UseFrameLimit) {
+		Clock::tick(globals::FrameTime);
 	} else {
 		Clock::tick();
 	}
@@ -333,7 +338,7 @@ void update() {
 		game_state.animation_timer.record();
 	}
 
-	if (Keyboard::is_key_down(Bindings::Quit)) {
+	if (Keyboard::is_key_down(bindings::Quit)) {
 		game_state.window.close();
 		return;
 	}
@@ -342,9 +347,8 @@ void update() {
 		if (game_state.epoch_timer.ready()) {
 			if (character_movement()) {
 				game_state.player_fov.repeal(game_state.game_map, cell_trait_t::Seen);
-
-				//game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f, true);
-				game_state.player_fov.shadow_cast(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, 8.0f,  90.0, 180.0);
+				
+				game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, globals::ViewDistance, direction_to_angle(game_state.player_direction), 180.0);
 
 				game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
 			}
@@ -357,7 +361,7 @@ void update() {
 
 	offset_t mouse_pos{ Mouse::get_position() };
 
-	game_state.draw_cursor = mouse_pos.x < Globals::UniversalOrigin.x || mouse_pos.y < Globals::UniversalOrigin.y || mouse_pos.x > Globals::UniversalExtent.x || mouse_pos.y > Globals::UniversalExtent.y;
+	game_state.draw_cursor = mouse_pos.x < globals::UniversalOrigin.x || mouse_pos.y < globals::UniversalOrigin.y || mouse_pos.x > globals::UniversalExtent.x || mouse_pos.y > globals::UniversalExtent.y;
 
 	if (game_state.draw_cursor) {
 		game_state.cursor.update();
@@ -377,7 +381,7 @@ void update() {
 }
 
 void render() {
-	game_state.renderer.clear(Colors::Black);
+	game_state.renderer.clear(colors::Black);
 
 	game_state.game_map.draw(game_state.game_atlas, -game_state.camera.get_position());
 
@@ -386,19 +390,19 @@ void render() {
 	if (game_state.draw_cursor) {
 		game_state.cursor.draw();
 	} else {
-		game_state.grid_cursor.draw(Globals::CursorOffset - game_state.camera.get_position() * Globals::CellSize);
+		game_state.grid_cursor.draw(globals::CursorOffset - game_state.camera.get_position() * globals::CellSize);
 	}
 
-	runes_t fps_text{ std::format("FPS:{:4}", static_cast<u32>(Clock::frame_time())), Colors::Green };
+	runes_t fps_text{ std::format("FPS:{:4}", static_cast<u32>(Clock::frame_time())), colors::Green };
 
-	game_state.ui_atlas.draw(fps_text, offset_t{ Globals::UIGridSize.w - 1, 1 }, cardinal_t::West, offset_t{ 0, -4 });
+	game_state.ui_atlas.draw(fps_text, offset_t{ globals::UIGridSize.w - 1, 1 }, cardinal_t::West, offset_t{ 0, -4 });
 
-	runes_t title_text{ Globals::GameTitle, Colors::Marble };
+	runes_t title_text{ globals::GameTitle, colors::Marble };
 
-	game_state.ui_atlas.draw_label(game_state.renderer, title_text, offset_t{ Globals::UIGridSize.w / 2, 1 }, cardinal_t::Central, offset_t{ 0, -4 }, Colors::Black, Colors::White);
+	game_state.ui_atlas.draw_label(game_state.renderer, title_text, offset_t{ globals::UIGridSize.w / 2, 1 }, cardinal_t::Central, offset_t{ 0, -4 }, colors::Black, colors::White);
 
-	game_state.renderer.draw_outline_rect(offset_t::Zero, Globals::WindowSize + Globals::WindowBorder * 2, Globals::BorderSize, Colors::Black);
-	game_state.renderer.draw_outline_rect(offset_t::Zero, Globals::WindowSize + Globals::WindowBorder * 2, Colors::White);
+	game_state.renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, globals::BorderSize, colors::Black);
+	game_state.renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, colors::White);
 
 	game_state.renderer.present();
 }
