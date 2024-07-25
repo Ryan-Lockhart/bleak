@@ -1,5 +1,6 @@
 #pragma once
 
+#include "concepts.hpp"
 #include <bleak/typedef.hpp>
 
 #include <functional>
@@ -11,17 +12,29 @@ namespace bleak {
 		static_assert(digits == 64 || digits == 32);
 
 		if constexpr (digits == 64) {
-			seed += 0x9e3779b9 + std::hash<T>()(v);
-			const std::size_t m = 0xe9846af9b1a615d;
+			if constexpr (is_hashable<T>::value) {
+				seed += 0x9e3779b9 + T::hasher::operator()(v);
+			} else {
+				seed += 0x9e3779b9 + std::hash<T>()(v);
+			}
+
+			static constexpr std::size_t m = 0xe9846af9b1a615d;
+
 			seed ^= seed >> 32;
 			seed *= m;
 			seed ^= seed >> 32;
 			seed *= m;
 			seed ^= seed >> 28;
 		} else {
-			seed += 0x9e3779b9 + std::hash<T>()(v);
-			const std::size_t m1 = 0x21f0aaad;
-			const std::size_t m2 = 0x735a2d97;
+			if constexpr (is_hashable<T>::value) {
+				seed += 0x9e3779b9 + T::hasher::operator()(v);
+			} else {
+				seed += 0x9e3779b9 + std::hash<T>()(v);
+			}
+
+			static constexpr std::size_t m1 = 0x21f0aaad;
+			static constexpr std::size_t m2 = 0x735a2d97;
+
 			seed ^= seed >> 16;
 			seed *= m1;
 			seed ^= seed >> 15;

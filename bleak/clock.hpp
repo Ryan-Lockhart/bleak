@@ -6,6 +6,8 @@
 
 namespace bleak {
 	namespace sdl {
+		static inline void delay(u32 ms) noexcept { SDL_Delay(ms); }
+
 		static inline usize get_performance_counter() noexcept { return SDL_GetPerformanceCounter(); }
 
 		static inline usize get_performance_frequency() noexcept { return SDL_GetPerformanceFrequency(); }
@@ -25,7 +27,7 @@ namespace bleak {
 		static inline void tick(f64 interval) {
 			last = now();
 			if (auto dt = delta_time(); dt < interval) {
-				SDL_Delay(static_cast<u32>(interval - dt));
+				sdl::delay(static_cast<u32>(interval - dt));
 			}
 		}
 

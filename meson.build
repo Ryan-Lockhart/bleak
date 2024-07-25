@@ -19,7 +19,7 @@ if build_type == 'debug'
     args = ['-DBLEAKDEPTH_DEBUG']
 else
     subsystem = 'console'
-    args = ['-DBLEAKDEPTH_RELEASE']
+    args = ['-DBLEAKDEPTH_RELEASE', '-DNDEBUG']
 endif
 
 sdl_dependencies = [

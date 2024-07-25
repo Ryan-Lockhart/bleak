@@ -190,7 +190,7 @@ namespace bleak {
 		constexpr explicit operator offset_t() const noexcept;
 
 		struct hasher {
-			constexpr usize operator()(cref<extent_t> extent) const noexcept { return hash_combine(extent.w, extent.h); }
+			static constexpr usize operator()(cref<extent_t> extent) noexcept { return hash_combine(extent.w, extent.h); }
 		};
 	};
 } // namespace bleak

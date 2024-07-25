@@ -6,7 +6,17 @@
 #include "bleak/lut.hpp"
 
 namespace bleak {
-	namespace Characters {
+	namespace characters {
+		constexpr const u8 OpenJaggedSet{ 0x00 };
+		constexpr const u8 ClosedJaggedSet{ 0x10 };
+
+		static constexpr u8 jagged_set(bool solid, u8 index) { return (solid ? ClosedJaggedSet : OpenJaggedSet) + index; }
+
+		constexpr const u8 OpenSmoothSet{ 0x20 };
+		constexpr const u8 ClosedSmoothSet{ 0x30 };
+		
+		static constexpr u8 smooth_set(bool solid, u8 index) { return (solid ? ClosedSmoothSet : OpenSmoothSet) + index; }
+
 		constexpr const u8 Error { 0x58 };
 
 		constexpr const u8 Empty { 0x00 };
@@ -30,5 +40,5 @@ namespace bleak {
 		constexpr const u8 Glock { 0x4A };
 		constexpr const u8 Ladder { 0x4B };
 		constexpr const u8 Corpse { 0x4C };
-	} // namespace Characters
+	} // namespace characters
 } // namespace Bleakdepth

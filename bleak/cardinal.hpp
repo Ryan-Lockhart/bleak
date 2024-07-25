@@ -34,9 +34,6 @@ namespace bleak {
 		static constexpr u8 East { 1 << 2 };
 		static constexpr u8 West { 1 << 3 };
 
-		static constexpr u8 Up { 1 << 4 };
-		static constexpr u8 Down { 1 << 5 };
-
 		static constexpr u8 Northwest { cardinal_t::North | cardinal_t::West };
 		static constexpr u8 Northeast { cardinal_t::North | cardinal_t::East };
 

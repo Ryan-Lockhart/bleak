@@ -1,13 +1,16 @@
 #pragma once
+
 #include <bleak/typedef.hpp>
 
 #include <format>
 #include <string>
+#include <bit>
 
 #include <bleak/atlas.hpp>
 #include <bleak/extent.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/renderer.hpp>
+#include <bleak/zone.hpp>
 
 #include "constants/characters.hpp"
 
@@ -243,11 +246,11 @@ namespace bleak {
 
 		inline constexpr std::string to_tooltip() const {
 			return std::format(
-				"The cell is physically {} and visibly {}.\nThe cell is {} and is {} by the player.\nIt is {} and {} to the touch.\nThe air within is {} and "
+				"The cell is physically {} and visibility is {}.\nIt is {} and is {} by the player.\nIt is {} and {} to the touch.\nThe air within is {} and "
 				"{}.",
 				solid ? "blocked" : "open",
-				seen ? "blocked" : "open",
-				solid ? "in view" : "not in view",
+				opaque ? "obscured" : "unobscured",
+				seen ? "in view" : "not in view",
 				explored ? "explored" : "unexplored",
 				damp ? "damp" : "dry",
 				warm ? "warm" : "cold",
@@ -277,10 +280,26 @@ namespace bleak {
 
 			const u8 rgb{ solid ? u8{ 0xC0 } : u8{ 0x40 } };
 			const u8 alpha{ seen ? u8{ 0xFF } : u8{ 0x80 } };
-			const u8 glyph{ solid ? Characters::Wall : Characters::Floor };
+			const u8 glyph{ solid ? characters::Wall : characters::Floor };
 
 			atlas.draw(glyph_t{ glyph, { rgb, rgb, rgb, alpha } }, position);
 		}
+
+		template<extent_t AtlasSize, typename T, extent_t ZoneSize, extent_t ZoneBorder> inline constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<offset_t> draw_position, cref<offset_t> cell_position) const noexcept {
+			if (!explored) {
+				return;
+			}
+
+			const u8 rgb{ solid ? u8{ 0xC0 } : u8{ 0x40 } };
+			const u8 alpha{ seen ? u8{ 0xFF } : u8{ 0x80 } };
+			const u8 glyph{ characters::jagged_set(solid, zone.template calculate_index<neighbourhood_solver_t::Melded, cell_trait_t, true>(cell_position, cell_trait_t::Solid)) };
+
+			atlas.draw(glyph_t{ glyph, { rgb, rgb, rgb, alpha } }, draw_position);
+		}
+
+		struct hasher {
+			static constexpr usize operator()(cref<cell_state_t> cell_state) noexcept { return hash_combine(std::bit_cast<u8>(cell_state)); }
+		};
 	};
 
 	template<> struct is_drawable<cell_state_t> {

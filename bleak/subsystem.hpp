@@ -11,7 +11,7 @@
 #include <bleak/log.hpp>
 
 namespace bleak {
-	struct Subsystem {
+	struct subsystem_s {
 	  private:
 		static inline bool sdl_initialized;
 		static inline bool sdl_image_initialized;
@@ -125,7 +125,7 @@ namespace bleak {
 		}
 
 	  public:
-		static inline void initialize() noexcept {
+		inline subsystem_s() noexcept {
 			if (is_initialized()) {
 				return;
 			}
@@ -137,7 +137,7 @@ namespace bleak {
 			initialize_sdl_ttf();
 		}
 
-		static inline void terminate() noexcept {
+		inline ~subsystem_s() noexcept {
 			if (!is_initialized()) {
 				return;
 			}

@@ -229,7 +229,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius) {
+		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius, bool inclusive = false) {
 			clear();
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
@@ -241,14 +241,18 @@ namespace bleak {
 				return *this;
 			}
 
-			for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
-				for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
-					const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
+			if (inclusive) {
+				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
+					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
+						const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
 
-					if (zone.within<zone_region_t::All>(neighbour)) {
-						insert(neighbour);
+						if (zone.template within<zone_region_t::All>(neighbour)) {
+							insert(neighbour);
+						}
 					}
 				}
+			} else {
+				insert(position);
 			}
 
 			if (radius == 1) {
@@ -264,7 +268,7 @@ namespace bleak {
 
 		template<typename T, typename U, extent_t Size, extent_t BorderSize>
 			requires is_equatable<T, U>::value
-		inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius) {
+		inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius, bool inclusive) {
 			clear();
 
 			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
@@ -276,14 +280,18 @@ namespace bleak {
 				return *this;
 			}
 
-			for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
-				for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
-					const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
+			if (inclusive) {
+				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
+					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
+						const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
 
-					if (zone.template within<zone_region_t::All>(neighbour)) {
-						insert(neighbour);
+						if (zone.template within<zone_region_t::All>(neighbour)) {
+							insert(neighbour);
+						}
 					}
 				}
+			} else {
+				insert(position);
 			}
 
 			if (radius == 1) {
@@ -297,7 +305,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius, f64 angle, f64 span) {
+		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius, f64 angle, f64 span, bool inclusive) {
 			clear();
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
@@ -317,14 +325,18 @@ namespace bleak {
 				span *= PercentOfCircle;
 			}
 
-			for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
-				for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
-					const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
+			if (inclusive) {
+				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
+					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
+						const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
 
-					if (zone.within<zone_region_t::All>(neighbour)) {
-						insert(neighbour);
+						if (zone.template within<zone_region_t::All>(neighbour)) {
+							insert(neighbour);
+						}
 					}
 				}
+			} else {
+				insert(position);
 			}
 
 			if (radius == 1) {
@@ -340,7 +352,7 @@ namespace bleak {
 
 		template<typename T, typename U, extent_t Size, extent_t BorderSize>
 			requires is_equatable<T, U>::value
-		inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius, f64 angle, f64 span) {
+		inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius, f64 angle, f64 span, bool inclusive) {
 			clear();
 
 			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
@@ -360,14 +372,18 @@ namespace bleak {
 				span *= PercentOfCircle;
 			}
 
-			for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
-				for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
-					const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
+			if (inclusive) {
+				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
+					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
+						const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
 
-					if (zone.template within<zone_region_t::All>(neighbour)) {
-						insert(neighbour);
+						if (zone.template within<zone_region_t::All>(neighbour)) {
+							insert(neighbour);
+						}
 					}
 				}
+			} else {
+				insert(position);
 			}
 
 			if (radius == 1) {

@@ -1,9 +1,12 @@
 #pragma once
+
 #include <bleak/typedef.hpp>
 
 #include <bleak/concepts.hpp>
+#include <bleak/hash.hpp>
 #include <bleak/memory.hpp>
 #include <bleak/offset.hpp>
+
 
 namespace bleak {
 	template<typename T>
@@ -15,6 +18,10 @@ namespace bleak {
 		constexpr creeper_t() : position{}, distance{} {}
 
 		constexpr creeper_t(cref<offset_t> position, cref<T> distance) : position{ position }, distance{ distance } {}
+
+		struct hasher {
+			static constexpr usize operator()(cref<creeper_t<T>> creeper) noexcept { return hash_combine(creeper.position, creeper.distance); }
+		};
 	};
 
 	template<typename T>
@@ -28,5 +35,9 @@ namespace bleak {
 		constexpr memory_creeper_t(cref<offset_t> current, cref<offset_t> previous, cref<T> distance) : position{ current, previous }, distance{ distance } {}
 
 		constexpr bool is_origin() const { return *this == memory_creeper_t<T>{}; }
+
+		struct hasher {
+			static constexpr usize operator()(cref<memory_creeper_t<T>> creeper) noexcept { return hash_combine(creeper.position, creeper.distance); }
+		};
 	};
 } // namespace bleak

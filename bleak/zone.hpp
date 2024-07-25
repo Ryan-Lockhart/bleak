@@ -30,6 +30,7 @@ namespace bleak {
 	template<typename T, extent_t RegionSize, extent_t ZoneSize, extent_t ZoneBorder = extent_t::Zero> struct region_t;
 
 	enum class zone_region_t : u8 { None = 0, Interior = 1 << 0, Border = 1 << 1, All = Interior | Border };
+	enum class neighbourhood_solver_t : u8 { Moore, VonNeumann, Extended, MarchingSquares, Melded };
 
 	template<typename T, extent_t Size, extent_t BorderSize = extent_t{ 0, 0 }> class zone_t {
 		static_assert(Size > extent_t::Zero, "Map size must be greater than zero.");
@@ -63,10 +64,18 @@ namespace bleak {
 			try {
 				file.open(path, std::ios::in | std::ios::binary);
 
+				file.seekg(0, std::ios::end);
+
+				if (file.tellg() != byte_size) {
+					throw std::runtime_error{ "byte size mismatch between file and map!" };
+				}
+
+				file.seekg(0, std::ios::beg);
+
 				file.read(reinterpret_cast<str>(cells.data_ptr()), cells.byte_size);
 
 				file.close();
-			} catch (std::exception e) {
+			} catch (cref<std::exception> e) {
 				error_log.add(e.what(), __TIME_FILE_LINE__);
 			}
 		}
@@ -292,7 +301,7 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, typename... Params>
-			requires (is_operable<T, Params, operator_t::Addition>::value, ...) && is_plurary<Params...>::value
+			requires(is_operable<T, Params, operator_t::Addition>::value, ...) && is_plurary<Params...>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> apply(cref<Params>... values) noexcept {
 			if constexpr (Region == zone_region_t::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
@@ -582,6 +591,222 @@ namespace bleak {
 			return count;
 		}
 
+		template<neighbourhood_solver_t Solver, bool Safe = true> constexpr u8 calculate_index(cref<offset_t> position, cref<T> value) const noexcept {
+			u8 index{ 0 };
+
+			if constexpr (Solver == neighbourhood_solver_t::Melded) {
+				if constexpr (Safe) {
+					if (!within<zone_region_t::All>(position)) {
+						return (1 << 4) - 1;
+					}
+
+					cardinal_t edge{ edge_state(position) };
+
+					bool nw{ edge == cardinal_t::Northwest == value || cells[position + offset_t::Northwest] == value };
+					bool n{ edge == cardinal_t::North || cells[position + offset_t::North] == value };
+					bool ne{ edge == cardinal_t::Northeast == value || cells[position + offset_t::Northeast] == value };
+
+					bool w{ edge == cardinal_t::West == value || cells[position + offset_t::West] == value };
+					bool e{ edge == cardinal_t::East == value || cells[position + offset_t::East] == value };
+
+					bool sw{ edge == cardinal_t::Southwest == value || cells[position + offset_t::Southwest] == value };
+					bool s{ edge == cardinal_t::South == value || cells[position + offset_t::South] == value };
+					bool se{ edge == cardinal_t::Southeast == value || cells[position + offset_t::Southeast] == value };
+
+					if (nw && n && w) {
+						index += 1 << 3;
+					}
+
+					if (n && ne && e) {
+						index += 1 << 2;
+					}
+
+					if (e && se && s) {
+						index += 1 << 1;
+					}
+
+					if (w && sw && s) {
+						index += 1 << 0;
+					}
+				} else {
+
+					bool nw{ cells[position + offset_t::Northwest] == value };
+					bool n{ cells[position + offset_t::North] == value };
+					bool ne{ cells[position + offset_t::Northeast] == value };
+
+					bool w{ cells[position + offset_t::West] == value };
+					bool e{ cells[position + offset_t::East] == value };
+
+					bool sw{ cells[position + offset_t::Southwest] == value };
+					bool s{ cells[position + offset_t::South] == value };
+					bool se{ cells[position + offset_t::Southeast] == value };
+
+					if (nw && n && w) {
+						index += 1 << 3;
+					}
+
+					if (n && ne && e) {
+						index += 1 << 2;
+					}
+
+					if (e && se && s) {
+						index += 1 << 1;
+					}
+
+					if (w && sw && s) {
+						index += 1 << 0;
+					}
+				}
+			} else if constexpr (Solver == neighbourhood_solver_t::MarchingSquares) {
+				if constexpr (Safe) {
+					if (!within<zone_region_t::All>(position)) {
+						return (1 << 4) - 1;
+					}
+
+					cardinal_t edge{ edge_state(position) };
+
+					if (edge == cardinal_t::Northwest == value) {
+						index += 1 << 3;
+					}
+
+					if (edge == cardinal_t::North || cells[position + offset_t::North] == value) {
+						index += 1 << 2;
+					}
+
+					if (cells[position] == value) {
+						index += 1 << 1;
+					}
+
+					if (edge == cardinal_t::West || cells[position + offset_t::West] == value) {
+						index += 1 << 0;
+					}
+				} else {
+					if (cells[position + offset_t::Northwest] == value) {
+						index += 1 << 3;
+					}
+					if (cells[position + offset_t::North] == value) {
+						index += 1 << 2;
+					}
+					if (cells[position] == value) {
+						index += 1 << 1;
+					}
+					if (cells[position + offset_t::West] == value) {
+						index += 1 << 0;
+					}
+				}
+			}
+
+			return index;
+		}
+
+		template<neighbourhood_solver_t Solver, typename U, bool Safe = true> requires is_equatable<T, U>::value constexpr u8 calculate_index(cref<offset_t> position, cref<U> value) const noexcept {
+			u8 index{ 0 };
+
+			if constexpr (Solver == neighbourhood_solver_t::Melded) {
+				if constexpr (Safe) {
+					if (!within<zone_region_t::All>(position)) {
+						return (1 << 4) - 1;
+					}
+
+					cardinal_t edge{ edge_state(position) };
+
+					bool nw{ edge == cardinal_t::Northwest || cells[position + offset_t::Northwest] == value };
+					bool n{ edge == cardinal_t::North || cells[position + offset_t::North] == value };
+					bool ne{ edge == cardinal_t::Northeast || cells[position + offset_t::Northeast] == value };
+
+					bool w{ edge == cardinal_t::West || cells[position + offset_t::West] == value };
+					bool e{ edge == cardinal_t::East || cells[position + offset_t::East] == value };
+
+					bool sw{ edge == cardinal_t::Southwest || cells[position + offset_t::Southwest] == value };
+					bool s{ edge == cardinal_t::South || cells[position + offset_t::South] == value };
+					bool se{ edge == cardinal_t::Southeast || cells[position + offset_t::Southeast] == value };
+
+					if (nw && n && w) {
+						index += 1 << 3;
+					}
+
+					if (n && ne && e) {
+						index += 1 << 2;
+					}
+
+					if (e && se && s) {
+						index += 1 << 1;
+					}
+
+					if (w && sw && s) {
+						index += 1 << 0;
+					}
+				} else {
+
+					bool nw{ cells[position + offset_t::Northwest] == value };
+					bool n{ cells[position + offset_t::North] == value };
+					bool ne{ cells[position + offset_t::Northeast] == value };
+
+					bool w{ cells[position + offset_t::West] == value };
+					bool e{ cells[position + offset_t::East] == value };
+
+					bool sw{ cells[position + offset_t::Southwest] == value };
+					bool s{ cells[position + offset_t::South] == value };
+					bool se{ cells[position + offset_t::Southeast] == value };
+
+					if (nw && n && w) {
+						index += 1 << 3;
+					}
+
+					if (n && ne && e) {
+						index += 1 << 2;
+					}
+
+					if (e && se && s) {
+						index += 1 << 1;
+					}
+
+					if (w && sw && s) {
+						index += 1 << 0;
+					}
+				}
+			} else if constexpr (Solver == neighbourhood_solver_t::MarchingSquares) {
+				if constexpr (Safe) {
+					if (!within<zone_region_t::All>(position)) {
+						return (1 << 4) - 1;
+					}
+
+					cardinal_t edge{ edge_state(position) };
+
+					if (edge == cardinal_t::Northwest == value) {
+						index += 1 << 3;
+					}
+
+					if (edge == cardinal_t::North || cells[position + offset_t::North] == value) {
+						index += 1 << 2;
+					}
+
+					if (cells[position] == value) {
+						index += 1 << 1;
+					}
+
+					if (edge == cardinal_t::West || cells[position + offset_t::West] == value) {
+						index += 1 << 0;
+					}
+				} else {
+					if (cells[position + offset_t::Northwest] == value) {
+						index += 1 << 3;
+					}
+					if (cells[position + offset_t::North] == value) {
+						index += 1 << 2;
+					}
+					if (cells[position] == value) {
+						index += 1 << 1;
+					}
+					if (cells[position + offset_t::West] == value) {
+						index += 1 << 0;
+					}
+				}
+			}
+
+			return index;
+		}
+
 		template<bool Safe = true> constexpr void modulate(ref<array_t<T, Size>> buffer, cref<offset_t> position, u8 threshold, cref<T> true_state, cref<T> false_state) const noexcept {
 			u8 neighbours{ neighbour_count<Safe>(position, true_state) };
 
@@ -602,7 +827,7 @@ namespace bleak {
 			}
 		}
 
-		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<T> true_value, cref<T> false_state) const noexcept {
+		template<zone_region_t Region> constexpr cref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<T> true_value, cref<T> false_state) const noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -639,7 +864,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<binary_applicator_t<T>> applicator) const noexcept {
+		template<zone_region_t Region> constexpr cref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<binary_applicator_t<T>> applicator) const noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -714,7 +939,7 @@ namespace bleak {
 
 			array_t<T, Size> buffer{ cells };
 
-			automatize<Region>(iterations, threshold, true_value, false_state);
+			automatize<Region>(buffer, iterations, threshold, true_value, false_state);
 			swap(buffer);
 
 			return *this;
@@ -886,6 +1111,180 @@ namespace bleak {
 			return std::nullopt;
 		}
 
+		constexpr bool linear_blockage(cref<offset_t> origin, cref<offset_t> target, cref<T> value) const noexcept {
+			if (cells[origin] == value || cells[target] == value) {
+				return true;
+			}
+
+			if (origin == target) {
+				return false;
+			}
+
+			offset_t delta{ std::abs(target.x - origin.x), std::abs(target.y - origin.y) };
+
+			offset_t step{ origin.x < target.x ? 1 : -1, origin.y < target.y ? 1 : -1 };
+
+			i32 err = delta.x - delta.y;
+
+			offset_t current_position{ origin };
+
+			for (;;) {
+				if (current_position == target) {
+					return true;
+				}
+
+				if (cells[current_position] == value) {
+					return true;
+				}
+
+				i32 e2 = 2 * err;
+
+				if (e2 > -delta.y) {
+					err -= delta.y;
+					current_position.x += step.x;
+				}
+
+				if (e2 < delta.x) {
+					err += delta.x;
+					current_position.y += step.y;
+				}
+			}
+		}
+
+		template<zone_region_t Region> constexpr u32 count(cref<T> value) const noexcept {
+			u32 total{ 0 };
+
+			if constexpr (Region == zone_region_t::All) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					if (cells[i] == value) {
+						++total;
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						if (cells[x, y] == value) {
+							++total;
+						}
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							if (cells[x, y] == value) {
+								++total;
+							}
+						}
+					} else {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							if (cells[i, y] == value) {
+								++total;
+							}
+							if (cells[zone_extent.x - i, y] == value) {
+								++total;
+							}
+						}
+					}
+				}
+			} else if constexpr (Region == zone_region_t::None) {
+				return 0;
+			}
+
+			return total;
+		}
+
+		template<zone_region_t Region, typename U> requires is_equatable<T, U>::value constexpr u32 count(cref<U> value) const noexcept {
+			u32 total{ 0 };
+
+			if constexpr (Region == zone_region_t::All) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					if (cells[i] == value) {
+						++total;
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						if (cells[x, y] == value) {
+							++total;
+						}
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							if (cells[x, y] == value) {
+								++total;
+							}
+						}
+					} else {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							if (cells[i, y] == value) {
+								++total;
+							}
+							if (cells[zone_extent.x - i, y] == value) {
+								++total;
+							}
+						}
+					}
+				}
+			} else if constexpr (Region == zone_region_t::None) {
+				return 0;
+			}
+
+			return total;
+		}
+
+		constexpr bool linear_blockage(cref<offset_t> origin, cref<offset_t> target, cref<T> value, u32 distance) const noexcept {
+			if (cells[origin] == value || cells[target] == value) {
+				return true;
+			}
+
+			if (origin == target) {
+				return false;
+			}
+
+			offset_t delta{ std::abs(target.x - origin.x), std::abs(target.y - origin.y) };
+
+			offset_t step{ origin.x < target.x ? 1 : -1, origin.y < target.y ? 1 : -1 };
+
+			i32 err = delta.x - delta.y;
+			
+			creeper_t<u32> creeper{ origin, 0 };
+
+			for (;;) {
+				if (creeper.position == target) {
+					return true;
+				}
+
+				if (cells[creeper.position] == value) {
+					return true;
+				}
+
+				i32 e2 = 2 * err;
+
+				if (e2 > -delta.y || e2 < delta.x) {
+					if (creeper.distance >= distance) {
+						return false;
+					}
+
+					if (e2 > -delta.y) {
+						err -= delta.y;
+						creeper.position.x += step.x;
+					}
+
+					if (e2 < delta.x) {
+						err += delta.x;
+						creeper.position.y += step.y;
+					}
+
+					++creeper.distance;
+				}
+			}
+		}
+
 		template<extent_t AtlasSize>
 		constexpr void draw(cref<atlas_t<AtlasSize>> atlas) const noexcept
 			requires is_drawable<T>::value
@@ -893,7 +1292,7 @@ namespace bleak {
 			for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 				for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 					const offset_t pos{ x, y };
-					(*this)[pos].draw(atlas, pos);
+					(*this)[pos].draw(atlas, *this, pos);
 				}
 			}
 		}
@@ -905,7 +1304,7 @@ namespace bleak {
 			for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 				for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 					const offset_t pos{ x, y };
-					(*this)[pos].draw(atlas, pos + offset);
+					(*this)[pos].draw(atlas, *this, pos + offset, pos);
 				}
 			}
 		}

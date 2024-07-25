@@ -151,8 +151,12 @@ namespace bleak {
 	};
 
 	template<typename T, typename U> struct is_comparable<T, U, comparator_t::Comparable> {
-		static bool constexpr value = is_comparable<T, U, comparator_t::Less>::value && is_comparable<T, U, comparator_t::Greater>::value && is_comparable<T, U, comparator_t::LessEq>::value
-								   && is_comparable<T, U, comparator_t::GreaterEq>::value && is_comparable<T, U, comparator_t::Equatable>::value;
+		static bool constexpr value =
+			is_comparable<T, U, comparator_t::Less>::value &&
+			is_comparable<T, U, comparator_t::Greater>::value &&
+			is_comparable<T, U, comparator_t::LessEq>::value &&
+			is_comparable<T, U, comparator_t::GreaterEq>::value &&
+			is_comparable<T, U, comparator_t::Equatable>::value;
 	};
 
 	template<typename T, typename U, comparator_t Comparator> constexpr bool is_comparable_v = is_comparable<T, U, Comparator>::value;
@@ -161,19 +165,11 @@ namespace bleak {
 		static bool constexpr value = (std::is_same<T, Params>::value && ...);
 	};
 
-	static_assert(is_homogeneous<i32, i32>::value == true);
-
-	static_assert(is_homogeneous<i32, f32>::value == false);
-
 	template<typename T, typename... Params> constexpr bool is_homogeneous_v = is_homogeneous<T, Params...>::value;
 
 	template<typename T, typename... Params> struct is_heterogeneous {
 		static bool constexpr value = (!std::is_same<T, Params>::value || ...);
 	};
-
-	static_assert(is_heterogeneous<i32, f32>::value == true);
-
-	static_assert(is_heterogeneous<i32, i32>::value == false);
 
 	template<typename T, typename... Params> constexpr bool is_heterogeneous_v = is_heterogeneous<T, Params...>::value;
 
@@ -194,6 +190,17 @@ namespace bleak {
 	};
 
 	template<typename... Params> constexpr bool is_plurary_v = is_plurary<Params...>::value;
+	
+	template<typename T>
+	concept Hashable = requires(T t) {
+		{ T::hasher::operator()(t) } -> std::convertible_to<usize>;
+	};
+
+	template<typename T> struct is_hashable {
+		static bool constexpr value = Hashable<T>;
+	};
+
+	template<typename T> constexpr bool is_hashable_v = is_hashable<T>::value;
 
 	template<typename T> struct is_drawable {
 		static bool constexpr value = false;

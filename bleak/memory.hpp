@@ -51,6 +51,10 @@ namespace bleak {
 		constexpr rememberance_t<T> perpetuate(cref<T> value) const { return rememberance_t<T>{ *this }.remember(value); }
 
 		constexpr rememberance_t<T> perpetuate(rval<T> value) const { return rememberance_t<T>{ *this }.remember(std::move(value)); }
+
+		struct hasher {
+			static constexpr usize operator()(cref<rememberance_t<T>> rememberance) noexcept { return hash_combine(rememberance.current, rememberance.previous); }
+		};
 	};
 
 	template<typename T> struct cenotaph {
