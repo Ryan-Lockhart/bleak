@@ -9,6 +9,7 @@
 #include <bleak/iter.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/utility.hpp>
+#include <type_traits>
 
 namespace bleak {
 	template<typename T, extent_t Size> class array_t {
@@ -74,6 +75,20 @@ namespace bleak {
 		inline constexpr cref<T> back() const noexcept { return data[last]; }
 
 		inline constexpr array_t() : data{ new T[size] } {}
+
+		inline constexpr array_t(std::array<T, size> elements) : data{ new T[size] } {
+			for (usize i{ 0 }; i < size; ++i) {
+				data[i] = elements[i];
+			}
+		}
+
+		template<typename U>
+			requires std::is_convertible<U, T>::value
+		inline constexpr explicit array_t(std::array<U, size> elements) : data{ new T[size] } {
+			for (usize i{ 0 }; i < size; ++i) {
+				data[i] = elements[i];
+			}
+		}
 
 		inline constexpr array_t(std::initializer_list<T> elements) : data{ new T[size] } {
 			if (elements.size() != size) {

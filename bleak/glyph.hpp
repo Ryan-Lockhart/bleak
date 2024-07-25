@@ -1,11 +1,15 @@
 #pragma once
 
-#include "bleak/primitive.hpp"
+#include "bleak/concepts.hpp"
+#include <array>
+#include <bleak/primitive.hpp>
 
+#include <cassert>
 #include <initializer_list>
 
-#include "bleak/array.hpp"
-#include "bleak/color.hpp"
+#include <bleak/array.hpp>
+#include <bleak/color.hpp>
+#include <bleak/typedef.hpp>
 
 namespace bleak {
 	struct glyph_t {
@@ -19,7 +23,7 @@ namespace bleak {
 
 	template<extent_t::product_t Length> struct animated_glyph_t {
 	  private:
-	  	static constexpr extent_t size{ Length, 1 };
+		static constexpr extent_t size{ Length, 1 };
 
 		array_t<u16, size> indices;
 		extent_t::product_t frame;
@@ -43,6 +47,14 @@ namespace bleak {
 		color_t color;
 
 		constexpr animated_glyph_t() = delete;
+
+		constexpr animated_glyph_t(std::array<u16, Length> indices) noexcept : indices{ indices }, frame{ 0 }, color{} {}
+
+		constexpr animated_glyph_t(std::array<u16, Length> indices, color_t color) noexcept : indices{ indices }, frame{ 0 }, color{ color } {}
+
+		template<Integer IndexType> constexpr animated_glyph_t(std::array<IndexType, Length> indices) noexcept : indices{ indices }, frame{ 0 }, color{} {}
+
+		template<Integer IndexType> constexpr animated_glyph_t(std::array<IndexType, Length> indices, color_t color) noexcept : indices{ indices }, frame{ 0 }, color{ color } {}
 
 		constexpr animated_glyph_t(std::initializer_list<u16> indices) noexcept : indices{ indices }, frame{ 0 }, color{} {}
 
@@ -148,17 +160,5 @@ namespace bleak {
 
 		constexpr bool operator<=(cref<animated_glyph_t> other) const noexcept = delete;
 		constexpr bool operator>=(cref<animated_glyph_t> other) const noexcept = delete;
-
-		template<u16 Start, u16 End> constexpr static array_t<u16, size> generate_contiguous_indices() noexcept {
-			array_t<u16, size> indices{};
-
-			static_assert(End - Start + 1 == Length, "lengths of indices and range are not equal!");
-
-			for (index_t i = 0; i < Length; ++i) {
-				indices[i] = Start + i;
-			}
-
-			return indices;
-		}
 	};
 } // namespace bleak

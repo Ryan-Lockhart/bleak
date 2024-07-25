@@ -19,15 +19,7 @@ namespace bleak {
 
 		inline area_t() noexcept {}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline area_t(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value) { recalculate(zone, value); }
-
-		template<typename T, extent_t Size, extent_t BorderSize> inline area_t(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value) { recalculate(zone, position, value); }
-
-		template<typename T, extent_t Size, extent_t BorderSize> inline area_t(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, offset_t::product_t distance) { recalculate(zone, position, value, distance); }
-
-		template<typename T, extent_t Size, extent_t BorderSize> inline area_t(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, f32 distance) { recalculate(zone, position, value, distance); }
-
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value) {
+		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> collect(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value) {
 			clear();
 
 			for (extent_t::scalar_t y{ 0 }; y < Size.h; ++y) {
@@ -45,7 +37,7 @@ namespace bleak {
 
 		template<typename T, typename U, extent_t Size, extent_t BorderSize>
 			requires is_equatable<T, U>::value
-		inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<U> value) {
+		inline ref<area_t> collect(cref<zone_t<T, Size, BorderSize>> zone, cref<U> value) {
 			clear();
 
 			for (extent_t::scalar_t y{ 0 }; y < Size.h; ++y) {
@@ -61,7 +53,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, bool inclusive = false) {
+		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> flood(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, bool inclusive = false) {
 			clear();
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
@@ -104,7 +96,7 @@ namespace bleak {
 
 		template<typename T, typename U, extent_t Size, extent_t BorderSize>
 			requires is_equatable<T, U>::value
-		inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, bool inclusive = false) {
+		inline ref<area_t> flood(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, bool inclusive = false) {
 			clear();
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
@@ -145,7 +137,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, cref<extent_t::product_t> distance, bool inclusive = false) {
+		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> flood(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, cref<extent_t::product_t> distance, bool inclusive = false) {
 			clear();
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
@@ -188,7 +180,7 @@ namespace bleak {
 
 		template<typename T, typename U, extent_t Size, extent_t BorderSize>
 			requires is_equatable<T, U>::value
-		inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, cref<extent_t::product_t> distance, bool inclusive = false) {
+		inline ref<area_t> flood(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, cref<extent_t::product_t> distance, bool inclusive = false) {
 			clear();
 
 			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
@@ -229,7 +221,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius, bool inclusive = false) {
+		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius, bool inclusive = false) {
 			clear();
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
@@ -268,7 +260,7 @@ namespace bleak {
 
 		template<typename T, typename U, extent_t Size, extent_t BorderSize>
 			requires is_equatable<T, U>::value
-		inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius, bool inclusive) {
+		inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius, bool inclusive) {
 			clear();
 
 			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
@@ -305,7 +297,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius, f64 angle, f64 span, bool inclusive) {
+		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius, f64 angle, f64 span, bool inclusive) {
 			clear();
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
@@ -352,7 +344,7 @@ namespace bleak {
 
 		template<typename T, typename U, extent_t Size, extent_t BorderSize>
 			requires is_equatable<T, U>::value
-		inline ref<area_t> recalculate(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius, f64 angle, f64 span, bool inclusive) {
+		inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius, f64 angle, f64 span, bool inclusive) {
 			clear();
 
 			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {

@@ -1289,8 +1289,8 @@ namespace bleak {
 		constexpr void draw(cref<atlas_t<AtlasSize>> atlas) const noexcept
 			requires is_drawable<T>::value
 		{
-			for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
-				for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+			for (offset_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+				for (offset_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 					const offset_t pos{ x, y };
 					(*this)[pos].draw(atlas, *this, pos);
 				}
@@ -1301,22 +1301,10 @@ namespace bleak {
 		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset) const noexcept
 			requires is_drawable<T>::value
 		{
-			for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
-				for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+			for (offset_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+				for (offset_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 					const offset_t pos{ x, y };
 					(*this)[pos].draw(atlas, *this, pos + offset, pos);
-				}
-			}
-		}
-
-		template<extent_t AtlasSize>
-		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset, cref<extent_t> scale) const noexcept
-			requires is_drawable<T>::value
-		{
-			for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
-				for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
-					const offset_t pos{ x, y };
-					(*this)[pos].draw(atlas, pos + offset, scale);
 				}
 			}
 		}

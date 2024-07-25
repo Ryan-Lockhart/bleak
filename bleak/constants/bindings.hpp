@@ -30,7 +30,7 @@ namespace bleak {
 			pair_t<cardinal_t, sdl::key>{ cardinal_t::East, Keys::Arrow::Right }
 		};
 
-		constexpr const sdl::key Wait{ Keys::Space };
+		constexpr const std::array<sdl::key, 2> Wait{ Keys::Space, Keys::Keypad::Numeric::Five };
 		constexpr const sdl::key Quit{ Keys::Escape };
 	} // namespace Bindings
 } // namespace bleak

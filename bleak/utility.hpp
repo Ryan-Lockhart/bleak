@@ -1,8 +1,9 @@
 #pragma once
-
 #include <bleak/typedef.hpp>
 
 #include <cmath>
+#include <cassert>
+#include <array>
 
 #include <bleak/concepts.hpp>
 #include <bleak/iter.hpp>
@@ -41,6 +42,51 @@ namespace bleak {
 	template<typename T> constexpr inline T lerp(T a, T b, T t) { return a + (b - a) * t; }
 
 	template<typename T> constexpr inline T usage(T value, T min, T max) { return (value - min) / (max - min); }
+
+	template<usize Length, usize Start, usize End>
+		requires(End - Start + 1 == Length)
+	constexpr static std::array<usize, End - Start + 1> generate_contiguous_indices() noexcept {
+		std::array<usize, End - Start + 1> indices{};
+
+		for (usize i{ 0 }; i < Length; ++i) {
+			indices[i] = Start + i;
+		}
+
+		return indices;
+	}
+
+	struct range_t {
+		usize first;
+		usize last;
+
+		constexpr range_t(usize start, usize end) noexcept : first{ start }, last{ end } { assert(start <= end); }
+
+		constexpr usize length() const noexcept { return last - first + 1; }
+
+		constexpr usize begin() const noexcept { return first; }
+
+		constexpr usize end() const noexcept { return last; }
+
+		constexpr bool overlapping(cref<range_t> other) const noexcept { return first <= other.last && last >= other.first; }
+	};
+
+	template<usize Length, typename... Ranges>
+		requires is_homogeneous<range_t, Ranges...>::value
+	constexpr static auto generate_discontiguous_indices(Ranges... ranges) noexcept -> std::array<usize, (ranges.length() + ...)> {
+		std::array<usize, (ranges.length() + ...)> indices{};
+
+		static_assert((ranges.overlapping(ranges...) && ...) == false, "ranges are not allowed to overlap!");
+		static_assert((ranges.length() + ...) == Length, "sum of range lengths are not equal to length!");
+
+		usize index{ 0 };
+		for (crauto range : { ranges... }) {
+			for (usize i = range.first; i <= range.last; ++i) {
+				indices[index] = i;
+			}
+		}
+
+		return indices;
+	}
 
 	namespace memory {
 		// size in bytes of one byte

@@ -116,7 +116,6 @@ struct game_state {
 
 	area_t player_fov{};
 	sprite_t player{ Glyphs::Player };
-	cardinal_t player_direction{ cardinal_t::North };
 
 	camera_t camera{ globals::GameGridSize, extent_t::Zero, globals::CameraExtent };
 	bool camera_locked{ true };
@@ -129,19 +128,6 @@ struct game_state {
 	wave_t sine_wave{ 1.0, 0.5, 1.0 };
 
 	mixer_s mixer{ 44100, MIX_DEFAULT_FORMAT, channel_t::Stereo, 2048 };
-
-	clip_pool_t<8> honks {
-		"res\\audio\\clips\\honk_0.wav",
-		"res\\audio\\clips\\honk_1.wav",
-		"res\\audio\\clips\\honk_2.wav",
-		"res\\audio\\clips\\honk_3.wav",
-		"res\\audio\\clips\\honk_4.wav",
-		"res\\audio\\clips\\honk_5.wav",
-		"res\\audio\\clips\\honk_6.wav",
-		"res\\audio\\clips\\honk_7.wav"
-	};
-
-	sound_t quack{ "res\\audio\\clips\\quack.wav" };
 
 	music_t music{ "res\\audio\\music\\hall_of_the_mountain_king.wav" };
 } static game_state{};
@@ -164,7 +150,7 @@ void mouse_keyboard_active() { game_state.gamepad_active = false; }
 
 using namespace bleak;
 
-bool update_camera() {
+inline bool update_camera() {
 	if (game_state.camera_locked) {
 		return game_state.camera.center_on(game_state.player.position);
 	}
@@ -196,18 +182,28 @@ bool update_camera() {
 	return false;
 }
 
-void recalculate_fov() {
+inline void recalculate_fov(cref<offset_t> position, cardinal_t direction) {
 	game_state.player_fov.repeal(game_state.game_map, cell_trait_t::Seen);
-
-	game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, globals::ViewDistance, direction_to_angle(game_state.player_direction), globals::ViewSpan, false);
-
+	game_state.player_fov.cast(game_state.game_map, position, cell_trait_t::Transperant, globals::ViewDistance, direction_to_angle(direction), globals::ViewSpan, true);
 	game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
 }
 
-bool character_movement() {
-	if (Keyboard::is_key_pressed(bindings::Wait)) {
+inline void recalculate_fov() {
+	game_state.player_fov.repeal(game_state.game_map, cell_trait_t::Seen);
+	game_state.player_fov.cast(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, globals::ViewDistance / 2, true);
+	game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
+}
+
+inline void recalculate_fov(cardinal_t direction) { recalculate_fov(game_state.player.position, direction); }
+
+inline bool character_movement() {
+	if (Keyboard::any_keys_pressed(bindings::Wait)) {
 		game_state.input_timer.record();
 		game_state.epoch_timer.record();
+
+		game_state.player.glyph.index = characters::Entity[cardinal_t::Central];
+
+		recalculate_fov();
 
 		return true;
 	}
@@ -232,22 +228,18 @@ bool character_movement() {
 	}
 
 	if (direction != offset_t::Zero) {
-		game_state.player_direction = static_cast<cardinal_t>(direction);
-		game_state.player.glyph.index = characters::Entity[game_state.player_direction];
-
-		recalculate_fov();
+		game_state.player.glyph.index = characters::Entity[direction];
 
 		offset_t target_position{ game_state.player.position + direction };
 
-		if (!game_state.game_map.within<zone_region_t::Interior>(target_position)) {
-			return false;
-		}
-
-		if (game_state.game_map[target_position].solid) {
+		if (!game_state.game_map.within<zone_region_t::Interior>(target_position) || game_state.game_map[target_position].solid) {
+			recalculate_fov(direction);
 			return false;
 		}
 
 		game_state.player.position += direction;
+
+		recalculate_fov(direction);
 
 		game_state.input_timer.record();
 		game_state.epoch_timer.record();
@@ -258,14 +250,14 @@ bool character_movement() {
 	return false;
 }
 
-void startup();
+inline void startup();
 
-void update();
-void render();
+inline void update();
+inline void render();
 
-void shutdown();
+inline void shutdown();
 
-void terminate_prematurely();
+inline void terminate_prematurely();
 
 int main(int argc, char* argv[]) {
 	startup();
@@ -280,7 +272,7 @@ int main(int argc, char* argv[]) {
 	return EXIT_SUCCESS;
 }
 
-void startup() {
+inline void startup() {
 	Mouse::initialize();
 	Keyboard::initialize();
 
@@ -307,11 +299,6 @@ void startup() {
 		region[i].generate<zone_region_t::Interior>(game_state.random_engine, 0.425, 5, 4, closed_state, open_state);
 	}
 
-	auto& fill_zone{ region[offset_t{ 0, 0 }] };
-
-	area_t area{ fill_zone, cell_state_t{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored } };
-	area.set(fill_zone, cell_state_t{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored });
-
 	region.compile(game_state.game_map);
 
 	auto starting_position{ game_state.game_map.find_random<zone_region_t::Interior>(game_state.random_engine, cell_trait_t::Open) };
@@ -324,9 +311,7 @@ void startup() {
 		terminate_prematurely();
 	}
 
-	game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, globals::ViewDistance, direction_to_angle(game_state.player_direction), globals::ViewSpan, false);
-
-	game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
+	recalculate_fov();
 
 	update_camera();
 
@@ -342,7 +327,7 @@ void startup() {
 	error_log.flush_to_console(std::cerr);
 }
 
-void update() {
+inline void update() {
 	if (game_state.window.is_closing()) {
 		return;
 	}
@@ -355,32 +340,14 @@ void update() {
 
 	game_state.window.poll_events();
 
-	if (Keyboard::any_key_down()) {
-		game_state.honks.play(game_state.random_engine);
-	}
-
-	if (game_state.animation_timer.ready()) {
-		// game_state.player.glyph.advance();
-		game_state.animation_timer.record();
-	}
-
 	if (Keyboard::is_key_down(bindings::Quit)) {
 		game_state.window.close();
-		game_state.quack.play();
-
-		sdl::delay(1000);
 		return;
 	}
 
 	if (game_state.input_timer.ready()) {
 		if (game_state.epoch_timer.ready()) {
-			if (character_movement()) {
-				game_state.player_fov.repeal(game_state.game_map, cell_trait_t::Seen);
-
-				game_state.player_fov.recalculate(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, globals::ViewDistance, direction_to_angle(game_state.player_direction), globals::ViewSpan, false);
-
-				game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
-			}
+			character_movement();
 		}
 
 		update_camera();
@@ -409,11 +376,11 @@ void update() {
 	}
 }
 
-void render() {
+inline void render() {
 	if (game_state.window.is_closing()) {
 		return;
 	}
-	
+
 	game_state.renderer.clear(colors::Black);
 
 	game_state.game_map.draw(game_state.game_atlas, -game_state.camera.get_position());
@@ -440,7 +407,7 @@ void render() {
 	game_state.renderer.present();
 }
 
-void shutdown() {
+inline void shutdown() {
 	if (game_state.primary_gamepad != nullptr) {
 		GamepadManager::release(0);
 	}
@@ -452,11 +419,9 @@ void shutdown() {
 
 	message_log.flush_to_file();
 	error_log.flush_to_file();
-
-	// game_state.game_map.serialize("res\\maps\\test_region.map");
 }
 
-void terminate_prematurely() {
+inline void terminate_prematurely() {
 	std::cout << "Message Log:\n";
 	message_log.flush_to_console(std::cout);
 
