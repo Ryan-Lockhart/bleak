@@ -872,27 +872,27 @@ namespace bleak {
 			if constexpr (Region == zone_region_t::All) {
 				for (extent_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
 					for (extent_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
-						modulate(buffer, { x, y }, threshold, applicator);
+						modulate(buffer, offset_t{ x, y }, threshold, applicator);
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Interior) {
-				constexpr bool is_not_safe{ border_size.w > 0 && border_size.h > 0 };
+				constexpr bool not_safe{ border_size.w == 0 || border_size.h == 0 };
 
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
-						modulate<is_not_safe>(buffer, { x, y }, threshold, applicator);
+						modulate<not_safe>(buffer, offset_t{ x, y }, threshold, applicator);
 					}
 				}
 			} else if constexpr (Region == zone_region_t::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
-							modulate(buffer, { x, y }, threshold, applicator);
+							modulate(buffer, offset_t{ x, y }, threshold, applicator);
 						}
 					} else {
 						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
-							modulate(buffer, { i, y }, threshold, applicator);
-							modulate(buffer, { zone_extent.x - i, y }, threshold, applicator);
+							modulate(buffer, offset_t{ i, y }, threshold, applicator);
+							modulate(buffer, offset_t{ zone_extent.x - i, y }, threshold, applicator);
 						}
 					}
 				}
@@ -957,7 +957,7 @@ namespace bleak {
 
 			array_t<T, Size> buffer{ cells };
 
-			automatize<Region>(iterations, threshold, applicator);
+			automatize<Region>(buffer, iterations, threshold, applicator);
 			swap(buffer);
 
 			return *this;
@@ -975,7 +975,7 @@ namespace bleak {
 
 			buffer = cells;
 
-			automatize<Region>(iterations, threshold, true_value, false_state);
+			automatize<Region>(buffer, iterations, threshold, true_value, false_state);
 			swap(buffer);
 
 			return *this;
@@ -993,7 +993,7 @@ namespace bleak {
 
 			buffer = cells;
 
-			automatize<Region>(iterations, threshold, applicator);
+			automatize<Region>(buffer, iterations, threshold, applicator);
 			swap(buffer);
 
 			return *this;

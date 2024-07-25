@@ -35,6 +35,7 @@
 #include <bleak/wave.hpp>
 #include <bleak/window.hpp>
 #include <bleak/zone.hpp>
+#include <bleak/applicator.hpp>
 
 #include <bleak/constants/bindings.hpp>
 #include <bleak/constants/colors.hpp>
@@ -72,8 +73,8 @@ namespace globals {
 	constexpr extent_t GlyphsetSize{ 16, 16 };
 	constexpr extent_t TilesetSize{ 16, 5 };
 
-	constexpr extent_t ZoneSize{ 64, 64 };
-	constexpr extent_t RegionSize{ 1, 1 };
+	constexpr extent_t ZoneSize{ 32, 32 };
+	constexpr extent_t RegionSize{ 16, 16 };
 
 	constexpr extent_t MapSize{ RegionSize * ZoneSize };
 
@@ -84,6 +85,10 @@ namespace globals {
 	constexpr offset_t CursorOffset{ UniversalOffset - CellSize / 4 };
 
 	constexpr extent_t CameraExtent{ MapSize - globals::GameGridSize };
+
+	constexpr f64 FillPercent{ 0.425 };
+	constexpr u32 AutomotaIterations{ 5 };
+	constexpr u32 AutomotaThreshold{ 4 };
 
 	constexpr u32 ViewDistance{ 8 };
 	constexpr f64 ViewSpan{ 135.0 };
@@ -294,9 +299,17 @@ inline void startup() {
 	constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Unseen, cell_trait_t::Unexplored };
 	constexpr cell_state_t closed_state{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Unseen, cell_trait_t::Unexplored };
 
+	constexpr binary_applicator_t<cell_state_t> cell_applicator{ closed_state, open_state };
+
 	for (extent_t::product_t i{ 0 }; i < region.region_area; ++i) {
 		region[i].set<zone_region_t::Border>(closed_state);
-		region[i].generate<zone_region_t::Interior>(game_state.random_engine, 0.425, 5, 4, closed_state, open_state);
+		region[i].generate<zone_region_t::Interior>(
+			game_state.random_engine,
+			globals::FillPercent,
+			globals::AutomotaIterations,
+			globals::AutomotaThreshold,
+			cell_applicator
+		);
 	}
 
 	region.compile(game_state.game_map);
