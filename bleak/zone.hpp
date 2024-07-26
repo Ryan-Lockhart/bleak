@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/camera.hpp"
 #include <bleak/typedef.hpp>
 
 #include <cstring>
@@ -1585,6 +1586,25 @@ namespace bleak {
 				for (offset_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 					const offset_t pos{ x, y };
 					(*this)[pos].draw(atlas, *this, pos, offset);
+				}
+			}
+		}
+
+		template<extent_t AtlasSize>
+		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<camera_t> camera) const noexcept
+			requires is_drawable<T>::value
+		{
+			const offset_t origin{ camera.get_position() };
+			const extent_t camera_extent{ camera.get_extent() };
+
+			if (camera_extent.w == 0 || camera_extent.h == 0 || origin.x > zone_extent.x || origin.y > zone_extent.y) {
+				return;
+			}
+
+			for (offset_t::scalar_t y{ max(offset_t::scalar_t{ 0 }, origin.y) }; y < min(zone_size.h, camera_extent.h); ++y) {
+				for (offset_t::scalar_t x{ max(offset_t::scalar_t{ 0 }, origin.x) }; x < min(zone_size.w, camera_extent.w); ++x) {
+					const offset_t pos{ x, y };
+					(*this)[pos].draw(atlas, *this, pos, -origin);
 				}
 			}
 		}

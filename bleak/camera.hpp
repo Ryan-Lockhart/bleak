@@ -110,7 +110,17 @@ namespace bleak {
 			return original_position != position;
 		}
 
-		constexpr cref<offset_t> get_position() const noexcept { return position; }
+		constexpr offset_t get_position() const noexcept { return position; }
+
+		constexpr extent_t get_size() const noexcept { return size; }
+
+		constexpr extent_t get_min() const noexcept { return min; }
+
+		constexpr extent_t get_max() const noexcept { return max; }
+
+		constexpr offset_t get_center() const noexcept { return position + size / 2; }
+
+		constexpr offset_t get_extent() const noexcept { return position + size; }
 
 	  private:
 		offset_t position;

@@ -427,7 +427,7 @@ inline void render() {
 
 	game_state.renderer.clear(colors::Black);
 
-	game_state.game_map.draw(game_state.game_atlas, -game_state.camera.get_position(), game_state.camera.get_position(), globals::GameGridSize);
+	game_state.game_map.draw(game_state.game_atlas, game_state.camera);
 
 	game_state.player.draw(game_state.game_atlas, -game_state.camera.get_position());
 
