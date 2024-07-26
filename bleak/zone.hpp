@@ -8,6 +8,7 @@
 #include <iostream>
 #include <optional>
 #include <random>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 
@@ -1018,8 +1019,6 @@ namespace bleak {
 						return pos;
 					}
 				}
-
-				return std::nullopt;
 			} else if constexpr (Region == zone_region_t::Interior) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
@@ -1031,8 +1030,6 @@ namespace bleak {
 						return pos;
 					}
 				}
-
-				return std::nullopt;
 			} else if constexpr (Region == zone_region_t::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
@@ -1050,8 +1047,6 @@ namespace bleak {
 						return pos;
 					}
 				}
-
-				return std::nullopt;
 			}
 
 			return std::nullopt;
@@ -1085,8 +1080,6 @@ namespace bleak {
 						return pos;
 					}
 				}
-
-				return std::nullopt;
 			} else if constexpr (Region == zone_region_t::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
@@ -1104,8 +1097,6 @@ namespace bleak {
 						return pos;
 					}
 				}
-
-				return std::nullopt;
 			}
 
 			return std::nullopt;

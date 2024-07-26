@@ -44,7 +44,7 @@ namespace bleak {
 		}
 	};
 
-	template<typename T> struct ternary_applicator_t {
+	template<typename T> requires is_comparable<T, T, comparator_t::Ordered>::value struct ternary_applicator_t {
 		const T greater_value;
 		const T equal_value;
 		const T less_value;

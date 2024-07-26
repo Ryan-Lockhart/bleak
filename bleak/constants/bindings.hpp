@@ -17,20 +17,23 @@ namespace bleak {
 		template<usize Count> using key_collection_t = std::array<sdl::key, Count>;
 
 		constexpr const lut_t<cardinal_t, key_collection_t<4>, 4> CharacterMovement { 
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::North, { Keys::Alpha::W, Keys::Keypad::Numeric::Seven, Keys::Keypad::Numeric::Eight, Keys::Keypad::Numeric::Nine } },
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::South, { Keys::Alpha::S, Keys::Keypad::Numeric::One, Keys::Keypad::Numeric::Two, Keys::Keypad::Numeric::Three } },
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::West, { Keys::Alpha::A, Keys::Keypad::Numeric::One, Keys::Keypad::Numeric::Four, Keys::Keypad::Numeric::Seven } },
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::East, { Keys::Alpha::D, Keys::Keypad::Numeric::Three, Keys::Keypad::Numeric::Six, Keys::Keypad::Numeric::Nine } }
-		};
-		
-		constexpr const lut_t<cardinal_t, sdl::key, 4> CameraMovement { 
-			pair_t<cardinal_t, sdl::key>{ cardinal_t::North, Keys::Arrow::Up },
-			pair_t<cardinal_t, sdl::key>{ cardinal_t::South, Keys::Arrow::Down },
-			pair_t<cardinal_t, sdl::key>{ cardinal_t::West, Keys::Arrow::Left },
-			pair_t<cardinal_t, sdl::key>{ cardinal_t::East, Keys::Arrow::Right }
+			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::North, { keys::Alpha::W, keys::Keypad::Numeric::Seven, keys::Keypad::Numeric::Eight, keys::Keypad::Numeric::Nine } },
+			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::South, { keys::Alpha::S, keys::Keypad::Numeric::One, keys::Keypad::Numeric::Two, keys::Keypad::Numeric::Three } },
+			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::West, { keys::Alpha::A, keys::Keypad::Numeric::One, keys::Keypad::Numeric::Four, keys::Keypad::Numeric::Seven } },
+			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::East, { keys::Alpha::D, keys::Keypad::Numeric::Three, keys::Keypad::Numeric::Six, keys::Keypad::Numeric::Nine } }
 		};
 
-		constexpr const std::array<sdl::key, 2> Wait{ Keys::Space, Keys::Keypad::Numeric::Five };
-		constexpr const sdl::key Quit{ Keys::Escape };
+		constexpr const std::array<sdl::key, 2> Wait{ keys::Space, keys::Keypad::Numeric::Five };
+		
+		constexpr const lut_t<cardinal_t, sdl::key, 4> CameraMovement { 
+			pair_t<cardinal_t, sdl::key>{ cardinal_t::North, keys::Arrow::Up },
+			pair_t<cardinal_t, sdl::key>{ cardinal_t::South, keys::Arrow::Down },
+			pair_t<cardinal_t, sdl::key>{ cardinal_t::West, keys::Arrow::Left },
+			pair_t<cardinal_t, sdl::key>{ cardinal_t::East, keys::Arrow::Right }
+		};
+
+		constexpr const sdl::key Quit{ keys::Escape };
+
+		constexpr const sdl::key CameraLock{ keys::Tab };
 	} // namespace Bindings
 } // namespace bleak

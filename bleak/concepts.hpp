@@ -94,7 +94,7 @@ namespace bleak {
 
 	template<typename T, operator_t Operator> constexpr bool is_operable_unary_v = is_operable_unary<T, Operator>::value;
 
-	enum class comparator_t { Less, Greater, LessEq, GreaterEq, Equatable, Comparable };
+	enum class comparator_t { Less, Greater, LessEq, GreaterEq, Equatable, Ordered, Comparable };
 
 	template<typename T, typename U>
 	concept Less = requires(T a, U b) {
@@ -121,6 +121,10 @@ namespace bleak {
 		{ a == b } -> std::convertible_to<bool>;
 		{ a != b } -> std::convertible_to<bool>;
 	};
+
+	template<typename T, typename U> concept Ordered = Less<T, U> && Greater<T, U>;
+
+	template<typename T, typename U> concept Comparable = Less<T, U> && Greater<T, U> && LessEq<T, U> && GreaterEq<T, U> && Equatable<T, U>;
 
 	template<typename T, typename U> struct is_equatable {
 		static bool constexpr value = Equatable<T, U>;
@@ -150,13 +154,12 @@ namespace bleak {
 		static bool constexpr value = Equatable<T, U>;
 	};
 
+	template<typename T, typename U> struct is_comparable<T, U, comparator_t::Ordered> {
+		static bool constexpr value = Ordered<T, U>;
+	};
+
 	template<typename T, typename U> struct is_comparable<T, U, comparator_t::Comparable> {
-		static bool constexpr value =
-			is_comparable<T, U, comparator_t::Less>::value &&
-			is_comparable<T, U, comparator_t::Greater>::value &&
-			is_comparable<T, U, comparator_t::LessEq>::value &&
-			is_comparable<T, U, comparator_t::GreaterEq>::value &&
-			is_comparable<T, U, comparator_t::Equatable>::value;
+		static bool constexpr value = Comparable<T, U>;
 	};
 
 	template<typename T, typename U, comparator_t Comparator> constexpr bool is_comparable_v = is_comparable<T, U, Comparator>::value;

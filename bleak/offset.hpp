@@ -144,7 +144,7 @@ namespace bleak {
 
 		template<> constexpr product_t distance(cref<offset_t> start, cref<offset_t> end) noexcept { return (end - start).length<product_t>(); }
 
-		template<typename T = product_t> static constexpr offset_t direction(cref<offset_t> start, cref<offset_t> end) noexcept { return (end - start).normalized<T>(); }
+		static constexpr cardinal_t direction(cref<offset_t> start, cref<offset_t> end) noexcept { return static_cast<cardinal_t>(end - start); }
 
 		template<typename T = product_t> constexpr ref<offset_t> normalize() noexcept {
 			const auto len = length<T>();

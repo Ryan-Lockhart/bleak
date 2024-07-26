@@ -9,7 +9,7 @@ namespace bleak {
 		using key = SDL_Scancode;
 	}
 
-	namespace Keys {
+	namespace keys {
 		static constexpr sdl::key First = SDL_SCANCODE_UNKNOWN;
 		static constexpr sdl::key Last = SDL_SCANCODE_ENDCALL;
 

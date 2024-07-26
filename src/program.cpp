@@ -1,3 +1,4 @@
+#include "bleak/constants/keys.hpp"
 #include <bleak/typedef.hpp>
 
 #include <cassert>
@@ -8,6 +9,7 @@
 
 #include <SDL.h>
 
+#include <bleak/applicator.hpp>
 #include <bleak/area.hpp>
 #include <bleak/atlas.hpp>
 #include <bleak/camera.hpp>
@@ -17,6 +19,7 @@
 #include <bleak/clock.hpp>
 #include <bleak/cursor.hpp>
 #include <bleak/extent.hpp>
+#include <bleak/field.hpp>
 #include <bleak/gamepad.hpp>
 #include <bleak/glyph.hpp>
 #include <bleak/keyboard.hpp>
@@ -35,7 +38,6 @@
 #include <bleak/wave.hpp>
 #include <bleak/window.hpp>
 #include <bleak/zone.hpp>
-#include <bleak/applicator.hpp>
 
 #include <bleak/constants/bindings.hpp>
 #include <bleak/constants/colors.hpp>
@@ -45,9 +47,9 @@
 using namespace bleak;
 
 namespace globals {
-	constexpr cstr GameName{ "Bleakdepth" };
-	constexpr cstr GameVersion{ "0.0.1" };
-	constexpr cstr GameAuthor{ "Ryan Lockhart" };
+	constexpr std::string GameName{ "Bleakdepth" };
+	constexpr std::string GameVersion{ "0.0.1" };
+	constexpr std::string GameAuthor{ "Ryan Lockhart" };
 
 	const std::string GameTitle{ std::format("{} v{} by {}", GameName, GameVersion, GameAuthor) };
 
@@ -94,7 +96,7 @@ namespace globals {
 	constexpr f64 ViewSpan{ 135.0 };
 } // namespace globals
 
-struct game_state {
+struct game_state_t {
 	subsystem_s subsystem{};
 
 	window_t window{ globals::GameTitle.c_str(), globals::WindowSize + globals::WindowBorder * 2, globals::WindowFlags };
@@ -105,7 +107,7 @@ struct game_state {
 
 	std::mt19937 random_engine{ std::random_device{}() };
 
-	zone_t<cell_state_t, globals::RegionSize * globals::ZoneSize, globals::BorderSize> game_map{};
+	zone_t<cell_state_t, globals::MapSize, globals::BorderSize> game_map{};
 	zone_t<glyph_t, globals::GameGridSize> glyph_map{};
 
 	bool gamepad_enabled{ true };
@@ -132,9 +134,9 @@ struct game_state {
 
 	wave_t sine_wave{ 1.0, 0.5, 1.0 };
 
-	mixer_s mixer{ 44100, MIX_DEFAULT_FORMAT, channel_t::Stereo, 2048 };
+	mixer_s mixer{};
 
-	music_t music{ "res\\audio\\music\\hall_of_the_mountain_king.wav" };
+	field_t<i32, globals::MapSize, globals::BorderSize> goal_map{};
 } static game_state{};
 
 void primary_gamepad_disconnected() {
@@ -156,6 +158,10 @@ void mouse_keyboard_active() { game_state.gamepad_active = false; }
 using namespace bleak;
 
 inline bool update_camera() {
+	if (Keyboard::is_key_down(bindings::CameraLock)) {
+		game_state.camera_locked = !game_state.camera_locked;
+	}
+
 	if (game_state.camera_locked) {
 		return game_state.camera.center_on(game_state.player.position);
 	}
@@ -209,6 +215,31 @@ inline bool character_movement() {
 		game_state.player.glyph.index = characters::Entity[cardinal_t::Central];
 
 		recalculate_fov();
+
+		return true;
+	}
+
+	if (Keyboard::any_keys_pressed(keys::Keypad::Plus, keys::Keypad::Minus)) {
+		crauto new_position{
+			Keyboard::is_key_pressed(keys::Keypad::Plus) ?
+				game_state.goal_map.ascend<zone_region_t::Interior>(game_state.player.position, game_state.random_engine) :
+				game_state.goal_map.descend<zone_region_t::Interior>(game_state.player.position, game_state.random_engine)
+		};
+
+		if (!new_position.has_value()) {
+			return false;
+		}
+
+		game_state.input_timer.record();
+		game_state.epoch_timer.record();
+
+		const cardinal_t player_direction{ offset_t::direction(game_state.player.position, new_position.value()) };
+
+		game_state.player.position = new_position.value();
+
+		game_state.player.glyph.index = characters::Entity[player_direction];
+
+		recalculate_fov(player_direction);
 
 		return true;
 	}
@@ -285,8 +316,6 @@ inline void startup() {
 
 	Mouse::hide_cursor();
 
-	game_state.music.play();
-
 	game_state.primary_gamepad = GamepadManager::lease(0, &primary_gamepad_disconnected, &primary_gamepad_reconnected);
 	game_state.gamepad_enabled = game_state.primary_gamepad != nullptr;
 
@@ -303,13 +332,7 @@ inline void startup() {
 
 	for (extent_t::product_t i{ 0 }; i < region.region_area; ++i) {
 		region[i].set<zone_region_t::Border>(closed_state);
-		region[i].generate<zone_region_t::Interior>(
-			game_state.random_engine,
-			globals::FillPercent,
-			globals::AutomotaIterations,
-			globals::AutomotaThreshold,
-			cell_applicator
-		);
+		region[i].generate<zone_region_t::Interior>(game_state.random_engine, globals::FillPercent, globals::AutomotaIterations, globals::AutomotaThreshold, cell_applicator);
 	}
 
 	region.compile(game_state.game_map);
@@ -322,6 +345,10 @@ inline void startup() {
 		error_log.add("no open cells found for player start position\n", __TIME_FILE_LINE__);
 		error_log.add("\ninterior contents:\n open cells: {}\n solid cells: {}\n", game_state.game_map.count<zone_region_t::Interior>(cell_trait_t::Open), game_state.game_map.count<zone_region_t::Interior>(cell_trait_t::Solid));
 		terminate_prematurely();
+	}
+
+	if (game_state.goal_map += game_state.player.position) {
+		game_state.goal_map.recalculate<zone_region_t::Interior>(game_state.game_map, cell_trait_t::Open);
 	}
 
 	recalculate_fov();

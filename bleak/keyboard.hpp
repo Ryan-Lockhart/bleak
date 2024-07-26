@@ -11,8 +11,8 @@
 namespace bleak {
 	struct Keyboard {
 	  private:
-		static inline std::bitset<Keys::Count> current_state;
-		static inline std::bitset<Keys::Count> previous_state;
+		static inline std::bitset<keys::Count> current_state;
+		static inline std::bitset<keys::Count> previous_state;
 
 		static inline bool initialized;
 
@@ -43,7 +43,7 @@ namespace bleak {
 		static inline void update() {
 			cptr<u8> state = SDL_GetKeyboardState(nullptr);
 
-			for (usize i { Keys::First }; i <= Keys::Last; ++i) {
+			for (usize i { keys::First }; i <= keys::Last; ++i) {
 				previous_state[i] = current_state[i];
 				current_state[i] = state[i];
 			}
@@ -78,7 +78,7 @@ namespace bleak {
 		static inline bool is_key_up(int key);
 
 		static inline bool any_key_pressed() {
-			for (int i { Keys::First }; i <= Keys::Last; ++i) {
+			for (int i { keys::First }; i <= keys::Last; ++i) {
 				if (is_key_pressed(i)) {
 					return true;
 				}
@@ -88,7 +88,7 @@ namespace bleak {
 		}
 
 		static inline bool any_key_released() {
-			for (int i { Keys::First }; i <= Keys::Last; ++i) {
+			for (int i { keys::First }; i <= keys::Last; ++i) {
 				if (is_key_released(i)) {
 					return true;
 				}
@@ -98,7 +98,7 @@ namespace bleak {
 		}
 
 		static inline bool any_key_down() {
-			for (int i { Keys::First }; i <= Keys::Last; ++i) {
+			for (int i { keys::First }; i <= keys::Last; ++i) {
 				if (is_key_down(i)) {
 					return true;
 				}
@@ -108,7 +108,7 @@ namespace bleak {
 		}
 
 		static inline bool any_key_up() {
-			for (int i { Keys::First }; i <= Keys::Last; ++i) {
+			for (int i { keys::First }; i <= keys::Last; ++i) {
 				if (is_key_up(i)) {
 					return true;
 				}

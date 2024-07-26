@@ -15,7 +15,7 @@ namespace bleak {
 
 			static inline bool init_mono(i32 frequency, u16 format, i32 chunk_size) noexcept { return Mix_OpenAudio(frequency, format, 1, chunk_size) == 0; }
 
-			static inline bool init_stereo(i32 frequency, u16 format, i32 chunk_size) noexcept { return Mix_OpenAudio(frequency, format, 1, chunk_size) == 0; }
+			static inline bool init_stereo(i32 frequency, u16 format, i32 chunk_size) noexcept { return Mix_OpenAudio(frequency, format, 2, chunk_size) == 0; }
 
 			static inline bool is_playing(i32 channel) noexcept {
 				assert(channel > -1);
@@ -86,6 +86,21 @@ namespace bleak {
 	private:
 		static inline bool initialized;
 	  public:
+		static constexpr i32 default_frequency{ 44100 };
+		static constexpr u16 default_format{ MIX_DEFAULT_FORMAT };
+		static constexpr i32 default_chunk_size{ 2048 };
+
+		inline mixer_s() noexcept {
+			mixer_s::initialized = sdl::mixer::init_stereo(default_frequency, default_format, default_chunk_size);
+			
+			if (!mixer_s::initialized) {
+				error_log.add("failed to initialize sdl-mixer: {}", Mix_GetError());
+				error_log.flush_to_console();
+			}
+
+			assert(mixer_s::is_initialized());
+		}
+
 		inline mixer_s(i32 frequency, u16 format, channel_t channels, i32 chunk_size) noexcept {
 			if (channels == channel_t::Mono) {
 				mixer_s::initialized = sdl::mixer::init_mono(frequency, format, chunk_size);
