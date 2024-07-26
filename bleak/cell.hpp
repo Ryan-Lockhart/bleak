@@ -285,16 +285,20 @@ namespace bleak {
 			atlas.draw(glyph_t{ glyph, { rgb, rgb, rgb, alpha } }, position);
 		}
 
-		template<extent_t AtlasSize, typename T, extent_t ZoneSize, extent_t ZoneBorder> inline constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<offset_t> draw_position, cref<offset_t> cell_position) const noexcept {
+		template<extent_t AtlasSize, typename T, extent_t ZoneSize, extent_t ZoneBorder> inline constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<offset_t> position, cref<offset_t> offset) const noexcept {
 			if (!explored) {
 				return;
 			}
 
 			const u8 rgb{ solid ? u8{ 0xC0 } : u8{ 0x40 } };
 			const u8 alpha{ seen ? u8{ 0xFF } : u8{ 0x80 } };
-			const u8 glyph{ characters::jagged_set(solid, zone.template calculate_index<neighbourhood_solver_t::Melded, cell_trait_t, true>(cell_position, cell_trait_t::Solid)) };
+			const u8 glyph{
+				solid ?
+					characters::jagged_set(true, zone.template calculate_index<neighbourhood_solver_t::Melded>(position, cell_trait_t::Solid)) :
+					characters::jagged_set(false, 0x00)
+			};
 
-			atlas.draw(glyph_t{ glyph, { rgb, rgb, rgb, alpha } }, draw_position);
+			atlas.draw(glyph_t{ glyph, { rgb, rgb, rgb, alpha } }, position + offset);
 		}
 
 		struct hasher {

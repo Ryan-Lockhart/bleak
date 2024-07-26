@@ -75,7 +75,7 @@ namespace globals {
 	constexpr extent_t GlyphsetSize{ 16, 16 };
 	constexpr extent_t TilesetSize{ 16, 5 };
 
-	constexpr extent_t ZoneSize{ 32, 32 };
+	constexpr extent_t ZoneSize{ 128, 128 };
 	constexpr extent_t RegionSize{ 16, 16 };
 
 	constexpr extent_t MapSize{ RegionSize * ZoneSize };
@@ -88,7 +88,7 @@ namespace globals {
 
 	constexpr extent_t CameraExtent{ MapSize - globals::GameGridSize };
 
-	constexpr f64 FillPercent{ 0.425 };
+	constexpr f64 FillPercent{ 0.475 };
 	constexpr u32 AutomotaIterations{ 5 };
 	constexpr u32 AutomotaThreshold{ 4 };
 
@@ -108,7 +108,6 @@ struct game_state_t {
 	std::mt19937 random_engine{ std::random_device{}() };
 
 	zone_t<cell_state_t, globals::MapSize, globals::BorderSize> game_map{};
-	zone_t<glyph_t, globals::GameGridSize> glyph_map{};
 
 	bool gamepad_enabled{ true };
 
@@ -333,6 +332,7 @@ inline void startup() {
 	for (extent_t::product_t i{ 0 }; i < region.region_area; ++i) {
 		region[i].set<zone_region_t::Border>(closed_state);
 		region[i].generate<zone_region_t::Interior>(game_state.random_engine, globals::FillPercent, globals::AutomotaIterations, globals::AutomotaThreshold, cell_applicator);
+		region[i].collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open);
 	}
 
 	region.compile(game_state.game_map);
@@ -347,9 +347,7 @@ inline void startup() {
 		terminate_prematurely();
 	}
 
-	if (game_state.goal_map += game_state.player.position) {
-		game_state.goal_map.recalculate<zone_region_t::Interior>(game_state.game_map, cell_trait_t::Open);
-	}
+	game_state.goal_map += game_state.player.position;
 
 	recalculate_fov();
 
@@ -384,6 +382,12 @@ inline void update() {
 		game_state.window.close();
 		return;
 	}
+
+	if (Keyboard::is_key_down(bindings::RevealMap)) {
+		game_state.game_map.apply<zone_region_t::All>(cell_trait_t::Explored);
+	}
+
+	game_state.goal_map.recalculate<zone_region_t::Interior>(game_state.game_map, cell_trait_t::Open);
 
 	if (game_state.input_timer.ready()) {
 		if (game_state.epoch_timer.ready()) {
@@ -423,7 +427,7 @@ inline void render() {
 
 	game_state.renderer.clear(colors::Black);
 
-	game_state.game_map.draw(game_state.game_atlas, -game_state.camera.get_position());
+	game_state.game_map.draw(game_state.game_atlas, -game_state.camera.get_position(), game_state.camera.get_position(), globals::GameGridSize);
 
 	game_state.player.draw(game_state.game_atlas, -game_state.camera.get_position());
 

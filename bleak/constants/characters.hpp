@@ -10,10 +10,14 @@ namespace bleak {
 		constexpr const u8 OpenJaggedSet{ 0x00 };
 		constexpr const u8 ClosedJaggedSet{ 0x10 };
 
+		static constexpr u8 jagged_set(u8 index) { return ClosedJaggedSet + index; }
+
 		static constexpr u8 jagged_set(bool solid, u8 index) { return (solid ? ClosedJaggedSet : OpenJaggedSet) + index; }
 
 		constexpr const u8 OpenSmoothSet{ 0x20 };
 		constexpr const u8 ClosedSmoothSet{ 0x30 };
+		
+		static constexpr u8 smooth_set(u8 index) { return ClosedSmoothSet + index; }
 		
 		static constexpr u8 smooth_set(bool solid, u8 index) { return (solid ? ClosedSmoothSet : OpenSmoothSet) + index; }
 
