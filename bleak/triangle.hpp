@@ -24,7 +24,7 @@ namespace bleak {
 			return offset_t::distance<offset_t::product_t>(vertices[0], vertices[1]) + offset_t::distance<offset_t::product_t>(vertices[1], vertices[2]) + offset_t::distance<offset_t::product_t>(vertices[2], vertices[0]);
 		}
 
-		constexpr offset_1d_t::product_t area() const noexcept { return std::abs(vertices[0].x * (vertices[1].y - vertices[2].y) + vertices[1].x * (vertices[2].y - vertices[0].y) + vertices[2].x * (vertices[0].y - vertices[1].y)) / 2; }
+		constexpr offset_t::product_t area() const noexcept { return std::abs(vertices[0].x * (vertices[1].y - vertices[2].y) + vertices[1].x * (vertices[2].y - vertices[0].y) + vertices[2].x * (vertices[0].y - vertices[1].y)) / 2; }
 
 		constexpr line_t a() const noexcept { return line_t{ vertices[0], vertices[1] }; }
 

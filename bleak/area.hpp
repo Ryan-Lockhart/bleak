@@ -3,9 +3,14 @@
 
 #include <cmath>
 #include <queue>
+#include <random>
 #include <unordered_set>
+#include <vector>
 
+#include <bleak/arc.hpp>
+#include <bleak/circle.hpp>
 #include <bleak/concepts.hpp>
+#include <bleak/extent.hpp>
 #include <bleak/octant.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/zone.hpp>
@@ -19,8 +24,10 @@ namespace bleak {
 
 		inline area_t() noexcept {}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> collect(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value) {
-			clear();
+		template<typename T, extent_t Size, extent_t BorderSize, bool Defer = false> inline ref<area_t> collect(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value) {
+			if constexpr (!Defer) {
+				clear();
+			}
 
 			for (extent_t::scalar_t y{ 0 }; y < Size.h; ++y) {
 				for (extent_t::scalar_t x{ 0 }; x < Size.w; ++x) {
@@ -35,10 +42,12 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, typename U, extent_t Size, extent_t BorderSize>
+		template<typename T, typename U, extent_t Size, extent_t BorderSize, bool Defer = false>
 			requires is_equatable<T, U>::value
 		inline ref<area_t> collect(cref<zone_t<T, Size, BorderSize>> zone, cref<U> value) {
-			clear();
+			if constexpr (!Defer) {
+				clear();
+			}
 
 			for (extent_t::scalar_t y{ 0 }; y < Size.h; ++y) {
 				for (extent_t::scalar_t x{ 0 }; x < Size.w; ++x) {
@@ -53,21 +62,23 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> flood(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, bool inclusive = false) {
-			clear();
+		template<typename T, extent_t Size, extent_t BorderSize, bool Defer = false> inline ref<area_t> flood(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, bool inclusive = false) {
+			if constexpr (!Defer) {
+				clear();
+			}
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
 			std::queue<offset_t> frontier{};
+
 			frontier.push(position);
+			insert(position);
 
 			while (!frontier.empty()) {
 				const offset_t current{ frontier.front() };
 				frontier.pop();
-
-				insert(current);
 
 				for (offset_t::scalar_t y{ -1 }; y <= 1; ++y) {
 					for (offset_t::scalar_t x{ -1 }; x <= 1; ++x) {
@@ -84,9 +95,12 @@ namespace bleak {
 						if (inclusive && zone[neighbour] != value) {
 							insert(neighbour);
 							continue;
+						} else if (zone[neighbour] != value) {
+							continue;
 						}
 
 						frontier.push(neighbour);
+						insert(current);
 					}
 				}
 			}
@@ -94,23 +108,25 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, typename U, extent_t Size, extent_t BorderSize>
+		template<typename T, typename U, extent_t Size, extent_t BorderSize, bool Defer = false>
 			requires is_equatable<T, U>::value
 		inline ref<area_t> flood(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, bool inclusive = false) {
-			clear();
+			if constexpr (!Defer) {
+				clear();
+			}
 
-			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
+			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
 			std::queue<offset_t> frontier{};
+
 			frontier.push(position);
+			insert(position);
 
 			while (!frontier.empty()) {
-				const offset_t current{ frontier.front() };
+				const offset_t current{ std::move(frontier.front()) };
 				frontier.pop();
-
-				insert(current);
 
 				for (offset_t::scalar_t y{ -1 }; y <= 1; ++y) {
 					for (offset_t::scalar_t x{ -1 }; x <= 1; ++x) {
@@ -120,16 +136,19 @@ namespace bleak {
 
 						const offset_t neighbour{ current.x + x, current.y + y };
 
-						if (!zone.within<zone_region_t::All>(neighbour) || contains(neighbour)) {
+						if (!zone.template within<zone_region_t::All>(neighbour) || contains(neighbour)) {
 							continue;
 						}
 
 						if (inclusive && zone[neighbour] != value) {
 							insert(neighbour);
+							continue;
+						} else if (zone[neighbour] != value) {
 							continue;
 						}
 
 						frontier.push(neighbour);
+						insert(neighbour);
 					}
 				}
 			}
@@ -137,21 +156,24 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> flood(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, cref<extent_t::product_t> distance, bool inclusive = false) {
-			clear();
+		template<typename T, extent_t Size, extent_t BorderSize, bool Defer = false>
+		inline ref<area_t> flood(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, cref<extent_t::product_t> distance, bool inclusive = false) {
+			if constexpr (!Defer) {
+				clear();
+			}
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
 			std::queue<creeper_t<f32>> frontier{};
+
 			frontier.push({ position, 0.0f });
+			insert(position);
 
 			while (!frontier.empty()) {
 				const creeper_t current{ frontier.front() };
 				frontier.pop();
-
-				insert(current.position);
 
 				for (offset_t::scalar_t y{ -1 }; y <= 1; ++y) {
 					for (offset_t::scalar_t x{ -1 }; x <= 1; ++x) {
@@ -161,16 +183,19 @@ namespace bleak {
 
 						const offset_t neighbour{ current.position.x + x, current.position.y + y };
 
-						if (!zone.within<zone_region_t::All>(neighbour) || contains(neighbour) || current.distance >= distance) {
+						if (!zone.within<zone_region_t::All>(neighbour) || contains(neighbour) || current.distance > distance) {
 							continue;
 						}
 
 						if (inclusive && zone[neighbour] != value) {
 							insert(neighbour);
 							continue;
+						} else if (zone[neighbour] != value) {
+							continue;
 						}
 
 						frontier.push({ neighbour, x != 0 && y != 0 ? current.distance + PlanarDiagonalDistance<extent_t::product_t> : current.distance + PlanarDistance<extent_t::product_t> });
+						insert(neighbour);
 					}
 				}
 			}
@@ -178,23 +203,25 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, typename U, extent_t Size, extent_t BorderSize>
+		template<typename T, typename U, extent_t Size, extent_t BorderSize, bool Defer = false>
 			requires is_equatable<T, U>::value
 		inline ref<area_t> flood(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, cref<extent_t::product_t> distance, bool inclusive = false) {
-			clear();
+			if constexpr (!Defer) {
+				clear();
+			}
 
 			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
 			std::queue<creeper_t<f32>> frontier{};
+
 			frontier.push({ position, 0.0f });
+			insert(position);
 
 			while (!frontier.empty()) {
 				const creeper_t current{ frontier.front() };
 				frontier.pop();
-
-				insert(current.position);
 
 				for (offset_t::scalar_t y{ -1 }; y <= 1; ++y) {
 					for (offset_t::scalar_t x{ -1 }; x <= 1; ++x) {
@@ -204,16 +231,19 @@ namespace bleak {
 
 						const offset_t neighbour{ current.position.x + x, current.position.y + y };
 
-						if (!zone.template within<zone_region_t::All>(neighbour) || contains(neighbour) || current.distance >= distance) {
+						if (!zone.template within<zone_region_t::All>(neighbour) || contains(neighbour) || current.distance > distance) {
 							continue;
 						}
 
 						if (inclusive && zone[neighbour] != value) {
 							insert(neighbour);
 							continue;
+						} else if (zone[neighbour] != value) {
+							continue;
 						}
 
 						frontier.push({ neighbour, x != 0 && y != 0 ? current.distance + PlanarDiagonalDistance<extent_t::product_t> : current.distance + PlanarDistance<extent_t::product_t> });
+						insert(neighbour);
 					}
 				}
 			}
@@ -221,8 +251,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius, bool inclusive = false) {
-			clear();
+		template<typename T, extent_t Size, extent_t BorderSize, bool Defer = false> inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value, cref<offset_t> position, u32 radius, bool inclusive = false) {
+			if constexpr (!Defer) {
+				clear();
+			}
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
@@ -236,7 +268,8 @@ namespace bleak {
 			if (inclusive) {
 				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
 					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
-						const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
+						const offset_t offset{ offs_x, offs_y };
+						const offset_t neighbour{ position + offset };
 
 						if (zone.template within<zone_region_t::All>(neighbour)) {
 							insert(neighbour);
@@ -258,10 +291,12 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, typename U, extent_t Size, extent_t BorderSize>
+		template<typename T, typename U, extent_t Size, extent_t BorderSize, bool Defer = false>
 			requires is_equatable<T, U>::value
-		inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius, bool inclusive) {
-			clear();
+		inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<U> value, cref<offset_t> position, u32 radius, bool inclusive) {
+			if constexpr (!Defer) {
+				clear();
+			}
 
 			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
@@ -275,7 +310,8 @@ namespace bleak {
 			if (inclusive) {
 				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
 					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
-						const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
+						const offset_t offset{ offs_x, offs_y };
+						const offset_t neighbour{ position + offset };
 
 						if (zone.template within<zone_region_t::All>(neighbour)) {
 							insert(neighbour);
@@ -297,8 +333,92 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize> inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<T> value, u32 radius, f64 angle, f64 span, bool inclusive) {
-			clear();
+		template<typename T, extent_t Size, extent_t BorderSize, bool Defer = false> inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value, cref<circle_t> circle, bool inclusive = false) {
+			if constexpr (!Defer) {
+				clear();
+			}
+
+			if (!zone.within<zone_region_t::All>(circle.position) || zone[circle.position] != value) {
+				return *this;
+			}
+
+			if (circle.radius == 0) {
+				insert(circle.position);
+				return *this;
+			}
+
+			if (inclusive) {
+				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
+					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
+						const offset_t offset{ offs_x, offs_y };
+						const offset_t neighbour{ circle.position + offset };
+
+						if (zone.template within<zone_region_t::All>(neighbour)) {
+							insert(neighbour);
+						}
+					}
+				}
+			} else {
+				insert(circle.position);
+			}
+
+			if (circle.radius == 1) {
+				return *this;
+			}
+
+			for (cref<octant_t> octant : Octants) {
+				shadow_cast(zone, circle.position, value, 1, 1.0, 0.0, octant, circle.radius);
+			}
+
+			return *this;
+		}
+
+		template<typename T, typename U, extent_t Size, extent_t BorderSize, bool Defer = false>
+			requires is_equatable<T, U>::value
+		inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<U> value, cref<circle_t> circle, bool inclusive) {
+			if constexpr (!Defer) {
+				clear();
+			}
+
+			if (!zone.template within<zone_region_t::All>(circle.position) || zone[circle.position] != value) {
+				return *this;
+			}
+
+			if (circle.radius == 0) {
+				insert(circle.position);
+				return *this;
+			}
+
+			if (inclusive) {
+				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
+					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
+						const offset_t offset{ offs_x, offs_y };
+						const offset_t neighbour{ circle.position + offset };
+
+						if (zone.template within<zone_region_t::All>(neighbour)) {
+							insert(neighbour);
+						}
+					}
+				}
+			} else {
+				insert(circle.position);
+			}
+
+			if (circle.radius == 1) {
+				return *this;
+			}
+
+			for (cref<octant_t> octant : Octants) {
+				shadow_cast(zone, circle.position, value, 1, 1.0, 0.0, octant, circle.radius);
+			}
+
+			return *this;
+		}
+
+		template<typename T, extent_t Size, extent_t BorderSize, bool Defer = false> inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value, cref<offset_t> position, u32 radius, f64 angle, f64 span, bool inclusive) {
+			if constexpr (!Defer) {
+				clear();
+			}
 
 			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
@@ -320,7 +440,8 @@ namespace bleak {
 			if (inclusive) {
 				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
 					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
-						const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
+						const offset_t offset{ offs_x, offs_y };
+						const offset_t neighbour{ position + offset };
 
 						if (zone.template within<zone_region_t::All>(neighbour)) {
 							insert(neighbour);
@@ -342,10 +463,12 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, typename U, extent_t Size, extent_t BorderSize>
+		template<typename T, typename U, extent_t Size, extent_t BorderSize, bool Defer = false>
 			requires is_equatable<T, U>::value
-		inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<offset_t> position, cref<U> value, u32 radius, f64 angle, f64 span, bool inclusive) {
-			clear();
+		inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<U> value, cref<offset_t> position, u32 radius, f64 angle, f64 span, bool inclusive) {
+			if constexpr (!Defer) {
+				clear();
+			}
 
 			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
@@ -367,7 +490,8 @@ namespace bleak {
 			if (inclusive) {
 				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
 					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
-						const offset_t neighbour{ position.x + offs_x, position.y + offs_y };
+						const offset_t offset{ offs_x, offs_y };
+						const offset_t neighbour{ position + offset };
 
 						if (zone.template within<zone_region_t::All>(neighbour)) {
 							insert(neighbour);
@@ -384,6 +508,162 @@ namespace bleak {
 
 			for (cref<octant_t> octant : Octants) {
 				is_nan ? shadow_cast(zone, position, value, 1, 1.0, 0.0, octant, radius) : shadow_cast(zone, position, value, 1, 1.0, 0.0, octant, radius, angle, span);
+			}
+
+			return *this;
+		}
+
+		template<typename T, extent_t Size, extent_t BorderSize, bool Defer = false> inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value, cref<arc_t> arc, bool inclusive) {
+			if constexpr (!Defer) {
+				clear();
+			}
+
+			if (!zone.within<zone_region_t::All>(arc.position) || zone[arc.position] != value) {
+				return *this;
+			}
+
+			if (arc.radius == 0) {
+				insert(arc.position);
+				return *this;
+			}
+
+			bool is_nan = std::isnan(arc.angle) || std::isnan(arc.span);
+
+			f64 angle{ arc.angle };
+			f64 span{ arc.span };
+
+			if (!is_nan) {
+				angle -= 90.0;
+				angle = (angle > 360.0 || angle < 0.0 ? wrap(angle, 360.0) : angle) * PercentOfCircle;
+				span *= PercentOfCircle;
+			}
+
+			if (inclusive) {
+				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
+					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
+						const offset_t offset{ offs_x, offs_y };
+						const offset_t neighbour{ arc.position + offset };
+
+						if (zone.template within<zone_region_t::All>(neighbour)) {
+							insert(neighbour);
+						}
+					}
+				}
+			} else {
+				insert(arc.position);
+			}
+
+			if (arc.radius == 1) {
+				return *this;
+			}
+
+			for (cref<octant_t> octant : Octants) {
+				is_nan ? shadow_cast(zone, arc.position, value, 1, 1.0, 0.0, octant, arc.radius) : shadow_cast(zone, arc.position, value, 1, 1.0, 0.0, octant, arc.radius, angle, span);
+			}
+
+			return *this;
+		}
+
+		template<typename T, typename U, extent_t Size, extent_t BorderSize, bool Defer = false>
+			requires is_equatable<T, U>::value
+		inline ref<area_t> cast(cref<zone_t<T, Size, BorderSize>> zone, cref<U> value, cref<arc_t> arc, bool inclusive) {
+			if constexpr (!Defer) {
+				clear();
+			}
+
+			if (!zone.template within<zone_region_t::All>(arc.position) || zone[arc.position] != value) {
+				return *this;
+			}
+
+			if (arc.radius == 0) {
+				insert(arc.position);
+				return *this;
+			}
+
+			bool is_nan = std::isnan(arc.angle) || std::isnan(arc.span);
+
+			f64 angle{ arc.angle };
+			f64 span{ arc.span };
+
+			if (!is_nan) {
+				angle -= 90.0;
+				angle = (angle > 360.0 || angle < 0.0 ? wrap(angle, 360.0) : angle) * PercentOfCircle;
+				span *= PercentOfCircle;
+			}
+
+			if (inclusive) {
+				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
+					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
+						const offset_t offset{ offs_x, offs_y };
+						const offset_t neighbour{ arc.position + offset };
+
+						if (zone.template within<zone_region_t::All>(neighbour)) {
+							insert(neighbour);
+						}
+					}
+				}
+			} else {
+				insert(arc.position);
+			}
+
+			if (arc.radius == 1) {
+				return *this;
+			}
+
+			for (cref<octant_t> octant : Octants) {
+				is_nan ? shadow_cast(zone, arc.position, value, 1, 1.0, 0.0, octant, arc.radius) : shadow_cast(zone, arc.position, value, 1, 1.0, 0.0, octant, arc.radius, angle, span);
+			}
+
+			return *this;
+		}
+
+		template<typename T, extent_t Size, extent_t BorderSize, bool Defer = false> inline ref<area_t> multi_cast(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value, cref<std::vector<circle_t>> circles, bool inclusive) {
+			if constexpr (!Defer) {
+				clear();
+			}
+
+			for (crauto circle : circles) {
+				cast<T, Size, BorderSize, true>(zone, value, circle, inclusive);
+			}
+
+			return *this;
+		}
+
+		template<typename T, typename U, extent_t Size, extent_t BorderSize, bool Defer = false>
+			requires is_equatable<T, U>::value
+		inline ref<area_t> multi_cast(cref<zone_t<T, Size, BorderSize>> zone, cref<U> value, cref<std::vector<circle_t>> circles, bool inclusive) {
+			if constexpr (!Defer) {
+				clear();
+			}
+
+			for (crauto circle : circles) {
+				cast<T, U, Size, BorderSize, true>(zone, value, circle, inclusive);
+			}
+
+			return *this;
+		}
+
+		template<typename T, extent_t Size, extent_t BorderSize, bool Defer = false> inline ref<area_t> multi_cast(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value, cref<std::vector<arc_t>> arcs, bool inclusive) {
+			if constexpr (!Defer) {
+				clear();
+			}
+
+			for (crauto arc : arcs) {
+				cast<T, Size, BorderSize, true>(zone, value, arc, inclusive);
+			}
+
+			return *this;
+		}
+
+		template<typename T, typename U, extent_t Size, extent_t BorderSize, bool Defer = false>
+			requires is_equatable<T, U>::value
+		inline ref<area_t> multi_cast(cref<zone_t<T, Size, BorderSize>> zone, cref<U> value, cref<std::vector<arc_t>> arcs, bool inclusive) {
+			if constexpr (!Defer) {
+				clear();
+			}
+
+			for (crauto arc : arcs) {
+				cast<T, U, Size, BorderSize, true>(zone, value, arc, inclusive);
 			}
 
 			return *this;
@@ -497,6 +777,60 @@ namespace bleak {
 			}
 
 			return *this;
+		}
+
+		inline ref<area_t> add(cref<area_t> other) {
+			for (cref<offset_t> position : other) {
+				insert(position);
+			}
+
+			return *this;
+		}
+
+		inline ref<area_t> remove(cref<area_t> other) {
+			for (cref<offset_t> position : other) {
+				erase(position);
+			}
+
+			return *this;
+		}
+
+		template<typename T, extent_t Size, extent_t BorderSize> static std::vector<area_t> partition(cref<zone_t<T, Size, BorderSize>> zone, cref<T> value) {
+			std::vector<area_t> partitions{};
+
+			area_t values{};
+			values.collect(zone, value);
+
+			while (!values.empty()) {
+				area_t partition{};
+
+				partition.flood(zone, *values.begin(), value);
+				values.remove(partition);
+
+				partitions.push_back(std::move(partition));
+			}
+
+			return partitions;
+		}
+
+		template<typename T, typename U, extent_t Size, extent_t BorderSize>
+			requires is_equatable<T, U>::value
+		static std::vector<area_t> partition(cref<zone_t<T, Size, BorderSize>> zone, cref<U> value) {
+			std::vector<area_t> partitions{};
+
+			area_t values{};
+			values.collect(zone, value);
+
+			while (!values.empty()) {
+				area_t partition{};
+
+				partition.flood(zone, *values.begin(), value);
+				values.remove(partition);
+
+				partitions.push_back(std::move(partition));
+			}
+
+			return partitions;
 		}
 
 	  private:

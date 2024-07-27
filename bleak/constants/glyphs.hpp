@@ -9,7 +9,7 @@
 #include <bleak/constants/colors.hpp>
 
 namespace bleak {
-	namespace Glyphs {
+	namespace glyphs {
 		constexpr const glyph_t Empty { characters::Empty, colors::Transparent };
 
 		constexpr const glyph_t Error { characters::Error, colors::Red };
@@ -22,5 +22,5 @@ namespace bleak {
 		constexpr const glyph_t Enemy { characters::Entity[cardinal_t::Central], colors::Red };
 		constexpr const glyph_t Ally { characters::Entity[cardinal_t::Central], colors::Cyan };
 		constexpr const glyph_t Neutral { characters::Entity[cardinal_t::Central], colors::Yellow };
-	} // namespace Glyphs
+	} // namespace glyphs
 } // namespace Bleakdepth

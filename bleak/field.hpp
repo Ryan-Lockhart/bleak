@@ -173,7 +173,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region> constexpr std::optional<offset_t> ascend(cref<offset_t> position) {
+		template<zone_region_t Region> constexpr std::optional<offset_t> ascend(cref<offset_t> position) const noexcept {
 			if (!distances.template within<Region>(position) || distances[position] == obstacle_value) {
 				return std::nullopt;
 			}
@@ -206,7 +206,7 @@ namespace bleak {
 
 		template<zone_region_t Region, typename Generator>
 			requires is_random_engine<Generator>::value
-		constexpr std::optional<offset_t> ascend(cref<offset_t> position, ref<Generator> generator, f64 unseat_probability = 0.5) {
+		constexpr std::optional<offset_t> ascend(cref<offset_t> position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
 			if (!distances.template within<Region>(position) || distances[position] == obstacle_value) {
 				return std::nullopt;
 			}
@@ -240,7 +240,7 @@ namespace bleak {
 			return highest;
 		}
 
-		template<zone_region_t Region> constexpr std::optional<offset_t> descend(cref<offset_t> position) {
+		template<zone_region_t Region> constexpr std::optional<offset_t> descend(cref<offset_t> position) const noexcept {
 			if (!distances.template within<Region>(position) || distances[position] == goal_value) {
 				return std::nullopt;
 			}
@@ -273,7 +273,7 @@ namespace bleak {
 
 		template<zone_region_t Region, typename Generator>
 			requires is_random_engine<Generator>::value
-		constexpr std::optional<offset_t> descend(cref<offset_t> position, ref<Generator> generator, f64 unseat_probability = 0.5) {
+		constexpr std::optional<offset_t> descend(cref<offset_t> position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
 			if (!distances.template within<Region>(position) || distances[position] == goal_value) {
 				return std::nullopt;
 			}
@@ -312,7 +312,9 @@ namespace bleak {
 				return false;
 			}
 
-			return goals.insert(goal).second;
+			dirty = goals.insert(goal).second;
+
+			return dirty;
 		}
 
 		constexpr bool operator-=(cref<offset_t> goal) noexcept {
@@ -320,7 +322,9 @@ namespace bleak {
 				return false;
 			}
 
-			return goals.erase(goal);
+			dirty = goals.erase(goal);
+
+			return dirty;
 		}
 
 		constexpr bool update(cref<offset_t> from, cref<offset_t> to) noexcept {
@@ -329,10 +333,10 @@ namespace bleak {
 			}
 
 			if (goals.erase(from)) {
-				return goals.insert(to).second;
+				dirty = goals.insert(to).second;
 			}
 
-			return false;
+			return dirty;
 		}
 	};
 } // namespace bleak

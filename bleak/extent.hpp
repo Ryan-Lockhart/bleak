@@ -14,13 +14,8 @@
 
 extern "C" {
 	typedef struct c_extent_t {
-#if BLEAKDEPTH_BIG_GRID
-		typedef bleak::uhalf scalar_t;
-		typedef bleak::usize product_t;
-#else
-		typedef bleak::uqrtr scalar_t;
-		typedef bleak::uhalf product_t;
-#endif
+		typedef bleak::ihalf scalar_t;
+		typedef bleak::isize product_t;
 
 		scalar_t w{ 0 };
 		scalar_t h{ 0 };

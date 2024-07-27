@@ -18,6 +18,7 @@
 #include <bleak/atlas.hpp>
 #include <bleak/cardinal.hpp>
 #include <bleak/concepts.hpp>
+#include <bleak/creeper.hpp>
 #include <bleak/extent.hpp>
 #include <bleak/log.hpp>
 #include <bleak/octant.hpp>

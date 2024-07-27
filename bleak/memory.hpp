@@ -1,3 +1,5 @@
+#pragma once
+
 #include <bleak/typedef.hpp>
 
 #include <algorithm>

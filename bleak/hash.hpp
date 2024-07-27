@@ -1,10 +1,11 @@
 #pragma once
 
-#include "concepts.hpp"
 #include <bleak/typedef.hpp>
 
 #include <functional>
 #include <limits>
+
+#include <bleak/concepts.hpp>
 
 namespace bleak {
 	template<typename T, typename... Values> constexpr void hash_combine(ref<usize> seed, cref<T> v, cref<Values>... values) {

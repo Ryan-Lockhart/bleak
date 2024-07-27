@@ -245,18 +245,32 @@ namespace bleak {
 		}
 
 		inline constexpr std::string to_tooltip() const {
-			return std::format(
-				"The cell is physically {} and visibility is {}.\nIt is {} and is {} by the player.\nIt is {} and {} to the touch.\nThe air within is {} and "
-				"{}.",
-				solid ? "blocked" : "open",
-				opaque ? "obscured" : "unobscured",
-				seen ? "in view" : "not in view",
-				explored ? "explored" : "unexplored",
-				damp ? "damp" : "dry",
-				warm ? "warm" : "cold",
-				smelly ? "pungent" : "odorless",
-				toxic ? "toxic" : "harmless"
-			);
+			if (seen && explored) {
+				return std::format(
+					"The cell is physically {} and visibility is {}.\nIt is {} and {} by the player.\nThe {} is {} and {} to the touch.{}",
+					solid ? "blocked" : "open",
+					opaque ? "obscured" : "unobscured",
+					seen ? "in view" : "not in view",
+					explored ? "was explored" : "remains unexplored",
+					solid ? "wall" : "floor",
+					damp ? "damp" : "dry",
+					warm ? "warm" : "cold",
+					solid ? "" : std::format("\nThe air within is {} and {}.",
+						smelly ? "pungent" : "odorless",
+						toxic ? "toxic" : "innocuous"
+					)
+				);
+			} else if (explored) {
+				return std::format(
+					"The cell is physically {} and visibility is {}.\nIt is {} and {} by the player.",
+					solid ? "blocked" : "open",
+					opaque ? "obscured" : "unobscured",
+					seen ? "in view" : "not in view",
+					explored ? "was explored" : "remains unexplored"
+				);
+			} else {
+				return "The cell remains unexplored.";
+			}
 		}
 
 		inline constexpr operator std::string() const {

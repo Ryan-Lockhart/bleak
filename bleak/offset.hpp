@@ -17,15 +17,9 @@
 
 extern "C" {
 	typedef struct c_offset_t {
-#if BLEAKDEPTH_BIG_GRID
 		typedef bleak::ihalf scalar_t;
 		typedef bleak::isize product_t;
 		typedef bleak::fsize float_t;
-#else
-		typedef bleak::iqrtr scalar_t;
-		typedef bleak::ihalf product_t;
-		typedef bleak::fhalf float_t;
-#endif
 
 		scalar_t x{ 0 };
 		scalar_t y{ 0 };

@@ -1,48 +1,14 @@
-#include "bleak/constants/keys.hpp"
-#include <bleak/typedef.hpp>
+#include "bleak/circle.hpp"
+#include <bleak/bleak.hpp>
 
 #include <cassert>
 #include <cstdlib>
 #include <format>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include <SDL.h>
-
-#include <bleak/applicator.hpp>
-#include <bleak/area.hpp>
-#include <bleak/atlas.hpp>
-#include <bleak/camera.hpp>
-#include <bleak/cardinal.hpp>
-#include <bleak/cell.hpp>
-#include <bleak/clip_pool.hpp>
-#include <bleak/clock.hpp>
-#include <bleak/cursor.hpp>
-#include <bleak/extent.hpp>
-#include <bleak/field.hpp>
-#include <bleak/gamepad.hpp>
-#include <bleak/glyph.hpp>
-#include <bleak/keyboard.hpp>
-#include <bleak/log.hpp>
-#include <bleak/mixer.hpp>
-#include <bleak/mouse.hpp>
-#include <bleak/music.hpp>
-#include <bleak/offset.hpp>
-#include <bleak/random.hpp>
-#include <bleak/region.hpp>
-#include <bleak/renderer.hpp>
-#include <bleak/sound.hpp>
-#include <bleak/sprite.hpp>
-#include <bleak/text.hpp>
-#include <bleak/timer.hpp>
-#include <bleak/wave.hpp>
-#include <bleak/window.hpp>
-#include <bleak/zone.hpp>
-
-#include <bleak/constants/bindings.hpp>
-#include <bleak/constants/colors.hpp>
-#include <bleak/constants/glyphs.hpp>
-#include <bleak/constants/numeric.hpp>
 
 using namespace bleak;
 
@@ -75,10 +41,12 @@ namespace globals {
 	constexpr extent_t GlyphsetSize{ 16, 16 };
 	constexpr extent_t TilesetSize{ 16, 5 };
 
-	constexpr extent_t ZoneSize{ 128, 128 };
-	constexpr extent_t RegionSize{ 16, 16 };
+	constexpr extent_t ZoneSize{ globals::GameGridSize };
+	constexpr extent_t RegionSize{ 1, 1 };
 
 	constexpr extent_t MapSize{ RegionSize * ZoneSize };
+
+	constexpr offset_t MapCenter{ GameGridSize / 2 };
 
 	constexpr extent_t BorderSize{ 4, 4 };
 
@@ -87,82 +55,89 @@ namespace globals {
 	constexpr offset_t CursorOffset{ UniversalOffset - CellSize / 4 };
 
 	constexpr extent_t CameraExtent{ MapSize - globals::GameGridSize };
+	constexpr offset_t::scalar_t CameraSpeed{ 2 };
 
-	constexpr f64 FillPercent{ 0.475 };
-	constexpr u32 AutomotaIterations{ 5 };
+	constexpr f64 FillPercent{ 0.425 };
+	constexpr u32 AutomotaIterations{ 10 };
 	constexpr u32 AutomotaThreshold{ 4 };
 
 	constexpr u32 ViewDistance{ 8 };
 	constexpr f64 ViewSpan{ 135.0 };
+
+	constexpr u32 ChaserPopulation{ 8 };
 } // namespace globals
 
-struct game_state_t {
-	subsystem_s subsystem{};
+subsystem_s subsystem{};
 
-	window_t window{ globals::GameTitle.c_str(), globals::WindowSize + globals::WindowBorder * 2, globals::WindowFlags };
-	renderer_t renderer{ window, globals::RendererFlags };
+window_t window{ globals::GameTitle.c_str(), globals::WindowSize + globals::WindowBorder * 2, globals::WindowFlags };
+renderer_t renderer{ window, globals::RendererFlags };
 
-	atlas_t<globals::TilesetSize> game_atlas{ renderer, "res\\tiles\\tileset_16x16.png", globals::UniversalOffset };
-	atlas_t<globals::GlyphsetSize> ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png", globals::UniversalOffset };
+atlas_t<globals::TilesetSize> game_atlas{ renderer, "res\\tiles\\tileset_16x16.png", globals::UniversalOffset };
+atlas_t<globals::GlyphsetSize> ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png", globals::UniversalOffset };
 
-	std::mt19937 random_engine{ std::random_device{}() };
+std::mt19937 random_engine{ std::random_device{}() };
 
-	zone_t<cell_state_t, globals::MapSize, globals::BorderSize> game_map{};
+zone_t<cell_state_t, globals::MapSize, globals::BorderSize> game_map{};
 
-	bool gamepad_enabled{ true };
+bool gamepad_enabled{ true };
 
-	cptr<gamepad_t> primary_gamepad{ nullptr };
+cptr<gamepad_t> primary_gamepad{ nullptr };
 
-	bool gamepad_active{ false };
+bool gamepad_active{ false };
 
-	cursor_t cursor{ renderer, "res\\sprites\\cursor.png", colors::White };
-	grid_cursor_t<globals::CellSize> grid_cursor{ renderer, "res\\sprites\\grid_cursor.png", colors::metals::Gold, game_map.zone_origin, game_map.zone_extent };
+cursor_t cursor{ renderer, "res\\sprites\\cursor.png", colors::White };
+grid_cursor_t<globals::CellSize> grid_cursor{ renderer, "res\\sprites\\grid_cursor.png", colors::metals::Gold, game_map.zone_origin, game_map.zone_extent };
 
-	bool draw_cursor{ true };
+bool draw_cursor{ true };
 
-	area_t player_fov{};
-	sprite_t player{ Glyphs::Player };
+sprite_t player{ glyphs::Player };
+area_t player_fov{};
 
-	camera_t camera{ globals::GameGridSize, extent_t::Zero, globals::CameraExtent };
-	bool camera_locked{ true };
+std::vector<sprite_t> chasers{ globals::ChaserPopulation, glyphs::Enemy };
 
-	timer_t input_timer{ 125.0 };
-	timer_t cursor_timer{ 125.0 };
-	timer_t epoch_timer{ 250.0 };
-	timer_t animation_timer{ 1000.0 / 3 };
+camera_t camera{ globals::GameGridSize, extent_t::Zero, globals::CameraExtent };
+bool camera_locked{ true };
 
-	wave_t sine_wave{ 1.0, 0.5, 1.0 };
+timer_t input_timer{ 125.0 };
+timer_t cursor_timer{ 125.0 };
+timer_t epoch_timer{ 250.0 };
+timer_t animation_timer{ 1000.0 / 3 };
 
-	mixer_s mixer{};
+wave_t sine_wave{ 1.0, 0.5, 1.0 };
 
-	field_t<i32, globals::MapSize, globals::BorderSize> goal_map{};
-} static game_state{};
+mixer_s mixer{};
 
-void primary_gamepad_disconnected() {
-	game_state.gamepad_enabled = false;
-	game_state.primary_gamepad = nullptr;
+field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> goal_map{};
+
+void primary_gamepad_disconnected() noexcept {
+	gamepad_enabled = false;
+	primary_gamepad = nullptr;
 }
 
-void primary_gamepad_reconnected(cptr<gamepad_t> gamepad) {
-	game_state.gamepad_enabled = true;
-	game_state.primary_gamepad = gamepad;
+void primary_gamepad_reconnected(cptr<gamepad_t> gamepad) noexcept {
+	gamepad_enabled = true;
+	primary_gamepad = gamepad;
 }
 
-void primary_gamepad_active() { game_state.gamepad_active = true; }
+void primary_gamepad_active() noexcept { gamepad_active = true; }
 
-void mouse_keyboard_active() { game_state.gamepad_active = false; }
+void mouse_keyboard_active() noexcept { gamepad_active = false; }
 
 #define main SDL_main
 
 using namespace bleak;
 
-inline bool update_camera() {
-	if (Keyboard::is_key_down(bindings::CameraLock)) {
-		game_state.camera_locked = !game_state.camera_locked;
+inline bool update_camera() noexcept {
+	if constexpr (globals::MapSize <= globals::GameGridSize) {
+		return camera.center_on(globals::MapCenter);
 	}
 
-	if (game_state.camera_locked) {
-		return game_state.camera.center_on(game_state.player.position);
+	if (Keyboard::is_key_down(bindings::CameraLock)) {
+		camera_locked = !camera_locked;
+	}
+
+	if (camera_locked) {
+		return camera.center_on(player.position);
 	}
 
 	offset_t direction{};
@@ -180,65 +155,61 @@ inline bool update_camera() {
 		++direction.x;
 	}
 
-	if (game_state.gamepad_enabled && direction == offset_t::Zero) {
-		direction = static_cast<offset_t>(game_state.primary_gamepad->right_stick.current_state);
+	if (gamepad_enabled && direction == offset_t::Zero) {
+		direction = static_cast<offset_t>(primary_gamepad->right_stick.current_state);
 	}
 
 	if (direction != offset_t::Zero) {
-		game_state.input_timer.record();
-		return game_state.camera.move(direction * 2);
+		input_timer.record();
+		return camera.move(direction * globals::CameraSpeed);
 	}
 
 	return false;
 }
 
-inline void recalculate_fov(cref<offset_t> position, cardinal_t direction) {
-	game_state.player_fov.repeal(game_state.game_map, cell_trait_t::Seen);
-	game_state.player_fov.cast(game_state.game_map, position, cell_trait_t::Transperant, globals::ViewDistance, direction_to_angle(direction), globals::ViewSpan, true);
-	game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
+inline void recalculate_fov(cref<offset_t> position, cardinal_t direction) noexcept {
+	player_fov.repeal(game_map, cell_trait_t::Seen);
+	player_fov.cast(game_map, cell_trait_t::Transperant, position, globals::ViewDistance, direction_to_angle(direction), globals::ViewSpan, true);
+	player_fov.apply(game_map, cell_trait_t::Seen, cell_trait_t::Explored);
 }
 
-inline void recalculate_fov() {
-	game_state.player_fov.repeal(game_state.game_map, cell_trait_t::Seen);
-	game_state.player_fov.cast(game_state.game_map, game_state.player.position, cell_trait_t::Transperant, globals::ViewDistance / 2, true);
-	game_state.player_fov.apply(game_state.game_map, cell_trait_t::Seen, cell_trait_t::Explored);
-}
+inline void recalculate_fov() noexcept {
+	player_fov.repeal(game_map, cell_trait_t::Seen);
+	//player_fov.cast(game_map, cell_trait_t::Transperant, player.position, globals::ViewDistance / 2, true);
 
-inline void recalculate_fov(cardinal_t direction) { recalculate_fov(game_state.player.position, direction); }
+	std::vector<circle_t> chaser_fovs{};
 
-inline bool character_movement() {
-	if (Keyboard::any_keys_pressed(bindings::Wait)) {
-		game_state.input_timer.record();
-		game_state.epoch_timer.record();
-
-		game_state.player.glyph.index = characters::Entity[cardinal_t::Central];
-
-		recalculate_fov();
-
-		return true;
+	for (crauto chaser : chasers) {
+		chaser_fovs.emplace_back(chaser.position, globals::ViewDistance / 2);
 	}
 
-	if (Keyboard::any_keys_pressed(keys::Keypad::Plus, keys::Keypad::Minus)) {
-		crauto new_position{
-			Keyboard::is_key_pressed(keys::Keypad::Plus) ?
-				game_state.goal_map.ascend<zone_region_t::Interior>(game_state.player.position, game_state.random_engine) :
-				game_state.goal_map.descend<zone_region_t::Interior>(game_state.player.position, game_state.random_engine)
-		};
+	chaser_fovs.emplace_back(player.position, globals::ViewDistance);
 
-		if (!new_position.has_value()) {
-			return false;
+	player_fov.multi_cast(game_map, cell_trait_t::Transperant, chaser_fovs, true);
+
+	player_fov.apply(game_map, cell_trait_t::Seen, cell_trait_t::Explored);
+}
+
+inline void recalculate_fov(cardinal_t direction) noexcept { recalculate_fov(player.position, direction); }
+
+inline bool any_chaser_at_position(cref<offset_t> position) noexcept {
+	for (cref<sprite_t> chaser : chasers) {
+		if (chaser.position == position) {
+			return true;
 		}
+	}
 
-		game_state.input_timer.record();
-		game_state.epoch_timer.record();
+	return false;
+}
 
-		const cardinal_t player_direction{ offset_t::direction(game_state.player.position, new_position.value()) };
+inline bool character_movement() noexcept {
+	if (Keyboard::any_keys_pressed(bindings::Wait)) {
+		input_timer.record();
+		epoch_timer.record();
 
-		game_state.player.position = new_position.value();
+		player.glyph.index = characters::Entity[cardinal_t::Central];
 
-		game_state.player.glyph.index = characters::Entity[player_direction];
-
-		recalculate_fov(player_direction);
+		//recalculate_fov();
 
 		return true;
 	}
@@ -258,26 +229,29 @@ inline bool character_movement() {
 		++direction.x;
 	}
 
-	if (game_state.gamepad_enabled && direction == offset_t::Zero) {
-		direction = static_cast<offset_t>(game_state.primary_gamepad->dpad.current_state);
+	if (gamepad_enabled && direction == offset_t::Zero) {
+		direction = static_cast<offset_t>(primary_gamepad->dpad.current_state);
 	}
 
 	if (direction != offset_t::Zero) {
-		game_state.player.glyph.index = characters::Entity[direction];
+		player.glyph.index = characters::Entity[direction];
 
-		offset_t target_position{ game_state.player.position + direction };
+		offset_t target_position{ player.position + direction };
 
-		if (!game_state.game_map.within<zone_region_t::Interior>(target_position) || game_state.game_map[target_position].solid) {
-			recalculate_fov(direction);
+		if (!game_map.within<zone_region_t::Interior>(target_position) || game_map[target_position].solid || any_chaser_at_position(target_position)) {
+			//recalculate_fov(direction);
 			return false;
 		}
 
-		game_state.player.position += direction;
+		goal_map.update(player.position, target_position);
+		goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open);
 
-		recalculate_fov(direction);
+		player.position += direction;
 
-		game_state.input_timer.record();
-		game_state.epoch_timer.record();
+		//recalculate_fov(direction);
+
+		input_timer.record();
+		epoch_timer.record();
 
 		return true;
 	}
@@ -285,14 +259,37 @@ inline bool character_movement() {
 	return false;
 }
 
-inline void startup();
+inline bool chaser_movement() noexcept {
+	bool any_moved{ false };
+	for (rauto chaser : chasers) {
+		crauto new_position{ goal_map.descend<zone_region_t::Interior>(chaser.position, random_engine) };
 
-inline void update();
-inline void render();
+		if (!new_position.has_value() || new_position.value() == player.position || any_chaser_at_position(new_position.value())) {
+			continue;
+		}
 
-inline void shutdown();
+		const cardinal_t chaser_direction{ offset_t::direction(chaser.position, new_position.value()) };
 
-inline void terminate_prematurely();
+		chaser.position = new_position.value();
+
+		chaser.glyph.index = characters::Entity[chaser_direction];
+
+		any_moved = true;
+	}
+
+	recalculate_fov();
+
+	return any_moved;
+}
+
+inline void startup() noexcept;
+
+inline void update() noexcept;
+inline void render() noexcept;
+
+inline void shutdown() noexcept;
+
+inline void terminate_prematurely() noexcept;
 
 int main(int argc, char* argv[]) {
 	startup();
@@ -300,14 +297,14 @@ int main(int argc, char* argv[]) {
 	do {
 		update();
 		render();
-	} while (game_state.window.is_running());
+	} while (window.is_running());
 
 	shutdown();
 
 	return EXIT_SUCCESS;
 }
 
-inline void startup() {
+inline void startup() noexcept {
 	Mouse::initialize();
 	Keyboard::initialize();
 
@@ -315,10 +312,10 @@ inline void startup() {
 
 	Mouse::hide_cursor();
 
-	game_state.primary_gamepad = GamepadManager::lease(0, &primary_gamepad_disconnected, &primary_gamepad_reconnected);
-	game_state.gamepad_enabled = game_state.primary_gamepad != nullptr;
+	primary_gamepad = GamepadManager::lease(0, &primary_gamepad_disconnected, &primary_gamepad_reconnected);
+	gamepad_enabled = primary_gamepad != nullptr;
 
-	if (game_state.primary_gamepad == nullptr) {
+	if (primary_gamepad == nullptr) {
 		message_log.add("no gamepad detected\n");
 	}
 
@@ -331,42 +328,65 @@ inline void startup() {
 
 	for (extent_t::product_t i{ 0 }; i < region.region_area; ++i) {
 		region[i].set<zone_region_t::Border>(closed_state);
-		region[i].generate<zone_region_t::Interior>(game_state.random_engine, globals::FillPercent, globals::AutomotaIterations, globals::AutomotaThreshold, cell_applicator);
+		region[i].generate<zone_region_t::Interior>(random_engine, globals::FillPercent, globals::AutomotaIterations, globals::AutomotaThreshold, cell_applicator);
 		region[i].collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open);
 	}
 
-	region.compile(game_state.game_map);
+	region.compile(game_map);
 
-	auto starting_position{ game_state.game_map.find_random<zone_region_t::Interior>(game_state.random_engine, cell_trait_t::Open) };
+	std::vector<area_t> areas{ area_t::partition(game_map, cell_trait_t::Open) };
 
-	if (starting_position.has_value()) {
-		game_state.player.position = starting_position.value();
+	if (areas.size() > 1) {
+		cref<area_t> largest_area{ *std::max_element(areas.begin(), areas.end(), [](cref<area_t> a, cref<area_t> b) { return a.size() < b.size(); }) };
+
+		for (crauto area : areas) {
+			if (area != largest_area) {
+				area.apply(game_map, cell_trait_t::Solid);
+			}
+		}
+	}
+
+	auto player_start{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open) };
+
+	if (player_start.has_value()) {
+		player.position = player_start.value();
 	} else {
 		error_log.add("no open cells found for player start position\n", __TIME_FILE_LINE__);
-		error_log.add("\ninterior contents:\n open cells: {}\n solid cells: {}\n", game_state.game_map.count<zone_region_t::Interior>(cell_trait_t::Open), game_state.game_map.count<zone_region_t::Interior>(cell_trait_t::Solid));
 		terminate_prematurely();
 	}
 
-	game_state.goal_map += game_state.player.position;
-
-	recalculate_fov();
+	goal_map += player.position;
+	goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open);
 
 	update_camera();
 
+	for (rauto chaser : chasers) {
+		auto chaser_start{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open) };
+
+		if (chaser_start.has_value()) {
+			chaser.position = chaser_start.value();
+		} else {
+			error_log.add("no open cells found for chaser start position\n", __TIME_FILE_LINE__);
+			terminate_prematurely();
+		}
+	}
+
+	recalculate_fov();
+
 	Clock::tick();
 
-	game_state.input_timer.reset();
-	game_state.cursor_timer.reset();
-	game_state.epoch_timer.reset();
+	input_timer.reset();
+	cursor_timer.reset();
+	epoch_timer.reset();
 
-	game_state.animation_timer.reset();
+	animation_timer.reset();
 
 	message_log.flush_to_console(std::cout);
 	error_log.flush_to_console(std::cerr);
 }
 
-inline void update() {
-	if (game_state.window.is_closing()) {
+inline void update() noexcept {
+	if (window.is_closing()) {
 		return;
 	}
 
@@ -376,83 +396,96 @@ inline void update() {
 		Clock::tick();
 	}
 
-	game_state.window.poll_events();
+	window.poll_events();
 
 	if (Keyboard::is_key_down(bindings::Quit)) {
-		game_state.window.close();
+		window.close();
 		return;
 	}
 
 	if (Keyboard::is_key_down(bindings::RevealMap)) {
-		game_state.game_map.apply<zone_region_t::All>(cell_trait_t::Explored);
+		game_map.apply<zone_region_t::All>(cell_trait_t::Explored);
 	}
 
-	game_state.goal_map.recalculate<zone_region_t::Interior>(game_state.game_map, cell_trait_t::Open);
+	bool turn_taken{ false };
 
-	if (game_state.input_timer.ready()) {
-		if (game_state.epoch_timer.ready()) {
-			character_movement();
+	if (input_timer.ready()) {
+		if (epoch_timer.ready()) {
+			turn_taken = character_movement();
 		}
 
 		update_camera();
 	}
 
-	game_state.sine_wave.update<wave_type_t::Sine>(Clock::elapsed());
+	if (turn_taken) {
+		chaser_movement();
+	}
+
+	sine_wave.update<wave_type_t::Sine>(Clock::elapsed());
 
 	offset_t mouse_pos{ Mouse::get_position() };
 
-	game_state.draw_cursor = mouse_pos.x < globals::UniversalOrigin.x || mouse_pos.y < globals::UniversalOrigin.y || mouse_pos.x > globals::UniversalExtent.x || mouse_pos.y > globals::UniversalExtent.y;
+	draw_cursor = mouse_pos.x < globals::UniversalOrigin.x || mouse_pos.y < globals::UniversalOrigin.y || mouse_pos.x > globals::UniversalExtent.x || mouse_pos.y > globals::UniversalExtent.y;
 
-	if (game_state.draw_cursor) {
-		game_state.cursor.update();
+	if (draw_cursor) {
+		cursor.update();
 	} else {
-		if (game_state.gamepad_enabled && game_state.gamepad_active) {
-			if (game_state.primary_gamepad->left_stick.current_state != cardinal_t::Central && game_state.cursor_timer.ready()) {
-				game_state.grid_cursor.update(game_state.primary_gamepad->left_stick.current_state);
+		if (gamepad_enabled && gamepad_active) {
+			if (primary_gamepad->left_stick.current_state != cardinal_t::Central && cursor_timer.ready()) {
+				grid_cursor.update(primary_gamepad->left_stick.current_state);
 
-				game_state.cursor_timer.record();
+				cursor_timer.record();
 			}
 		} else {
-			game_state.grid_cursor.update(game_state.camera.get_position());
+			grid_cursor.update(camera.get_position());
 		}
 
-		game_state.grid_cursor.color.set_alpha(game_state.sine_wave.current_value());
+		grid_cursor.color.set_alpha(sine_wave.current_value());
 	}
 }
 
-inline void render() {
-	if (game_state.window.is_closing()) {
+inline void render() noexcept {
+	if (window.is_closing()) {
 		return;
 	}
 
-	game_state.renderer.clear(colors::Black);
+	renderer.clear(colors::Black);
 
-	game_state.game_map.draw(game_state.game_atlas, game_state.camera);
+	game_map.draw(game_atlas, camera);
 
-	game_state.player.draw(game_state.game_atlas, -game_state.camera.get_position());
-
-	if (game_state.draw_cursor) {
-		game_state.cursor.draw();
-	} else {
-		game_state.grid_cursor.draw(globals::CursorOffset - game_state.camera.get_position() * globals::CellSize);
+	for (crauto chaser : chasers) {
+		chaser.draw(game_atlas, -camera.get_position());
 	}
+
+	player.draw(game_atlas, -camera.get_position());
+
+	renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, globals::BorderSize, colors::Black);
+	renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, colors::White);
+	renderer.draw_outline_rect(globals::UniversalOffset, globals::WindowSize, colors::White);
 
 	runes_t fps_text{ std::format("FPS:{:4}", static_cast<u32>(Clock::frame_time())), colors::Green };
 
-	game_state.ui_atlas.draw(fps_text, offset_t{ globals::UIGridSize.w - 1, 1 }, cardinal_t::West, offset_t{ 0, -4 });
+	ui_atlas.draw_label(renderer, fps_text, offset_t{ globals::UIGridSize.w - 1, 0 }, cardinal_t::Southwest, extent_t{ 1, 1 }, colors::Black, colors::White);
 
 	runes_t title_text{ globals::GameTitle, colors::Marble };
 
-	game_state.ui_atlas.draw_label(game_state.renderer, title_text, offset_t{ globals::UIGridSize.w / 2, 1 }, cardinal_t::Central, offset_t{ 0, -4 }, colors::Black, colors::White);
+	ui_atlas.draw_label(renderer, title_text, offset_t{ globals::UIGridSize.w / 2, 0 }, cardinal_t::South, extent_t{ 1, 1 }, colors::Black, colors::White);
 
-	game_state.renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, globals::BorderSize, colors::Black);
-	game_state.renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, colors::White);
+	runes_t tooltip_text{ game_map[grid_cursor.get_position()].to_tooltip(), colors::White };
 
-	game_state.renderer.present();
+	ui_atlas.draw_label(renderer, tooltip_text, offset_t{ globals::UIGridSize.w - 1, globals::UIGridSize.h - 1 }, cardinal_t::Northwest, extent_t{ 1, 1 }, colors::Black, colors::White);
+
+	if (draw_cursor) {
+		cursor.draw();
+	} else {
+		grid_cursor.draw(globals::CursorOffset - camera.get_position() * globals::CellSize);
+	}
+
+	renderer.present();
 }
 
-inline void shutdown() {
-	if (game_state.primary_gamepad != nullptr) {
+inline void shutdown() noexcept {
+	if (primary_gamepad != nullptr) {
 		GamepadManager::release(0);
 	}
 
@@ -465,7 +498,7 @@ inline void shutdown() {
 	error_log.flush_to_file();
 }
 
-inline void terminate_prematurely() {
+inline void terminate_prematurely() noexcept {
 	std::cout << "Message Log:\n";
 	message_log.flush_to_console(std::cout);
 

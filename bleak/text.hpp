@@ -65,16 +65,16 @@ namespace bleak {
 		}
 	};
 
-	namespace Text {
-		static constexpr isize HORIZONTAL_TAB_WIDTH{ 4 };
+	namespace text {
+		static constexpr isize HorizontalTabWidth{ 4 };
 		static_assert(
-			HORIZONTAL_TAB_WIDTH && ((HORIZONTAL_TAB_WIDTH & (HORIZONTAL_TAB_WIDTH - 1)) == 0 && HORIZONTAL_TAB_WIDTH > 0),
+			HorizontalTabWidth && ((HorizontalTabWidth & (HorizontalTabWidth - 1)) == 0 && HorizontalTabWidth > 0),
 			"horizontal tab width must be a positive power-of-two!"
 		);
 
-		static constexpr isize VERTICAL_TAB_WIDTH{ 4 };
+		static constexpr isize VerticalTabWidth{ 4 };
 		static_assert(
-			VERTICAL_TAB_WIDTH && ((VERTICAL_TAB_WIDTH & (VERTICAL_TAB_WIDTH - 1)) == 0 && VERTICAL_TAB_WIDTH > 0),
+			VerticalTabWidth && ((VerticalTabWidth & (VerticalTabWidth - 1)) == 0 && VerticalTabWidth > 0),
 			"vertical tab width must be a positive power-of-two!"
 		);
 
@@ -98,10 +98,10 @@ namespace bleak {
 					current_width = 0;
 					continue;
 				case '\t':
-					current_width += (current_width + HORIZONTAL_TAB_WIDTH - 1) & -HORIZONTAL_TAB_WIDTH;
+					current_width += (current_width + HorizontalTabWidth - 1) & -HorizontalTabWidth;
 					continue;
 				case '\v':
-					size.h += (size.h + VERTICAL_TAB_WIDTH - 1) & -VERTICAL_TAB_WIDTH;
+					size.h += (size.h + VerticalTabWidth - 1) & -VerticalTabWidth;
 					if (current_width > size.w) {
 						size.w = current_width;
 					}
@@ -122,7 +122,46 @@ namespace bleak {
 		}
 
 		static constexpr extent_t calculate_size(cref<std::string> text) noexcept {
-			return calculate_size(runes_t{ text });
+			if (text.empty()) {
+				return extent_t::Zero;
+			}
+
+			usize current_width{ 0 };
+			extent_t size{ 0, 1 };
+
+			for (auto& ch : text) {
+				switch (ch) {
+				case '\0':
+					goto superbreak;
+				case '\n':
+					++size.h;
+					if (current_width > size.w) {
+						size.w = current_width;
+					}
+					current_width = 0;
+					continue;
+				case '\t':
+					current_width += (current_width + HorizontalTabWidth - 1) & -HorizontalTabWidth;
+					continue;
+				case '\v':
+					size.h += (size.h + VerticalTabWidth - 1) & -VerticalTabWidth;
+					if (current_width > size.w) {
+						size.w = current_width;
+					}
+					current_width = 0;
+					continue;
+				default:
+					++current_width;
+					continue;
+				}
+			}
+
+		superbreak:
+			if (current_width > size.w) {
+				size.w = current_width;
+			}
+
+			return size;
 		}
-	} // namespace Text
+	} // namespace text
 } // namespace bleak

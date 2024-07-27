@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bleak/typedef.hpp>
+#include <bleak/primitive.hpp>
 
 #include <concepts>
 #include <limits>
@@ -210,4 +211,28 @@ namespace bleak {
 	};
 
 	template<typename T> constexpr bool is_drawable_v = is_drawable<T>::value;
+
+	template<typename T>
+	concept HasPosition = requires(T t) {
+		{ t.position } -> std::convertible_to<offset_t>;
+		{ t.get_position() } -> std::convertible_to<offset_t>;
+	};
+
+	template<typename T> struct has_position {
+		static bool constexpr value = HasPosition<T>;
+	};
+
+	template<typename T> constexpr bool has_position_v = has_position<T>::value;
+
+	template<typename T>
+	concept HasSize = requires(T t) {
+		{ t.size } -> std::convertible_to<extent_t>;
+		{ t.get_size() } -> std::convertible_to<extent_t>;
+	};
+
+	template<typename T> struct has_size {
+		static bool constexpr value = HasSize<T>;
+	};
+
+	template<typename T> constexpr bool has_size_v = has_size<T>::value;
 } // namespace bleak

@@ -132,10 +132,10 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				case '\t':
-					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					carriage_pos.x += (carriage_pos.x + text::HorizontalTabWidth - 1) & -text::HorizontalTabWidth;
 					continue;
 				case '\v':
-					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.y += (carriage_pos.y + text::VerticalTabWidth - 1) & -text::VerticalTabWidth;
 					carriage_pos.x = 0;
 					continue;
 				default:
@@ -151,7 +151,7 @@ namespace bleak {
 				return;
 			}
 
-			const extent_t size{ Text::calculate_size(runes) };
+			const extent_t size{ text::calculate_size(runes) };
 			const offset_t origin{ position - size / 2 };
 			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
 			const offset_t alignment_offs{ size_offs - size_offs / 2 };
@@ -167,10 +167,10 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				case '\t':
-					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					carriage_pos.x += (carriage_pos.x + text::HorizontalTabWidth - 1) & -text::HorizontalTabWidth;
 					continue;
 				case '\v':
-					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.y += (carriage_pos.y + text::VerticalTabWidth - 1) & -text::VerticalTabWidth;
 					carriage_pos.x = 0;
 					continue;
 				default:
@@ -186,7 +186,7 @@ namespace bleak {
 				return;
 			}
 
-			const extent_t size{ Text::calculate_size(runes) };
+			const extent_t size{ text::calculate_size(runes) };
 			const offset_t origin{ position - size / 2 };
 			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
 			const offset_t alignment_offs{ size_offs - size_offs / 2 };
@@ -202,10 +202,10 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				case '\t':
-					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					carriage_pos.x += (carriage_pos.x + text::HorizontalTabWidth - 1) & -text::HorizontalTabWidth;
 					continue;
 				case '\v':
-					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.y += (carriage_pos.y + text::VerticalTabWidth - 1) & -text::VerticalTabWidth;
 					carriage_pos.x = 0;
 					continue;
 				default:
@@ -216,7 +216,7 @@ namespace bleak {
 			}
 		}
 
-		inline void draw(cref<std::string> text, cref<offset_t> position, cref<color_t> color) const {
+		inline void draw(cref<std::string> text, cref<color_t> color, cref<offset_t> position) const {
 			if (text.empty()) {
 				return;
 			}
@@ -232,10 +232,10 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				case '\t':
-					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					carriage_pos.x += (carriage_pos.x + text::HorizontalTabWidth - 1) & -text::HorizontalTabWidth;
 					continue;
 				case '\v':
-					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.y += (carriage_pos.y + text::VerticalTabWidth - 1) & -text::VerticalTabWidth;
 					carriage_pos.x = 0;
 					continue;
 				default:
@@ -246,12 +246,12 @@ namespace bleak {
 			}
 		}
 
-		inline void draw(cref<std::string> text, cref<offset_t> position, cref<color_t> color, cref<cardinal_t> alignment) const {
+		inline void draw(cref<std::string> text, cref<color_t> color, cref<offset_t> position, cref<cardinal_t> alignment) const {
 			if (text.empty()) {
 				return;
 			}
 
-			const extent_t size{ Text::calculate_size(text) };
+			const extent_t size{ text::calculate_size(text) };
 			const offset_t origin{ position - size / 2 };
 			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
 			const offset_t alignment_offs{ size_offs - size_offs / 2 };
@@ -267,10 +267,10 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				case '\t':
-					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					carriage_pos.x += (carriage_pos.x + text::HorizontalTabWidth - 1) & -text::HorizontalTabWidth;
 					continue;
 				case '\v':
-					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.y += (carriage_pos.y + text::VerticalTabWidth - 1) & -text::VerticalTabWidth;
 					carriage_pos.x = 0;
 					continue;
 				default:
@@ -281,118 +281,15 @@ namespace bleak {
 			}
 		}
 
-		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_t> position, cref<color_t> background, cref<color_t> outline) const {
-			if (runes.empty()) {
-				return;
-			}
-
-			renderer.draw_composite_rect(rect_t{ position * glyph_size, Text::calculate_size(runes) * glyph_size }, background, outline, 1);
-
-			offset_t carriage_pos{ 0 };
-
-			for (auto& rune : runes) {
-				switch (rune.index) {
-				case '\0':
-					return;
-				case '\n':
-					++carriage_pos.y;
-					carriage_pos.x = 0;
-					continue;
-				case '\t':
-					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
-					continue;
-				case '\v':
-					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
-					carriage_pos.x = 0;
-					continue;
-				default:
-					draw(renderer, rune, position + carriage_pos);
-					++carriage_pos.x;
-					continue;
-				}
-			}
-		}
-
-		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_t> position, cref<cardinal_t> alignment, cref<color_t> background, cref<color_t> outline) const {
-			if (runes.empty()) {
-				return;
-			}
-
-			const extent_t size{ Text::calculate_size(runes) };
-			const offset_t origin{ position - size / 2 };
-			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
-			const offset_t alignment_offs{ size_offs - size_offs / 2 };
-
-			renderer.draw_composite_rect(rect_t{ origin + alignment_offs * glyph_size, size * glyph_size }, background, outline, 1);
-
-			offset_t carriage_pos{ 0 };
-
-			for (auto& rune : runes) {
-				switch (rune.index) {
-				case '\0':
-					return;
-				case '\n':
-					++carriage_pos.y;
-					carriage_pos.x = 0;
-					continue;
-				case '\t':
-					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
-					continue;
-				case '\v':
-					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
-					carriage_pos.x = 0;
-					continue;
-				default:
-					draw(renderer, rune, origin + carriage_pos + alignment_offs);
-					++carriage_pos.x;
-					continue;
-				}
-			}
-		}
-
-		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_t> position, cref<cardinal_t> alignment, cref<offset_t> offset, cref<color_t> background, cref<color_t> outline) const {
-			if (runes.empty()) {
-				return;
-			}
-
-			const extent_t size{ Text::calculate_size(runes) };
-			const offset_t origin{ position - size / 2 };
-			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
-			const offset_t alignment_offs{ size_offs - size_offs / 2 };
-
-			renderer.draw_composite_rect(rect_t{ origin + alignment_offs * glyph_size + offset, size * glyph_size }, background, outline, 1);
-
-			offset_t carriage_pos{ 0 };
-
-			for (auto& rune : runes) {
-				switch (rune.index) {
-				case '\0':
-					return;
-				case '\n':
-					++carriage_pos.y;
-					carriage_pos.x = 0;
-					continue;
-				case '\t':
-					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
-					continue;
-				case '\v':
-					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
-					carriage_pos.x = 0;
-					continue;
-				default:
-					draw(rune, origin + carriage_pos + alignment_offs, offset);
-					++carriage_pos.x;
-					continue;
-				}
-			}
-		}
-
-		inline void draw_label(ref<renderer_t> renderer, cref<std::string> text, cref<offset_t> position, cref<color_t> color, cref<color_t> background, cref<color_t> outline) const {
+		inline void draw(cref<std::string> text, cref<color_t> color, cref<offset_t> position, cref<cardinal_t> alignment, cref<offset_t> offset) const {
 			if (text.empty()) {
 				return;
 			}
 
-			renderer.draw_composite_rect(rect_t{ position * glyph_size, Text::calculate_size(text) * glyph_size }, background, outline, 1);
+			const extent_t size{ text::calculate_size(text) };
+			const offset_t origin{ position - size / 2 };
+			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+			const offset_t alignment_offs{ size_offs - size_offs / 2 };
 
 			offset_t carriage_pos{ 0 };
 
@@ -405,55 +302,98 @@ namespace bleak {
 					carriage_pos.x = 0;
 					continue;
 				case '\t':
-					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
+					carriage_pos.x += (carriage_pos.x + text::HorizontalTabWidth - 1) & -text::HorizontalTabWidth;
 					continue;
 				case '\v':
-					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
+					carriage_pos.y += (carriage_pos.y + text::VerticalTabWidth - 1) & -text::VerticalTabWidth;
 					carriage_pos.x = 0;
 					continue;
 				default:
-					draw(renderer, glyph_t{ static_cast<u8>(ch), color }, position + carriage_pos);
+					draw(glyph_t{ static_cast<u8>(ch), color }, origin + carriage_pos + alignment_offs, offset);
 					++carriage_pos.x;
 					continue;
 				}
 			}
 		}
 
-		inline void draw_label(ref<renderer_t> renderer, cref<std::string> text, cref<offset_t> position, cref<color_t> color, cref<cardinal_t> alignment, cref<color_t> background, cref<color_t> outline) const {
-			if (text.empty()) {
+		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_t> position, cref<extent_t> padding, cref<color_t> background, cref<color_t> outline) const {
+			if (runes.empty()) {
 				return;
 			}
 
-			const extent_t size{ Text::calculate_size(text) };
+			renderer.draw_composite_rect(rect_t{ position * glyph_size, (text::calculate_size(runes) + padding * 2) * glyph_size }, background, outline, 1);
+			
+			draw(runes, position);
+		}
+
+		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_t> position, cref<cardinal_t> alignment, cref<extent_t> padding, cref<color_t> background, cref<color_t> outline) const {
+			if (runes.empty()) {
+				return;
+			}
+
+			const extent_t size{ text::calculate_size(runes) };
 			const offset_t origin{ position - size / 2 };
 			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
 			const offset_t alignment_offs{ size_offs - size_offs / 2 };
 
-			renderer.draw_composite_rect(rect_t{ origin + alignment_offs * glyph_size, size * glyph_size }, background, outline, 1);
+			renderer.draw_composite_rect(rect_t{ (origin + alignment_offs) * glyph_size, (size + padding * 2) * glyph_size }, background, outline, 1);
+			
+			draw(runes, position, alignment);
+		}
 
-			offset_t carriage_pos{ 0 };
-
-			for (auto& ch : text) {
-				switch (ch) {
-				case '\0':
-					return;
-				case '\n':
-					++carriage_pos.y;
-					carriage_pos.x = 0;
-					continue;
-				case '\t':
-					carriage_pos.x += (carriage_pos.x + Text::HORIZONTAL_TAB_WIDTH - 1) & -Text::HORIZONTAL_TAB_WIDTH;
-					continue;
-				case '\v':
-					carriage_pos.y += (carriage_pos.y + Text::VERTICAL_TAB_WIDTH - 1) & -Text::VERTICAL_TAB_WIDTH;
-					carriage_pos.x = 0;
-					continue;
-				default:
-					draw(renderer, glyph_t{ static_cast<u8>(ch), color }, origin + carriage_pos + alignment_offs);
-					++carriage_pos.x;
-					continue;
-				}
+		inline void draw_label(ref<renderer_t> renderer, cref<runes_t> runes, cref<offset_t> position, cref<cardinal_t> alignment, cref<offset_t> offset, cref<extent_t> padding, cref<color_t> background, cref<color_t> outline) const {
+			if (runes.empty()) {
+				return;
 			}
+
+			const extent_t size{ text::calculate_size(runes) };
+			const offset_t origin{ position - size / 2 };
+			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+			const offset_t alignment_offs{ size_offs - size_offs / 2 };
+
+			renderer.draw_composite_rect(rect_t{ (origin + alignment_offs) * glyph_size + offset, (size + padding * 2) * glyph_size }, background, outline, 1);
+			
+			draw(runes, position, alignment, offset);
+		}
+
+		inline void draw_label(ref<renderer_t> renderer, cref<std::string> text, cref<color_t> color, cref<offset_t> position, cref<extent_t> padding, cref<color_t> background, cref<color_t> outline) const {
+			if (text.empty()) {
+				return;
+			}
+
+			renderer.draw_composite_rect(rect_t{ position * glyph_size, text::calculate_size(text) * glyph_size }, background, outline, 1);
+			
+			draw(text, position, color);
+		}
+
+		inline void draw_label(ref<renderer_t> renderer, cref<std::string> text, cref<color_t> color, cref<offset_t> position, cref<cardinal_t> alignment, cref<extent_t> padding, cref<color_t> background, cref<color_t> outline) const {
+			if (text.empty()) {
+				return;
+			}
+
+			const extent_t size{ text::calculate_size(text) };
+			const offset_t origin{ position - size / 2 };
+			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+			const offset_t alignment_offs{ size_offs - size_offs / 2 };
+
+			renderer.draw_composite_rect(rect_t{ (origin + alignment_offs) * glyph_size, size * glyph_size }, background, outline, 1);
+			
+			draw(text, position, color, alignment);
+		}
+
+		inline void draw_label(ref<renderer_t> renderer, cref<std::string> text, cref<color_t> color, cref<offset_t> position, cref<cardinal_t> alignment, cref<offset_t> offset, cref<extent_t> padding, cref<color_t> background, cref<color_t> outline) const {
+			if (text.empty()) {
+				return;
+			}
+
+			const extent_t size{ text::calculate_size(text) };
+			const offset_t origin{ position - size / 2 };
+			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+			const offset_t alignment_offs{ size_offs - size_offs / 2 };
+
+			renderer.draw_composite_rect(rect_t{ (origin + alignment_offs) * glyph_size + offset, size * glyph_size }, background, outline, 1);
+			
+			draw(text, position, color, alignment, offset);
 		}
 	};
 } // namespace bleak

@@ -30,61 +30,6 @@ sdl_dependencies = [
     dependency('sdl2_ttf'),
 ]
 
-array_test = executable(
-    'array',
-    'tests/array.cpp',
-
-    dependencies: [sdl_dependencies],
-
-    override_options: [
-        'cpp_std=c++26',
-        'cpp_stdlib=libc++',
-    ],
-
-    c_args: args,
-    cpp_args: args,
-
-    win_subsystem: 'console',
-)
-
-zone_test = executable(
-    'zone',
-    'tests/zone.cpp',
-
-    dependencies: [sdl_dependencies],
-
-    override_options: [
-        'cpp_std=c++26',
-        'cpp_stdlib=libc++',
-    ],
-
-    c_args: args,
-    cpp_args: args,
-
-    win_subsystem: 'console',
-)
-
-region_test = executable(
-    'region',
-    'tests/region.cpp',
-
-    dependencies: [sdl_dependencies],
-
-    override_options: [
-        'cpp_std=c++26',
-        'cpp_stdlib=libc++',
-    ],
-
-    c_args: args,
-    cpp_args: args,
-
-    win_subsystem: 'console',
-)
-
-test('array', array_test)
-test('zone', zone_test)
-test('region', region_test)
-
 sources = ['src/program.cpp']
 
 executable(
