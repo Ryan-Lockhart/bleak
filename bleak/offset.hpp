@@ -24,15 +24,13 @@ extern "C" {
 		scalar_t x{ 0 };
 		scalar_t y{ 0 };
 
-		static_assert(
-			(product_t)std::numeric_limits<scalar_t>::max() *
-			(product_t)std::numeric_limits<scalar_t>::max() <=
-			std::numeric_limits<product_t>::max(), "product_t is too small for scalar_t"
-		);
+		static_assert((product_t)std::numeric_limits<scalar_t>::max() * (product_t)std::numeric_limits<scalar_t>::max() <= std::numeric_limits<product_t>::max(), "product_t is too small for scalar_t");
 	} c_offset_t;
 }
 
 namespace bleak {
+	enum class distance_function_t { Manhattan, Chebyshev, Euclidean, Octile };
+
 	struct offset_t : c_offset_t {
 		using underlying_t = c_offset_t;
 
@@ -101,6 +99,13 @@ namespace bleak {
 			}
 		}
 
+		constexpr ref<offset_t> abs() noexcept {
+			x = std::abs(x);
+			y = std::abs(y);
+
+			return *this;
+		}
+
 		constexpr product_t dot() const noexcept { return product_cast(x) * x + product_cast(y) * y; }
 
 		template<typename T = product_t>
@@ -130,13 +135,21 @@ namespace bleak {
 			return (product_t)((float_t)v.i);
 		}
 
-		template<typename T = product_t> static constexpr T distance(cref<offset_t> start, cref<offset_t> end) noexcept;
+		template<FloatingPoint T> static constexpr T distance(cref<offset_t> start, cref<offset_t> end) noexcept { return (end - start).length<T>(); }
 
-		template<> constexpr f32 distance(cref<offset_t> start, cref<offset_t> end) noexcept { return (end - start).length<f32>(); }
-
-		template<> constexpr f64 distance(cref<offset_t> start, cref<offset_t> end) noexcept { return (end - start).length<f64>(); }
-
-		template<> constexpr product_t distance(cref<offset_t> start, cref<offset_t> end) noexcept { return (end - start).length<product_t>(); }
+		template<distance_function_t Distance> static constexpr product_t distance(cref<offset_t> start, cref<offset_t> end) noexcept {
+			if constexpr (Distance == distance_function_t::Manhattan) {
+				return std::abs(end.x - start.x) + std::abs(end.y - start.y);
+			} else if constexpr (Distance == distance_function_t::Chebyshev) {
+				return std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
+			} else if constexpr (Distance == distance_function_t::Euclidean) {
+				return product_cast((end - start).length<f64>());
+			} else if constexpr (Distance == distance_function_t::Octile) {
+				cauto delta{ (end - start).abs() };
+				
+				return product_cast(1.0 * (delta.x + delta.y) + (1.414 - 2.0 * 1.0) * std::min(delta.x, delta.y));
+			}
+		}
 
 		static constexpr cardinal_t direction(cref<offset_t> start, cref<offset_t> end) noexcept { return static_cast<cardinal_t>(end - start); }
 
@@ -403,4 +416,14 @@ namespace bleak {
 	}
 
 	constexpr offset_t::operator extent_t() const noexcept { return extent_t{ extent_t::scalar_cast(x), extent_t::scalar_cast(y) }; }
+
+	template<distance_function_t Distance> static constexpr auto neighbourhood_offsets {
+		[]() {
+			if constexpr (Distance == distance_function_t::Manhattan) {
+				return std::array<offset_t, 4>{ offset_t::North, offset_t::South, offset_t::West, offset_t::East };
+			} else {
+				return std::array<offset_t, 8>{ offset_t::North, offset_t::South, offset_t::West, offset_t::East, offset_t::Northwest, offset_t::Northeast, offset_t::Southwest, offset_t::Southeast };
+			}
+		}()
+	};
 } // namespace bleak

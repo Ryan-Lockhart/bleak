@@ -149,7 +149,7 @@ namespace bleak {
 		}
 
 		inline void draw_line(cref<offset_t> start, cref<offset_t> end, extent_t::scalar_t thickness) noexcept {
-			offset_t::product_t dst{ offset_t::distance(start, end) };
+			offset_t::product_t dst{ offset_t::distance<distance_function_t::Chebyshev>(start, end) };
 			offset_t dir{ offset_t::direction(start, end) };
 
 			offset_t origin{ start + dir * thickness / 2 };

@@ -32,12 +32,18 @@ namespace bleak {
 
 		constexpr memory_creeper_t() : position{}, distance{} {}
 
+		constexpr memory_creeper_t(cref<rememberance_t<offset_t>> memory, cref<T> distance) : position{ memory }, distance{ distance } {}
+
 		constexpr memory_creeper_t(cref<offset_t> current, cref<offset_t> previous, cref<T> distance) : position{ current, previous }, distance{ distance } {}
 
 		constexpr bool is_origin() const { return *this == memory_creeper_t<T>{}; }
 
 		struct hasher {
 			static constexpr usize operator()(cref<memory_creeper_t<T>> creeper) noexcept { return hash_combine(creeper.position, creeper.distance); }
+		};
+
+		struct less {
+			static constexpr bool operator()(cref<memory_creeper_t<T>> lhs, cref<memory_creeper_t<T>> rhs) noexcept { return lhs.distance > rhs.distance; }
 		};
 	};
 } // namespace bleak

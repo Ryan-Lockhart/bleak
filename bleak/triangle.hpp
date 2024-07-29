@@ -21,7 +21,10 @@ namespace bleak {
 		constexpr triangle_2d_t(cref<offset_t> p1, cref<offset_t> p2, cref<offset_t> p3) noexcept : vertices{ p1, p2, p3 } {}
 
 		constexpr offset_t::product_t perimeter() const noexcept {
-			return offset_t::distance<offset_t::product_t>(vertices[0], vertices[1]) + offset_t::distance<offset_t::product_t>(vertices[1], vertices[2]) + offset_t::distance<offset_t::product_t>(vertices[2], vertices[0]);
+			return
+				offset_t::distance<distance_function_t::Chebyshev>(vertices[0], vertices[1]) +
+				offset_t::distance<distance_function_t::Chebyshev>(vertices[1], vertices[2]) +
+				offset_t::distance<distance_function_t::Chebyshev>(vertices[2], vertices[0]);
 		}
 
 		constexpr offset_t::product_t area() const noexcept { return std::abs(vertices[0].x * (vertices[1].y - vertices[2].y) + vertices[1].x * (vertices[2].y - vertices[0].y) + vertices[2].x * (vertices[0].y - vertices[1].y)) / 2; }

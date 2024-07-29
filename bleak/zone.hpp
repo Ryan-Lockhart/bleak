@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/camera.hpp"
 #include <bleak/typedef.hpp>
 
 #include <cstring>
@@ -26,6 +25,7 @@
 #include <bleak/primitive.hpp>
 #include <bleak/random.hpp>
 #include <bleak/renderer.hpp>
+#include <bleak/camera.hpp>
 
 #include <bleak/constants/numeric.hpp>
 

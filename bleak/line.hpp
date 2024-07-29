@@ -15,6 +15,6 @@ namespace bleak {
 
 		constexpr line_t(ihalf x1, ihalf y1, ihalf x2, ihalf y2) noexcept : start { x1, y1 }, end { x2, y2 } {}
 
-		constexpr usize length() const noexcept { return offset_t::distance<offset_t::product_t>(start, end); }
+		constexpr usize length() const noexcept { return offset_t::distance<distance_function_t::Chebyshev>(start, end); }
 	};
 } // namespace bleak

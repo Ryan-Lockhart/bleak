@@ -1,4 +1,4 @@
-#include "bleak/circle.hpp"
+#include "bleak/offset.hpp"
 #include <bleak/bleak.hpp>
 
 #include <cassert>
@@ -64,7 +64,7 @@ namespace globals {
 	constexpr u32 ViewDistance{ 8 };
 	constexpr f64 ViewSpan{ 135.0 };
 
-	constexpr u32 ChaserPopulation{ 8 };
+	constexpr u32 AdventurerPopulation{ 5 };
 } // namespace globals
 
 subsystem_s subsystem{};
@@ -93,7 +93,7 @@ bool draw_cursor{ true };
 sprite_t player{ glyphs::Player };
 area_t player_fov{};
 
-std::vector<sprite_t> chasers{ globals::ChaserPopulation, glyphs::Enemy };
+std::vector<sprite_t> chasers{ globals::AdventurerPopulation, glyphs::Enemy };
 
 camera_t camera{ globals::GameGridSize, extent_t::Zero, globals::CameraExtent };
 bool camera_locked{ true };
@@ -106,6 +106,8 @@ timer_t animation_timer{ 1000.0 / 3 };
 wave_t sine_wave{ 1.0, 0.5, 1.0 };
 
 mixer_s mixer{};
+
+path_t test_path{};
 
 field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> goal_map{};
 
@@ -321,8 +323,8 @@ inline void startup() noexcept {
 
 	region_t<cell_state_t, globals::RegionSize, globals::ZoneSize, globals::BorderSize> region{ "res\\maps\\test_region.map" };
 
-	constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Unseen, cell_trait_t::Unexplored };
-	constexpr cell_state_t closed_state{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Unseen, cell_trait_t::Unexplored };
+	constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Unseen, cell_trait_t::Explored };
+	constexpr cell_state_t closed_state{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Unseen, cell_trait_t::Explored };
 
 	constexpr binary_applicator_t<cell_state_t> cell_applicator{ closed_state, open_state };
 
@@ -442,6 +444,8 @@ inline void update() noexcept {
 
 		grid_cursor.color.set_alpha(sine_wave.current_value());
 	}
+
+	test_path.generate<distance_function_t::Octile>(player.position, grid_cursor.get_position(), game_map, cell_trait_t::Open);
 }
 
 inline void render() noexcept {
@@ -453,7 +457,13 @@ inline void render() noexcept {
 
 	game_map.draw(game_atlas, camera);
 
+	test_path.draw(game_atlas, { 0x4D, colors::Blue }, -camera.get_position());
+
 	for (crauto chaser : chasers) {
+		if (!player_fov.contains(chaser.position)) {
+			continue;
+		}
+		
 		chaser.draw(game_atlas, -camera.get_position());
 	}
 

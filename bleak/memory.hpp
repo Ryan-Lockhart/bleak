@@ -10,7 +10,9 @@
 #include <bleak/utility.hpp>
 
 namespace bleak {
-	template<typename T> struct rememberance_t {
+	template<typename T>
+		requires is_equatable<T, T>::value
+	struct rememberance_t {
 		T current;
 		T previous;
 
@@ -27,6 +29,10 @@ namespace bleak {
 		constexpr bool operator!=(cref<rememberance_t<T>> other) const { return current != other.current || previous != other.previous; }
 
 		constexpr bool is_new(cref<T> value) const { return value != current; }
+
+		constexpr bool is_old(cref<T> value) const { return value == previous; }
+
+		constexpr bool has_swapped(cref<rememberance_t<T>> other) const { return current == other.previous && previous == other.current; }
 
 		constexpr ref<rememberance_t<T>> remember(cref<T> value) {
 			if (!is_new(value)) {
