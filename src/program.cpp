@@ -361,7 +361,7 @@ inline void startup() noexcept {
 	update_camera();
 
 	for (rauto chaser : chasers) {
-		auto chaser_start{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open) };
+		cauto chaser_start{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open) };
 
 		if (chaser_start.has_value()) {
 			chaser.position = chaser_start.value();

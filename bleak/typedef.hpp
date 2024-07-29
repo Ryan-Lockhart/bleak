@@ -9,6 +9,8 @@ namespace bleak {
 
 #define __TIME_FILE_LINE__ __TIME__, __FILE__, __LINE__
 
+#define cauto const auto
+
 #define rauto auto&
 #define crauto const auto&
 
