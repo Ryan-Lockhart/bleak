@@ -24,9 +24,6 @@ namespace bleak {
 		constexpr const u8 Error { 0x58 };
 
 		constexpr const u8 Empty { 0x00 };
-		constexpr const u8 Wall { 0x4F };
-		constexpr const u8 Obstacle { 0x4E };
-		constexpr const u8 Floor { 0x4D };
 
 		constexpr const lut_t<cardinal_t, u8, 9> Entity {
 			pair_t<cardinal_t, u8>{ cardinal_t::Northwest, u8 { 0x48 } },
@@ -40,9 +37,12 @@ namespace bleak {
 			pair_t<cardinal_t, u8>{ cardinal_t::Southeast, u8 { 0x44 } }
 		};
 
-		constexpr const u8 Medkit { 0x49 };
-		constexpr const u8 Glock { 0x4A };
-		constexpr const u8 Ladder { 0x4B };
-		constexpr const u8 Corpse { 0x4C };
+		constexpr const u8 Ladder { 0x49 };
+		constexpr const u8 Corpse { 0x4A };
+		constexpr const u8 Asperand { 0x4B };
+		constexpr const u8 Pound { 0x4C };
+		constexpr const u8 Floor { 0x4D };
+		constexpr const u8 Obstacle { 0x4E };
+		constexpr const u8 Wall { 0x4F };
 	} // namespace characters
 } // namespace Bleakdepth

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/hash.hpp"
 #include <bleak/typedef.hpp>
 
 #include <bleak/extent.hpp>
@@ -51,6 +52,18 @@ namespace bleak {
 		template<extent_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset) const {
 			atlas.draw((glyph_t)glyph, position + offset);
 		}
+
+		struct hasher {
+			static constexpr inline size_t operator()(cref<sprite_t> sprite) noexcept {
+				return hash_combine(sprite.position, sprite.glyph);
+			}
+
+			struct offset {
+				static constexpr inline size_t operator()(cref<sprite_t> sprite) noexcept {
+					return hash_combine(sprite.position);
+				}
+			};
+		};
 	};
 
 	template<extent_t::product_t Length> struct animated_sprite_t {

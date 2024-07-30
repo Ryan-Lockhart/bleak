@@ -11,10 +11,12 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+#include <unordered_set>
 
 #include <bleak/applicator.hpp>
 #include <bleak/array.hpp>
 #include <bleak/atlas.hpp>
+#include <bleak/camera.hpp>
 #include <bleak/cardinal.hpp>
 #include <bleak/concepts.hpp>
 #include <bleak/creeper.hpp>
@@ -25,7 +27,6 @@
 #include <bleak/primitive.hpp>
 #include <bleak/random.hpp>
 #include <bleak/renderer.hpp>
-#include <bleak/camera.hpp>
 
 #include <bleak/constants/numeric.hpp>
 
@@ -825,7 +826,7 @@ namespace bleak {
 					for (extent_t::product_t x{ 0 }; x < zone_area; ++x) {
 						const offset_t position{ x, y };
 
-						if (cells[position] != value || calculate_index<neighbourhood_solver_t::Melded>(position) != index) {
+						if (cells[position] != value || calculate_index<neighbourhood_solver_t::Melded>(position, value) != index) {
 							continue;
 						}
 
@@ -837,7 +838,7 @@ namespace bleak {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						const offset_t position{ x, y };
 
-						if (cells[position] != value || calculate_index<neighbourhood_solver_t::Melded, interior_safe>(position) != index) {
+						if (cells[position] != value || calculate_index<neighbourhood_solver_t::Melded, interior_safe>(position, value) != index) {
 							continue;
 						}
 
@@ -850,7 +851,7 @@ namespace bleak {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 							const offset_t position{ x, y };
 
-							if (cells[position] != value || calculate_index<neighbourhood_solver_t::Melded>(position) != index) {
+							if (cells[position] != value || calculate_index<neighbourhood_solver_t::Melded>(position, value) != index) {
 								continue;
 							}
 
@@ -860,7 +861,7 @@ namespace bleak {
 						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
 							const offset_t inner_position{ i, y };
 
-							if (cells[inner_position] != value || calculate_index<neighbourhood_solver_t::Melded>(inner_position) != index) {
+							if (cells[inner_position] != value || calculate_index<neighbourhood_solver_t::Melded>(inner_position, value) != index) {
 								goto outer_pos;
 							}
 
@@ -869,7 +870,7 @@ namespace bleak {
 						outer_pos:
 							const offset_t outer_position{ zone_extent.x - i, y };
 
-							if (cells[outer_position] != value || calculate_index<neighbourhood_solver_t::Melded>(outer_position) != index) {
+							if (cells[outer_position] != value || calculate_index<neighbourhood_solver_t::Melded>(outer_position, value) != index) {
 								continue;
 							}
 
@@ -1391,6 +1392,122 @@ namespace bleak {
 			return std::nullopt;
 		}
 
+		template<zone_region_t Region, typename Randomizer>
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage) const noexcept
+			requires is_random_engine<Randomizer>::value
+		{
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			if constexpr (Region == zone_region_t::All) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < interior_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
+
+				for (extent_t::product_t i{ 0 }; i < border_area; ++i) {
+					auto x{ x_dis(generator) };
+					auto y{ y_dis(generator) };
+
+					x = x < border_size.w ? x : zone_extent.x - x;
+					y = y < border_size.h ? y : zone_extent.y - y;
+
+					const offset_t pos{ x, y };
+
+					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			}
+
+			return std::nullopt;
+		}
+
+		template<zone_region_t Region, typename Randomizer, typename U>
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage) const noexcept
+			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
+		{
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			if constexpr (Region == zone_region_t::All) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < interior_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
+
+				for (extent_t::product_t i{ 0 }; i < border_area; ++i) {
+					auto x{ x_dis(generator) };
+					auto y{ y_dis(generator) };
+
+					x = x < border_size.w ? x : zone_extent.x - x;
+					y = y < border_size.h ? y : zone_extent.y - y;
+
+					const offset_t pos{ x, y };
+
+					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			}
+
+			return std::nullopt;
+		}
+
 		constexpr bool linear_blockage(cref<offset_t> origin, cref<offset_t> target, cref<T> value) const noexcept {
 			if (cells[origin] == value || cells[target] == value) {
 				return true;
@@ -1567,31 +1684,41 @@ namespace bleak {
 			}
 		}
 
-		template<extent_t AtlasSize>
+		template<bool Simple = false, extent_t AtlasSize>
 		constexpr void draw(cref<atlas_t<AtlasSize>> atlas) const noexcept
 			requires is_drawable<T>::value
 		{
 			for (offset_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 				for (offset_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 					const offset_t pos{ x, y };
-					(*this)[pos].draw(atlas, *this, pos);
+
+					if constexpr (Simple) {
+						(*this)[pos].draw(atlas, pos);
+					} else {
+						(*this)[pos].draw(atlas, *this, pos);
+					}
 				}
 			}
 		}
 
-		template<extent_t AtlasSize>
+		template<bool Simple = false, extent_t AtlasSize>
 		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset) const noexcept
 			requires is_drawable<T>::value
 		{
 			for (offset_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 				for (offset_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
 					const offset_t pos{ x, y };
-					(*this)[pos].draw(atlas, *this, pos, offset);
+
+					if constexpr (Simple) {
+						(*this)[pos].draw(atlas, pos, offset);
+					} else {
+						(*this)[pos].draw(atlas, *this, pos, offset);
+					}
 				}
 			}
 		}
 
-		template<extent_t AtlasSize>
+		template<bool Simple = false, extent_t AtlasSize>
 		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<camera_t> camera) const noexcept
 			requires is_drawable<T>::value
 		{
@@ -1605,12 +1732,17 @@ namespace bleak {
 			for (offset_t::scalar_t y{ max(offset_t::scalar_t{ 0 }, origin.y) }; y < min(zone_size.h, camera_extent.h); ++y) {
 				for (offset_t::scalar_t x{ max(offset_t::scalar_t{ 0 }, origin.x) }; x < min(zone_size.w, camera_extent.w); ++x) {
 					const offset_t pos{ x, y };
-					(*this)[pos].draw(atlas, *this, pos, -origin);
+
+					if constexpr (Simple) {
+						(*this)[pos].draw(atlas, pos, -origin);
+					} else {
+						(*this)[pos].draw(atlas, *this, pos, -origin);
+					}
 				}
 			}
 		}
 
-		template<extent_t AtlasSize>
+		template<bool Simple = false, extent_t AtlasSize>
 		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset, cref<offset_t> origin, cref<extent_t> size) const noexcept
 			requires is_drawable<T>::value
 		{
@@ -1623,7 +1755,12 @@ namespace bleak {
 			for (offset_t::scalar_t y{ max(offset_t::scalar_t{ 0 }, origin.y) }; y < min(zone_size.h, camera_extent.h); ++y) {
 				for (offset_t::scalar_t x{ max(offset_t::scalar_t{ 0 }, origin.x) }; x < min(zone_size.w, camera_extent.w); ++x) {
 					const offset_t pos{ x, y };
-					(*this)[pos].draw(atlas, *this, pos, offset);
+
+					if constexpr (Simple) {
+						(*this)[pos].draw(atlas, pos, offset);
+					} else {
+						(*this)[pos].draw(atlas, *this, pos, offset);
+					}
 				}
 			}
 		}

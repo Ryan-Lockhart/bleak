@@ -5,6 +5,8 @@
 #include <format>
 #include <string>
 
+#include <bleak/hash.hpp>
+
 extern "C" {
 	typedef struct c_color_t {
 		union {
@@ -38,6 +40,8 @@ namespace bleak {
 		constexpr color_t() noexcept {}
 
 		constexpr color_t(u8 r, u8 g, u8 b, u8 a = u8{ 0xFF }) noexcept : c_color_t{ .r = r, .g = g, .b = b, .a = a } {}
+
+		constexpr color_t(u8 rgb, u8 a = u8{ 0xFF }) noexcept : c_color_t{ .r = rgb, .g = rgb, .b = rgb, .a = a } {}
 
 		constexpr color_t(f32 r, f32 g, f32 b, f32 a = 1.0f) noexcept :
 			c_color_t{ .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) } {}
@@ -74,5 +78,9 @@ namespace bleak {
 		constexpr explicit operator u32() const noexcept { return packed; }
 
 		inline operator std::string() const noexcept { return std::format("[{}, {}, {}, {}]", r, g, b, a); }
+
+		struct hasher {
+			static constexpr usize operator()(cref<color_t> color) noexcept { return hash_combine(color.r, color.g, color.b, color.a); }
+		};
 	};
 } // namespace bleak

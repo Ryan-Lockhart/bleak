@@ -12,6 +12,7 @@
 #include <bleak/renderer.hpp>
 #include <bleak/zone.hpp>
 
+#include "bleak/constants/characters.hpp"
 #include "constants/characters.hpp"
 
 namespace bleak {
@@ -292,11 +293,23 @@ namespace bleak {
 				return;
 			}
 
-			const u8 rgb{ solid ? u8{ 0xC0 } : u8{ 0x40 } };
 			const u8 alpha{ seen ? u8{ 0xFF } : u8{ 0x80 } };
 			const u8 glyph{ solid ? characters::Wall : characters::Floor };
 
-			atlas.draw(glyph_t{ glyph, { rgb, rgb, rgb, alpha } }, position);
+			atlas.draw(glyph_t{ characters::Floor, color_t{ 0x40, alpha } }, position);
+			atlas.draw(glyph_t{ glyph, color_t{ 0xC0, alpha } }, position);
+		}
+
+		template<extent_t AtlasSize> inline constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> position, cref<offset_t> offset) const noexcept {
+			if (!explored) {
+				return;
+			}
+
+			const u8 alpha{ seen ? u8{ 0xFF } : u8{ 0x80 } };
+			const u8 glyph{ solid ? characters::Wall : characters::Floor };
+
+			atlas.draw(glyph_t{ characters::Floor, color_t{ 0x40, alpha } }, position + offset);
+			atlas.draw(glyph_t{ glyph, color_t{ 0xC0, alpha } }, position + offset);
 		}
 
 		template<extent_t AtlasSize, typename T, extent_t ZoneSize, extent_t ZoneBorder> inline constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<offset_t> position, cref<offset_t> offset) const noexcept {
@@ -304,7 +317,6 @@ namespace bleak {
 				return;
 			}
 
-			const u8 rgb{ solid ? u8{ 0xC0 } : u8{ 0x40 } };
 			const u8 alpha{ seen ? u8{ 0xFF } : u8{ 0x80 } };
 			const u8 glyph{
 				solid ?
@@ -312,7 +324,8 @@ namespace bleak {
 					characters::jagged_set(false, 0x00)
 			};
 
-			atlas.draw(glyph_t{ glyph, { rgb, rgb, rgb, alpha } }, position + offset);
+			atlas.draw(glyph_t{ characters::Floor, color_t{ 0x40, alpha } }, position + offset);
+			atlas.draw(glyph_t{ glyph, color_t{ 0xC0, alpha } }, position + offset);
 		}
 
 		struct hasher {

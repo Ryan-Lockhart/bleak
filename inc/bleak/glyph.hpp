@@ -1,15 +1,15 @@
 #pragma once
 
-#include "bleak/concepts.hpp"
-#include <array>
 #include <bleak/primitive.hpp>
 
 #include <cassert>
 #include <initializer_list>
+#include <array>
 
 #include <bleak/array.hpp>
 #include <bleak/color.hpp>
-#include <bleak/typedef.hpp>
+#include <bleak/concepts.hpp>
+#include <bleak/hash.hpp>
 
 namespace bleak {
 	struct glyph_t {
@@ -19,6 +19,10 @@ namespace bleak {
 		constexpr glyph_t() noexcept : color{}, index{} {}
 
 		constexpr glyph_t(u16 index, color_t color) noexcept : color{ color }, index{ index } {}
+
+		struct hasher {
+			static constexpr size_t operator()(cref<glyph_t> glyph) noexcept { return hash_combine(glyph.color, glyph.index); }
+		};
 	};
 
 	template<extent_t::product_t Length> struct animated_glyph_t {

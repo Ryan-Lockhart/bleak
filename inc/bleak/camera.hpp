@@ -84,28 +84,36 @@ namespace bleak {
 			return original_position != position;
 		}
 
-		constexpr bool center_on(cref<offset_t> target) noexcept {
-			if (target == position) {
+		template<bool Force = false> constexpr bool center_on(cref<offset_t> target) noexcept {
+			const offset_t target_position{ target - half_size() };
+			
+			if (position == target_position) {
 				return false;
 			}
 
 			const offset_t original_position{ position };
 
-			position = target - size / 2;
-			constrain();
+			position = target_position;
+			if constexpr (!Force) {
+				constrain();
+			}
 
 			return original_position != position;
 		}
 
-		constexpr bool center_on(cref<offset_t> target, cref<extent_t> min, cref<extent_t> max) noexcept {
-			if (target == position) {
+		template<bool Force = false> constexpr bool center_on(cref<offset_t> target, cref<extent_t> min, cref<extent_t> max) noexcept {
+			const offset_t target_position{ target - half_size() };
+
+			if (position == target_position) {
 				return false;
 			}
 
 			const offset_t original_position{ position };
 
-			position = target - size / 2;
-			constrain(min, max);
+			position = target_position;
+			if constexpr (!Force) {
+				constrain(min, max);
+			}
 
 			return original_position != position;
 		}
@@ -126,6 +134,8 @@ namespace bleak {
 		offset_t position;
 
 		const extent_t size;
+
+		constexpr inline extent_t half_size() const noexcept { return size / 2; }
 
 		const extent_t min;
 		const extent_t max;

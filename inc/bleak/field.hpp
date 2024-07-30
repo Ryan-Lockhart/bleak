@@ -204,6 +204,37 @@ namespace bleak {
 			return highest;
 		}
 
+		template<zone_region_t Region> constexpr std::optional<offset_t> ascend(cref<offset_t> position, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage) const noexcept {
+			if (!distances.template within<Region>(position) || distances[position] == obstacle_value) {
+				return std::nullopt;
+			}
+
+			offset_t highest{ position };
+
+			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
+				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
+					if (x_offs == 0 && y_offs == 0) {
+						continue;
+					}
+
+					const offset_t offset{ x_offs, y_offs };
+					const offset_t offset_position{ position + offset };
+
+					if (!distances.template within<Region>(offset_position) || distances[offset_position] == obstacle_value || distances[offset_position] <= distances[highest] || sparse_blockage.contains(offset_position)) {
+						continue;
+					}
+
+					highest = offset_position;
+				}
+			}
+
+			if (highest == position) {
+				return std::nullopt;
+			}
+
+			return highest;
+		}
+
 		template<zone_region_t Region, typename Generator>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> ascend(cref<offset_t> position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
@@ -226,6 +257,42 @@ namespace bleak {
 
 					if (!distances.template within<Region>(offset_position) || distances[offset_position] == obstacle_value || distances[offset_position] < distances[highest]
 						|| (distances[offset_position] == distances[highest] && !distribution(generator))) {
+						continue;
+					}
+
+					highest = offset_position;
+				}
+			}
+
+			if (highest == position) {
+				return std::nullopt;
+			}
+
+			return highest;
+		}
+
+		template<zone_region_t Region, typename Generator>
+			requires is_random_engine<Generator>::value
+		constexpr std::optional<offset_t> ascend(cref<offset_t> position, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
+			if (!distances.template within<Region>(position) || distances[position] == obstacle_value) {
+				return std::nullopt;
+			}
+
+			std::bernoulli_distribution distribution{ unseat_probability };
+
+			offset_t highest{ position };
+
+			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
+				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
+					if (x_offs == 0 && y_offs == 0) {
+						continue;
+					}
+
+					const offset_t offset{ x_offs, y_offs };
+					const offset_t offset_position{ position + offset };
+
+					if (!distances.template within<Region>(offset_position) || distances[offset_position] == obstacle_value || distances[offset_position] < distances[highest]
+						|| sparse_blockage.contains(offset_position) || (distances[offset_position] == distances[highest] && !distribution(generator))) {
 						continue;
 					}
 
@@ -271,6 +338,37 @@ namespace bleak {
 			return lowest;
 		}
 
+		template<zone_region_t Region> constexpr std::optional<offset_t> descend(cref<offset_t> position, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage) const noexcept {
+			if (!distances.template within<Region>(position) || distances[position] == goal_value) {
+				return std::nullopt;
+			}
+
+			offset_t lowest{ position };
+
+			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
+				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
+					if (x_offs == 0 && y_offs == 0) {
+						continue;
+					}
+
+					const offset_t offset{ x_offs, y_offs };
+					const offset_t offset_position{ position + offset };
+
+					if (!distances.template within<Region>(offset_position) || distances[offset_position] >= distances[lowest] || sparse_blockage.contains(offset_position)) {
+						continue;
+					}
+
+					lowest = offset_position;
+				}
+			}
+
+			if (lowest == position) {
+				return std::nullopt;
+			}
+
+			return lowest;
+		}
+
 		template<zone_region_t Region, typename Generator>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> descend(cref<offset_t> position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
@@ -293,6 +391,42 @@ namespace bleak {
 
 					if (!distances.template within<Region>(offset_position) || distances[offset_position] > distances[lowest]
 						|| (distances[offset_position] == distances[lowest] && !distribution(generator))) {
+						continue;
+					}
+
+					lowest = offset_position;
+				}
+			}
+
+			if (lowest == position) {
+				return std::nullopt;
+			}
+
+			return lowest;
+		}
+
+		template<zone_region_t Region, typename Generator>
+			requires is_random_engine<Generator>::value
+		constexpr std::optional<offset_t> descend(cref<offset_t> position, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
+			if (!distances.template within<Region>(position) || distances[position] == goal_value) {
+				return std::nullopt;
+			}
+
+			std::bernoulli_distribution distribution{ unseat_probability };
+
+			offset_t lowest{ position };
+
+			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
+				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
+					if (x_offs == 0 && y_offs == 0) {
+						continue;
+					}
+
+					const offset_t offset{ x_offs, y_offs };
+					const offset_t offset_position{ position + offset };
+
+					if (!distances.template within<Region>(offset_position) || distances[offset_position] > distances[lowest]
+						|| sparse_blockage.contains(offset_position) || (distances[offset_position] == distances[lowest] && !distribution(generator))) {
 						continue;
 					}
 

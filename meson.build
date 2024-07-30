@@ -37,6 +37,7 @@ executable(
     sources,
 
     dependencies: [sdl_dependencies],
+    include_directories: include_directories(['inc', 'src']),
 
     override_options: [
         'cpp_std=c++26',

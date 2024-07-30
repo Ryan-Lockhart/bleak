@@ -3,13 +3,13 @@
 #include <bleak/typedef.hpp>
 
 #include <initializer_list>
+#include <type_traits>
 
 #include <bleak/concepts.hpp>
 #include <bleak/extent.hpp>
 #include <bleak/iter.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/utility.hpp>
-#include <type_traits>
 
 namespace bleak {
 	template<typename T, extent_t Size> class array_t {
