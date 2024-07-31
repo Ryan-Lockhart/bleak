@@ -5,7 +5,7 @@
 			"label": "meson-build",
 			"type": "meson",
 			"mode": "build",
-			"target": "bleakdepth:executable",
+			"target": "necrowarp:executable",
 			"problemMatcher": [
 				"$meson-gcc"
 			],

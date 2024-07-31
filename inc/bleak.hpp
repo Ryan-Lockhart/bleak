@@ -1,5 +1,6 @@
 #pragma once
 
+ // IWYU pragma: begin_exports
 #include <bleak/applicator.hpp>
 #include <bleak/arc.hpp>
 #include <bleak/area.hpp>
@@ -51,3 +52,4 @@
 #include <bleak/wave.hpp>
 #include <bleak/window.hpp>
 #include <bleak/zone.hpp>
+// IWYU pragma: end_exports

@@ -1,12 +1,10 @@
-#include "bleak/constants/characters.hpp"
-#include "bleak/constants/glyphs.hpp"
-#include "bleak/zone.hpp"
 #include <bleak.hpp>
 
-#include <bleakdepth/game_state.hpp>
-#include <bleakdepth/globals.hpp>
+#include <necrowarp/entity_state.hpp>
+#include <necrowarp/game_state.hpp>
+#include <necrowarp/globals.hpp>
 
-namespace bleakdepth {
+namespace necrowarp {
 	using namespace bleak;
 
 	class Game {
@@ -35,7 +33,7 @@ namespace bleakdepth {
 			primary_gamepad = gamepad;
 		}
 
-		static inline bool update_camera() noexcept {
+		static inline bool camera_input() noexcept {
 			if constexpr (globals::MapSize <= globals::GameGridSize) {
 				return camera.center_on<true>(globals::MapCenter);
 			}
@@ -75,12 +73,10 @@ namespace bleakdepth {
 			return false;
 		}
 
-		static inline bool character_movement() noexcept {
+		static inline bool character_input() noexcept {
 			if (Keyboard::any_keys_pressed(bindings::Wait)) {
 				input_timer.record();
 				epoch_timer.record();
-
-				player.glyph.index = characters::Entity[cardinal_t::Central];
 
 				return true;
 			}
@@ -105,21 +101,11 @@ namespace bleakdepth {
 			}
 
 			if (direction != offset_t::Zero) {
-				player.glyph.index = characters::Entity[direction];
-
 				const offset_t target_position{ player.position + direction };
 
-				if (!game_map.within<zone_region_t::Interior>(target_position) || game_map[target_position].solid || occupation_map.contains(target_position)) {
+				if (!game_map.within<zone_region_t::Interior>(target_position) || game_map[target_position].solid || occupation_map[target_position]) {
 					return false;
 				}
-
-				occupation_map.erase(player.position);
-				occupation_map.insert(target_position);
-
-				adventurer_goal_map.update(player.position, target_position);
-				adventurer_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open);
-
-				player.position = target_position;
 
 				input_timer.record();
 				epoch_timer.record();
@@ -130,65 +116,9 @@ namespace bleakdepth {
 			return false;
 		}
 
-		static inline bool skeleton_movement() noexcept {
-			bool any_moved{ false };
-			for (rauto skeleton : skeletons) {
-
-				crauto new_position{ skeleton_goal_map.descend<zone_region_t::Interior>(skeleton.position, occupation_map, random_engine) };
-
-				if (!new_position.has_value()) {
-					continue;
-				}
-
-				occupation_map.erase(skeleton.position);
-				occupation_map.insert(new_position.value());
-
-				skeleton_goal_map.update(skeleton.position, new_position.value());
-
-				const cardinal_t new_direction{ offset_t::direction(skeleton.position, new_position.value()) };
-
-				skeleton.position = new_position.value();
-
-				skeleton.glyph.index = characters::Entity[new_direction];
-
-				any_moved = true;
-			}
-
-			if (any_moved) {
-				skeleton_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open);
-			}
-
-			return any_moved;
-		}
-
-		static inline bool adventurer_movement() noexcept {
-			bool any_moved{ false };
-			for (rauto adventurer : adventurers) {
-				crauto new_position{ adventurer_goal_map.descend<zone_region_t::Interior>(adventurer.position, occupation_map, random_engine) };
-
-				if (!new_position.has_value()) {
-					continue;
-				}
-
-				occupation_map.erase(adventurer.position);
-				occupation_map.insert(new_position.value());
-
-				skeleton_goal_map.update(adventurer.position, new_position.value());
-
-				const cardinal_t new_direction{ offset_t::direction(adventurer.position, new_position.value()) };
-
-				adventurer.position = new_position.value();
-
-				adventurer.glyph.index = characters::Entity[new_direction];
-
-				any_moved = true;
-			}
-
-			if (any_moved) {
-				skeleton_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open);
-			}
-
-			return any_moved;
+		static inline void input() noexcept {
+			character_input();
+			camera_input();
 		}
 
 		static inline void startup() noexcept {
@@ -233,33 +163,6 @@ namespace bleakdepth {
 				}
 			}
 
-			auto player_start{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open, occupation_map) };
-
-			if (player_start.has_value()) {
-				player.position = player_start.value();
-				occupation_map.insert(player.position);
-			} else {
-				error_log.add("no open cells found for player start position\n", __TIME_FILE_LINE__);
-				terminate_prematurely();
-			}
-
-			adventurer_goal_map += player.position;
-			adventurer_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open);
-
-			update_camera();
-
-			for (rauto chaser : adventurers) {
-				cauto chaser_start{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open, occupation_map) };
-
-				if (chaser_start.has_value()) {
-					chaser.position = chaser_start.value();
-					occupation_map.insert(chaser.position);
-				} else {
-					error_log.add("no open cells found for chaser start position\n", __TIME_FILE_LINE__);
-					terminate_prematurely();
-				}
-			}
-
 			Clock::tick();
 
 			input_timer.reset();
@@ -294,19 +197,12 @@ namespace bleakdepth {
 				game_map.apply<zone_region_t::All>(cell_trait_t::Explored);
 			}
 
-			bool turn_taken{ false };
-
 			if (input_timer.ready()) {
 				if (epoch_timer.ready()) {
-					turn_taken = character_movement();
+					character_input();
 				}
 
-				update_camera();
-			}
-
-			if (turn_taken) {
-				skeleton_movement();
-				adventurer_movement();
+				camera_input();
 			}
 
 			sine_wave.update<wave_type_t::Sine>(Clock::elapsed());
@@ -330,8 +226,6 @@ namespace bleakdepth {
 
 				grid_cursor.color.set_alpha(sine_wave.current_value());
 			}
-
-			test_path.generate<zone_region_t::Interior, distance_function_t::Euclidean>(player.position, grid_cursor.get_position(), game_map, occupation_map, cell_trait_t::Open);
 		}
 
 		static inline void render() noexcept {
@@ -342,30 +236,6 @@ namespace bleakdepth {
 			renderer.clear(colors::Black);
 
 			game_map.draw<globals::UseSimpleGraphics>(game_atlas, camera);
-
-			test_path.draw(game_atlas, glyphs::PathSegment, -camera.get_position());
-
-			for (crauto adventurer : adventurers) {
-				if constexpr (globals::UseSimpleGraphics) {
-					game_atlas.draw(glyphs::Enemy, adventurer.position - camera.get_position());
-				} else {
-					adventurer.draw(game_atlas, -camera.get_position());
-				}
-			}
-
-			for (crauto skeleton : skeletons) {
-				if constexpr (globals::UseSimpleGraphics) {
-					game_atlas.draw(glyphs::Ally, skeleton.position - camera.get_position());
-				} else {
-					skeleton.draw(game_atlas, -camera.get_position());
-				}
-			}
-			
-			if constexpr (globals::UseSimpleGraphics) {
-				game_atlas.draw(glyphs::Player, player.position - camera.get_position());
-			} else {
-				player.draw(game_atlas, -camera.get_position());
-			}
 
 			renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, globals::BorderSize, colors::Black);
 			renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, colors::White);
@@ -417,4 +287,4 @@ namespace bleakdepth {
 			exit(EXIT_FAILURE);
 		}
 	};
-} // namespace bleakdepth
+} // namespace necrowarp

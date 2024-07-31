@@ -2,9 +2,9 @@
 
 namespace bleak {
 #if defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || defined(_M_ARM64)
-#define BLEAKDEPTH_64
+#define BLEAK_64
 #elif defined(__i386__) || defined(_M_IX86) || defined(__arm__) || defined(_M_ARM)
-#define BLEAKDEPTH_32
+#define BLEAK_32
 #endif
 
 #define __TIME_FILE_LINE__ __TIME__, __FILE__, __LINE__
@@ -40,13 +40,13 @@ namespace bleak {
 
 	using f80 = long double;
 
-#if defined(BLEAKDEPTH_64)
+#if defined(BLEAK_64)
 	using u128 = unsigned __int128;
 	using i128 = signed __int128;
 	using f128 = __float128;
 #endif
 
-#if defined(BLEAKDEPTH_32)
+#if defined(BLEAK_32)
 
 	using uquad = u64;
 	using iquad = i64;

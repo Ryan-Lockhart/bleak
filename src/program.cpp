@@ -1,7 +1,9 @@
-#include <bleakdepth/game.hpp>
+#include <necrowarp/game.hpp>
 
 #define main SDL_main
 
 int main(int argc, char* argv[]) {
-	return bleakdepth::Game::run();
+	using namespace necrowarp;
+
+	return Game::run();
 }

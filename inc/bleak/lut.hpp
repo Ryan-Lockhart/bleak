@@ -51,9 +51,9 @@ namespace bleak {
 		constexpr bool operator>=(cref<pair_t> other) const noexcept { return value >= other.value; }
 	};
 
-#if defined(BLEAKDEPTH_32)
+#if defined(BLEAK_32)
 	constexpr const usize LUT_SIZE_CAP{ 1024 };
-#elif defined(BLEAKDEPTH_64)
+#elif defined(BLEAK_64)
 	constexpr const usize LUT_SIZE_CAP{ 2048 };
 #endif
 

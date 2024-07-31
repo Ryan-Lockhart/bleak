@@ -2,11 +2,11 @@
 
 #include <bleak.hpp>
 
-namespace bleakdepth {
+namespace necrowarp {
 	namespace globals {
 		using namespace bleak;
 
-		constexpr std::string GameName{ "Bleakdepth" };
+		constexpr std::string GameName{ "Necrowarp" };
 		constexpr std::string GameVersion{ "0.0.1" };
 		constexpr std::string GameAuthor{ "Ryan Lockhart" };
 
@@ -34,8 +34,7 @@ namespace bleakdepth {
 		constexpr extent_t GlyphsetSize{ 16, 16 };
 		constexpr extent_t TilesetSize{ 16, 5 };
 
-		// constexpr extent_t ZoneSize{ globals::GameGridSize };
-		constexpr extent_t ZoneSize{ 32, 32 };
+		constexpr extent_t ZoneSize{ globals::GameGridSize };
 		constexpr extent_t RegionSize{ 1, 1 };
 
 		constexpr extent_t MapSize{ RegionSize * ZoneSize };
@@ -62,4 +61,4 @@ namespace bleakdepth {
 
 		constexpr bool UseSimpleGraphics{ false };
 	} // namespace globals
-} // namespace bleakdepth
+} // namespace necrowarp

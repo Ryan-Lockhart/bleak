@@ -120,6 +120,8 @@ namespace bleak {
 
 		constexpr offset_t get_position() const noexcept { return position; }
 
+		constexpr offset_t get_offset() const noexcept { return -position; }
+
 		constexpr extent_t get_size() const noexcept { return size; }
 
 		constexpr extent_t get_min() const noexcept { return min; }

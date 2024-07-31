@@ -51,7 +51,9 @@ namespace bleak {
 			i32 err = delta.x - delta.y;
 
 			for (;;) {
-				points.push(line.start);
+				if (pos != line.start) {
+					points.push(pos);
+				}
 
 				if (pos == line.end) {
 					break;
@@ -73,12 +75,13 @@ namespace bleak {
 			return *this;
 		}
 
-		template<dense_args> inline ref<path_t> generate(cref<line_t> line, cref<dense_t> zone, cref<T> value) {
+		template<zone_region_t Region, dense_args>
+		inline ref<path_t> generate(cref<line_t> line, cref<dense_t> zone, cref<T> value) {
 			if (!empty()) {
 				clear();
 			}
 
-			if (!zone.within<zone_region_t::All>(line.start) || zone[line.start] != value || !zone.within<zone_region_t::All>(line.end) || zone[line.end] != value || line.start == line.end) {
+			if (!is_valid(line.start, line.end, zone, value) || line.start == line.end) {
 				return *this;
 			}
 
@@ -91,15 +94,18 @@ namespace bleak {
 			i32 err = delta.x - delta.y;
 
 			for (;;) {
-				if (!zone.within<zone_region_t::All>(pos) || zone[pos] != value) {
+				if (pos == line.end) {
+					points.push(pos);
+					break;
+				}
+
+				if (!is_valid<Region>(pos, zone, value)) {
 					clear();
 					return *this;
 				}
 
-				points.push(line.start);
-
-				if (pos == line.end) {
-					break;
+				if (pos != line.start) {
+					points.push(pos);
 				}
 
 				i32 e2 = 2 * err;
@@ -118,14 +124,14 @@ namespace bleak {
 			return *this;
 		}
 
-		template<dense_args, typename U>
+		template<zone_region_t Region, dense_args, typename U>
 			requires is_equatable<T, U>::value
 		inline ref<path_t> generate(cref<line_t> line, cref<dense_t> zone, cref<U> value) {
 			if (!empty()) {
 				clear();
 			}
 
-			if (!zone.within<zone_region_t::All>(line.start) || zone[line.start] != value || !zone.within<zone_region_t::All>(line.end) || zone[line.end] != value || line.start == line.end) {
+			if (!is_valid<Region>(line.start, line.end, zone, value) || line.start == line.end) {
 				return *this;
 			}
 
@@ -138,15 +144,18 @@ namespace bleak {
 			i32 err = delta.x - delta.y;
 
 			for (;;) {
-				if (!zone.within<zone_region_t::All>(pos) || zone[pos] != value) {
+				if (pos == line.end) {
+					points.push(pos);
+					break;
+				}
+
+				if (!is_valid<Region>(pos, zone, value)) {
 					clear();
 					return *this;
 				}
-
-				points.push(line.start);
-
-				if (pos == line.end) {
-					break;
+				
+				if (pos != line.start) {
+					points.push(pos);
 				}
 
 				i32 e2 = 2 * err;
@@ -165,188 +174,124 @@ namespace bleak {
 			return *this;
 		}
 
-		template<distance_function_t Distance, dense_args> inline ref<path_t> generate(cref<offset_t> origin, cref<offset_t> destination, cref<dense_t> zone, cref<T> value) {
+		template<zone_region_t Region, bool Inclusive = false, dense_args>
+		inline ref<path_t> generate(cref<line_t> line, cref<dense_t> zone, cref<T> value, cref<sparse_t> sparse_blockage) {
 			if (!empty()) {
 				clear();
 			}
 
-			if (origin == destination || !zone.template within<zone_region_t::All>(origin) || zone[origin] != value || !zone.template within<zone_region_t::All>(destination) || zone[destination] != value) {
-				return *this;
+			if constexpr (Inclusive) {				
+				if (!is_valid<Region>(line.start, line.end, zone, value) || line.start == line.end) {
+					return *this;
+				}
+			} else {
+				if (!is_valid<Region>(line.start, line.end, zone, value, sparse_blockage) || line.start == line.end) {
+					return *this;
+				}
 			}
 
-			frontier_t frontier{};
-			sparse_t visited{};
+			offset_t pos{ line.start };
 
-			frontier.push(creep_t{ origin, origin, offset_t::distance<Distance>(origin, destination) });
-			visited.insert(origin);
+			offset_t delta{ std::abs(line.end.x - line.start.x), std::abs(line.end.y - line.start.y) };
 
-			trail_t trail{};
+			offset_t step{ line.start.x < line.end.x ? 1 : -1, line.start.y < line.end.y ? 1 : -1 };
 
-			while (!frontier.empty()) {
-				const creep_t current{ frontier.top() };
-				frontier.pop();
+			i32 err = delta.x - delta.y;
 
-				for (crauto offset : neighbourhood_offsets<Distance>) {
-					const offset_t neighbour{ current.position.current + offset };
-					cauto distance{ offset_t::distance<Distance>(neighbour, destination) };
+			for (;;) {
+				if (pos == line.end) {
+					points.push(pos);
+					break;
+				}
 
-					if (!zone.within<zone_region_t::All>(neighbour) || zone[neighbour] != value || distance > current.distance || !visited.insert(neighbour).second) {
-						continue;
-					}
+				if (pos != line.start && !is_valid<Region>(pos, zone, value, sparse_blockage)) {
+					clear();
+					return *this;
+				}
+				
+				if (pos != line.start) {
+					points.push(pos);
+				}
 
-					if (neighbour == destination) {
-						rememberance_t<offset_t> unwind{ trail[destination] };
+				i32 e2 = 2 * err;
 
-						while (unwind.current != origin) {
-							points.push(unwind.current);
-							unwind = trail[unwind.previous];
-						}
+				if (e2 > -delta.y) {
+					err -= delta.y;
+					pos.x += step.x;
+				}
 
-						return *this;
-					}
-
-					frontier.push(creep_t{ neighbour, current.position.current, distance });
-					trail.emplace(neighbour, current.position.perpetuate(neighbour));
+				if (e2 < delta.x) {
+					err += delta.x;
+					pos.y += step.y;
 				}
 			}
 
 			return *this;
 		}
 
-		template<distance_function_t Distance, dense_args, typename U>
+		template<zone_region_t Region, bool Inclusive = false, dense_args, typename U>
 			requires is_equatable<T, U>::value
-		inline ref<path_t> generate(cref<offset_t> origin, cref<offset_t> destination, cref<dense_t> zone, cref<U> value) {
+		inline ref<path_t> generate(cref<line_t> line, cref<dense_t> zone, cref<U> value, cref<sparse_t> sparse_blockage) {
 			if (!empty()) {
 				clear();
 			}
 
-			if (origin == destination || !zone.template within<zone_region_t::All>(origin) || zone[origin] != value || !zone.template within<zone_region_t::All>(destination) || zone[destination] != value) {
-				return *this;
+			if constexpr (Inclusive) {				
+				if (!is_valid<Region>(line.start, line.end, zone, value) || line.start == line.end) {
+					return *this;
+				}
+			} else {
+				if (!is_valid<Region>(line.start, line.end, zone, value, sparse_blockage) || line.start == line.end) {
+					return *this;
+				}
 			}
 
-			frontier_t frontier{};
-			sparse_t visited{};
+			offset_t pos{ line.start };
 
-			frontier.emplace(origin, origin, offset_t::distance<Distance>(origin, destination));
-			visited.insert(origin);
+			offset_t delta{ std::abs(line.end.x - line.start.x), std::abs(line.end.y - line.start.y) };
 
-			trail_t trail{};
+			offset_t step{ line.start.x < line.end.x ? 1 : -1, line.start.y < line.end.y ? 1 : -1 };
 
-			trail.emplace(origin, origin);
+			i32 err = delta.x - delta.y;
 
-			while (!frontier.empty()) {
-				const creep_t current{ frontier.top() };
-				frontier.pop();
+			for (;;) {
+				if (pos == line.end) {
+					points.push(pos);
+					break;
+				}
 
-				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
-					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
-						if (offs_x == 0 && offs_y == 0) {
-							continue;
-						}
+				if (pos != line.start && !is_valid<Region>(pos, zone, value, sparse_blockage)) {
+					clear();
+					return *this;
+				}
+				
+				if (pos != line.start) {
+					points.push(pos);
+				}
 
-						const offset_t offset{ offs_x, offs_y };
-						const offset_t neighbour{ current.position.current + offset };
-						const offset_t::product_t distance{ offset_t::distance<Distance>(neighbour, destination) };
+				i32 e2 = 2 * err;
 
-						if (!zone.template within<zone_region_t::All>(neighbour) || zone[neighbour] != value || distance > current.distance || visited.contains(neighbour)) {
-							visited.insert(neighbour);
-							continue;
-						}
+				if (e2 > -delta.y) {
+					err -= delta.y;
+					pos.x += step.x;
+				}
 
-						if (neighbour == destination) {
-							rememberance_t<offset_t> unwind{ trail[current.position.current] };
-
-							points.push(destination);
-
-							while (unwind.current != origin) {
-								points.push(unwind.current);
-								unwind = trail[unwind.previous];
-							}
-
-							points.push(origin);
-
-							return *this;
-						}
-
-						const rememberance_t<offset_t> memory{ neighbour, current.position.current };
-
-						frontier.emplace(memory, distance);
-						trail.emplace(neighbour, memory);
-						visited.insert(neighbour);
-					}
+				if (e2 < delta.x) {
+					err += delta.x;
+					pos.y += step.y;
 				}
 			}
 
 			return *this;
 		}
 
-		template<distance_function_t Distance, dense_args>
-		inline ref<path_t> generate(cref<offset_t> origin, cref<offset_t> destination, cref<dense_t> zone, cref<sparse_t> sparse_blockage, cref<T> value) {
+		template<zone_region_t Region, distance_function_t Distance, dense_args>
+		inline ref<path_t> generate(cref<offset_t> origin, cref<offset_t> destination, cref<dense_t> zone, cref<T> value) {
 			if (!empty()) {
 				clear();
 			}
 
-			if (origin == destination || !zone.template within<zone_region_t::All>(origin) || zone[origin] != value || !zone.template within<zone_region_t::All>(destination) || zone[destination] != value) {
-				return *this;
-			}
-
-			frontier_t frontier{};
-			sparse_t visited{};
-
-			frontier.push(creep_t{ origin, origin, offset_t::distance<Distance>(origin, destination) });
-			visited.insert(origin);
-
-			trail_t trail{};
-
-			while (!frontier.empty()) {
-				const creep_t current{ frontier.top() };
-				frontier.pop();
-
-				for (offset_t::scalar_t offs_y{ -1 }; offs_y <= 1; ++offs_y) {
-					for (offset_t::scalar_t offs_x{ -1 }; offs_x <= 1; ++offs_x) {
-						if (offs_x == 0 && offs_y == 0) {
-							continue;
-						}
-
-						const offset_t offset{ offs_x, offs_y };
-						const offset_t neighbour{ current.position.current + offset };
-						cauto distance{ offset_t::distance<Distance>(neighbour, destination) };
-
-						if (neighbour == destination) {
-							rememberance_t<offset_t> unwind{ trail[destination] };
-
-							while (unwind.current != origin) {
-								points.push(unwind.current);
-								unwind = trail[unwind.previous];
-							}
-
-							points.push(origin);
-
-							return *this;
-						}
-
-						if (!zone.within<zone_region_t::All>(neighbour) || zone[neighbour] != value || distance > current.distance || visited.contains(neighbour) || sparse_blockage.contains(neighbour)) {
-							visited.insert(neighbour);
-							continue;
-						}
-
-						frontier.push(creep_t{ neighbour, current.position.current, distance });
-						trail.emplace(neighbour, current.position.perpetuate(neighbour));
-					}
-				}
-			}
-
-			return *this;
-		}
-
-		template<zone_region_t Region, distance_function_t Distance, dense_args, typename U>
-			requires is_equatable<T, U>::value
-		inline ref<path_t> generate(cref<offset_t> origin, cref<offset_t> destination, cref<dense_t> zone, cref<sparse_t> sparse_blockage, cref<U> value) {
-			if (!empty()) {
-				clear();
-			}
-			
-			if (!is_valid<Region>(origin, destination, zone, value, sparse_blockage)) {
+			if (!is_valid<Region>(origin, destination, zone, value)) {
 				return *this;
 			}
 
@@ -375,7 +320,168 @@ namespace bleak {
 					const offset_t neighbour{ current_creeper.position.current + offset };
 					cauto distance{ offset_t::distance<Distance>(neighbour, destination) };
 
-					if (!is_valid<zone_region_t::All>(neighbour, zone, value, visited, sparse_blockage) || distance > current_creeper.distance) {
+					if (neighbour != destination && (!is_valid<Region>(neighbour, zone, value, visited) || distance > current_creeper.distance)) {
+						continue;
+					}
+
+					const rememberance_t<offset_t> memory{ neighbour, current_creeper.position.current };
+
+					frontier.emplace(memory, distance);
+					trail.emplace(neighbour, memory);
+				}
+			}
+
+			return *this;
+		}
+
+		template<zone_region_t Region, distance_function_t Distance, dense_args, typename U>
+			requires is_equatable<T, U>::value
+		inline ref<path_t> generate(cref<offset_t> origin, cref<offset_t> destination, cref<dense_t> zone, cref<U> value) {
+			if (!empty()) {
+				clear();
+			}
+			
+			if (!is_valid<Region>(origin, destination, zone, value)) {
+				return *this;
+			}
+
+			frontier_t frontier{};
+			sparse_t visited{};
+
+			frontier.emplace(origin, origin, offset_t::distance<Distance>(origin, destination));
+			visited.insert(origin);
+
+			trail_t trail{};
+
+			trail.emplace(origin, origin);
+
+			while (!frontier.empty()) {
+				const creep_t current_creeper{ frontier.top() };
+				frontier.pop();
+
+				visited.insert(current_creeper.position.current);
+
+				if (current_creeper.position.current == destination) {
+					unwind(origin, destination, trail);
+					return *this;
+				}
+
+				for (crauto offset : neighbourhood_offsets<Distance>) {
+					const offset_t neighbour{ current_creeper.position.current + offset };
+					cauto distance{ offset_t::distance<Distance>(neighbour, destination) };
+
+					if (neighbour != destination && (!is_valid<Region>(neighbour, zone, value, visited) || distance > current_creeper.distance)) {
+						continue;
+					}
+
+					const rememberance_t<offset_t> memory{ neighbour, current_creeper.position.current };
+
+					frontier.emplace(memory, distance);
+					trail.emplace(neighbour, memory);
+				}
+			}
+
+			return *this;
+		}
+
+		template<zone_region_t Region, distance_function_t Distance, bool Inclusive = false, dense_args>
+		inline ref<path_t> generate(cref<offset_t> origin, cref<offset_t> destination, cref<dense_t> zone, cref<T> value, cref<sparse_t> sparse_blockage) {
+			if (!empty()) {
+				clear();
+			}
+
+			if constexpr (Inclusive) {				
+				if (!is_valid<Region>(origin, destination, zone, value)) {
+					return *this;
+				}
+			} else {
+				if (!is_valid<Region>(origin, destination, zone, value, sparse_blockage)) {
+					return *this;
+				}
+			}
+
+			frontier_t frontier{};
+			sparse_t visited{};
+
+			frontier.emplace(origin, origin, offset_t::distance<Distance>(origin, destination));
+			visited.insert(origin);
+
+			trail_t trail{};
+
+			trail.emplace(origin, origin);
+
+			while (!frontier.empty()) {
+				const creep_t current_creeper{ frontier.top() };
+				frontier.pop();
+
+				visited.insert(current_creeper.position.current);
+
+				if (current_creeper.position.current == destination) {
+					unwind(origin, destination, trail);
+					return *this;
+				}
+
+				for (crauto offset : neighbourhood_offsets<Distance>) {
+					const offset_t neighbour{ current_creeper.position.current + offset };
+					cauto distance{ offset_t::distance<Distance>(neighbour, destination) };
+
+					if (neighbour != destination && (!is_valid<Region>(neighbour, zone, value, visited, sparse_blockage) || distance > current_creeper.distance)) {
+						continue;
+					}
+
+					const rememberance_t<offset_t> memory{ neighbour, current_creeper.position.current };
+
+					frontier.emplace(memory, distance);
+					trail.emplace(neighbour, memory);
+				}
+			}
+
+			return *this;
+		}
+
+		template<zone_region_t Region, distance_function_t Distance, bool Inclusive = false, dense_args, typename U>
+			requires is_equatable<T, U>::value
+		inline ref<path_t> generate(cref<offset_t> origin, cref<offset_t> destination, cref<dense_t> zone, cref<U> value, cref<sparse_t> sparse_blockage) {
+			if (!empty()) {
+				clear();
+			}
+
+			if constexpr (Inclusive) {				
+				if (!is_valid<Region>(origin, destination, zone, value)) {
+					return *this;
+				}
+			} else {
+				if (!is_valid<Region>(origin, destination, zone, value, sparse_blockage)) {
+					return *this;
+				}
+			}
+
+			frontier_t frontier{};
+			sparse_t visited{};
+
+			frontier.emplace(origin, origin, offset_t::distance<Distance>(origin, destination));
+			visited.insert(origin);
+
+			trail_t trail{};
+
+			trail.emplace(origin, origin);
+
+			while (!frontier.empty()) {
+				const creep_t current_creeper{ frontier.top() };
+				frontier.pop();
+
+				visited.insert(current_creeper.position.current);
+
+				if (current_creeper.position.current == destination) {
+					unwind(origin, destination, trail);
+					return *this;
+				}
+
+				for (crauto offset : neighbourhood_offsets<Distance>) {
+					const offset_t neighbour{ current_creeper.position.current + offset };
+					cauto distance{ offset_t::distance<Distance>(neighbour, destination) };
+
+					if (neighbour != destination && (!is_valid<Region>(neighbour, zone, value, visited, sparse_blockage) || distance > current_creeper.distance)) {
 						continue;
 					}
 
@@ -508,6 +614,33 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, dense_args>
+		inline bool is_valid(cref<offset_t> position, cref<dense_t> zone, cref<T> value) const {
+			if (!zone.template within<Region>(position)) {
+				return false;
+			}
+
+			if (zone[position] != value) {
+				return false;
+			}
+
+			return true;
+		}
+
+		template<zone_region_t Region, dense_args, typename U>
+			requires is_equatable<T, U>::value
+		inline bool is_valid(cref<offset_t> position, cref<dense_t> zone, cref<U> value) const {
+			if (!zone.template within<Region>(position)) {
+				return false;
+			}
+
+			if (zone[position] != value) {
+				return false;
+			}
+
+			return true;
+		}
+
+		template<zone_region_t Region, dense_args>
 		inline bool is_valid(cref<offset_t> position, cref<dense_t> zone, cref<T> value, cref<sparse_t> visited) const {
 			if (!zone.template within<Region>(position)) {
 				return false;
@@ -524,7 +657,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<zone_region_t Region, typename T, typename U, extent_t Size, extent_t BorderSize>
+		template<zone_region_t Region, dense_args, typename U>
 			requires is_equatable<T, U>::value
 		inline bool is_valid(cref<offset_t> position, cref<dense_t> zone, cref<U> value, cref<sparse_t> visited) const {
 			if (!zone.template within<Region>(position)) {

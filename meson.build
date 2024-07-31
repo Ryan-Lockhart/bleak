@@ -1,5 +1,5 @@
 project(
-    'bleakdepth',
+    'libbleak',
     'cpp',
     version: '0.0.1',
 )
@@ -7,19 +7,19 @@ project(
 cpu_family = target_machine.cpu_family()
 
 if cpu_family == 'x86'
-    install_dir = 'C:\\Program Files (x86)\\Bleakdepth'
+    install_dir = 'C:\\Program Files (x86)\\Necrowarp'
 elif cpu_family == 'x86_64'
-    install_dir = 'C:\\Program Files\\Bleakdepth'
+    install_dir = 'C:\\Program Files\\Necrowarp'
 endif
 
 build_type = get_option('buildtype')
 
 if build_type == 'debug'
     subsystem = 'console'
-    args = ['-DBLEAKDEPTH_DEBUG']
+    args = ['-DBLEAK_DEBUG']
 else
     subsystem = 'console'
-    args = ['-DBLEAKDEPTH_RELEASE', '-DNDEBUG']
+    args = ['-DBLEAK_RELEASE', '-DNDEBUG']
 endif
 
 sdl_dependencies = [
@@ -30,10 +30,12 @@ sdl_dependencies = [
     dependency('sdl2_ttf'),
 ]
 
-sources = ['src/program.cpp']
+sources = [
+    'src/program.cpp'
+]
 
 executable(
-    'bleakdepth',
+    'necrowarp',
     sources,
 
     dependencies: [sdl_dependencies],

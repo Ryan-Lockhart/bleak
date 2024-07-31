@@ -5,7 +5,7 @@
             "name": "(lldb) Launch",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bleakdepth.exe",
+            "program": "${workspaceFolder}/build/necrowarp.exe",
             "args": [],
             "cwd": "${workspaceFolder}",
             "expressions": "native"
