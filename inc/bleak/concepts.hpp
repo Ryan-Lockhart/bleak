@@ -225,6 +225,19 @@ namespace bleak {
 	template<typename T> constexpr bool has_position_v = has_position<T>::value;
 
 	template<typename T>
+	concept HashableByPosition = requires(T t) {
+		{ t.position } -> std::convertible_to<offset_t>;
+		{ t.get_position() } -> std::convertible_to<offset_t>;
+		{ T::hasher::offset::operator()(t) } -> std::convertible_to<usize>;
+	};
+
+	template<typename T> struct is_hashable_by_position {
+		static constexpr bool value = HashableByPosition<T>;
+	};
+
+	template<typename T> constexpr bool is_hashable_by_position_v = is_hashable_by_position<T>::value;
+
+	template<typename T>
 	concept HasSize = requires(T t) {
 		{ t.size } -> std::convertible_to<extent_t>;
 		{ t.get_size() } -> std::convertible_to<extent_t>;
@@ -235,4 +248,17 @@ namespace bleak {
 	};
 
 	template<typename T> constexpr bool has_size_v = has_size<T>::value;
+
+	template<typename T>
+	concept HashableBySize = requires(T t) {
+		{ t.size } -> std::convertible_to<offset_t>;
+		{ t.get_size() } -> std::convertible_to<offset_t>;
+		{ T::hasher::size::operator()(t) } -> std::convertible_to<usize>;
+	};
+
+	template<typename T> struct is_hashable_by_size {
+		static constexpr bool value = HashableBySize<T>;
+	};
+
+	template<typename T> constexpr bool is_hashable_by_size_v = is_hashable_by_size<T>::value;
 } // namespace bleak
