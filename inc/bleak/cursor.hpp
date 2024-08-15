@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/camera.hpp"
 #include <bleak/typedef.hpp>
 
 #include <bleak/cardinal.hpp>
@@ -102,7 +103,11 @@ namespace bleak {
 
 		inline void draw() const { texture.draw(position * size, color); }
 
+		inline void draw(cref<camera_t> camera) const { texture.draw((position - camera.get_position()) * size, color); }
+
 		inline void draw(cref<offset_t> offset) const { texture.draw(position * size + offset, color); }
+
+		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const { texture.draw((position - camera.get_offset()) * size + offset, color); }
 
 		inline offset_t get_position() const { return position; }
 

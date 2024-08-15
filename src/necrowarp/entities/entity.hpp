@@ -29,9 +29,9 @@ namespace necrowarp {
 
     constexpr lut_t<entity_type_t, glyph_t, EntityTypeCount> EntityGlyphs {
         pair_t<entity_type_t, glyph_t>{ entity_type_t::None, glyph_t{ 0x00, colors::White } },
-        pair_t<entity_type_t, glyph_t>{ entity_type_t::Player, glyph_t{ 0x00, colors::White } },
-        pair_t<entity_type_t, glyph_t>{ entity_type_t::Skull, glyph_t{ 0x00, colors::White } },
-        pair_t<entity_type_t, glyph_t>{ entity_type_t::Skeleton, glyph_t{ 0x00, colors::White } },
-        pair_t<entity_type_t, glyph_t>{ entity_type_t::Adventurer, glyph_t{ 0x00, colors::White } }
+        pair_t<entity_type_t, glyph_t>{ entity_type_t::Player, glyph_t{ 0x40, colors::White } },
+        pair_t<entity_type_t, glyph_t>{ entity_type_t::Skull, glyph_t{ 0x46, colors::White } },
+        pair_t<entity_type_t, glyph_t>{ entity_type_t::Skeleton, glyph_t{ 0x43, colors::White } },
+        pair_t<entity_type_t, glyph_t>{ entity_type_t::Adventurer, glyph_t{ 0x42, colors::White } }
     };
 }

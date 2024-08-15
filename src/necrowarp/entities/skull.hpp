@@ -20,14 +20,14 @@ namespace necrowarp {
 
 		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skull], position + camera.get_offset() + offset); }
 
-		constexpr operator entity_type_t() const noexcept { return entity_type_t::Player; }
+		constexpr operator entity_type_t() const noexcept { return entity_type_t::Skull; }
 	};
 
 	template<> struct is_entity<skull_t> {
 		static constexpr bool value = true;
 	};
 
-	template<typename T> struct is_entity_type<T, entity_type_t::Skull> {
+	template<> struct is_entity_type<skull_t, entity_type_t::Skull> {
 		static constexpr bool value = true;
 	};
 } // namespace necrowarp

@@ -7,6 +7,7 @@
 
 #include <bleak/concepts.hpp>
 #include <bleak/extent.hpp>
+#include <bleak/hash.hpp>
 #include <bleak/iter.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/utility.hpp>
@@ -222,5 +223,29 @@ namespace bleak {
 		constexpr ptr<T> data_ptr() noexcept { return data; }
 
 		constexpr cptr<T> data_ptr() const noexcept { return data; }
+
+		constexpr bool operator==(cref<array_t> other) const noexcept {
+			for (usize i{0}; i < size; ++i) {
+				if (data[i] != other.data[i]) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		constexpr bool operator!=(cref<array_t> other) const noexcept {
+			for (usize i{0}; i < size; ++i) {
+				if (data[i] != other.data[i]) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		struct hasher {
+			static constexpr usize operator()(cref<array_t<T, Size>> array) { return hash_array(array.begin(), array.end()); }
+		};
 	};
 } // namespace bleak

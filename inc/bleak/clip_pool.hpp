@@ -9,7 +9,7 @@
 
 namespace bleak {
 	template<usize Size> struct clip_pool_t {
-		static_assert(Size > 0, "zize must be greater than zero!");
+		static_assert(Size > 0, "size must be greater than zero!");
 
 	  private:
 		sound_t sounds[Size];

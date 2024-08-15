@@ -32,7 +32,7 @@ namespace necrowarp {
 		static constexpr bool value = true;
 	};
 
-	template<typename T> struct is_entity_type<T, entity_type_t::Skeleton> {
+	template<> struct is_entity_type<skeleton_t, entity_type_t::Skeleton> {
 		static constexpr bool value = true;
 	};
 } // namespace necrowarp

@@ -18,7 +18,7 @@ if build_type == 'debug'
     subsystem = 'console'
     args = ['-DBLEAK_DEBUG']
 else
-    subsystem = 'console'
+    subsystem = 'windows'
     args = ['-DBLEAK_RELEASE', '-DNDEBUG']
 endif
 

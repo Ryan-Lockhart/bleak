@@ -1,3 +1,9 @@
+#include "bleak/applicator.hpp"
+#include "bleak/cell.hpp"
+#include "bleak/log.hpp"
+#include "bleak/zone.hpp"
+#include "necrowarp/entities/adventurer.hpp"
+#include "necrowarp/entities/player.hpp"
 #include <bleak.hpp>
 
 #include <necrowarp/entity_state.hpp>
@@ -107,6 +113,8 @@ namespace necrowarp {
 					return false;
 				}
 
+				player.position = target_position;
+
 				input_timer.record();
 				epoch_timer.record();
 
@@ -146,7 +154,14 @@ namespace necrowarp {
 			for (extent_t::product_t i{ 0 }; i < region.region_area; ++i) {
 				region[i].set<zone_region_t::Border>(closed_state);
 				region[i].generate<zone_region_t::Interior>(random_engine, globals::FillPercent, globals::AutomotaIterations, globals::AutomotaThreshold, cell_applicator);
-				region[i].collapse<zone_region_t::Interior>(closed_state, 0x00, open_state);
+
+				region[i].collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open);
+
+				region[i].randomize<zone_region_t::All>(random_engine, 0.25, cell_trait_t::Smooth, cell_trait_t::Rough);
+				region[i].randomize<zone_region_t::All>(random_engine, 2.0 / 3.0, cell_trait_t::Protrudes, cell_trait_t::Recedes);
+
+				region[i].randomize<zone_region_t::All, rock_type_t>(random_engine);
+				region[i].randomize<zone_region_t::All, mineral_type_t>(random_engine);
 			}
 
 			region.compile(game_map);
@@ -161,6 +176,26 @@ namespace necrowarp {
 						area.apply(game_map, cell_trait_t::Solid);
 					}
 				}
+			}
+
+			cauto player_pos{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open) };
+
+			if (!player_pos.has_value()) {
+				error_log.add("could not find open position for player!");
+				terminate_prematurely();
+			}
+
+			player.position = player_pos.value();
+
+			for (u32 i{ 0 }; i < globals::AdventurerPopulation; ++i) {
+				cauto random_pos{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open) };
+
+				if (!random_pos.has_value()) {
+					error_log.add("could not find open position for adventurer!");
+					terminate_prematurely();
+				}
+
+				entity_registry.add(adventurer_t{ random_pos.value() });
 			}
 
 			Clock::tick();
@@ -235,7 +270,9 @@ namespace necrowarp {
 
 			renderer.clear(colors::Black);
 
-			game_map.draw<globals::UseSimpleGraphics>(game_atlas, camera);
+			game_map.draw(game_atlas, camera);
+
+			entity_registry.draw(camera);
 
 			renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, globals::BorderSize, colors::Black);
 			renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, colors::White);
@@ -256,7 +293,7 @@ namespace necrowarp {
 			if (draw_cursor) {
 				cursor.draw();
 			} else {
-				grid_cursor.draw(globals::CursorOffset - camera.get_position() * globals::CellSize);
+				grid_cursor.draw(camera, globals::CursorOffset);
 			}
 
 			renderer.present();

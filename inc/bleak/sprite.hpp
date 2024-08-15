@@ -117,5 +117,17 @@ namespace bleak {
 		template<extent_t AtlasSize> constexpr inline void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset) const {
 			atlas.draw(glyph.current(), position + offset);
 		}
+
+		struct hasher {
+			static constexpr inline size_t operator()(cref<animated_sprite_t> sprite) noexcept {
+				return hash_combine(sprite.position, sprite.glyph);
+			}
+
+			struct offset {
+				static constexpr inline size_t operator()(cref<animated_sprite_t> sprite) noexcept {
+					return hash_combine(sprite.position);
+				}
+			};
+		};
 	};
 } // namespace bleak

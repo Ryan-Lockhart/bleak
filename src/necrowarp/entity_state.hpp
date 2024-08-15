@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bleak/camera.hpp"
+#include "entities/entity.hpp"
 #include <necrowarp/entities.hpp>
 
 namespace necrowarp {
@@ -30,19 +32,19 @@ namespace necrowarp {
 			}
 		}
 
-		template<typename T> requires is_entity<T>::value inline bool add(rval<T> entity, cref<offset_t> position) noexcept {
-			if (occupation_map[position]) {
+		template<typename T> requires is_entity<T>::value && (!is_entity_type<T, entity_type_t::Player>::value) inline bool add(rval<T> entity) noexcept {
+			if (occupation_map[entity.position]) {
 				return false;
 			}
-			
+
 			if constexpr (is_entity_type<T, entity_type_t::Skull>::value) {
-				skulls.emplace(position, entity);
+				skulls.emplace(entity.position, entity);
 				return true;
 			} else if constexpr (is_entity_type<T, entity_type_t::Skeleton>::value) {
-				skeletons.emplace(position, entity);
+				skeletons.emplace(entity.position, entity);
 				return true;
 			} else if constexpr (is_entity_type<T, entity_type_t::Adventurer>::value) {
-				adventurers.emplace(position, entity);
+				adventurers.emplace(entity.position, entity);
 				return true;
 			}
 
@@ -118,6 +120,38 @@ namespace necrowarp {
 			}
 
 			return false;
+		}
+
+		inline void draw() const noexcept {
+			player.draw();
+
+			for (crauto skull : skulls) {
+				skull.second.draw();
+			}
+
+			for (crauto skeleton : skeletons) {
+				skeleton.second.draw();
+			}
+
+			for (crauto adventurer : adventurers) {
+				adventurer.second.draw();
+			}
+		}
+
+		inline void draw(cref<camera_t> camera) const noexcept {
+			player.draw(camera);
+			
+			for (crauto skull : skulls) {
+				skull.second.draw(camera);
+			}
+
+			for (crauto skeleton : skeletons) {
+				skeleton.second.draw(camera);
+			}
+
+			for (crauto adventurer : adventurers) {
+				adventurer.second.draw(camera);
+			}
 		}
 	} static inline entity_registry{};
 }

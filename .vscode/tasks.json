@@ -21,9 +21,10 @@
 				"--reconfigure",
 				"${workspaceFolder}\\build",
 				"${workspaceFolder}",
+				"--native-file",
+				"windows.meson",
 				"--buildtype",
-				"debug",
-				"--debug"
+				"debug"
 			],
 			"group": "build",
 			"detail": "reconfigures the project for building in debug mode"
@@ -37,6 +38,8 @@
 				"--reconfigure",
 				"${workspaceFolder}\\build",
 				"${workspaceFolder}",
+				"--native-file",
+				"windows.meson",
 				"--buildtype",
 				"release"
 			],

@@ -164,5 +164,9 @@ namespace bleak {
 
 		constexpr bool operator<=(cref<animated_glyph_t> other) const noexcept = delete;
 		constexpr bool operator>=(cref<animated_glyph_t> other) const noexcept = delete;
+
+		struct hasher {
+			static constexpr size_t operator()(cref<animated_glyph_t> glyph) noexcept { return hash_combine(glyph.color, glyph.frame, glyph.indices); }
+		};
 	};
 } // namespace bleak

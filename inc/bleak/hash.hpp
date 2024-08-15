@@ -46,10 +46,20 @@ namespace bleak {
 		(hash_combine(seed, values), ...);
 	}
 
-	template<typename T, typename... Values> constexpr usize hash_combine(cref<T> v, cref<Values>... values) {
-		std::size_t seed{ 0 };
+	template<typename T, typename... Values> static constexpr usize hash_combine(cref<T> v, cref<Values>... values) noexcept {
+		usize seed{ 0 };
 
 		(hash_combine(seed, v, values), ...);
+
+		return seed;
+	}
+
+	template<typename T> static constexpr usize hash_array(cptr<T> begin_iter, cptr<T> end_iter) noexcept {
+		usize seed{0};
+
+		for (cauto iter{ begin_iter }; iter != end_iter; ++iter) {
+			hash_combine(seed, *iter);
+		}
 
 		return seed;
 	}

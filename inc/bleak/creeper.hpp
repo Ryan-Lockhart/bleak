@@ -7,7 +7,6 @@
 #include <bleak/memory.hpp>
 #include <bleak/offset.hpp>
 
-
 namespace bleak {
 	template<typename T>
 		requires is_numeric<T>::value

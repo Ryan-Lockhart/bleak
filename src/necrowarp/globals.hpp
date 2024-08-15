@@ -50,14 +50,15 @@ namespace necrowarp {
 		constexpr extent_t CameraExtent{ MapSize - globals::GameGridSize };
 		constexpr offset_t::scalar_t CameraSpeed{ 2 };
 
-		constexpr f64 FillPercent{ 0.425 };
+		constexpr f64 FillPercent{ 0.5 };
 		constexpr u32 AutomotaIterations{ 10 };
 		constexpr u32 AutomotaThreshold{ 4 };
 
 		constexpr u32 ViewDistance{ 8 };
 		constexpr f64 ViewSpan{ 135.0 };
 
-		constexpr u32 AdventurerPopulation{ 5 };
+		constexpr u32 AdventurerPopulation{ 3 };
+		constexpr u32 SkullDebris{ 5 };
 
 		constexpr bool UseSimpleGraphics{ false };
 	} // namespace globals

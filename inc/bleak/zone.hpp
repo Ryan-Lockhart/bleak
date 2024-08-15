@@ -456,10 +456,89 @@ namespace bleak {
 			}
 		}
 
-		template<zone_region_t Region, typename Randomizer>
-		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<T> true_value, cref<T> false_value) noexcept
+		template<typename U>
+			requires std::is_assignable<T, U>::value
+		constexpr void sync(cref<array_t<U, Size>> buffer) noexcept {
+			for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+				cells[i] = buffer[i];
+			}
+		}
+
+		template<zone_region_t Region, typename U, typename Randomizer>
 			requires is_random_engine<Randomizer>::value
-		{
+		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			if constexpr (Region == zone_region_t::All) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					cells[i] = T::template randomizer<Randomizer>::template operator()<U>(generator);
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						cells[x, y] = T::template randomizer<Randomizer>::template operator()<U>(generator);
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							cells[x, y] = T::template randomizer<Randomizer>::template operator()<U>(generator);
+						}
+					} else {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							cells[i, y] = T::template randomizer<Randomizer>::template operator()<U>(generator);
+							cells[zone_extent.x - i, y] = T::template randomizer<Randomizer>::template operator()<U>(generator);
+						}
+					}
+				}
+			}
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer>
+			requires is_random_engine<Randomizer>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<T> true_value, cref<T> false_value) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			auto dis{ std::bernoulli_distribution{ fill_percent } };
+
+			if constexpr (Region == zone_region_t::All) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					cells[i] = dis(generator) ? true_value : false_value;
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						cells[x, y] = dis(generator) ? true_value : false_value;
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							cells[x, y] = dis(generator) ? true_value : false_value;
+						}
+					} else {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							cells[i, y] = dis(generator) ? true_value : false_value;
+							cells[zone_extent.x - i, y] = dis(generator) ? true_value : false_value;
+						}
+					}
+				}
+			}
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer, typename U>
+			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<U> true_value, cref<U> false_value) noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -495,9 +574,45 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, typename Randomizer>
-		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<T>> applicator) noexcept
 			requires is_random_engine<Randomizer>::value
-		{
+		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<T>> applicator) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			auto dis{ std::bernoulli_distribution{ fill_percent } };
+
+			if constexpr (Region == zone_region_t::All) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					cells[i] = applicator(generator, dis);
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						cells[x, y] = applicator(generator, dis);
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							cells[x, y] = applicator(generator, dis);
+						}
+					} else {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							cells[i, y] = applicator(generator, dis);
+							cells[zone_extent.x - i, y] = applicator(generator, dis);
+						}
+					}
+				}
+			}
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer, typename U>
+			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<U>> applicator) noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -533,6 +648,75 @@ namespace bleak {
 		}
 
 		template<bool Safe = false> constexpr u8 neighbour_count(cref<offset_t> position, cref<T> value) const noexcept {
+			u8 count{ 0 };
+
+			if constexpr (Safe) {
+				if (cells[position + offset_t::Northwest] == value) {
+					++count;
+				}
+				if (cells[position + offset_t::North] == value) {
+					++count;
+				}
+				if (cells[position + offset_t::Northeast] == value) {
+					++count;
+				}
+				if (cells[position + offset_t::West] == value) {
+					++count;
+				}
+				if (cells[position + offset_t::East] == value) {
+					++count;
+				}
+				if (cells[position + offset_t::Southwest] == value) {
+					++count;
+				}
+				if (cells[position + offset_t::South] == value) {
+					++count;
+				}
+				if (cells[position + offset_t::Southeast] == value) {
+					++count;
+				}
+			} else {
+				cardinal_t edge{ edge_state(position) };
+
+				if (edge.north || edge.west || cells[position + offset_t::Northwest] == value) {
+					++count;
+				}
+
+				if (edge.north || cells[position + offset_t::North] == value) {
+					++count;
+				}
+
+				if (edge.north || edge.east || cells[position + offset_t::Northeast] == value) {
+					++count;
+				}
+
+				if (edge.west || cells[position + offset_t::West] == value) {
+					++count;
+				}
+
+				if (edge.east || cells[position + offset_t::East] == value) {
+					++count;
+				}
+
+				if (edge.south || edge.west || cells[position + offset_t::Southwest] == value) {
+					++count;
+				}
+
+				if (edge.south || cells[position + offset_t::South] == value) {
+					++count;
+				}
+
+				if (edge.south || edge.east || cells[position + offset_t::Southeast] == value) {
+					++count;
+				}
+			}
+
+			return count;
+		}
+
+		template<bool Safe = false, typename U>
+			requires is_equatable<T, U>::value
+		constexpr u8 neighbour_count(cref<offset_t> position, cref<U> value) const noexcept {
 			u8 count{ 0 };
 
 			if constexpr (Safe) {
@@ -706,7 +890,7 @@ namespace bleak {
 			return index;
 		}
 
-		template<neighbourhood_solver_t Solver, typename U, bool Safe = false>
+		template<neighbourhood_solver_t Solver, bool Safe = false, typename U>
 			requires is_equatable<T, U>::value
 		constexpr u8 calculate_index(cref<offset_t> position, cref<U> value) const noexcept {
 			u8 index{ 0 };
@@ -739,11 +923,12 @@ namespace bleak {
 					if (w && sw && s) {
 						index += 1 << 0;
 					}
+				} else {
 					if (!within<zone_region_t::All>(position)) {
 						return (1 << 4) - 1;
 					}
-				} else {
-					const cardinal_t edge{ edge_state(position) };
+
+					cardinal_t edge{ edge_state(position) };
 
 					const bool nw{ edge.north || edge.west || cells[position + offset_t::Northwest] == value };
 					const bool n{ edge.north || cells[position + offset_t::North] == value };
@@ -911,7 +1096,7 @@ namespace bleak {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						const offset_t position{ x, y };
 
-						if (cells[position] != value || calculate_index<neighbourhood_solver_t::Melded, U, interior_safe>(position, value) != index) {
+						if (cells[position] != value || calculate_index<neighbourhood_solver_t::Melded, interior_safe>(position, value) != index) {
 							continue;
 						}
 
@@ -1112,6 +1297,18 @@ namespace bleak {
 			}
 		}
 
+		template<bool Safe = false, typename U>
+			requires std::is_assignable<T, U>::value
+		constexpr void modulate(ref<array_t<T, Size>> buffer, cref<offset_t> position, u8 threshold, cref<U> true_state, cref<U> false_state) const noexcept {
+			u8 neighbours{ neighbour_count<Safe>(position, true_state) };
+
+			if (neighbours > threshold) {
+				buffer[position] = true_state;
+			} else if (neighbours < threshold) {
+				buffer[position] = false_state;
+			}
+		}
+
 		template<bool Safe = false> constexpr void modulate(ref<array_t<T, Size>> buffer, cref<offset_t> position, u8 threshold, cref<binary_applicator_t<T>> applicator) const noexcept {
 			u8 neighbours{ neighbour_count<Safe>(position, applicator.true_value) };
 
@@ -1122,7 +1319,56 @@ namespace bleak {
 			}
 		}
 
+		template<bool Safe = false, typename U>
+			requires std::is_assignable<T, U>::value
+		constexpr void modulate(ref<array_t<T, Size>> buffer, cref<offset_t> position, u8 threshold, cref<binary_applicator_t<U>> applicator) const noexcept {
+			u8 neighbours{ neighbour_count<Safe>(position, applicator.true_value) };
+
+			if (neighbours > threshold) {
+				buffer[position] = applicator.true_value;
+			} else if (neighbours < threshold) {
+				buffer[position] = applicator.false_value;
+			}
+		}
+
 		template<zone_region_t Region> constexpr cref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<T> true_value, cref<T> false_state) const noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			if constexpr (Region == zone_region_t::All) {
+				for (extent_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
+					for (extent_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
+						modulate(buffer, offset_t{ x, y }, threshold, true_value, false_state);
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						modulate<interior_safe>(buffer, offset_t{ x, y }, threshold, true_value, false_state);
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							modulate(buffer, offset_t{ x, y }, threshold, true_value, false_state);
+						}
+					} else {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							modulate(buffer, offset_t{ i, y }, threshold, true_value, false_state);
+							modulate(buffer, offset_t{ zone_extent.x - i, y }, threshold, true_value, false_state);
+						}
+					}
+				}
+			}
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename U>
+			requires std::is_assignable<T, U>::value
+		constexpr cref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<U> true_value, cref<U> false_state) const noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -1192,7 +1438,59 @@ namespace bleak {
 			return *this;
 		}
 
+		template<zone_region_t Region, typename U>
+			requires std::is_assignable<T, U>::value
+		constexpr cref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<binary_applicator_t<U>> applicator) const noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			if constexpr (Region == zone_region_t::All) {
+				for (extent_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
+					for (extent_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
+						modulate(buffer, offset_t{ x, y }, threshold, applicator);
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						modulate<interior_safe>(buffer, offset_t{ x, y }, threshold, applicator);
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							modulate(buffer, offset_t{ x, y }, threshold, applicator);
+						}
+					} else {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							modulate(buffer, offset_t{ i, y }, threshold, applicator);
+							modulate(buffer, offset_t{ zone_extent.x - i, y }, threshold, applicator);
+						}
+					}
+				}
+			}
+
+			return *this;
+		}
+
 		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			for (u32 i{ 0 }; i < iterations; ++i) {
+				automatize<Region>(buffer, threshold, true_value, false_state);
+				swap(buffer);
+			}
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename U>
+			requires std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<U> true_value, cref<U> false_state) noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -1218,10 +1516,41 @@ namespace bleak {
 			return *this;
 		}
 
+		template<zone_region_t Region, typename U>
+			requires std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			for (u32 i{ 0 }; i < iterations; ++i) {
+				automatize<Region>(buffer, threshold, applicator);
+				swap(buffer);
+			}
+
+			return *this;
+		}
+
 		template<zone_region_t Region, typename Randomizer>
-		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept
 			requires is_random_engine<Randomizer>::value
-		{
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			randomize<Region>(generator, fill_percent, true_value, false_state);
+
+			array_t<T, Size> buffer{ cells };
+
+			automatize<Region>(buffer, iterations, threshold, true_value, false_state);
+			swap(buffer);
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer, typename U>
+			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<U> true_value, cref<U> false_state) noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -1237,9 +1566,25 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, typename Randomizer>
-		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept
 			requires is_random_engine<Randomizer>::value
-		{
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			randomize<Region>(generator, fill_percent, applicator);
+
+			array_t<T, Size> buffer{ cells };
+
+			automatize<Region>(buffer, iterations, threshold, applicator);
+			swap(buffer);
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer, typename U>
+			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator) noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -1255,9 +1600,25 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, typename Randomizer>
-		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept
 			requires is_random_engine<Randomizer>::value
-		{
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			randomize<Region>(generator, fill_percent, true_value, false_state);
+
+			buffer = cells;
+
+			automatize<Region>(buffer, iterations, threshold, true_value, false_state);
+			swap(buffer);
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer, typename U>
+			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<U> true_value, cref<U> false_state) noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -1273,9 +1634,25 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, typename Randomizer>
-		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept
 			requires is_random_engine<Randomizer>::value
-		{
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			randomize<Region>(generator, fill_percent, applicator);
+
+			buffer = cells;
+
+			automatize<Region>(buffer, iterations, threshold, applicator);
+			swap(buffer);
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer, typename U>
+			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator) noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -1291,9 +1668,8 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, typename Randomizer>
-		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value) const noexcept
 			requires is_random_engine<Randomizer>::value
-		{
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value) const noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -1343,9 +1719,8 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, typename Randomizer, typename U>
-		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value) const noexcept
 			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
-		{
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value) const noexcept {
 			if constexpr (Region == zone_region_t::All) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
@@ -1393,9 +1768,8 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, typename Randomizer>
-		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage) const noexcept
 			requires is_random_engine<Randomizer>::value
-		{
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage) const noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -1451,9 +1825,8 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, typename Randomizer, typename U>
-		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage) const noexcept
 			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
-		{
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage) const noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
