@@ -47,5 +47,7 @@ namespace necrowarp {
 
 	static inline path_t test_path{};
 
+	static inline bool player_acted{ false };
+
 	static inline i16 total_kills{ 0 };
 } // namespace necrowarp

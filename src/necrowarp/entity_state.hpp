@@ -122,6 +122,22 @@ namespace necrowarp {
 			return false;
 		}
 
+		inline void update() noexcept {
+			player.update();
+
+			for (auto& skull : skulls) {
+				skull.second.update();
+			}
+
+			for (auto& skeleton : skeletons) {
+				skeleton.second.update();
+			}
+
+			for (auto& adventurer : adventurers) {
+				adventurer.second.update();
+			}
+		}
+
 		inline void draw() const noexcept {
 			player.draw();
 

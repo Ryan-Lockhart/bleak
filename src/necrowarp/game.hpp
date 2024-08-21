@@ -1,11 +1,7 @@
-#include "bleak/applicator.hpp"
-#include "bleak/cell.hpp"
 #include "bleak/log.hpp"
-#include "bleak/zone.hpp"
-#include "necrowarp/entities/adventurer.hpp"
-#include "necrowarp/entities/player.hpp"
 #include <bleak.hpp>
 
+#include <necrowarp/entities.hpp>
 #include <necrowarp/entity_state.hpp>
 #include <necrowarp/game_state.hpp>
 #include <necrowarp/globals.hpp>
@@ -234,15 +230,21 @@ namespace necrowarp {
 
 			if (input_timer.ready()) {
 				if (epoch_timer.ready()) {
-					character_input();
+					player_acted = character_input();
 				}
 
 				camera_input();
 			}
 
+			if (player_acted) {
+				entity_registry.update();
+
+				player_acted = false;
+			}
+
 			sine_wave.update<wave_type_t::Sine>(Clock::elapsed());
 
-			offset_t mouse_pos{ Mouse::get_position() };
+			const offset_t mouse_pos{ Mouse::get_position() };
 
 			draw_cursor = mouse_pos.x < globals::UniversalOrigin.x || mouse_pos.y < globals::UniversalOrigin.y || mouse_pos.x > globals::UniversalExtent.x || mouse_pos.y > globals::UniversalExtent.y;
 
@@ -272,13 +274,19 @@ namespace necrowarp {
 
 			game_map.draw(game_atlas, camera);
 
-			entity_registry.draw(camera);
-
 			renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, globals::BorderSize, colors::Black);
 			renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, colors::White);
 			renderer.draw_outline_rect(globals::UniversalOffset, globals::WindowSize, colors::White);
 
-			runes_t fps_text{ std::format("FPS:{:4}", static_cast<u32>(Clock::frame_time())), colors::Green };
+			if (draw_cursor) {
+				cursor.draw();
+			} else {
+				grid_cursor.draw(camera, globals::CursorOffset);
+			}
+
+			entity_registry.draw(camera);
+
+			const runes_t fps_text{ std::format("FPS:{:4}", static_cast<u32>(Clock::frame_time())), colors::Green };
 
 			ui_atlas.draw_label(renderer, fps_text, offset_t{ globals::UIGridSize.w - 1, 0 }, cardinal_t::Southwest, extent_t{ 1, 1 }, colors::Black, colors::White);
 
@@ -286,15 +294,14 @@ namespace necrowarp {
 
 			ui_atlas.draw_label(renderer, title_text, offset_t{ globals::UIGridSize.w / 2, 0 }, cardinal_t::South, extent_t{ 1, 1 }, colors::Black, colors::White);
 
-			runes_t tooltip_text{ game_map[grid_cursor.get_position()].to_tooltip(), colors::White };
+			const bool on_left_side{ grid_cursor.get_quadrant().left };
 
-			ui_atlas.draw_label(renderer, tooltip_text, offset_t{ globals::UIGridSize.w - 1, globals::UIGridSize.h - 1 }, cardinal_t::Northwest, extent_t{ 1, 1 }, colors::Black, colors::White);
+			const offset_t tooltip_pos{ on_left_side ? globals::UIGridSize.w - 1 : 0, globals::UIGridSize.h - 1 };
+			const cardinal_t tooltip_align{ on_left_side ? cardinal_t::Northwest : cardinal_t::Northeast };
 
-			if (draw_cursor) {
-				cursor.draw();
-			} else {
-				grid_cursor.draw(camera, globals::CursorOffset);
-			}
+			const runes_t tooltip_text{ grid_cursor.hovered(game_map).to_tooltip(), colors::White };
+
+			ui_atlas.draw_label(renderer, tooltip_text, tooltip_pos, tooltip_align, extent_t{ 1, 1 }, colors::Black, colors::White);
 
 			renderer.present();
 		}

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "bleak/camera.hpp"
 #include <bleak/typedef.hpp>
 
+#include <bleak/camera.hpp>
 #include <bleak/cardinal.hpp>
 #include <bleak/color.hpp>
 #include <bleak/extent.hpp>
@@ -10,6 +10,7 @@
 #include <bleak/offset.hpp>
 #include <bleak/quadrant.hpp>
 #include <bleak/texture.hpp>
+#include <bleak/zone.hpp>
 
 #include <bleak/constants/colors.hpp>
 
@@ -110,6 +111,16 @@ namespace bleak {
 		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const { texture.draw((position - camera.get_offset()) * size + offset, color); }
 
 		inline offset_t get_position() const { return position; }
+
+		template<typename T, extent_t ZoneSize, extent_t BorderSize>
+		inline ref<T> hovered(ref<zone_t<T, ZoneSize, BorderSize>> zone) {
+			return zone[position];
+		};
+
+		template<typename T, extent_t ZoneSize, extent_t BorderSize>
+		inline cref<T> hovered(cref<zone_t<T, ZoneSize, BorderSize>> zone) const {
+			return zone[position];
+		};
 
 		inline quadrant_t get_quadrant() const {
 			const auto mid{ midpoint() };

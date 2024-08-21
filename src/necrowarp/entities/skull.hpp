@@ -12,6 +12,8 @@ namespace necrowarp {
 
 		inline skull_t(cref<offset_t> position) noexcept : position{ position } {}
 
+		inline void update() noexcept {}
+
 		inline void draw() const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skull], position); }
 
 		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skull], position + offset); }

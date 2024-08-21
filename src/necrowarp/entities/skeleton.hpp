@@ -17,6 +17,8 @@ namespace necrowarp {
 
 		inline ~skeleton_t() noexcept { total_kills += kills; }
 
+		inline void update() noexcept {}
+
 		inline void draw() const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skeleton], position); }
 
 		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skeleton], position + offset); }

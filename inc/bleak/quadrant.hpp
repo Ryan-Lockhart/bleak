@@ -28,7 +28,7 @@ namespace bleak {
 		static constexpr u8 Upper{ 1 << 0 };
 		static constexpr u8 Left{ 1 << 1 };
 
-		static constexpr u8 TopLeft{ quadrant_t::Upper | quadrant_t::Left };
+		static constexpr u8 UpperLeft{ quadrant_t::Upper | quadrant_t::Left };
 		static constexpr u8 LowerLeft{ quadrant_t::Left };
 
 		static constexpr u8 UpperRight{ quadrant_t::Upper };
@@ -89,7 +89,7 @@ namespace bleak {
 
 		constexpr operator std::string() const noexcept {
 			switch (value) {
-			case TopLeft:
+			case UpperLeft:
 				return "upper-left";
 			case LowerLeft:
 				return "lower-left";
