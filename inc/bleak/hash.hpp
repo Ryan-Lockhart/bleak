@@ -54,12 +54,16 @@ namespace bleak {
 		return seed;
 	}
 
-	template<typename T> static constexpr usize hash_array(cptr<T> begin_iter, cptr<T> end_iter) noexcept {
-		usize seed{0};
-
+	template<typename T> static constexpr void hash_array(ref<usize> seed, cptr<T> begin_iter, cptr<T> end_iter) noexcept {
 		for (cauto iter{ begin_iter }; iter != end_iter; ++iter) {
 			hash_combine(seed, *iter);
 		}
+	}
+
+	template<typename T> static constexpr usize hash_array(cptr<T> begin_iter, cptr<T> end_iter) noexcept {
+		usize seed{ 0 };
+
+		hash_array(seed, begin_iter, end_iter);
 
 		return seed;
 	}

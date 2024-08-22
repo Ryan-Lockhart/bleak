@@ -477,9 +477,19 @@ namespace bleak {
 		struct randomizer {
 			template<typename T> static constexpr T operator()(ref<Generator> generator) noexcept {
 				if constexpr (std::is_same<T, rock_type_t>::value) {
-					return static_cast<rock_type_t>(std::uniform_int_distribution<i32>{ static_cast<i32>(rock_type_t::Limestone), static_cast<i32>(rock_type_t::Marble) }(generator));
+					static std::uniform_int_distribution<i32> dis {
+						static_cast<i32>(rock_type_t::Limestone),
+						static_cast<i32>(rock_type_t::Marble)
+					};
+
+					return static_cast<rock_type_t>(dis(generator));
 				} else if constexpr (std::is_same<T, mineral_type_t>::value) {
-					return static_cast<mineral_type_t>(std::uniform_int_distribution<i32>{ static_cast<i32>(mineral_type_t::None), static_cast<i32>(mineral_type_t::Tetrahedrite) }(generator));
+					static std::uniform_int_distribution<i32> dis {
+						static_cast<i32>(mineral_type_t::None),
+						static_cast<i32>(mineral_type_t::Tetrahedrite)
+					};
+
+					return static_cast<mineral_type_t>(dis(generator));
 				}
 
 				return T{};
