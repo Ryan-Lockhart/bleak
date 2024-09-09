@@ -385,7 +385,7 @@ namespace bleak {
 					damp ? "damp" : "dry",
 					warm ? "warm" : "cold",
 					smooth ? "smooth" : "rough",
-					mineral_type != mineral_type_t::None ? std::format("\nIts surface is encrusted with {}", to_string(mineral_type)) : "",
+					mineral_type == mineral_type_t::None || !solid ? "" : std::format("\nIts surface is encrusted with {}", to_string(mineral_type)),
 					solid ? "" : std::format("\nThe air within is {} and {}.", smelly ? "pungent" : "odorless", toxic ? "toxic" : "innocuous")
 				);
 			} else if (explored) {

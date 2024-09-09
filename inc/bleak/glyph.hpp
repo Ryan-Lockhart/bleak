@@ -14,11 +14,11 @@
 namespace bleak {
 	struct glyph_t {
 		color_t color;
-		u16 index;
+		u32 index;
 
 		constexpr glyph_t() noexcept : color{}, index{} {}
 
-		constexpr glyph_t(u16 index, color_t color) noexcept : color{ color }, index{ index } {}
+		constexpr glyph_t(u32 index, color_t color) noexcept : color{ color }, index{ index } {}
 
 		struct hasher {
 			static constexpr size_t operator()(cref<glyph_t> glyph) noexcept { return hash_combine(glyph.color, glyph.index); }
@@ -29,7 +29,7 @@ namespace bleak {
 	  private:
 		static constexpr extent_t size{ Length, 1 };
 
-		array_t<u16, size> indices;
+		array_t<u32, size> indices;
 		extent_t::product_t frame;
 
 		constexpr inline void wrap() noexcept { frame %= length; }
@@ -42,31 +42,31 @@ namespace bleak {
 		static constexpr index_t first{ 0 };
 		static constexpr index_t last{ length - 1 };
 
-		using iterator = fwd_iter_t<u16>;
-		using const_iterator = fwd_iter_t<const u16>;
+		using iterator = fwd_iter_t<u32>;
+		using const_iterator = fwd_iter_t<const u32>;
 
-		using reverse_iterator = rev_iter_t<u16>;
-		using const_reverse_iterator = rev_iter_t<const u16>;
+		using reverse_iterator = rev_iter_t<u32>;
+		using const_reverse_iterator = rev_iter_t<const u32>;
 
 		color_t color;
 
 		constexpr animated_glyph_t() = delete;
 
-		constexpr animated_glyph_t(std::array<u16, Length> indices) noexcept : indices{ indices }, frame{ 0 }, color{} {}
+		constexpr animated_glyph_t(std::array<u32, Length> indices) noexcept : indices{ indices }, frame{ 0 }, color{} {}
 
-		constexpr animated_glyph_t(std::array<u16, Length> indices, color_t color) noexcept : indices{ indices }, frame{ 0 }, color{ color } {}
+		constexpr animated_glyph_t(std::array<u32, Length> indices, color_t color) noexcept : indices{ indices }, frame{ 0 }, color{ color } {}
 
 		template<Integer IndexType> constexpr animated_glyph_t(std::array<IndexType, Length> indices) noexcept : indices{ indices }, frame{ 0 }, color{} {}
 
 		template<Integer IndexType> constexpr animated_glyph_t(std::array<IndexType, Length> indices, color_t color) noexcept : indices{ indices }, frame{ 0 }, color{ color } {}
 
-		constexpr animated_glyph_t(std::initializer_list<u16> indices) noexcept : indices{ indices }, frame{ 0 }, color{} {}
+		constexpr animated_glyph_t(std::initializer_list<u32> indices) noexcept : indices{ indices }, frame{ 0 }, color{} {}
 
-		constexpr animated_glyph_t(std::initializer_list<u16> indices, color_t color) noexcept : indices{ indices }, frame{ 0 }, color{ color } {}
+		constexpr animated_glyph_t(std::initializer_list<u32> indices, color_t color) noexcept : indices{ indices }, frame{ 0 }, color{ color } {}
 
-		constexpr animated_glyph_t(rval<array_t<u16, size>> indices) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{} {}
+		constexpr animated_glyph_t(rval<array_t<u32, size>> indices) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{} {}
 
-		constexpr animated_glyph_t(rval<array_t<u16, size>> indices, color_t color) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{ color } {}
+		constexpr animated_glyph_t(rval<array_t<u32, size>> indices, color_t color) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{ color } {}
 
 		constexpr animated_glyph_t(cref<animated_glyph_t> other) noexcept : indices{ other.indices }, frame{ other.frame }, color{ other.color } {}
 
@@ -98,9 +98,9 @@ namespace bleak {
 
 		constexpr ~animated_glyph_t() = default;
 
-		constexpr u16 operator[](index_t index) const noexcept { return indices[index]; }
+		constexpr u32 operator[](index_t index) const noexcept { return indices[index]; }
 
-		constexpr u16 at(index_t index) const {
+		constexpr u32 at(index_t index) const {
 			if (index >= length) {
 				throw std::out_of_range{ "index out of range!" };
 			}
@@ -128,9 +128,9 @@ namespace bleak {
 
 		constexpr explicit operator glyph_t() const noexcept { return { indices[frame], color }; }
 
-		constexpr u16 front() const noexcept { return indices.front(); }
+		constexpr u32 front() const noexcept { return indices.front(); }
 
-		constexpr u16 back() const noexcept { return indices.back(); }
+		constexpr u32 back() const noexcept { return indices.back(); }
 
 		constexpr iterator begin() noexcept { return indices.begin(); }
 

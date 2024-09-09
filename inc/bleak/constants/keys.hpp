@@ -15,7 +15,7 @@ namespace bleak {
 
 		static constexpr usize Count = SDL_NUM_SCANCODES;
 
-		struct Alpha {
+		namespace Alpha {
 			static constexpr sdl::key A = SDL_SCANCODE_A;
 			static constexpr sdl::key B = SDL_SCANCODE_B;
 			static constexpr sdl::key C = SDL_SCANCODE_C;
@@ -44,7 +44,7 @@ namespace bleak {
 			static constexpr sdl::key Z = SDL_SCANCODE_Z;
 		};
 
-		struct Numeric {
+		namespace Numeric {
 			static constexpr sdl::key Zero = SDL_SCANCODE_0;
 			static constexpr sdl::key One = SDL_SCANCODE_1;
 			static constexpr sdl::key Two = SDL_SCANCODE_2;
@@ -82,7 +82,7 @@ namespace bleak {
 		static constexpr sdl::key PrintScreen = SDL_SCANCODE_PRINTSCREEN;
 		static constexpr sdl::key Pause = SDL_SCANCODE_PAUSE;
 
-		struct Keypad {
+		namespace Keypad {
 			static constexpr sdl::key Divide = SDL_SCANCODE_KP_DIVIDE;
 			static constexpr sdl::key Multiply = SDL_SCANCODE_KP_MULTIPLY;
 			static constexpr sdl::key Minus = SDL_SCANCODE_KP_MINUS;
@@ -91,7 +91,7 @@ namespace bleak {
 			static constexpr sdl::key Period = SDL_SCANCODE_KP_PERIOD;
 			static constexpr sdl::key Equals = SDL_SCANCODE_KP_EQUALS;
 
-			struct Numeric {
+			namespace Numeric {
 				static constexpr sdl::key Zero = SDL_SCANCODE_KP_0;
 				static constexpr sdl::key One = SDL_SCANCODE_KP_1;
 				static constexpr sdl::key Two = SDL_SCANCODE_KP_2;
@@ -105,7 +105,7 @@ namespace bleak {
 			};
 		};
 
-		struct Function {
+		namespace Function {
 			static constexpr sdl::key One = SDL_SCANCODE_F1;
 			static constexpr sdl::key Two = SDL_SCANCODE_F2;
 			static constexpr sdl::key Three = SDL_SCANCODE_F3;
@@ -120,22 +120,22 @@ namespace bleak {
 			static constexpr sdl::key Twelve = SDL_SCANCODE_F12;
 		};
 
-		struct Arrow {
+		namespace Arrow {
 			static constexpr sdl::key Up = SDL_SCANCODE_UP;
 			static constexpr sdl::key Down = SDL_SCANCODE_DOWN;
 			static constexpr sdl::key Left = SDL_SCANCODE_LEFT;
 			static constexpr sdl::key Right = SDL_SCANCODE_RIGHT;
 		};
 
-		struct Modifier {
-			struct Left {
+		namespace Modifier {
+			namespace Left {
 				static constexpr sdl::key Shift = SDL_SCANCODE_LSHIFT;
 				static constexpr sdl::key Control = SDL_SCANCODE_LCTRL;
 				static constexpr sdl::key Alt = SDL_SCANCODE_LALT;
 				static constexpr sdl::key Meta = SDL_SCANCODE_LGUI;
 			};
 
-			struct Right {
+			namespace Right {
 				static constexpr sdl::key Shift = SDL_SCANCODE_RSHIFT;
 				static constexpr sdl::key Control = SDL_SCANCODE_RCTRL;
 				static constexpr sdl::key Alt = SDL_SCANCODE_RALT;

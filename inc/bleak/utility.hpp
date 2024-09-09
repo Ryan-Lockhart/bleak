@@ -1,9 +1,9 @@
 #pragma once
 #include <bleak/typedef.hpp>
 
-#include <cmath>
-#include <cassert>
 #include <array>
+#include <cassert>
+#include <cmath>
 
 #include <bleak/concepts.hpp>
 #include <bleak/iter.hpp>
@@ -42,6 +42,8 @@ namespace bleak {
 	template<typename T> constexpr inline T lerp(T a, T b, T t) { return a + (b - a) * t; }
 
 	template<typename T> constexpr inline T usage(T value, T min, T max) { return (value - min) / (max - min); }
+
+	template<Numeric N> constexpr inline bool between(N value, N min, N max) { return value >= min && value <= max; }
 
 	template<usize Length, usize Start, usize End>
 		requires(End - Start + 1 == Length)
@@ -112,6 +114,40 @@ namespace bleak {
 
 #define REQUIRE_SEMICOLON() static_assert(true, "")
 
+#define DEFINE_GENERIC_USING(type, value_type)                                                                                                                                                                                                 \
+	using value_t = value_type;                                                                                                                                                                                                                \
+                                                                                                                                                                                                                                               \
+	using ptr_t = ptr<value_type>;                                                                                                                                                                                                             \
+	using cptr_t = cptr<value_type>;                                                                                                                                                                                                           \
+	using ptrc_t = ptrc<value_type>;                                                                                                                                                                                                           \
+	using cptrc_t = cptrc<value_type>;                                                                                                                                                                                                         \
+                                                                                                                                                                                                                                               \
+	using ref_t = ref<value_type>;                                                                                                                                                                                                             \
+	using cref_t = cref<value_type>;                                                                                                                                                                                                           \
+	using rval_t = rval<value_type>;                                                                                                                                                                                                           \
+	using crval_t = crval<value_type>;                                                                                                                                                                                                         \
+                                                                                                                                                                                                                                               \
+	using self_t = type<value_type>;                                                                                                                                                                                                           \
+                                                                                                                                                                                                                                               \
+	REQUIRE_SEMICOLON()
+
+#define DEFINE_GENERIC_USING_VAARGS(type, value_type, ...)                                                                                                                                                                                                 \
+	using value_t = value_type;                                                                                                                                                                                                                \
+                                                                                                                                                                                                                                               \
+	using ptr_t = ptr<value_type>;                                                                                                                                                                                                             \
+	using cptr_t = cptr<value_type>;                                                                                                                                                                                                           \
+	using ptrc_t = ptrc<value_type>;                                                                                                                                                                                                           \
+	using cptrc_t = cptrc<value_type>;                                                                                                                                                                                                         \
+                                                                                                                                                                                                                                               \
+	using ref_t = ref<value_type>;                                                                                                                                                                                                             \
+	using cref_t = cref<value_type>;                                                                                                                                                                                                           \
+	using rval_t = rval<value_type>;                                                                                                                                                                                                           \
+	using crval_t = crval<value_type>;                                                                                                                                                                                                         \
+                                                                                                                                                                                                                                               \
+	using self_t = type<value_type, __VA_ARGS__>;                                                                                                                                                                                                           \
+                                                                                                                                                                                                                                               \
+	REQUIRE_SEMICOLON()
+
 #define DEFINE_FWD_ITER(qualifiers, type, value)                                                                                                                                                                                               \
 	using iterator = type::iterator;                                                                                                                                                                                                           \
 	using const_iterator = type::const_iterator;                                                                                                                                                                                               \
@@ -124,6 +160,7 @@ namespace bleak {
                                                                                                                                                                                                                                                \
 	inline qualifiers const_iterator cbegin() const noexcept { return value.cbegin(); }                                                                                                                                                        \
 	inline qualifiers const_iterator cend() const noexcept { return value.cend(); }                                                                                                                                                            \
+                                                                                                                                                                                                                                               \
 	REQUIRE_SEMICOLON()
 
 #define DEFINE_REV_ITER(qualifiers, type, value)                                                                                                                                                                                               \
@@ -138,11 +175,13 @@ namespace bleak {
                                                                                                                                                                                                                                                \
 	inline qualifiers const_reverse_iterator crbegin() const noexcept { return value.crbegin(); }                                                                                                                                              \
 	inline qualifiers const_reverse_iterator crend() const noexcept { return value.crend(); }                                                                                                                                                  \
+                                                                                                                                                                                                                                               \
 	REQUIRE_SEMICOLON()
 
 #define DEFINE_ITERATORS(qualifiers, type, value)                                                                                                                                                                                              \
 	DEFINE_FWD_ITER(qualifiers, type, value);                                                                                                                                                                                                  \
 	DEFINE_REV_ITER(qualifiers, type, value);                                                                                                                                                                                                  \
+                                                                                                                                                                                                                                               \
 	REQUIRE_SEMICOLON()
 
 #define DECLARE_FWD_ITER(qualifiers, type)                                                                                                                                                                                                     \
@@ -157,6 +196,7 @@ namespace bleak {
                                                                                                                                                                                                                                                \
 	qualifiers const_iterator cbegin() const noexcept;                                                                                                                                                                                         \
 	qualifiers const_iterator cend() const noexcept;                                                                                                                                                                                           \
+                                                                                                                                                                                                                                               \
 	REQUIRE_SEMICOLON()
 
 #define DECLARE_REV_ITER(qualifiers, type)                                                                                                                                                                                                     \
@@ -171,10 +211,12 @@ namespace bleak {
                                                                                                                                                                                                                                                \
 	qualifiers const_reverse_iterator crbegin() const noexcept;                                                                                                                                                                                \
 	qualifiers const_reverse_iterator crend() const noexcept;                                                                                                                                                                                  \
+                                                                                                                                                                                                                                               \
 	REQUIRE_SEMICOLON()
 
 #define DECLARE_ITERATORS(qualifiers, type)                                                                                                                                                                                                    \
 	DECLARE_FWD_ITER(qualifiers, type);                                                                                                                                                                                                        \
 	DECLARE_REV_ITER(qualifiers, type);                                                                                                                                                                                                        \
+                                                                                                                                                                                                                                               \
 	REQUIRE_SEMICOLON()
 } // namespace bleak

@@ -254,7 +254,7 @@ namespace bleak {
 			return false;
 		}
 
-		template<usize Size> inline bool any_keys_down(cref<std::array<sdl::key, Size>> keys) {
+		template<usize Size> static inline bool any_keys_down(cref<std::array<sdl::key, Size>> keys) {
 			for (sdl::key key : keys) {
 				if (is_key_down(key)) {
 					return true;

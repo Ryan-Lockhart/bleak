@@ -36,5 +36,8 @@ namespace bleak {
 
 		constexpr const sdl::key CameraLock{ keys::Tab };
 		constexpr const sdl::key RevealMap{ keys::Grave };
+
+		constexpr const sdl::key RandomWarp{ keys::Alpha::Q };
+		constexpr const sdl::key TargetWarp{ keys::Alpha::E };
 	} // namespace Bindings
 } // namespace bleak

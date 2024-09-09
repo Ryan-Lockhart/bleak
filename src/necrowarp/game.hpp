@@ -1,4 +1,3 @@
-#include "bleak/log.hpp"
 #include <bleak.hpp>
 
 #include <necrowarp/entities.hpp>
@@ -76,7 +75,33 @@ namespace necrowarp {
 		}
 
 		static inline bool character_input() noexcept {
+			player.command = entity_command_t{ command_type_t::None, player.position, std::nullopt };
+
 			if (Keyboard::any_keys_pressed(bindings::Wait)) {
+				input_timer.record();
+				epoch_timer.record();
+
+				return true;
+			} else if (Keyboard::is_key_down(bindings::RandomWarp)) {
+				player.command = entity_command_t{ command_type_t::RandomWarp, player.position, std::nullopt };
+
+				input_timer.record();
+				epoch_timer.record();
+
+				return true;
+			} else if (Keyboard::is_key_down(bindings::TargetWarp)) {
+				if (!game_map.within<zone_region_t::Interior>(grid_cursor.get_position()) || game_map[grid_cursor.get_position()].solid) {
+					return false;
+				}
+
+				player.command = entity_command_t{
+					entity_registry.contains(grid_cursor.get_position()) ?
+						command_type_t::ConsumeWarp :
+						command_type_t::TargetWarp,
+					player.position,
+					grid_cursor.get_position()
+				};				
+
 				input_timer.record();
 				epoch_timer.record();
 
@@ -87,14 +112,11 @@ namespace necrowarp {
 
 			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::North])) {
 				--direction.y;
-			}
-			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::South])) {
+			} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::South])) {
 				++direction.y;
-			}
-			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::West])) {
+			} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::West])) {
 				--direction.x;
-			}
-			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::East])) {
+			} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::East])) {
 				++direction.x;
 			}
 
@@ -105,11 +127,19 @@ namespace necrowarp {
 			if (direction != offset_t::Zero) {
 				const offset_t target_position{ player.position + direction };
 
-				if (!game_map.within<zone_region_t::Interior>(target_position) || game_map[target_position].solid || occupation_map[target_position]) {
+				if (!game_map.within<zone_region_t::Interior>(target_position) || game_map[target_position].solid) {
 					return false;
 				}
+				
+				player.command = entity_command_t{
+					entity_registry.contains(target_position) ?
+						command_type_t::Consume :
+						command_type_t::Move,
+					player.position,
+					target_position
+				};
 
-				player.position = target_position;
+				draw_warp_cursor = false;
 
 				input_timer.record();
 				epoch_timer.record();
@@ -183,16 +213,18 @@ namespace necrowarp {
 
 			player.position = player_pos.value();
 
-			for (u32 i{ 0 }; i < globals::AdventurerPopulation; ++i) {
-				cauto random_pos{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open) };
+			entity_registry.spawn<skull_t>(globals::SkullDebris);
 
-				if (!random_pos.has_value()) {
-					error_log.add("could not find open position for adventurer!");
-					terminate_prematurely();
-				}
+			adventurer_goal_map += player_pos.value();
+			adventurer_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 
-				entity_registry.add(adventurer_t{ random_pos.value() });
+			entity_registry.spawn<adventurer_t>(globals::AdventurerPopulation);
+
+			for (crauto adventurer : adventurers) {
+				skeleton_goal_map += adventurer.position;
 			}
+
+			skeleton_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 
 			Clock::tick();
 
@@ -239,6 +271,13 @@ namespace necrowarp {
 			if (player_acted) {
 				entity_registry.update();
 
+				if (entity_registry.empty<entity_type_t::Adventurer>()) {
+					entity_registry.spawn<adventurer_t>(globals::AdventurerPopulation + total_kills() / 2);
+				}
+
+				adventurer_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+				skeleton_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+
 				player_acted = false;
 			}
 
@@ -263,6 +302,11 @@ namespace necrowarp {
 
 				grid_cursor.color.set_alpha(sine_wave.current_value());
 			}
+
+			if (draw_warp_cursor) {
+				warp_cursor.set(player.position);
+				warp_cursor.color.set_alpha(sine_wave.current_value());
+			}
 		}
 
 		static inline void render() noexcept {
@@ -282,6 +326,10 @@ namespace necrowarp {
 				cursor.draw();
 			} else {
 				grid_cursor.draw(camera, globals::CursorOffset);
+			}
+
+			if (draw_warp_cursor) {
+				warp_cursor.draw(camera, globals::CursorOffset);
 			}
 
 			entity_registry.draw(camera);

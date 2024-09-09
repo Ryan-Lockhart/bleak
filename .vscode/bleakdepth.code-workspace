@@ -13,10 +13,6 @@
 		},
 		"task.quickOpen.showAll": true,
 		"task.autoDetect": "on",
-		"C_Cpp.default.compileCommands": "d:\\Development\\Projects\\C++\\Bleakdepth\\build/compile_commands.json",
-		"C_Cpp.default.configurationProvider": "mesonbuild.mesonbuild",
-		"C_Cpp.markdownInComments": "enabled",
-		"C_Cpp.clang_format_fallbackStyle": "LLVM",
-		"C_Cpp.doxygen.generatedStyle": "/**",
+		"mesonbuild.modifySettings": false,
 	}
 }

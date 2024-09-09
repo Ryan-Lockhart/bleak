@@ -11,7 +11,6 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <unordered_set>
 
 #include <bleak/applicator.hpp>
 #include <bleak/array.hpp>
@@ -1767,9 +1766,9 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_t Region, typename Randomizer>
+		template<zone_region_t Region, typename Randomizer, SparseBlockage Blockage>
 			requires is_random_engine<Randomizer>::value
-		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage) const noexcept {
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<Blockage> sparse_blockage) const noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}
@@ -1824,9 +1823,9 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_t Region, typename Randomizer, typename U>
+		template<zone_region_t Region, typename Randomizer, typename U, SparseBlockage Blockage>
 			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
-		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<std::unordered_set<offset_t, offset_t::hasher>> sparse_blockage) const noexcept {
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<Blockage> sparse_blockage) const noexcept {
 			if constexpr (Region == zone_region_t::None) {
 				return *this;
 			}

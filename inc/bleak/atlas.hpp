@@ -2,6 +2,7 @@
 
 #include <bleak/typedef.hpp>
 
+#include <cctype>
 #include <stdexcept>
 
 #include <SDL.h>
@@ -17,6 +18,30 @@
 #include <bleak/texture.hpp>
 
 namespace bleak {
+	static constexpr offset_t generate_alignment_offset(cref<runes_t> runes, cref<offset_t> position, cref<cardinal_t> alignment) {
+		const offset_t size_offs{ static_cast<offset_t>(alignment) * text::calculate_size(runes) };
+
+		return offset_t{ size_offs - size_offs / 2 };
+	}
+
+	static constexpr offset_t generate_alignment_offset(cref<std::string> text, cref<offset_t> position, cref<cardinal_t> alignment) {
+		const offset_t size_offs{ static_cast<offset_t>(alignment) * text::calculate_size(text) };
+		
+		return offset_t{ size_offs - size_offs / 2 };
+	}
+
+	static constexpr offset_t generate_alignment_offset(cref<runes_t> runes, cref<offset_t> position, cref<cardinal_t> alignment, cref<extent_t> size) {
+		const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+
+		return offset_t{ size_offs - size_offs / 2 };
+	}
+
+	static constexpr offset_t generate_alignment_offset(cref<std::string> text, cref<offset_t> position, cref<cardinal_t> alignment, cref<extent_t> size) {
+		const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
+		
+		return offset_t{ size_offs - size_offs / 2 };
+	}
+
 	template<extent_t Size> class atlas_t {
 	  private:
 		array_t<rect_t, Size> rects;
@@ -153,8 +178,7 @@ namespace bleak {
 
 			const extent_t size{ text::calculate_size(runes) };
 			const offset_t origin{ position - size / 2 };
-			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
-			const offset_t alignment_offs{ size_offs - size_offs / 2 };
+			const offset_t alignment_offs{ generate_alignment_offset(runes, position, alignment, size) };
 
 			offset_t carriage_pos{ 0 };
 
@@ -172,6 +196,9 @@ namespace bleak {
 				case '\v':
 					carriage_pos.y += (carriage_pos.y + text::VerticalTabWidth - 1) & -text::VerticalTabWidth;
 					carriage_pos.x = 0;
+					continue;
+				case ' ':
+					++carriage_pos.x;
 					continue;
 				default:
 					draw(rune, origin + carriage_pos + alignment_offs);
@@ -188,12 +215,11 @@ namespace bleak {
 
 			const extent_t size{ text::calculate_size(runes) };
 			const offset_t origin{ position - size / 2 };
-			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
-			const offset_t alignment_offs{ size_offs - size_offs / 2 };
+			const offset_t alignment_offs{ generate_alignment_offset(runes, position, alignment, size) };
 
 			offset_t carriage_pos{ 0 };
 
-			for (auto& rune : runes) {
+			for (cauto rune : runes) {
 				switch (rune.index) {
 				case '\0':
 					return;
@@ -207,6 +233,9 @@ namespace bleak {
 				case '\v':
 					carriage_pos.y += (carriage_pos.y + text::VerticalTabWidth - 1) & -text::VerticalTabWidth;
 					carriage_pos.x = 0;
+					continue;
+				case ' ':
+					++carriage_pos.x;
 					continue;
 				default:
 					draw(rune, origin + carriage_pos + alignment_offs, offset);
@@ -223,7 +252,7 @@ namespace bleak {
 
 			offset_t carriage_pos{ 0 };
 
-			for (auto& ch : text) {
+			for (cauto ch : text) {
 				switch (ch) {
 				case '\0':
 					return;
@@ -238,8 +267,11 @@ namespace bleak {
 					carriage_pos.y += (carriage_pos.y + text::VerticalTabWidth - 1) & -text::VerticalTabWidth;
 					carriage_pos.x = 0;
 					continue;
+				case ' ':
+					++carriage_pos.x;
+					continue;
 				default:
-					draw(glyph_t{ static_cast<u8>(ch), color }, position + carriage_pos);
+					draw(glyph_t{ static_cast<u32>(ch), color }, position + carriage_pos);
 					++carriage_pos.x;
 					continue;
 				}
@@ -253,12 +285,11 @@ namespace bleak {
 
 			const extent_t size{ text::calculate_size(text) };
 			const offset_t origin{ position - size / 2 };
-			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
-			const offset_t alignment_offs{ size_offs - size_offs / 2 };
+			const offset_t alignment_offs{ generate_alignment_offset(text, position, alignment, size) };
 
 			offset_t carriage_pos{ 0 };
 
-			for (auto& ch : text) {
+			for (cauto ch : text) {
 				switch (ch) {
 				case '\0':
 					return;
@@ -273,8 +304,11 @@ namespace bleak {
 					carriage_pos.y += (carriage_pos.y + text::VerticalTabWidth - 1) & -text::VerticalTabWidth;
 					carriage_pos.x = 0;
 					continue;
+				case ' ':
+					++carriage_pos.x;
+					continue;
 				default:
-					draw(glyph_t{ static_cast<u8>(ch), color }, origin + carriage_pos + alignment_offs);
+					draw(glyph_t{ static_cast<u32>(ch), color }, origin + carriage_pos + alignment_offs);
 					++carriage_pos.x;
 					continue;
 				}
@@ -288,12 +322,11 @@ namespace bleak {
 
 			const extent_t size{ text::calculate_size(text) };
 			const offset_t origin{ position - size / 2 };
-			const offset_t size_offs{ static_cast<offset_t>(alignment) * size };
-			const offset_t alignment_offs{ size_offs - size_offs / 2 };
+			const offset_t alignment_offs{ generate_alignment_offset(text, position, alignment, size) };
 
 			offset_t carriage_pos{ 0 };
 
-			for (auto& ch : text) {
+			for (cauto ch : text) {
 				switch (ch) {
 				case '\0':
 					return;
@@ -308,8 +341,11 @@ namespace bleak {
 					carriage_pos.y += (carriage_pos.y + text::VerticalTabWidth - 1) & -text::VerticalTabWidth;
 					carriage_pos.x = 0;
 					continue;
+				case ' ':
+					++carriage_pos.x;
+					continue;
 				default:
-					draw(glyph_t{ static_cast<u8>(ch), color }, origin + carriage_pos + alignment_offs, offset);
+					draw(glyph_t{ static_cast<u32>(ch), color }, origin + carriage_pos + alignment_offs, offset);
 					++carriage_pos.x;
 					continue;
 				}

@@ -19,7 +19,7 @@ namespace bleak {
 				if (music == nullptr) {
 					return;
 				}
-				
+
 				Mix_FreeMusic(music);
 				music = nullptr;
 			}
@@ -96,10 +96,7 @@ namespace bleak {
 
 		inline void halt() noexcept { sdl::music::halt(); }
 
-		inline void play() noexcept {
-			assert(music);
-			sdl::music::play(music);
-		}
+		inline void play() noexcept { sdl::music::play(music); }
 
 		inline void play(i32 volume) noexcept {
 			sdl::music::set_volume(volume);

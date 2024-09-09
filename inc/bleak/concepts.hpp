@@ -1,7 +1,8 @@
 #pragma once
 
-#include <bleak/typedef.hpp>
 #include <bleak/primitive.hpp>
+#include <bleak/typedef.hpp>
+
 
 #include <concepts>
 #include <limits>
@@ -123,9 +124,11 @@ namespace bleak {
 		{ a != b } -> std::convertible_to<bool>;
 	};
 
-	template<typename T, typename U> concept Ordered = Less<T, U> && Greater<T, U>;
+	template<typename T, typename U>
+	concept Ordered = Less<T, U> && Greater<T, U>;
 
-	template<typename T, typename U> concept Comparable = Less<T, U> && Greater<T, U> && LessEq<T, U> && GreaterEq<T, U> && Equatable<T, U>;
+	template<typename T, typename U>
+	concept Comparable = Less<T, U> && Greater<T, U> && LessEq<T, U> && GreaterEq<T, U> && Equatable<T, U>;
 
 	template<typename T, typename U> struct is_equatable {
 		static bool constexpr value = Equatable<T, U>;
@@ -194,7 +197,7 @@ namespace bleak {
 	};
 
 	template<typename... Params> constexpr bool is_plurary_v = is_plurary<Params...>::value;
-	
+
 	template<typename T>
 	concept Hashable = requires(T t) {
 		{ T::hasher::operator()(t) } -> std::convertible_to<usize>;
@@ -261,4 +264,9 @@ namespace bleak {
 	};
 
 	template<typename T> constexpr bool is_hashable_by_size_v = is_hashable_by_size<T>::value;
+
+	template<typename T>
+	concept SparseBlockage = requires(T t, offset_t position) {
+		{ t.contains(position) } -> std::convertible_to<bool>;
+	};
 } // namespace bleak

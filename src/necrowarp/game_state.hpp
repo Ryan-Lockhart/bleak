@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/constants/colors.hpp"
 #include <bleak.hpp>
 
 #include <necrowarp/globals.hpp>
@@ -26,9 +27,12 @@ namespace necrowarp {
 	static inline bool gamepad_active{ false };
 
 	static inline cursor_t cursor{ renderer, "res\\sprites\\cursor.png", colors::White };
+
 	static inline grid_cursor_t<globals::CellSize> grid_cursor{ renderer, "res\\sprites\\grid_cursor.png", colors::metals::Gold, game_map.zone_origin, game_map.zone_extent };
+	static inline grid_cursor_t<globals::CellSize> warp_cursor{ renderer, "res\\sprites\\grid_cursor.png", colors::Magenta, game_map.zone_origin, game_map.zone_extent };
 
 	static inline bool draw_cursor{ true };
+	static inline bool draw_warp_cursor{ false };
 
 	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> adventurer_goal_map{};
 	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> skeleton_goal_map{};
@@ -48,6 +52,9 @@ namespace necrowarp {
 	static inline path_t test_path{};
 
 	static inline bool player_acted{ false };
+	
+	static inline i16 player_kills{ 0 };
+	static inline i16 skeleton_kills{ 0 };
 
-	static inline i16 total_kills{ 0 };
+	static inline i16 total_kills() noexcept { return player_kills + skeleton_kills; };
 } // namespace necrowarp

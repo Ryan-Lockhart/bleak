@@ -96,6 +96,8 @@ namespace bleak {
 			}
 		}
 
+		inline void set(cref<offset_t> position) { this->position = use_bounds ? offset_t::clamp(position, min, max) : position; }
+
 		inline offset_t midpoint() const { return offset_t{ (max - min) / 2 }; }
 
 		inline offset_t lower_third() const { return offset_t{ (max - min) / 3 }; }
@@ -112,15 +114,9 @@ namespace bleak {
 
 		inline offset_t get_position() const { return position; }
 
-		template<typename T, extent_t ZoneSize, extent_t BorderSize>
-		inline ref<T> hovered(ref<zone_t<T, ZoneSize, BorderSize>> zone) {
-			return zone[position];
-		};
+		template<typename T, extent_t ZoneSize, extent_t BorderSize> inline ref<T> hovered(ref<zone_t<T, ZoneSize, BorderSize>> zone) { return zone[position]; };
 
-		template<typename T, extent_t ZoneSize, extent_t BorderSize>
-		inline cref<T> hovered(cref<zone_t<T, ZoneSize, BorderSize>> zone) const {
-			return zone[position];
-		};
+		template<typename T, extent_t ZoneSize, extent_t BorderSize> inline cref<T> hovered(cref<zone_t<T, ZoneSize, BorderSize>> zone) const { return zone[position]; };
 
 		inline quadrant_t get_quadrant() const {
 			const auto mid{ midpoint() };

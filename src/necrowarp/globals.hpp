@@ -60,6 +60,25 @@ namespace necrowarp {
 		constexpr u32 AdventurerPopulation{ 3 };
 		constexpr u32 SkullDebris{ 5 };
 
+		constexpr u8 StartingEnergy{ 3 };
+		constexpr u8 StartingArmor{ 0 };
+
+		constexpr u8 MinimumEnergy{ 0 };
+		constexpr u8 MinimumArmor{ 0 };
+
+		constexpr u8 MaximumEnergy{ 5 };
+		constexpr u8 MaximumArmor{ 3 };
+
+		constexpr u8 SkullBoon{ 1 };
+		constexpr u8 PlayerKillBoon{ 1 };
+		constexpr u8 SkeletonKillBoon{ 1 };
+		constexpr u8 FailedWarpBoon{ 1 };
+
+		constexpr u8 RandomWarpCost{ 1 };
+		constexpr u8 TargetWarpCost{ 2 };
+
+		constexpr u8 ClashArmorDamage{ 1 };
+
 		constexpr bool UseSimpleGraphics{ false };
 	} // namespace globals
 } // namespace necrowarp

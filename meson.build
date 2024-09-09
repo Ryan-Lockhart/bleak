@@ -34,6 +34,8 @@ sources = [
     'src/program.cpp'
 ]
 
+assert(sources.length() == 1, 'project is designed for a single source executable')
+
 executable(
     'necrowarp',
     sources,
