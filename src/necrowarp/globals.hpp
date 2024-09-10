@@ -61,31 +61,6 @@ namespace necrowarp {
 		constexpr u32 AdventurerPopulation{ 3 };
 		constexpr u32 SkullDebris{ 5 };
 
-		constexpr u8 StartingEnergy{ 3 };
-		constexpr u8 StartingArmor{ 0 };
-
-		constexpr u8 MinimumEnergy{ 4 };
-		constexpr u8 MinimumArmor{ 2 };
-
-		constexpr u8 MaximumEnergy{ 32 };
-		constexpr u8 MaximumArmor{ 16 };
-
-		constexpr u8 SkullBoon{ 1 };
-		constexpr u8 FailedWarpBoon{ 1 };
-		
-		constexpr u8 AdventurerDeathBoon{ 1 };
-		constexpr u8 PaladinDeathBoon{ 2 };
-		constexpr u8 PriestDeathBoon{ 4 };
-
-		constexpr u8 RandomWarpCost{ 1 };
-		constexpr u8 TargetWarpCost{ 2 };
-		constexpr u8 SummonWraithCost{ 4 };
-		constexpr u8 GrandSummoningCost{ 8 };
-
-		constexpr u8 AdventurerDamage{ 1 };
-		constexpr u8 PaladinDamage{ 2 };
-		constexpr u8 PriestDamage{ 4 };
-
 		constexpr glyph_t EnergyGlyph{ 0x44, colors::White };
 		constexpr glyph_t ArmorGlyph{ 0x45, colors::White };
 

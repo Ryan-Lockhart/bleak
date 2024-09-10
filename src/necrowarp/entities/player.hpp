@@ -1,6 +1,5 @@
 #pragma once
 
-#include "necrowarp/globals.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <necrowarp/game_state.hpp>
@@ -10,26 +9,40 @@ namespace necrowarp {
 
 	struct player_t {
 		entity_command_t command;
-
 		offset_t position;
 
-		u16 kills;
+		static constexpr i8 MaximumEnergy{ 32 };
+		static constexpr i8 MinimumEnergy{ 4 };
 
-		u8 energy;
-		u8 armor;
+		static constexpr i8 StartingEnergy{ 3 };
+		static constexpr i8 StartingArmor{ 0 };
 
-		static constexpr u8 MaximumEnergy{ 32 };
-		static constexpr u8 MinimumEnergy{ 4 };
-		
-		static constexpr u8 MaximumArmor{ 16 };
-		static constexpr u8 MinimumArmor{ 2 };
+		static constexpr i8 MaximumArmor{ 16 };
+		static constexpr i8 MinimumArmor{ 2 };
 
-		static constexpr u8 MaximumDamage{ 1 };
-		static constexpr u8 MinimumDamage{ 1 };
+		static constexpr i8 MaximumDamage{ 1 };
+		static constexpr i8 MinimumDamage{ 1 };
 
-		inline player_t() noexcept : command{}, position{}, kills{ 0 }, energy{ globals::StartingEnergy }, armor{ globals::StartingArmor } {}
+		static constexpr i8 RandomWarpCost{ 1 };
+		static constexpr i8 TargetWarpCost{ 2 };
+		static constexpr i8 SummonWraithCost{ 4 };
+		static constexpr i8 GrandSummoningCost{ 8 };
 
-		inline player_t(cref<offset_t> position) noexcept : command{}, position{ position }, kills{ 0 }, energy{ globals::StartingEnergy }, armor{ globals::StartingArmor } {}
+		static constexpr i8 SkullBoon{ 1 };
+		static constexpr i8 FailedWarpBoon{ 1 };
+
+	  private:
+		i8 energy;
+		i8 armor;
+
+		inline void set_energy(i8 value) noexcept { energy = clamp<i8>(value, 0, max_energy()); }
+
+		inline void set_armor(i8 value) noexcept { armor = clamp<i8>(value, 0, max_armor()); }
+
+	  public:
+		inline player_t() noexcept : command{}, position{}, energy{ StartingEnergy }, armor{ StartingArmor } {}
+
+		inline player_t(cref<offset_t> position) noexcept : command{}, position{ position }, energy{ StartingEnergy }, armor{ StartingArmor } {}
 
 		inline void update() noexcept {
 			if (energy > max_energy()) {
@@ -41,38 +54,74 @@ namespace necrowarp {
 			}
 		}
 
+		inline i8 get_energy() const noexcept { return energy; }
+
+		inline i8 get_armor() const noexcept { return armor; }
+
 		inline bool has_energy() const noexcept { return energy > 0; }
 
 		inline bool has_armor() const noexcept { return armor > 0; }
 
-		inline u8 max_energy() const noexcept { return globals::SkullDebris + skeleton_kills / 16; }
+		inline i8 max_energy() const noexcept { return MinimumEnergy + skeleton_kills / 16; }
 
-		inline u8 max_armor() const noexcept { return globals::AdventurerPopulation + player_kills / 8; }
+		inline i8 max_armor() const noexcept { return MinimumArmor + player_kills / 8; }
 
-		inline bool can_random_warp() const noexcept { return energy >= globals::RandomWarpCost; }
+		inline bool can_random_warp() const noexcept { return energy >= RandomWarpCost; }
 
-		inline bool can_target_warp() const noexcept { return energy >= globals::TargetWarpCost; }
+		inline bool can_target_warp() const noexcept { return energy >= TargetWarpCost; }
+
+		inline bool can_summon_wraith() const noexcept { return energy >= SummonWraithCost; }
+
+		inline bool can_grand_summon() const noexcept { return energy >= GrandSummoningCost; }
+
+		inline void pay_random_warp_cost() noexcept { set_energy(energy - RandomWarpCost); }
+
+		inline void pay_target_warp_cost() noexcept { set_energy(energy - TargetWarpCost); }
+
+		inline void pay_summon_wraith_cost() noexcept { set_energy(energy - SummonWraithCost); }
+
+		inline void pay_grand_summon_cost() noexcept { set_energy(energy - GrandSummoningCost); }
+
+		inline void receive_skull_boon() noexcept { set_energy(energy + SkullBoon); }
+
+		inline void receive_failed_warp_boon() noexcept { set_energy(energy + FailedWarpBoon); }
+
+		inline void max_out_energy() noexcept { energy = max_energy(); }
+
+		inline void max_out_armor() noexcept { armor = max_armor(); }
+
+		inline void zero_out_energy() noexcept { energy = 0; }
+
+		inline void zero_out_armor() noexcept { armor = 0; }
+
+		template<entity_type_t EntityType> inline bool will_perish() const noexcept;
+
+		template<entity_type_t EntityType> inline void receive_damage() noexcept;
+
+		template<entity_type_t EntityType> inline void receive_death_boon() noexcept;
+
+		inline void bolster_armor(i8 value) noexcept;
 
 		inline void increment_energy() noexcept {
-			if (energy < MaximumEnergy) {
+			if (energy < max_energy()) {
 				++energy;
 			}
 		}
 
 		inline void decrement_energy() noexcept {
-			if (energy > globals::MinimumEnergy) {
+			if (energy > MinimumEnergy) {
 				--energy;
 			}
 		}
 
 		inline void increment_armor() noexcept {
-			if (armor < MaximumArmor) {
+			if (armor < max_armor()) {
 				++armor;
 			}
 		}
 
 		inline void decrement_armor() noexcept {
-			if (armor > globals::MinimumArmor) {
+			if (armor > MinimumArmor) {
 				--armor;
 			}
 		}

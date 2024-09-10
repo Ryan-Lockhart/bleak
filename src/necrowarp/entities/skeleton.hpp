@@ -20,6 +20,13 @@ namespace necrowarp {
 	struct skeleton_t {
 		offset_t position;
 
+		// the maximum amount of health a skeleton can have
+		static constexpr i8 MaximumHealth{ 1 };
+		// the maximum amount of damage a skeleton can do
+		static constexpr i8 MaximumDamage{ 1 };
+
+		constexpr i8 armor_boon() const noexcept { return 1; }
+
 		inline skeleton_t(cref<offset_t> position) noexcept : position{ position } {}
 
 		inline entity_command_t think() const noexcept;
@@ -34,16 +41,17 @@ namespace necrowarp {
 
 		constexpr operator entity_type_t() const noexcept { return entity_type_t::Skeleton; }
 
-		static constexpr u8 MaximumHealth{ 1 };
-		static constexpr u8 MaximumDamage{ 1 };
-
 		struct hasher {
+			using is_transparent = void;
+
 			static constexpr usize operator()(cref<skeleton_t> skeleton) noexcept { return offset_t::hasher::operator()(skeleton.position); }
 
 			static constexpr usize operator()(cref<offset_t> position) noexcept { return offset_t::hasher::operator()(position); }
 		};
 
 		struct comparator {
+			using is_transparent = void;
+
 			static constexpr bool operator()(cref<skeleton_t> lhs, cref<skeleton_t> rhs) noexcept { return offset_t::hasher::operator()(lhs.position) == offset_t::hasher::operator()(rhs.position); }
 
 			static constexpr bool operator()(cref<skeleton_t> lhs, cref<offset_t> rhs) noexcept { return offset_t::hasher::operator()(lhs.position) == offset_t::hasher::operator()(rhs); }
@@ -51,28 +59,4 @@ namespace necrowarp {
 			static constexpr bool operator()(cref<offset_t> lhs, cref<skeleton_t> rhs) noexcept { return offset_t::hasher::operator()(lhs) == offset_t::hasher::operator()(rhs.position); }
 		};
 	};
-} // namespace necrowarp
-
-#include <necrowarp/entity_state.hpp>
-
-namespace necrowarp {
-	inline entity_command_t skeleton_t::think() const noexcept {
-		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
-			const offset_t current_position{ position + offset };
-
-			if (entity_registry.at(current_position) != entity_type_t::Adventurer) {
-				continue;
-			}
-
-			return entity_command_t{ command_type_t::Clash, position, current_position };
-		}
-
-		cauto descent_pos{ evil_goal_map.descend<zone_region_t::Interior>(position, entity_registry) };
-
-		if (!descent_pos.has_value()) {
-			return entity_command_t{ command_type_t::None };
-		}
-
-		return entity_command_t{ command_type_t::Move, position, descent_pos.value() };
-	}
 } // namespace necrowarp

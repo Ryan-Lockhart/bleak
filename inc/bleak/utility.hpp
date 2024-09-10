@@ -48,6 +48,18 @@ namespace bleak {
 
 	template<Numeric N> constexpr inline bool between(N value, N min, N max) { return value >= min && value <= max; }
 
+	template<typename T> constexpr ref<T> deref(ptr<T> pointer) { return *pointer; }
+
+	template<typename T> constexpr cref<T> deref(cptr<T> pointer) { return *pointer; }
+
+	template<typename T> constexpr ptr<T> addr_of(ref<T> pointer) { return *pointer; }
+
+	template<typename T> constexpr cptr<T> addr_of(cref<T> pointer) { return *pointer; }
+
+	template<typename T, typename U> constexpr ptr<T> deref_addr_of(ref<U> iterator) { return &(*iterator); }
+
+	template<typename T, typename U> constexpr cptr<T> deref_addr_of(cref<U> iterator) { return &(*iterator); }
+
 	template<usize Length, usize Start, usize End>
 		requires(End - Start + 1 == Length)
 	constexpr static std::array<usize, End - Start + 1> generate_contiguous_indices() noexcept {
@@ -115,6 +127,7 @@ namespace bleak {
 		constexpr const usize Maximum{ Gigabyte * 4 };
 	}; // namespace memory
 
+// forces the use of a macro to be terminated with a semicolon
 #define REQUIRE_SEMICOLON() static_assert(true, "")
 
 #define DEFINE_GENERIC_USING(type, value_type)                                                                                                                                                                                                 \

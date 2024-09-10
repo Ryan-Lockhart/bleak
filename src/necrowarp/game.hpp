@@ -4,6 +4,7 @@
 
 #include <necrowarp/entities.hpp>
 #include <necrowarp/entity_state.hpp>
+#include <necrowarp/entity_state.tpp>
 #include <necrowarp/game_state.hpp>
 #include <necrowarp/globals.hpp>
 
@@ -338,11 +339,11 @@ namespace necrowarp {
 
 			renderer.draw_composite_rect(offset_t{ globals::GlyphSize }, extent_t{ 32, 3 } * globals::CellSize - globals::GlyphSize, colors::Black, colors::White, 1);
 
-			for (u8 i{0}; i < player.energy; ++i) {
+			for (u8 i{0}; i < player.get_energy(); ++i) {
 				game_atlas.draw(globals::EnergyGlyph, offset_t{ i, 0 }, offset_t{ 4, 4 });
 			}
 
-			for (u8 i{0}; i < player.armor; ++i) {
+			for (u8 i{0}; i < player.get_armor(); ++i) {
 				game_atlas.draw(globals::ArmorGlyph, offset_t{ i, 1 }, offset_t{ 4, 4 });
 			}
 

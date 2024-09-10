@@ -12,8 +12,6 @@ namespace necrowarp {
 
 		inline skull_t(cref<offset_t> position) noexcept : position{ position } {}
 
-		inline bool update() noexcept;
-
 		inline void draw() const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skull], position); }
 
 		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skull], position + offset); }
@@ -25,12 +23,16 @@ namespace necrowarp {
 		constexpr operator entity_type_t() const noexcept { return entity_type_t::Skull; }
 
 		struct hasher {
+			using is_transparent = void;
+
 			static constexpr usize operator()(cref<skull_t> skull) noexcept { return offset_t::hasher::operator()(skull.position); }
 
 			static constexpr usize operator()(cref<offset_t> position) noexcept { return offset_t::hasher::operator()(position); }
 		};
 
 		struct comparator {
+			using is_transparent = void;
+			
 			static constexpr bool operator()(cref<skull_t> lhs, cref<skull_t> rhs) noexcept { return offset_t::hasher::operator()(lhs.position) == offset_t::hasher::operator()(rhs.position); }
 
 			static constexpr bool operator()(cref<skull_t> lhs, cref<offset_t> rhs) noexcept { return offset_t::hasher::operator()(lhs.position) == offset_t::hasher::operator()(rhs); }
@@ -47,7 +49,3 @@ namespace necrowarp {
 		static constexpr bool value = true;
 	};
 } // namespace necrowarp
-
-#include <necrowarp/entity_state.hpp>
-
-inline bool necrowarp::skull_t::update() noexcept { return false; }
