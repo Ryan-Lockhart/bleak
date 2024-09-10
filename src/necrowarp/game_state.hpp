@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/constants/colors.hpp"
 #include <bleak.hpp>
 
 #include <necrowarp/globals.hpp>
@@ -34,8 +33,8 @@ namespace necrowarp {
 	static inline bool draw_cursor{ true };
 	static inline bool draw_warp_cursor{ false };
 
-	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> adventurer_goal_map{};
-	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> skeleton_goal_map{};
+	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> good_goal_map{};
+	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> evil_goal_map{};
 
 	static inline camera_t camera{ globals::GameGridSize, extent_t::Zero, globals::CameraExtent };
 	static inline bool camera_locked{ true };

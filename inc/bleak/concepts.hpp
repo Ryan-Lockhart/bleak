@@ -3,7 +3,6 @@
 #include <bleak/primitive.hpp>
 #include <bleak/typedef.hpp>
 
-
 #include <concepts>
 #include <limits>
 #include <type_traits>

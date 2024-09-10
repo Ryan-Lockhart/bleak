@@ -20,8 +20,6 @@ namespace bleak {
 		zone_t<D, ZoneSize, ZoneBorder> distances;
 		std::unordered_set<offset_t, offset_t::hasher> goals;
 
-		bool dirty{ true };
-
 	  public:
 		static constexpr D goal_value{ 0 };
 		static constexpr D obstacle_value{ std::numeric_limits<D>::max() };
@@ -57,11 +55,9 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region, typename T> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value) noexcept {
-			if (!dirty) {
-				return *this;
-			}
+		constexpr cref<D> operator[](cref<offset_t> position) const noexcept { return distances[position]; }
 
+		template<zone_region_t Region, typename T> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value) noexcept {
 			reset();
 
 			if (goals.empty()) {
@@ -109,8 +105,6 @@ namespace bleak {
 					}
 				}
 			}
-
-			dirty = false;
 
 			return *this;
 		}
@@ -118,10 +112,6 @@ namespace bleak {
 		template<zone_region_t Region, typename T, typename U>
 			requires is_equatable<T, U>::value
 		constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value) noexcept {
-			if (!dirty) {
-				return *this;
-			}
-
 			reset<Region>();
 
 			if (goals.empty()) {
@@ -168,16 +158,10 @@ namespace bleak {
 				}
 			}
 
-			dirty = false;
-
 			return *this;
 		}
 
 		template<zone_region_t Region, typename T, SparseBlockage Blockage> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Blockage> sparse_blockage) noexcept {
-			if (!dirty) {
-				return *this;
-			}
-
 			reset();
 
 			if (goals.empty()) {
@@ -226,18 +210,12 @@ namespace bleak {
 				}
 			}
 
-			dirty = false;
-
 			return *this;
 		}
 
 		template<zone_region_t Region, typename T, typename U, SparseBlockage Blockage>
 			requires is_equatable<T, U>::value
 		constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value, cref<Blockage> sparse_blockage) noexcept {
-			if (!dirty) {
-				return *this;
-			}
-
 			reset<Region>();
 
 			if (goals.empty()) {
@@ -283,8 +261,6 @@ namespace bleak {
 					}
 				}
 			}
-
-			dirty = false;
 
 			return *this;
 		}
@@ -561,9 +537,7 @@ namespace bleak {
 				return false;
 			}
 
-			dirty = goals.insert(goal).second;
-
-			return dirty;
+			return goals.insert(goal).second;
 		}
 
 		constexpr bool operator-=(cref<offset_t> goal) noexcept {
@@ -571,9 +545,7 @@ namespace bleak {
 				return false;
 			}
 
-			dirty = goals.erase(goal);
-
-			return dirty;
+			return goals.erase(goal);
 		}
 
 		constexpr bool update(cref<offset_t> from, cref<offset_t> to) noexcept {
@@ -582,10 +554,10 @@ namespace bleak {
 			}
 
 			if (goals.erase(from)) {
-				dirty = goals.insert(to).second;
+				return goals.insert(to).second;
 			}
 
-			return dirty;
+			return false;
 		}
 	};
 } // namespace bleak

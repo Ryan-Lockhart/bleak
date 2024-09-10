@@ -1,4 +1,5 @@
 #pragma once
+
 #include <bleak/typedef.hpp>
 
 #include <array>
@@ -42,6 +43,8 @@ namespace bleak {
 	template<typename T> constexpr inline T lerp(T a, T b, T t) { return a + (b - a) * t; }
 
 	template<typename T> constexpr inline T usage(T value, T min, T max) { return (value - min) / (max - min); }
+
+	template<typename T, typename U> constexpr inline U usage(T value, T min, T max) { return (value - min) / (max - min); }
 
 	template<Numeric N> constexpr inline bool between(N value, N min, N max) { return value >= min && value <= max; }
 

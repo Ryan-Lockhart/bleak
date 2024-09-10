@@ -24,6 +24,9 @@ namespace necrowarp {
 
 		constexpr operator entity_type_t() const noexcept { return entity_type_t::Adventurer; }
 
+		static constexpr u8 MaximumHealth{ 1 };
+		static constexpr u8 MaximumDamage{ 1 };
+
 		struct hasher {
 			static constexpr usize operator()(cref<adventurer_t> adventurer) noexcept { return offset_t::hasher::operator()(adventurer.position); }
 
@@ -62,7 +65,7 @@ namespace necrowarp {
 			return entity_command_t{ command_type_t::Clash, position, current_position };
 		}
 
-		cauto descent_pos{ adventurer_goal_map.descend<zone_region_t::Interior>(position, entity_registry) };
+		cauto descent_pos{ good_goal_map.descend<zone_region_t::Interior>(position, entity_registry) };
 
 		if (!descent_pos.has_value()) {
 			return entity_command_t{ command_type_t::None };

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <bleak.hpp>
 
 #include <necrowarp/entities.hpp>
@@ -215,16 +217,16 @@ namespace necrowarp {
 
 			entity_registry.spawn<skull_t>(globals::SkullDebris);
 
-			adventurer_goal_map += player_pos.value();
-			adventurer_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+			good_goal_map += player_pos.value();
+			good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 
 			entity_registry.spawn<adventurer_t>(globals::AdventurerPopulation);
 
 			for (crauto adventurer : adventurers) {
-				skeleton_goal_map += adventurer.position;
+				evil_goal_map += adventurer.position;
 			}
 
-			skeleton_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+			evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 
 			Clock::tick();
 
@@ -271,12 +273,12 @@ namespace necrowarp {
 			if (player_acted) {
 				entity_registry.update();
 
+				// bandaid fix; need to control increment/decrement of player's energy and armor
+				player.update();
+
 				if (entity_registry.empty<entity_type_t::Adventurer>()) {
 					entity_registry.spawn<adventurer_t>(globals::AdventurerPopulation + total_kills() / 2);
 				}
-
-				adventurer_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
-				skeleton_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 
 				player_acted = false;
 			}
@@ -333,6 +335,16 @@ namespace necrowarp {
 			}
 
 			entity_registry.draw(camera);
+
+			renderer.draw_composite_rect(offset_t{ globals::GlyphSize }, extent_t{ 32, 3 } * globals::CellSize - globals::GlyphSize, colors::Black, colors::White, 1);
+
+			for (u8 i{0}; i < player.energy; ++i) {
+				game_atlas.draw(globals::EnergyGlyph, offset_t{ i, 0 }, offset_t{ 4, 4 });
+			}
+
+			for (u8 i{0}; i < player.armor; ++i) {
+				game_atlas.draw(globals::ArmorGlyph, offset_t{ i, 1 }, offset_t{ 4, 4 });
+			}
 
 			const runes_t fps_text{ std::format("FPS:{:4}", static_cast<u32>(Clock::frame_time())), colors::Green };
 

@@ -10,28 +10,45 @@ namespace necrowarp {
 
 	enum struct entity_type_t : u8 {
 		None = 0,
+
 		Player,
+
 		Skull,
+
 		Skeleton,
+		Wraith,
+
 		Adventurer,
+		Paladin,
+		Priest
 	};
 
 	static constexpr cstr to_string(cref<entity_type_t> type) noexcept {
 		switch (type) {
 		case entity_type_t::None:
 			return "none";
+
 		case entity_type_t::Player:
 			return "player";
+
 		case entity_type_t::Skull:
 			return "skull";
+
 		case entity_type_t::Skeleton:
 			return "skeleton";
+		case entity_type_t::Wraith:
+			return "wraith";
+
 		case entity_type_t::Adventurer:
 			return "adventurer";
+		case entity_type_t::Paladin:
+			return "paladin";
+		case entity_type_t::Priest:
+			return "priest";
 		}
 	}
 
-	constexpr usize EntityTypeCount{ static_cast<usize>(entity_type_t::Adventurer) + 1 };
+	constexpr usize EntityTypeCount{ static_cast<usize>(entity_type_t::Priest) + 1 };
 
 	template<typename T> struct is_entity {
 		static constexpr bool value = false;
@@ -45,9 +62,14 @@ namespace necrowarp {
 
 	enum struct command_type_t : u8 {
 		None = 0,
+
 		Move,
 		Consume,
 		Clash,
+		
+		SummonWraith,
+		GrandSummoning,
+
 		RandomWarp,
 		TargetWarp,
 		ConsumeWarp,
@@ -57,12 +79,19 @@ namespace necrowarp {
 		switch (command) {
 		case command_type_t::None:
 			return "none";
+
 		case command_type_t::Move:
 			return "move";
 		case command_type_t::Consume:
 			return "consume";
 		case command_type_t::Clash:
 			return "clash";
+
+		case command_type_t::SummonWraith:
+			return "summon wraith";
+		case command_type_t::GrandSummoning:
+			return "grand summoning";
+
 		case command_type_t::RandomWarp:
 			return "random warp";
 		case command_type_t::TargetWarp:
@@ -93,10 +122,17 @@ namespace necrowarp {
 
 	constexpr lut_t<entity_type_t, glyph_t, EntityTypeCount> EntityGlyphs{
 		pair_t<entity_type_t, glyph_t>{ entity_type_t::None, glyph_t{ 0x00, colors::White } },
+
 		pair_t<entity_type_t, glyph_t>{ entity_type_t::Player, glyph_t{ 0x40, colors::White } },
+
 		pair_t<entity_type_t, glyph_t>{ entity_type_t::Skull, glyph_t{ 0x46, colors::White } },
+
 		pair_t<entity_type_t, glyph_t>{ entity_type_t::Skeleton, glyph_t{ 0x43, colors::White } },
-		pair_t<entity_type_t, glyph_t>{ entity_type_t::Adventurer, glyph_t{ 0x42, colors::White } }
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Wraith, glyph_t{ 0x43, colors::White } },
+
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Adventurer, glyph_t{ 0x42, colors::White } },
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Paladin, glyph_t{ 0x42, colors::White } },
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Priest, glyph_t{ 0x42, colors::White } }
 	};
 
 	constexpr glyph_t PlayerArmored{ 0x41, colors::White };

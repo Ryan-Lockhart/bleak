@@ -44,13 +44,14 @@ namespace necrowarp {
 		constexpr extent_t BorderSize{ 4, 4 };
 
 		constexpr extent_t CellSize{ 16, 16 };
+		constexpr extent_t GlyphSize{ 8, 8 };
 
 		constexpr offset_t CursorOffset{ UniversalOffset - CellSize / 4 };
 
 		constexpr extent_t CameraExtent{ MapSize - globals::GameGridSize };
 		constexpr offset_t::scalar_t CameraSpeed{ 2 };
 
-		constexpr f64 FillPercent{ 0.5 };
+		constexpr f64 FillPercent{ 0.45 };
 		constexpr u32 AutomotaIterations{ 10 };
 		constexpr u32 AutomotaThreshold{ 4 };
 
@@ -63,21 +64,30 @@ namespace necrowarp {
 		constexpr u8 StartingEnergy{ 3 };
 		constexpr u8 StartingArmor{ 0 };
 
-		constexpr u8 MinimumEnergy{ 0 };
-		constexpr u8 MinimumArmor{ 0 };
+		constexpr u8 MinimumEnergy{ 4 };
+		constexpr u8 MinimumArmor{ 2 };
 
-		constexpr u8 MaximumEnergy{ 5 };
-		constexpr u8 MaximumArmor{ 3 };
+		constexpr u8 MaximumEnergy{ 32 };
+		constexpr u8 MaximumArmor{ 16 };
 
 		constexpr u8 SkullBoon{ 1 };
-		constexpr u8 PlayerKillBoon{ 1 };
-		constexpr u8 SkeletonKillBoon{ 1 };
 		constexpr u8 FailedWarpBoon{ 1 };
+		
+		constexpr u8 AdventurerDeathBoon{ 1 };
+		constexpr u8 PaladinDeathBoon{ 2 };
+		constexpr u8 PriestDeathBoon{ 4 };
 
 		constexpr u8 RandomWarpCost{ 1 };
 		constexpr u8 TargetWarpCost{ 2 };
+		constexpr u8 SummonWraithCost{ 4 };
+		constexpr u8 GrandSummoningCost{ 8 };
 
-		constexpr u8 ClashArmorDamage{ 1 };
+		constexpr u8 AdventurerDamage{ 1 };
+		constexpr u8 PaladinDamage{ 2 };
+		constexpr u8 PriestDamage{ 4 };
+
+		constexpr glyph_t EnergyGlyph{ 0x44, colors::White };
+		constexpr glyph_t ArmorGlyph{ 0x45, colors::White };
 
 		constexpr bool UseSimpleGraphics{ false };
 	} // namespace globals

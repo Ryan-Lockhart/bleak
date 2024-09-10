@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/random.hpp"
 #include <bleak/typedef.hpp>
 
 #include <bit>
@@ -11,6 +10,7 @@
 #include <bleak/atlas.hpp>
 #include <bleak/extent.hpp>
 #include <bleak/offset.hpp>
+#include <bleak/random.hpp>
 #include <bleak/renderer.hpp>
 #include <bleak/zone.hpp>
 
@@ -477,17 +477,11 @@ namespace bleak {
 		struct randomizer {
 			template<typename T> static constexpr T operator()(ref<Generator> generator) noexcept {
 				if constexpr (std::is_same<T, rock_type_t>::value) {
-					static std::uniform_int_distribution<i32> dis {
-						static_cast<i32>(rock_type_t::Limestone),
-						static_cast<i32>(rock_type_t::Marble)
-					};
+					static std::uniform_int_distribution<i32> dis{ static_cast<i32>(rock_type_t::Limestone), static_cast<i32>(rock_type_t::Marble) };
 
 					return static_cast<rock_type_t>(dis(generator));
 				} else if constexpr (std::is_same<T, mineral_type_t>::value) {
-					static std::uniform_int_distribution<i32> dis {
-						static_cast<i32>(mineral_type_t::None),
-						static_cast<i32>(mineral_type_t::Tetrahedrite)
-					};
+					static std::uniform_int_distribution<i32> dis{ static_cast<i32>(mineral_type_t::None), static_cast<i32>(mineral_type_t::Tetrahedrite) };
 
 					return static_cast<mineral_type_t>(dis(generator));
 				}

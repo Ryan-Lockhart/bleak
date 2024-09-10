@@ -1,6 +1,5 @@
 #pragma once
 
-#include "necrowarp/globals.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <queue>
@@ -37,6 +36,10 @@ namespace necrowarp {
 
 		template<entity_type_t EntityType> static inline bool update(cref<offset_t> current, cref<offset_t> target) noexcept;
 
+		static inline void process_commands(ref<std::queue<entity_command_t>> commands) noexcept;
+
+		static inline void process_command(cref<entity_command_t> command) noexcept;
+
 		static inline void update() noexcept;
 
 		static inline void draw() noexcept;
@@ -46,9 +49,12 @@ namespace necrowarp {
 } // namespace necrowarp
 
 #include <necrowarp/entities/adventurer.hpp>
+#include <necrowarp/entities/paladin.hpp>
 #include <necrowarp/entities/player.hpp>
+#include <necrowarp/entities/priest.hpp>
 #include <necrowarp/entities/skeleton.hpp>
 #include <necrowarp/entities/skull.hpp>
+#include <necrowarp/entities/wraith.hpp>
 
 namespace necrowarp {
 	using namespace bleak;
@@ -56,10 +62,15 @@ namespace necrowarp {
 	static inline player_t player{};
 
 	static inline std::unordered_set<skull_t, skull_t::hasher, skull_t::comparator> skulls{};
-	static inline std::unordered_set<skeleton_t, skeleton_t::hasher, skeleton_t::comparator> skeletons{};
-	static inline std::unordered_set<adventurer_t, adventurer_t::hasher, adventurer_t::comparator> adventurers{};
 
-	inline bool entity_registry_t::contains(cref<offset_t> position) noexcept { return player.position == position || skulls.contains(position) || skeletons.contains(position) || adventurers.contains(position); }
+	static inline std::unordered_set<skeleton_t, skeleton_t::hasher, skeleton_t::comparator> skeletons{};
+	static inline std::unordered_set<wraith_t, wraith_t::hasher, wraith_t::comparator> wraithes{};
+
+	static inline std::unordered_set<adventurer_t, adventurer_t::hasher, adventurer_t::comparator> adventurers{};
+	static inline std::unordered_set<paladin_t, paladin_t::hasher, paladin_t::comparator> paladins{};
+	static inline std::unordered_set<priest_t, priest_t::hasher, priest_t::comparator> priests{};
+
+	inline bool entity_registry_t::contains(cref<offset_t> position) noexcept { return player.position == position || skulls.contains(position) || skeletons.contains(position) || wraithes.contains(position) || adventurers.contains(position) || paladins.contains(position) || priests.contains(position); }
 
 	template<entity_type_t EntityType> inline bool entity_registry_t::contains(cref<offset_t> position) noexcept {
 		if constexpr (EntityType == entity_type_t::Player) {
@@ -68,10 +79,16 @@ namespace necrowarp {
 			return skulls.contains(position);
 		} else if constexpr (EntityType == entity_type_t::Skeleton) {
 			return skeletons.contains(position);
+		} else if constexpr (EntityType == entity_type_t::Wraith) {
+			return wraithes.contains(position);
 		} else if constexpr (EntityType == entity_type_t::Adventurer) {
 			return adventurers.contains(position);
+		} else if constexpr (EntityType == entity_type_t::Paladin) {
+			return paladins.contains(position);
+		} else if constexpr (EntityType == entity_type_t::Priest) {
+			return priests.contains(position);
 		} else {
-			return player.position != position && !skulls.contains(position) && !skeletons.contains(position) && !adventurers.contains(position);
+			return player.position != position && !skulls.contains(position) && !skeletons.contains(position) && !wraithes.contains(position) && !adventurers.contains(position) && !paladins.contains(position) && !priests.contains(position);
 		}
 	}
 
@@ -155,10 +172,10 @@ namespace necrowarp {
 		} else if constexpr (is_entity_type<T, entity_type_t::Skeleton>::value) {
 			return skeletons.emplace(entity).second;
 		} else if constexpr (is_entity_type<T, entity_type_t::Adventurer>::value) {
-			cauto [iter, inserted] { adventurers.emplace(entity) };
+			cauto[iter, inserted]{ adventurers.emplace(entity) };
 
 			if (inserted) {
-				skeleton_goal_map += iter->position;
+				evil_goal_map += iter->position;
 			}
 
 			return inserted;
@@ -180,7 +197,7 @@ namespace necrowarp {
 			const bool removed{ static_cast<bool>(adventurers.erase(position)) };
 
 			if (removed) {
-				skeleton_goal_map -= position;
+				evil_goal_map -= position;
 			}
 
 			return removed;
@@ -269,7 +286,7 @@ namespace necrowarp {
 		} else if (entity_type == entity_type_t::Player) {
 			player.position = target;
 
-			adventurer_goal_map.update(current, target);
+			good_goal_map.update(current, target);
 		} else if (entity_type == entity_type_t::Skull) {
 			cauto skull{ skulls.find(current) };
 
@@ -307,267 +324,280 @@ namespace necrowarp {
 
 			adventurers.insert(std::move(node));
 
-			skeleton_goal_map.update(current, target);
+			evil_goal_map.update(current, target);
 		}
 
 		return true;
 	}
 
 	inline void entity_registry_t::update() noexcept {
-		// command priority: player -> skeletons -> adventurers
-		// failure to strictly enforce the command prioritiy will result in an experience unfair to the player
+		// command priority: player -> adventurers -> skeletons
+		// skeletons depend upon the actions of adventurers
+		// adventurers depend upon the actions of the player
+
+		// process the player's command
+
+		entity_registry.process_command(player.command);
 
 		std::queue<entity_command_t> commands{};
 
-		// collect the player's command
-
-		commands.push(player.command);
-
-		// collect all skeleton commands
-
-		for (crauto skeleton : skeletons) {
-			commands.push(skeleton.think());
-		}
-
-		// collect all adventurer commands
+		// collect and process all adventurer commands
 
 		for (crauto adventurer : adventurers) {
 			commands.push(adventurer.think());
 		}
 
-		// iterate over all commands semi-anonymously in order of appendation (use std::stack for reverse order)
+		entity_registry.process_commands(commands);
 
-		while (!commands.empty()) {
-			const entity_command_t current_command{ commands.front() };
-			commands.pop();
+		// collect and process all skeleton commands
 
-			// a command of none type or a command without a source position will be skipped
+		for (crauto skeleton : skeletons) {
+			commands.push(skeleton.think());
+		}
 
-			if (current_command.type == command_type_t::None || !current_command.source.has_value()) {
-				continue;
-			}
+		entity_registry.process_commands(commands);
 
-			const offset_t source_position{ current_command.source.value() };
+		good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 
-			// a source command outside of the map interior will be skipped
+		evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+	}
 
-			if (!game_map.within<zone_region_t::Interior>(source_position)) {
-				continue;
-			}
+	inline void entity_registry_t::process_command(cref<entity_command_t> command) noexcept {
+		// a command of none type or a command without a source position will be skipped
 
-			const entity_type_t source_type{ entity_registry.at(source_position) };
+		if (command.type == command_type_t::None || !command.source.has_value()) {
+			return;
+		}
 
-			// source entities of none/skull type will be skipped
+		const offset_t source_position{ command.source.value() };
 
-			switch (source_type) {
-			case entity_type_t::None:
-			case entity_type_t::Skull:
-				continue;
+		// a source command outside of the map interior will be skipped
+
+		if (!game_map.within<zone_region_t::Interior>(source_position)) {
+			return;
+		}
+
+		const entity_type_t source_type{ entity_registry.at(source_position) };
+
+		// source entities of none/skull type will be skipped
+
+		switch (source_type) {
+		case entity_type_t::None:
+		case entity_type_t::Skull:
+			return;
+		default:
+			break;
+		}
+
+		// only the player can issue warp or consume commands
+
+		if (source_type != entity_type_t::Player) {
+			switch (command.type) {
+			case command_type_t::Consume:
+			case command_type_t::RandomWarp:
+			case command_type_t::TargetWarp:
+			case command_type_t::ConsumeWarp:
+				return;
 			default:
 				break;
 			}
+		}
 
-			// only the player can issue warp or consume commands
+		// a command without a target position will be skipped if and only if the command is not a player random warping
 
-			if (source_type != entity_type_t::Player) {
-				switch (current_command.type) {
-				case command_type_t::Consume:
-				case command_type_t::RandomWarp:
-				case command_type_t::TargetWarp:
-				case command_type_t::ConsumeWarp:
-					continue;
-				default:
-					break;
-				}
+		if (!command.target.has_value()) {
+			if (command.type != command_type_t::RandomWarp || source_type != entity_type_t::Player || !player.can_random_warp()) {
+				return;
 			}
 
-			// a command without a target position will be skipped if and only if the command is not a player random warping
+			cauto random_position{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open, entity_registry) };
 
-			if (!current_command.target.has_value()) {
-				if (current_command.type != command_type_t::RandomWarp || source_type != entity_type_t::Player || !player.can_random_warp()) {
-					continue;
-				}
+			if (!random_position.has_value()) {
+				return;
+			}
+
+			player.energy -= globals::RandomWarpCost;
+
+			entity_registry.update(source_position, random_position.value());
+
+			draw_warp_cursor = true;
+
+			return;
+		}
+
+		const offset_t target_position{ command.target.value() };
+
+		// a target command outside of the map interior will be skipped
+
+		if (!game_map.within<zone_region_t::Interior>(target_position)) {
+			return;
+		}
+
+		const entity_type_t target_type{ entity_registry.at(target_position) };
+
+		// commands will be skipped if the entity state is not compatible with the command
+
+		switch (command.type) {
+		case command_type_t::Move:
+		case command_type_t::TargetWarp:
+			// the former commands will be skipped if an entity is present at the target position
+
+			if (entity_registry.contains(target_position) || target_type != entity_type_t::None) {
+				return;
+			}
+
+			break;
+		case command_type_t::Clash:
+		case command_type_t::Consume:
+		case command_type_t::ConsumeWarp:
+			// the former commands will be skipped if an entity isn't present at the target position
+
+			if (!entity_registry.contains(target_position) || target_type == entity_type_t::None) {
+				return;
+			}
+
+			break;
+		default:
+			break;
+		}
+
+		switch (command.type) {
+		case command_type_t::Move:
+			entity_registry.update(source_position, target_position);
+
+			return;
+		case command_type_t::Consume:
+			if (target_type == entity_type_t::Skull) {
+				entity_registry.remove<entity_type_t::Skull>(target_position);
+				entity_registry.add<skeleton_t>(skeleton_t{ target_position });
+
+				player.energy += globals::SkullBoon;
 
 				cauto random_position{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open, entity_registry) };
 
 				if (!random_position.has_value()) {
-					continue;
-				}
+					player.energy += globals::FailedWarpBoon;
 
-				player.energy -= globals::RandomWarpCost;
+					draw_warp_cursor = false;
+
+					return;
+				}
 
 				entity_registry.update(source_position, random_position.value());
 
 				draw_warp_cursor = true;
-
-				continue;
-			}
-
-			const offset_t target_position{ current_command.target.value() };
-
-			// a target command outside of the map interior will be skipped
-
-			if (!game_map.within<zone_region_t::Interior>(target_position)) {
-				continue;
-			}
-
-			const entity_type_t target_type{ entity_registry.at(target_position) };
-
-			// commands will be skipped if the entity state is not compatible with the command
-
-			switch (current_command.type) {
-			case command_type_t::Move:
-			case command_type_t::TargetWarp:
-				// the former commands will be skipped if an entity is present at the target position
-
-				if (entity_registry.contains(target_position) || target_type != entity_type_t::None) {
-					continue;
-				}
-
-				break;
-			case command_type_t::Clash:
-			case command_type_t::Consume:
-			case command_type_t::ConsumeWarp:
-				// the former commands will be skipped if an entity isn't present at the target position
-
-				if (!entity_registry.contains(target_position) || target_type == entity_type_t::None) {
-					continue;
-				}
-
-				break;
-			default:
-				break;
-			}
-
-			switch (current_command.type) {
-			case command_type_t::Move:
-				entity_registry.update(source_position, target_position);
-
-				continue;
-			case command_type_t::Consume:
-				if (target_type == entity_type_t::Skull) {
-					entity_registry.remove<entity_type_t::Skull>(target_position);
-					entity_registry.add<skeleton_t>(skeleton_t{ target_position });
-
-					player.energy += globals::SkullBoon;
-
-					cauto random_position{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open, entity_registry) };
-
-					if (!random_position.has_value()) {
-						player.energy += globals::FailedWarpBoon;
-
-						draw_warp_cursor = false;
-
-						continue;
-					}
-
-					entity_registry.update(source_position, random_position.value());
-
-					draw_warp_cursor = true;
-				} else if (target_type == entity_type_t::Skeleton) {
-					entity_registry.remove<entity_type_t::Skeleton>(target_position);
-
-					entity_registry.update(source_position, target_position);
-
-					player.armor = globals::MaximumArmor;
-
-					draw_warp_cursor = false;
-				}
-
-				continue;
-			case command_type_t::Clash:
-				if (source_type == entity_type_t::Adventurer && target_type == entity_type_t::Player) {
-					if (!player.has_armor()) {
-						// game over
-						continue;
-					}
-
-					entity_registry.remove<entity_type_t::Adventurer>(source_position);
-
-					skeleton_goal_map -= source_position;
-
-					entity_registry.add<skull_t>(skull_t{ source_position });
-
-					player.energy += globals::PlayerKillBoon;
-					player.armor -= globals::ClashArmorDamage;
-					
-					++player_kills;
-				} else if (source_type == entity_type_t::Skeleton && target_type == entity_type_t::Adventurer) {
-					entity_registry.remove<entity_type_t::Skeleton>(source_position);
-					entity_registry.remove<entity_type_t::Adventurer>(target_position);
-
-					entity_registry.add<skull_t>(skull_t{ target_position });
-
-					player.energy += globals::SkeletonKillBoon;
-					
-					++skeleton_kills;
-				} else if (source_type == entity_type_t::Player && target_type == entity_type_t::Adventurer) {
-					if (!player.has_armor()) {
-						// game over
-						continue;
-					}
-
-					entity_registry.remove<entity_type_t::Adventurer>(target_position);
-
-					entity_registry.add<skull_t>(skull_t{ target_position });
-
-					player.energy += globals::PlayerKillBoon;
-					player.armor -= globals::ClashArmorDamage;
-					
-					++player_kills;
-
-					draw_warp_cursor = false;
-				}
-
-				continue;
-			case command_type_t::ConsumeWarp:
-				if (!player.can_target_warp()) {
-					continue;
-				}
-
-				if (target_type == entity_type_t::Skull) {
-					entity_registry.remove<entity_type_t::Skull>(target_position);
-					entity_registry.add<skeleton_t>(skeleton_t{ target_position });
-
-					player.energy -= globals::TargetWarpCost + globals::SkullBoon;
-
-					cauto random_position{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open, entity_registry) };
-
-					if (!random_position.has_value()) {
-						player.energy += globals::FailedWarpBoon;
-						continue;
-					}
-
-					entity_registry.update(source_position, random_position.value());
-
-					draw_warp_cursor = true;
-				} else if (target_type == entity_type_t::Skeleton) {
-					entity_registry.remove<entity_type_t::Skeleton>(target_position);
-
-					player.energy -= globals::TargetWarpCost;
-					player.armor = globals::MaximumArmor;
-
-					entity_registry.update(source_position, target_position);
-
-					draw_warp_cursor = false;
-				}
-
-				continue;
-			case command_type_t::TargetWarp:
-				if (!player.can_target_warp()) {
-					continue;
-				}
-
-				player.energy -= globals::TargetWarpCost;
+			} else if (target_type == entity_type_t::Skeleton) {
+				entity_registry.remove<entity_type_t::Skeleton>(target_position);
 
 				entity_registry.update(source_position, target_position);
+
+				player.armor = globals::MaximumArmor;
 
 				draw_warp_cursor = false;
-
-				continue;
-			default:
-				continue;
 			}
+
+			return;
+		case command_type_t::Clash:
+			if (source_type == entity_type_t::Adventurer && target_type == entity_type_t::Player) {
+				if (!player.has_armor()) {
+					// game over
+					return;
+				}
+
+				entity_registry.remove<entity_type_t::Adventurer>(source_position);
+
+				evil_goal_map -= source_position;
+
+				entity_registry.add<skull_t>(skull_t{ source_position });
+
+				player.energy += globals::AdventurerDeathBoon;
+				player.armor -= globals::AdventurerDamage;
+
+				++player_kills;
+			} else if (source_type == entity_type_t::Skeleton && target_type == entity_type_t::Adventurer) {
+				entity_registry.remove<entity_type_t::Skeleton>(source_position);
+				entity_registry.remove<entity_type_t::Adventurer>(target_position);
+
+				entity_registry.add<skull_t>(skull_t{ target_position });
+
+				player.energy += globals::AdventurerDeathBoon;
+
+				++skeleton_kills;
+			} else if (source_type == entity_type_t::Player && target_type == entity_type_t::Adventurer) {
+				if (!player.has_armor()) {
+					// game over
+					return;
+				}
+
+				entity_registry.remove<entity_type_t::Adventurer>(target_position);
+
+				entity_registry.add<skull_t>(skull_t{ target_position });
+
+				player.energy += globals::AdventurerDeathBoon;
+				player.armor -= globals::AdventurerDamage;
+
+				++player_kills;
+
+				draw_warp_cursor = false;
+			}
+
+			return;
+		case command_type_t::ConsumeWarp:
+			if (!player.can_target_warp()) {
+				return;
+			}
+
+			if (target_type == entity_type_t::Skull) {
+				entity_registry.remove<entity_type_t::Skull>(target_position);
+				entity_registry.add<skeleton_t>(skeleton_t{ target_position });
+
+				player.energy -= globals::TargetWarpCost + globals::SkullBoon;
+
+				cauto random_position{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open, entity_registry) };
+
+				if (!random_position.has_value()) {
+					player.energy += globals::FailedWarpBoon;
+					return;
+				}
+
+				entity_registry.update(source_position, random_position.value());
+
+				draw_warp_cursor = true;
+			} else if (target_type == entity_type_t::Skeleton) {
+				entity_registry.remove<entity_type_t::Skeleton>(target_position);
+
+				entity_registry.update(source_position, target_position);
+
+				player.energy -= globals::TargetWarpCost;
+				player.armor += player.max_armor() / 3;
+
+				draw_warp_cursor = false;
+			}
+
+			return;
+		case command_type_t::TargetWarp:
+			if (!player.can_target_warp()) {
+				return;
+			}
+
+			player.energy -= globals::TargetWarpCost;
+
+			entity_registry.update(source_position, target_position);
+
+			draw_warp_cursor = false;
+
+			return;
+		default:
+			return;
+		}
+	}
+
+	inline void entity_registry_t::process_commands(ref<std::queue<entity_command_t>> commands) noexcept {
+		while (!commands.empty()) {
+			const entity_command_t command{ commands.front() };
+			commands.pop();
+
+			entity_registry.process_command(command);
 		}
 	}
 

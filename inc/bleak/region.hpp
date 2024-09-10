@@ -1,5 +1,5 @@
 #pragma once
-#include "bleak/log.hpp"
+
 #include <bleak/typedef.hpp>
 
 #include <cstring>
@@ -7,6 +7,7 @@
 #include <utility>
 
 #include <bleak/extent.hpp>
+#include <bleak/log.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/renderer.hpp>
 #include <bleak/zone.hpp>
