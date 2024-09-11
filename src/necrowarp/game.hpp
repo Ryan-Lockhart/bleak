@@ -1,5 +1,8 @@
 #pragma once
 
+#include "bleak/constants/bindings.hpp"
+#include "bleak/keyboard.hpp"
+#include "necrowarp/entities/entity.hpp"
 #include <bleak.hpp>
 
 #include <necrowarp/entities.hpp>
@@ -78,7 +81,7 @@ namespace necrowarp {
 		}
 
 		static inline bool character_input() noexcept {
-			player.command = entity_command_t{ command_type_t::None, player.position, std::nullopt };
+			player.command = entity_command_t{};
 
 			if (Keyboard::any_keys_pressed(bindings::Wait)) {
 				input_timer.record();
@@ -86,7 +89,7 @@ namespace necrowarp {
 
 				return true;
 			} else if (Keyboard::is_key_down(bindings::RandomWarp)) {
-				player.command = entity_command_t{ command_type_t::RandomWarp, player.position, std::nullopt };
+				player.command = entity_command_t{ command_type_t::RandomWarp, player.position };
 
 				input_timer.record();
 				epoch_timer.record();
@@ -103,7 +106,21 @@ namespace necrowarp {
 						command_type_t::TargetWarp,
 					player.position,
 					grid_cursor.get_position()
-				};				
+				};
+
+				input_timer.record();
+				epoch_timer.record();
+
+				return true;
+			} else if (Keyboard::is_key_down(bindings::SummonWraith)) {
+				player.command = entity_command_t{ command_type_t::SummonWraith, player.position };
+
+				input_timer.record();
+				epoch_timer.record();
+
+				return true;
+			} else if (Keyboard::is_key_down(bindings::GrandSummoning)) {
+				player.command = entity_command_t{ command_type_t::GrandSummoning };
 
 				input_timer.record();
 				epoch_timer.record();
@@ -133,11 +150,11 @@ namespace necrowarp {
 				if (!game_map.within<zone_region_t::Interior>(target_position) || game_map[target_position].solid) {
 					return false;
 				}
+
+				const command_type_t command_type{ !entity_registry.contains(target_position) ? command_type_t::Move : player.clash_or_consume(target_position) };
 				
 				player.command = entity_command_t{
-					entity_registry.contains(target_position) ?
-						command_type_t::Consume :
-						command_type_t::Move,
+					command_type,
 					player.position,
 					target_position
 				};
@@ -274,11 +291,8 @@ namespace necrowarp {
 			if (player_acted) {
 				entity_registry.update();
 
-				// bandaid fix; need to control increment/decrement of player's energy and armor
-				player.update();
-
 				if (entity_registry.empty<entity_type_t::Adventurer>()) {
-					entity_registry.spawn<adventurer_t>(globals::AdventurerPopulation + total_kills() / 2);
+					entity_registry.spawn<adventurer_t>(globals::AdventurerPopulation + total_kills() / 4);
 				}
 
 				player_acted = false;
@@ -337,14 +351,14 @@ namespace necrowarp {
 
 			entity_registry.draw(camera);
 
-			renderer.draw_composite_rect(offset_t{ globals::GlyphSize }, extent_t{ 32, 3 } * globals::CellSize - globals::GlyphSize, colors::Black, colors::White, 1);
+			renderer.draw_composite_rect(offset_t{ globals::GlyphSize }, extent_t{ max(player.max_energy(), player.max_armor()) + 1, 3 } * globals::CellSize - globals::GlyphSize, colors::Black, colors::White, 1);
 
 			for (u8 i{0}; i < player.get_energy(); ++i) {
-				game_atlas.draw(globals::EnergyGlyph, offset_t{ i, 0 }, offset_t{ 4, 4 });
+				game_atlas.draw(EnergyGlyph, offset_t{ i, 0 }, offset_t{ 4, 4 });
 			}
 
 			for (u8 i{0}; i < player.get_armor(); ++i) {
-				game_atlas.draw(globals::ArmorGlyph, offset_t{ i, 1 }, offset_t{ 4, 4 });
+				game_atlas.draw(ArmorGlyph, offset_t{ i, 1 }, offset_t{ 4, 4 });
 			}
 
 			const runes_t fps_text{ std::format("FPS:{:4}", static_cast<u32>(Clock::frame_time())), colors::Green };

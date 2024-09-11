@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/offset.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <necrowarp/game_state.hpp>
@@ -30,6 +31,7 @@ namespace necrowarp {
 
 		static constexpr i8 SkullBoon{ 1 };
 		static constexpr i8 FailedWarpBoon{ 1 };
+		static constexpr i8 UnsafeWarpBoon{ 1 };
 
 	  private:
 		i8 energy;
@@ -43,16 +45,6 @@ namespace necrowarp {
 		inline player_t() noexcept : command{}, position{}, energy{ StartingEnergy }, armor{ StartingArmor } {}
 
 		inline player_t(cref<offset_t> position) noexcept : command{}, position{ position }, energy{ StartingEnergy }, armor{ StartingArmor } {}
-
-		inline void update() noexcept {
-			if (energy > max_energy()) {
-				energy = max_energy();
-			}
-
-			if (armor > max_armor()) {
-				armor = max_armor();
-			}
-		}
 
 		inline i8 get_energy() const noexcept { return energy; }
 
@@ -68,23 +60,41 @@ namespace necrowarp {
 
 		inline bool can_random_warp() const noexcept { return energy >= RandomWarpCost; }
 
+		inline bool can_random_warp(i8 discount) const noexcept { return energy >= RandomWarpCost - discount; }
+
 		inline bool can_target_warp() const noexcept { return energy >= TargetWarpCost; }
+
+		inline bool can_target_warp(i8 discount) const noexcept { return energy >= TargetWarpCost - discount; }
 
 		inline bool can_summon_wraith() const noexcept { return energy >= SummonWraithCost; }
 
+		inline bool can_summon_wraith(i8 discount) const noexcept { return energy >= SummonWraithCost - discount; }
+
 		inline bool can_grand_summon() const noexcept { return energy >= GrandSummoningCost; }
+
+		inline bool can_grand_summon(i8 discount) const noexcept { return energy >= GrandSummoningCost - discount; }
 
 		inline void pay_random_warp_cost() noexcept { set_energy(energy - RandomWarpCost); }
 
+		inline void pay_random_warp_cost(i8 discount) noexcept { set_energy(energy - RandomWarpCost + discount); }
+
 		inline void pay_target_warp_cost() noexcept { set_energy(energy - TargetWarpCost); }
+
+		inline void pay_target_warp_cost(i8 discount) noexcept { set_energy(energy - TargetWarpCost + discount); }
 
 		inline void pay_summon_wraith_cost() noexcept { set_energy(energy - SummonWraithCost); }
 
+		inline void pay_summon_wraith_cost(i8 discount) noexcept { set_energy(energy - SummonWraithCost + discount); }
+
 		inline void pay_grand_summon_cost() noexcept { set_energy(energy - GrandSummoningCost); }
+
+		inline void pay_grand_summon_cost(i8 discount) noexcept { set_energy(energy - GrandSummoningCost + discount); }
 
 		inline void receive_skull_boon() noexcept { set_energy(energy + SkullBoon); }
 
 		inline void receive_failed_warp_boon() noexcept { set_energy(energy + FailedWarpBoon); }
+
+		inline void receive_unsafe_warp_boon() noexcept { set_energy(energy + UnsafeWarpBoon); }
 
 		inline void max_out_energy() noexcept { energy = max_energy(); }
 
@@ -100,7 +110,9 @@ namespace necrowarp {
 
 		template<entity_type_t EntityType> inline void receive_death_boon() noexcept;
 
-		inline void bolster_armor(i8 value) noexcept;
+		inline command_type_t clash_or_consume(cref<offset_t> position) const noexcept;
+
+		inline void bolster_armor(i8 value) noexcept { set_armor(armor + value); }
 
 		inline void increment_energy() noexcept {
 			if (energy < max_energy()) {
@@ -126,13 +138,13 @@ namespace necrowarp {
 			}
 		}
 
-		inline void draw() const noexcept { game_atlas.draw(has_armor() ? PlayerArmored : EntityGlyphs[entity_type_t::Player], position); }
+		inline void draw() const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : EntityGlyphs[entity_type_t::Player], position); }
 
-		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(has_armor() ? PlayerArmored : EntityGlyphs[entity_type_t::Player], position + offset); }
+		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : EntityGlyphs[entity_type_t::Player], position + offset); }
 
-		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(has_armor() ? PlayerArmored : EntityGlyphs[entity_type_t::Player], position + camera.get_offset()); }
+		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : EntityGlyphs[entity_type_t::Player], position + camera.get_offset()); }
 
-		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(has_armor() ? PlayerArmored : EntityGlyphs[entity_type_t::Player], position + camera.get_offset() + offset); }
+		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : EntityGlyphs[entity_type_t::Player], position + camera.get_offset() + offset); }
 
 		constexpr operator entity_type_t() const noexcept { return entity_type_t::Player; }
 	};

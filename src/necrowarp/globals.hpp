@@ -58,11 +58,8 @@ namespace necrowarp {
 		constexpr u32 ViewDistance{ 8 };
 		constexpr f64 ViewSpan{ 135.0 };
 
-		constexpr u32 AdventurerPopulation{ 3 };
-		constexpr u32 SkullDebris{ 5 };
-
-		constexpr glyph_t EnergyGlyph{ 0x44, colors::White };
-		constexpr glyph_t ArmorGlyph{ 0x45, colors::White };
+		constexpr u32 AdventurerPopulation{ 5 };
+		constexpr u32 SkullDebris{ 10 };
 
 		constexpr bool UseSimpleGraphics{ false };
 	} // namespace globals

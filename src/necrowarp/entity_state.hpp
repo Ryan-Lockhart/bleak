@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/offset.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <queue>
@@ -16,15 +17,15 @@ namespace necrowarp {
 			requires is_entity<T>::value
 		inline cptr<T> at(cref<offset_t> position) const noexcept;
 
+		inline usize count() const noexcept;
+
 		template<entity_type_t EntityType> inline usize count() const noexcept;
 
-		template<entity_type_t EntityType> inline usize empty() const noexcept;
+		template<entity_type_t EntityType> inline bool empty() const noexcept;
 
 		inline bool contains(cref<offset_t> position) const noexcept;
 
 		template<entity_type_t EntityType> inline bool contains(cref<offset_t> position) const noexcept;
-
-		template<entity_type_t EntityType> inline void announce_population() const noexcept;
 
 		template<typename T>
 			requires is_entity<T>::value && (!is_entity_type<T, entity_type_t::Player>::value)
@@ -39,6 +40,14 @@ namespace necrowarp {
 		inline bool update(cref<offset_t> current, cref<offset_t> target) noexcept;
 
 		template<entity_type_t EntityType> inline bool update(cref<offset_t> current, cref<offset_t> target) noexcept;
+
+		inline bool is_command_valid(cref<entity_command_t> command) const noexcept;
+
+		inline void random_warp(cref<offset_t> source) noexcept;
+
+		template<entity_type_t Initiator> inline void process_clash(cref<offset_t> source, cref<offset_t> target) noexcept;
+
+		template<command_type_t CommandType> inline void process_command(cref<entity_command_t> command) noexcept;
 
 		inline void process_commands(ref<std::queue<entity_command_t>> commands) noexcept;
 

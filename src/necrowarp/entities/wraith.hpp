@@ -14,7 +14,7 @@ namespace necrowarp {
 		static constexpr i8 MaximumHealth{ 8 };
 		static constexpr i8 MaximumDamage{ 2 };
 
-		constexpr i8 armor_boon() const noexcept { return health; }
+		constexpr i8 armor_boon() const noexcept { return max<i8>(health, 1); }
 		
 		inline wraith_t(cref<offset_t> position, i8 health) noexcept : position{ position }, health{ health } {}
 

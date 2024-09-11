@@ -24,8 +24,8 @@ namespace necrowarp {
 		static constexpr i8 MaximumHealth{ 1 };
 		// the maximum amount of damage a skeleton can do
 		static constexpr i8 MaximumDamage{ 1 };
-
-		constexpr i8 armor_boon() const noexcept { return 1; }
+		// the amount of armor a skeleton gives the player when consumed
+		static constexpr i8 ArmorBoon{ 1 };
 
 		inline skeleton_t(cref<offset_t> position) noexcept : position{ position } {}
 

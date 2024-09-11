@@ -532,6 +532,119 @@ namespace bleak {
 			return lowest;
 		}
 
+		template<zone_region_t Region, typename Randomizer, typename T, SparseBlockage Blockage>
+		constexpr std::optional<offset_t> find_random(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, ref<Randomizer> generator, cref<T> value, cref<Blockage> sparse_blockage, cref<D> minimum_distance) const noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			if constexpr (Region == zone_region_t::All) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.zone_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.zone_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < zone.zone_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (zone[pos] != value || sparse_blockage.contains(pos) || distances[pos] < minimum_distance) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ zone.interior_origin.x, zone.interior_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ zone.interior_origin.y, zone.interior_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < zone.interior_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (zone[pos] != value || sparse_blockage.contains(pos) || distances[pos] < minimum_distance) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.border_size.w * 2 - 1 };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.border_size.h * 2 - 1 };
+
+				for (extent_t::product_t i{ 0 }; i < zone.border_area; ++i) {
+					auto x{ x_dis(generator) };
+					auto y{ y_dis(generator) };
+
+					x = x < zone.border_size.w ? x : zone.zone_extent.x - x;
+					y = y < zone.border_size.h ? y : zone.zone_extent.y - y;
+
+					const offset_t pos{ x, y };
+
+					if (zone[pos] != value || sparse_blockage.contains(pos) || distances[pos] < minimum_distance) {
+						continue;
+					}
+
+					return pos;
+				}
+			}
+
+			return std::nullopt;
+		}
+
+		template<zone_region_t Region, typename Randomizer, typename T, typename U, SparseBlockage Blockage>
+			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
+		constexpr std::optional<offset_t> find_random(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, ref<Randomizer> generator, cref<U> value, cref<Blockage> sparse_blockage, cref<D> minimum_distance) const noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			if constexpr (Region == zone_region_t::All) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.zone_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.zone_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < zone.zone_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (zone[pos] != value || sparse_blockage.contains(pos) || distances[pos] < minimum_distance) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ zone.interior_origin.x, zone.interior_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ zone.interior_origin.y, zone.interior_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < zone.interior_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (zone[pos] != value || sparse_blockage.contains(pos) || distances[pos] < minimum_distance) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.border_size.w * 2 - 1 };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.border_size.h * 2 - 1 };
+
+				for (extent_t::product_t i{ 0 }; i < zone.border_area; ++i) {
+					auto x{ x_dis(generator) };
+					auto y{ y_dis(generator) };
+
+					x = x < zone.border_size.w ? x : zone.zone_extent.x - x;
+					y = y < zone.border_size.h ? y : zone.zone_extent.y - y;
+
+					const offset_t pos{ x, y };
+
+					if (zone[pos] != value || sparse_blockage.contains(pos) || distances[pos] < minimum_distance) {
+						continue;
+					}
+
+					return pos;
+				}
+			}
+
+			return std::nullopt;
+		}
+
 		constexpr bool operator+=(cref<offset_t> goal) noexcept {
 			if (!distances.template within<zone_region_t::All>(goal)) {
 				return false;

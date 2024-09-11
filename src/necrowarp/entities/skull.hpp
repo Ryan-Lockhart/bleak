@@ -9,16 +9,19 @@ namespace necrowarp {
 
 	struct skull_t {
 		offset_t position;
+		bool fresh;
 
-		inline skull_t(cref<offset_t> position) noexcept : position{ position } {}
+		inline skull_t(cref<offset_t> position) noexcept : position{ position }, fresh{ false } {}
+
+		inline skull_t(cref<offset_t> position, bool fresh) noexcept : position{ position }, fresh{ fresh } {}
 
 		inline void draw() const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skull], position); }
 
-		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skull], position + offset); }
+		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(fresh ? EntityGlyphs[entity_type_t::Skull] : AnimatedSkullGlyph, position + offset); }
 
-		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skull], position + camera.get_offset()); }
+		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(fresh ? EntityGlyphs[entity_type_t::Skull] : AnimatedSkullGlyph, position + camera.get_offset()); }
 
-		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skull], position + camera.get_offset() + offset); }
+		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(fresh ? EntityGlyphs[entity_type_t::Skull] : AnimatedSkullGlyph, position + camera.get_offset() + offset); }
 
 		constexpr operator entity_type_t() const noexcept { return entity_type_t::Skull; }
 

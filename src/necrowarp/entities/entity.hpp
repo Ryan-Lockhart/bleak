@@ -18,6 +18,8 @@ namespace necrowarp {
 		Skeleton,
 		Wraith,
 
+		Ladder,
+
 		Adventurer,
 		Paladin,
 		Priest
@@ -38,6 +40,9 @@ namespace necrowarp {
 			return "skeleton";
 		case entity_type_t::Wraith:
 			return "wraith";
+
+		case entity_type_t::Ladder:
+			return "ladder";
 
 		case entity_type_t::Adventurer:
 			return "adventurer";
@@ -121,19 +126,26 @@ namespace necrowarp {
 	template<typename T, entity_type_t EntityType> constexpr bool is_entity_type_v = is_entity_type<T, EntityType>::value;
 
 	constexpr lut_t<entity_type_t, glyph_t, EntityTypeCount> EntityGlyphs{
-		pair_t<entity_type_t, glyph_t>{ entity_type_t::None, glyph_t{ 0x00, colors::White } },
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::None, glyph_t{ 0x40, colors::White } },
 
-		pair_t<entity_type_t, glyph_t>{ entity_type_t::Player, glyph_t{ 0x40, colors::White } },
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Player, glyph_t{ 0x41, colors::White } },
 
-		pair_t<entity_type_t, glyph_t>{ entity_type_t::Skull, glyph_t{ 0x46, colors::White } },
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Skull, glyph_t{ 0x43, colors::White } },
 
-		pair_t<entity_type_t, glyph_t>{ entity_type_t::Skeleton, glyph_t{ 0x43, colors::White } },
-		pair_t<entity_type_t, glyph_t>{ entity_type_t::Wraith, glyph_t{ 0x43, colors::White } },
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Skeleton, glyph_t{ 0x45, colors::White } },
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Wraith, glyph_t{ 0x46, colors::White } },
 
-		pair_t<entity_type_t, glyph_t>{ entity_type_t::Adventurer, glyph_t{ 0x42, colors::White } },
-		pair_t<entity_type_t, glyph_t>{ entity_type_t::Paladin, glyph_t{ 0x42, colors::White } },
-		pair_t<entity_type_t, glyph_t>{ entity_type_t::Priest, glyph_t{ 0x42, colors::White } }
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Ladder, glyph_t{ 0x47, colors::White } },
+
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Adventurer, glyph_t{ 0x48, colors::White } },
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Paladin, glyph_t{ 0x49, colors::White } },
+		pair_t<entity_type_t, glyph_t>{ entity_type_t::Priest, glyph_t{ 0x4A, colors::White } }
 	};
 
-	constexpr glyph_t PlayerArmored{ 0x41, colors::White };
+	constexpr glyph_t PlayerArmoredGlyph{ 0x42, colors::White };
+
+	constexpr glyph_t AnimatedSkullGlyph{ 0x44, colors::White };
+
+	constexpr glyph_t EnergyGlyph{ 0x4B, colors::White };
+	constexpr glyph_t ArmorGlyph{ 0x4C, colors::White };
 } // namespace necrowarp
