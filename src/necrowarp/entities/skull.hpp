@@ -51,4 +51,8 @@ namespace necrowarp {
 	template<> struct is_entity_type<skull_t, entity_type_t::Skull> {
 		static constexpr bool value = true;
 	};
+
+	template<> struct to_entity_type<entity_type_t::Skull> {
+		using type = skull_t;
+	};
 } // namespace necrowarp

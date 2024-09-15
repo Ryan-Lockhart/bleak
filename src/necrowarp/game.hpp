@@ -1,8 +1,5 @@
 #pragma once
 
-#include "bleak/constants/bindings.hpp"
-#include "bleak/keyboard.hpp"
-#include "necrowarp/entities/entity.hpp"
 #include <bleak.hpp>
 
 #include <necrowarp/entities.hpp>
@@ -100,13 +97,7 @@ namespace necrowarp {
 					return false;
 				}
 
-				player.command = entity_command_t{
-					entity_registry.contains(grid_cursor.get_position()) ?
-						command_type_t::ConsumeWarp :
-						command_type_t::TargetWarp,
-					player.position,
-					grid_cursor.get_position()
-				};
+				player.command = entity_command_t{ entity_registry.contains(grid_cursor.get_position()) ? command_type_t::ConsumeWarp : command_type_t::TargetWarp, player.position, grid_cursor.get_position() };
 
 				input_timer.record();
 				epoch_timer.record();
@@ -132,11 +123,14 @@ namespace necrowarp {
 
 			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::North])) {
 				--direction.y;
-			} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::South])) {
+			}
+			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::South])) {
 				++direction.y;
-			} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::West])) {
+			}
+			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::West])) {
 				--direction.x;
-			} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::East])) {
+			}
+			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::East])) {
 				++direction.x;
 			}
 
@@ -152,12 +146,8 @@ namespace necrowarp {
 				}
 
 				const command_type_t command_type{ !entity_registry.contains(target_position) ? command_type_t::Move : player.clash_or_consume(target_position) };
-				
-				player.command = entity_command_t{
-					command_type,
-					player.position,
-					target_position
-				};
+
+				player.command = entity_command_t{ command_type, player.position, target_position };
 
 				draw_warp_cursor = false;
 
@@ -239,10 +229,6 @@ namespace necrowarp {
 			good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 
 			entity_registry.spawn<adventurer_t>(globals::AdventurerPopulation);
-
-			for (crauto adventurer : adventurers) {
-				evil_goal_map += adventurer.position;
-			}
 
 			evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 
@@ -353,11 +339,11 @@ namespace necrowarp {
 
 			renderer.draw_composite_rect(offset_t{ globals::GlyphSize }, extent_t{ max(player.max_energy(), player.max_armor()) + 1, 3 } * globals::CellSize - globals::GlyphSize, colors::Black, colors::White, 1);
 
-			for (u8 i{0}; i < player.get_energy(); ++i) {
+			for (u8 i{ 0 }; i < player.get_energy(); ++i) {
 				game_atlas.draw(EnergyGlyph, offset_t{ i, 0 }, offset_t{ 4, 4 });
 			}
 
-			for (u8 i{0}; i < player.get_armor(); ++i) {
+			for (u8 i{ 0 }; i < player.get_armor(); ++i) {
 				game_atlas.draw(ArmorGlyph, offset_t{ i, 1 }, offset_t{ 4, 4 });
 			}
 

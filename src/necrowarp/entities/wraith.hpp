@@ -56,4 +56,8 @@ namespace necrowarp {
 	template<> struct is_entity_type<wraith_t, entity_type_t::Wraith> {
 		static constexpr bool value = true;
 	};
+
+	template<> struct to_entity_type<entity_type_t::Wraith> {
+		using type = wraith_t;
+	};
 } // namespace necrowarp

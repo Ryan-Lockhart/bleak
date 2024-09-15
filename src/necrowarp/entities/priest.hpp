@@ -55,4 +55,8 @@ namespace necrowarp {
 	template<> struct is_entity_type<priest_t, entity_type_t::Priest> {
 		static constexpr bool value = true;
 	};
+
+	template<> struct to_entity_type<entity_type_t::Priest> {
+		using type = priest_t;
+	};
 } // namespace necrowarp

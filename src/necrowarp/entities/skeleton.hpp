@@ -7,16 +7,6 @@
 namespace necrowarp {
 	using namespace bleak;
 
-	struct skeleton_t;
-
-	template<> struct is_entity<skeleton_t> {
-		static constexpr bool value = true;
-	};
-
-	template<> struct is_entity_type<skeleton_t, entity_type_t::Skeleton> {
-		static constexpr bool value = true;
-	};
-
 	struct skeleton_t {
 		offset_t position;
 
@@ -58,5 +48,17 @@ namespace necrowarp {
 
 			static constexpr bool operator()(cref<offset_t> lhs, cref<skeleton_t> rhs) noexcept { return offset_t::hasher::operator()(lhs) == offset_t::hasher::operator()(rhs.position); }
 		};
+	};
+	
+	template<> struct is_entity<skeleton_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_entity_type<skeleton_t, entity_type_t::Skeleton> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct to_entity_type<entity_type_t::Skeleton> {
+		using type = skeleton_t;
 	};
 } // namespace necrowarp

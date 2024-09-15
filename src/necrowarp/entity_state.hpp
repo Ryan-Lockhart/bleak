@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/offset.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <queue>
@@ -19,10 +18,18 @@ namespace necrowarp {
 
 		inline usize count() const noexcept;
 
+		template<typename... EntityTypes>
+			requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
+		inline usize count() const noexcept;
+
 		template<entity_type_t EntityType> inline usize count() const noexcept;
 
 		template<entity_type_t EntityType> inline bool empty() const noexcept;
 
+		inline bool contains(cref<offset_t> position) const noexcept;
+
+		template<typename... EntityTypes>
+			requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
 		inline bool contains(cref<offset_t> position) const noexcept;
 
 		template<entity_type_t EntityType> inline bool contains(cref<offset_t> position) const noexcept;
@@ -43,7 +50,7 @@ namespace necrowarp {
 
 		inline bool is_command_valid(cref<entity_command_t> command) const noexcept;
 
-		inline void random_warp(cref<offset_t> source) noexcept;
+		inline bool random_warp(cref<offset_t> source) noexcept;
 
 		template<entity_type_t Initiator> inline void process_clash(cref<offset_t> source, cref<offset_t> target) noexcept;
 
@@ -55,8 +62,20 @@ namespace necrowarp {
 
 		inline void update() noexcept;
 
-		inline void draw() noexcept;
+		template<typename... EntityTypes>
+			requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
+		inline void update(ref<std::queue<entity_command_t>> commands) noexcept;
 
-		inline void draw(cref<camera_t> camera) noexcept;
+		template<typename... EntityTypes>
+			requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
+		inline void draw() const noexcept;
+
+		template<typename... EntityTypes>
+			requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
+		inline void draw(cref<camera_t> camera) const noexcept;
+
+		inline void draw() const noexcept;
+
+		inline void draw(cref<camera_t> camera) const noexcept;
 	} static inline entity_registry{};
 } // namespace necrowarp

@@ -11,6 +11,7 @@
  #include <necrowarp/entities/priest.hpp>
 
 #include <necrowarp/entities/player.tpp>
+#include <necrowarp/entities/skull.tpp>
 #include <necrowarp/entities/skeleton.tpp>
 #include <necrowarp/entities/wraith.tpp>
 #include <necrowarp/entities/ladder.tpp>

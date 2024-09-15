@@ -48,4 +48,8 @@ namespace necrowarp {
 	template<> struct is_entity_type<ladder_t, entity_type_t::Ladder> {
 		static constexpr bool value = true;
 	};
+
+	template<> struct to_entity_type<entity_type_t::Ladder> {
+		using type = ladder_t;
+	};
 } // namespace necrowarp

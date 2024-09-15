@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bleak/offset.hpp"
+#include "entities/entity.hpp"
 #include "necrowarp/entity_state.hpp"
 #include "necrowarp/game_state.hpp"
 #include <necrowarp/entities.hpp>
@@ -7,64 +9,56 @@
 #include <cstddef>
 #include <type_traits>
 #include <unordered_set>
-#include <vector>
 
 namespace necrowarp {
 	using namespace bleak;
 
 	static inline player_t player{};
 
-	static inline std::unordered_set<skull_t, skull_t::hasher, skull_t::comparator> skulls{};
+	template<typename T> static inline std::unordered_set<T, typename T::hasher, typename T::comparator> entity_storage;
 
-	static inline std::unordered_set<skeleton_t, skeleton_t::hasher, skeleton_t::comparator> skeletons{};
-	static inline std::unordered_set<wraith_t, wraith_t::hasher, wraith_t::comparator> wraithes{};
+	template<> static inline std::unordered_set<skull_t, skull_t::hasher, skull_t::comparator> entity_storage<skull_t>{};
+	template<> static inline std::unordered_set<skeleton_t, skeleton_t::hasher, skeleton_t::comparator> entity_storage<skeleton_t>{};
+	template<> static inline std::unordered_set<wraith_t, wraith_t::hasher, wraith_t::comparator> entity_storage<wraith_t>{};
+	template<> static inline std::unordered_set<ladder_t, ladder_t::hasher, ladder_t::comparator> entity_storage<ladder_t>{};
+	template<> static inline std::unordered_set<adventurer_t, adventurer_t::hasher, adventurer_t::comparator> entity_storage<adventurer_t>{};
+	template<> static inline std::unordered_set<paladin_t, paladin_t::hasher, paladin_t::comparator> entity_storage<paladin_t>{};
+	template<> static inline std::unordered_set<priest_t, priest_t::hasher, priest_t::comparator> entity_storage<priest_t>{};
 
-	static inline std::unordered_set<ladder_t, ladder_t::hasher, ladder_t::comparator> ladders{};
-
-	static inline std::unordered_set<adventurer_t, adventurer_t::hasher, adventurer_t::comparator> adventurers{};
-	static inline std::unordered_set<paladin_t, paladin_t::hasher, paladin_t::comparator> paladins{};
-	static inline std::unordered_set<priest_t, priest_t::hasher, priest_t::comparator> priests{};
-
+	template<typename... EntityTypes>
+		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
 	inline bool entity_registry_t::contains(cref<offset_t> position) const noexcept {
-		return player.position == position || skulls.contains(position) || skeletons.contains(position) || wraithes.contains(position) || ladders.contains(position) || adventurers.contains(position) || paladins.contains(position) || priests.contains(position);
+		return (entity_storage<EntityTypes>.contains(position) || ...);
 	}
 
+	inline bool entity_registry_t::contains(cref<offset_t> position) const noexcept { return player.position == position || contains<ALL_NON_PLAYER>(position); }
+
 	template<entity_type_t EntityType> inline bool entity_registry_t::contains(cref<offset_t> position) const noexcept {
-		if constexpr (EntityType == entity_type_t::Player) {
+		if constexpr (EntityType == entity_type_t::None) {
+			return true;
+		} else if constexpr (EntityType == entity_type_t::Player) {
 			return player.position == position;
-		} else if constexpr (EntityType == entity_type_t::Skull) {
-			return skulls.contains(position);
-		} else if constexpr (EntityType == entity_type_t::Skeleton) {
-			return skeletons.contains(position);
-		} else if constexpr (EntityType == entity_type_t::Wraith) {
-			return wraithes.contains(position);
-		} else if constexpr (EntityType == entity_type_t::Ladder) {
-			return ladders.contains(position);
-		} else if constexpr (EntityType == entity_type_t::Adventurer) {
-			return adventurers.contains(position);
-		} else if constexpr (EntityType == entity_type_t::Paladin) {
-			return paladins.contains(position);
-		} else if constexpr (EntityType == entity_type_t::Priest) {
-			return priests.contains(position);
+		} else {
+			return entity_storage<typename to_entity_type<EntityType>::type>.contains(position);
 		}
 	}
 
 	inline entity_type_t entity_registry_t::at(cref<offset_t> position) const noexcept {
 		if (player.position == position) {
 			return entity_type_t::Player;
-		} else if (skulls.contains(position)) {
+		} else if (entity_storage<skull_t>.contains(position)) {
 			return entity_type_t::Skull;
-		} else if (skeletons.contains(position)) {
+		} else if (entity_storage<skeleton_t>.contains(position)) {
 			return entity_type_t::Skeleton;
-		} else if (wraithes.contains(position)) {
+		} else if (entity_storage<wraith_t>.contains(position)) {
 			return entity_type_t::Wraith;
-		} else if (ladders.contains(position)) {
+		} else if (entity_storage<ladder_t>.contains(position)) {
 			return entity_type_t::Ladder;
-		} else if (adventurers.contains(position)) {
+		} else if (entity_storage<adventurer_t>.contains(position)) {
 			return entity_type_t::Adventurer;
-		} else if (paladins.contains(position)) {
+		} else if (entity_storage<paladin_t>.contains(position)) {
 			return entity_type_t::Paladin;
-		} else if (priests.contains(position)) {
+		} else if (entity_storage<priest_t>.contains(position)) {
 			return entity_type_t::Priest;
 		} else {
 			return entity_type_t::None;
@@ -82,68 +76,24 @@ namespace necrowarp {
 			}
 
 			return &player;
-		} else if constexpr (std::is_same<T, skull_t>::value) {
-			cauto iter{ skulls.find(position) };
-
-			if (iter == skulls.end()) {
-				return nullptr;
-			}
-
-			return deref_addr_of<skull_t>(iter);
-		} else if constexpr (std::is_same<T, skeleton_t>::value) {
-			cauto iter{ skeletons.find(position) };
-
-			if (iter == skeletons.end()) {
-				return nullptr;
-			}
-
-			return deref_addr_of<skeleton_t>(iter);
-		} else if constexpr (std::is_same<T, wraith_t>::value) {
-			cauto iter{ wraithes.find(position) };
-
-			if (iter == wraithes.end()) {
-				return nullptr;
-			}
-
-			return deref_addr_of<wraith_t>(iter);
-		} else if constexpr (std::is_same<T, ladder_t>::value) {
-			cauto iter{ ladders.find(position) };
-
-			if (iter == ladders.end()) {
-				return nullptr;
-			}
-
-			return deref_addr_of<ladder_t>(iter);
-		} else if constexpr (std::is_same<T, adventurer_t>::value) {
-			cauto iter{ adventurers.find(position) };
-
-			if (iter == adventurers.end()) {
-				return nullptr;
-			}
-
-			return deref_addr_of<adventurer_t>(iter);
-		} else if constexpr (std::is_same<T, paladin_t>::value) {
-			cauto iter{ paladins.find(position) };
-
-			if (iter == paladins.end()) {
-				return nullptr;
-			}
-
-			return deref_addr_of<paladin_t>(iter);
-		} else if constexpr (std::is_same<T, priest_t>::value) {
-			cauto iter{ priests.find(position) };
-
-			if (iter == priests.end()) {
-				return nullptr;
-			}
-
-			return deref_addr_of<priest_t>(iter);
 		}
 
-		return nullptr;
+		cauto iter{ entity_storage<T>.find(position) };
+
+		if (iter == entity_storage<T>.end()) {
+			return nullptr;
+		}
+
+		return deref_addr_of<T>(iter);
 	}
 
-	inline usize entity_registry_t::count() const noexcept { return 1 + skulls.size() + skeletons.size() + wraithes.size() + ladders.size() + adventurers.size() + paladins.size() + priests.size(); }
+	template<typename... EntityTypes>
+		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
+	inline usize entity_registry_t::count() const noexcept {
+		return (entity_storage<EntityTypes>.size() + ...);
+	}
+
+	inline usize entity_registry_t::count() const noexcept { return count<ALL_NON_PLAYER>() + 1; }
 
 	template<entity_type_t EntityType> inline usize entity_registry_t::count() const noexcept {
 		if constexpr (EntityType == entity_type_t::None) {
@@ -151,19 +101,19 @@ namespace necrowarp {
 		} else if constexpr (EntityType == entity_type_t::Player) {
 			return 1;
 		} else if constexpr (EntityType == entity_type_t::Skull) {
-			return skulls.size();
+			return entity_storage<skull_t>.size();
 		} else if constexpr (EntityType == entity_type_t::Skeleton) {
-			return skeletons.size();
+			return entity_storage<skeleton_t>.size();
 		} else if constexpr (EntityType == entity_type_t::Wraith) {
-			return wraithes.size();
+			return entity_storage<wraith_t>.size();
 		} else if constexpr (EntityType == entity_type_t::Ladder) {
-			return ladders.size();
+			return entity_storage<ladder_t>.size();
 		} else if constexpr (EntityType == entity_type_t::Adventurer) {
-			return adventurers.size();
+			return entity_storage<adventurer_t>.size();
 		} else if constexpr (EntityType == entity_type_t::Paladin) {
-			return paladins.size();
+			return entity_storage<paladin_t>.size();
 		} else if constexpr (EntityType == entity_type_t::Priest) {
-			return priests.size();
+			return entity_storage<priest_t>.size();
 		}
 	}
 
@@ -172,21 +122,11 @@ namespace necrowarp {
 			return false;
 		} else if constexpr (EntityType == entity_type_t::Player) {
 			return false;
-		} else if constexpr (EntityType == entity_type_t::Skull) {
-			return skulls.empty();
-		} else if constexpr (EntityType == entity_type_t::Skeleton) {
-			return skeletons.empty();
-		} else if constexpr (EntityType == entity_type_t::Wraith) {
-			return wraithes.empty();
-		} else if constexpr (EntityType == entity_type_t::Ladder) {
-			return ladders.empty();
-		} else if constexpr (EntityType == entity_type_t::Adventurer) {
-			return adventurers.empty();
-		} else if constexpr (EntityType == entity_type_t::Paladin) {
-			return paladins.empty();
-		} else if constexpr (EntityType == entity_type_t::Priest) {
-			return priests.empty();
 		}
+
+		using entity_type = typename to_entity_type<EntityType>::type;
+
+		return entity_storage<entity_type>.empty();
 	}
 
 	template<typename T>
@@ -196,21 +136,17 @@ namespace necrowarp {
 			return false;
 		}
 
-		if constexpr (is_entity_type<T, entity_type_t::Skull>::value) {
-			return skulls.emplace(entity).second;
-		} else if constexpr (is_entity_type<T, entity_type_t::Skeleton>::value) {
-			return skeletons.emplace(entity).second;
-		} else if constexpr (is_entity_type<T, entity_type_t::Adventurer>::value) {
-			cauto[iter, inserted]{ adventurers.emplace(entity) };
+		cauto[iter, inserted]{ entity_storage<T>.emplace(std::move(entity)) };
 
-			if (inserted) {
+		if (inserted) {
+			if constexpr (is_evil_entity<T>::value) {
+				good_goal_map += iter->position;
+			} else if constexpr (is_good_entity<T>::value) {
 				evil_goal_map += iter->position;
 			}
-
-			return inserted;
 		}
 
-		return false;
+		return inserted;
 	}
 
 	template<entity_type_t EntityType> inline bool entity_registry_t::remove(cref<offset_t> position) noexcept {
@@ -218,21 +154,19 @@ namespace necrowarp {
 			return false;
 		}
 
-		if constexpr (EntityType == entity_type_t::Skull) {
-			return skulls.erase(position);
-		} else if constexpr (EntityType == entity_type_t::Skeleton) {
-			return skeletons.erase(position);
-		} else if constexpr (EntityType == entity_type_t::Adventurer) {
-			const bool removed{ static_cast<bool>(adventurers.erase(position)) };
+		using entity_type = typename to_entity_type<EntityType>::type;
 
-			if (removed) {
+		const bool removed{ static_cast<bool>(entity_storage<entity_type>.erase(position)) };
+
+		if (removed) {
+			if constexpr (is_evil_entity<entity_type>::value) {
+				good_goal_map -= position;
+			} else if constexpr (is_good_entity<entity_type>::value) {
 				evil_goal_map -= position;
 			}
-
-			return removed;
 		}
 
-		return false;
+		return removed;
 	}
 
 	template<typename T>
@@ -251,116 +185,89 @@ namespace necrowarp {
 		return true;
 	}
 
-	template<entity_type_t EntityType> inline bool entity_registry_t::update(cref<offset_t> current, cref<offset_t> target) noexcept {
-		if (!entity_registry.contains(current) || entity_registry.contains(target)) {
-			return false;
-		}
-
-		if constexpr (EntityType == entity_type_t::Skull) {
-			cauto skull{ skulls.find(current) };
-
-			if (skull == skulls.end()) {
-				return false;
-			}
-
-			rvauto node{ skulls.extract(skull) };
-
-			node.value().position = target;
-
-			skulls.insert(std::move(node));
-
-			return true;
-		} else if constexpr (EntityType == entity_type_t::Skeleton) {
-			cauto skeleton{ skeletons.find(current) };
-
-			if (skeleton == skeletons.end()) {
-				return false;
-			}
-
-			rvauto node{ skeletons.extract(skeleton) };
-
-			node.value().position = target;
-
-			skeletons.insert(std::move(node));
-
-			return true;
-		} else if constexpr (EntityType == entity_type_t::Adventurer) {
-			cauto adventurer{ adventurers.find(current) };
-
-			if (adventurer == adventurers.end()) {
-				return false;
-			}
-
-			rvauto node{ adventurers.extract(adventurer) };
-
-			node.value().position = target;
-
-			adventurers.insert(std::move(node));
-
-			return true;
-		}
-
-		return false;
-	}
-
 	inline bool entity_registry_t::update(cref<offset_t> current, cref<offset_t> target) noexcept {
 		if (!entity_registry.contains(current) || entity_registry.contains(target)) {
 			return false;
 		}
 
-		const entity_type_t entity_type{ entity_registry.at(current) };
+		cauto entity_type{ entity_registry.at(current) };
 
-		if (entity_type == entity_type_t::None) {
+		switch (entity_type) {
+		case entity_type_t::None:
+		case entity_type_t::Skull:
+		case entity_type_t::Ladder:
 			return false;
-		} else if (entity_type == entity_type_t::Player) {
+		case entity_type_t::Player:
 			player.position = target;
-
 			good_goal_map.update(current, target);
-		} else if (entity_type == entity_type_t::Skull) {
-			cauto skull{ skulls.find(current) };
+			return true;
+		case entity_type_t::Skeleton:
+			return update<entity_type_t::Skeleton>(current, target);
+		case entity_type_t::Wraith:
+			return update<entity_type_t::Wraith>(current, target);
+		case entity_type_t::Adventurer:
+			return update<entity_type_t::Adventurer>(current, target);
+		case entity_type_t::Paladin:
+			return update<entity_type_t::Paladin>(current, target);
+		case entity_type_t::Priest:
+			return update<entity_type_t::Priest>(current, target);
+		default:
+			return false;
+		}
+	}
 
-			if (skull == skulls.end()) {
-				return false;
-			}
+	template<entity_type_t EntityType> inline bool entity_registry_t::update(cref<offset_t> current, cref<offset_t> target) noexcept {
+		if (!entity_registry.contains(current) || !game_map.within<zone_region_t::Interior>(current) || entity_registry.contains(target) || !game_map.within<zone_region_t::Interior>(target)) {
+			return false;
+		}
 
-			rvauto node{ skulls.extract(skull) };
+		if constexpr (EntityType == entity_type_t::None || EntityType == entity_type_t::Player) {
+			return false;
+		}
 
-			node.value().position = target;
+		using entity_type = typename to_entity_type<EntityType>::type;
 
-			skulls.insert(std::move(node));
-		} else if (entity_type == entity_type_t::Skeleton) {
-			cauto skeleton{ skeletons.find(current) };
+		cauto entity{ entity_storage<entity_type>.find(current) };
 
-			if (skeleton == skeletons.end()) {
-				return false;
-			}
+		if (entity == entity_storage<entity_type>.end()) {
+			return false;
+		}
 
-			rvauto node{ skeletons.extract(skeleton) };
+		rvauto node{ entity_storage<entity_type>.extract(entity) };
 
-			node.value().position = target;
+		node.value().position = target;
 
-			skeletons.insert(std::move(node));
-		} else if (entity_type == entity_type_t::Adventurer) {
-			cauto adventurer{ adventurers.find(current) };
+		entity_storage<entity_type>.insert(std::move(node));
 
-			if (adventurer == adventurers.end()) {
-				return false;
-			}
-
-			rvauto node{ adventurers.extract(adventurer) };
-
-			node.value().position = target;
-
-			adventurers.insert(std::move(node));
-
+		if constexpr (is_evil_entity<entity_type>::value) {
+			good_goal_map.update(current, target);
+		} else if constexpr (is_good_entity<entity_type>::value) {
 			evil_goal_map.update(current, target);
 		}
 
 		return true;
 	}
 
+	template<typename... EntityTypes>
+		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
+	inline void entity_registry_t::update(ref<std::queue<entity_command_t>> commands) noexcept {
+		auto process_entities{ [&commands](crauto entities) {
+			for (crauto entity : entities) {
+				commands.push(entity.think());
+			}
+
+			entity_registry.process_commands(commands);
+
+			good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+
+			evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+		} };
+
+		(process_entities(entity_storage<EntityTypes>), ...);
+	}
+
 	inline void entity_registry_t::update() noexcept {
-		// command priority: player -> skeletons -> adventurers
+		// command priority: player -> skeletons -> wraithes -> adventurers -> paladins -> priests
 
 		// process the player's command
 
@@ -368,29 +275,7 @@ namespace necrowarp {
 
 		std::queue<entity_command_t> commands{};
 
-		// collect and process all skeleton commands
-
-		for (crauto skeleton : skeletons) {
-			commands.push(skeleton.think());
-		}
-
-		entity_registry.process_commands(commands);
-
-		good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
-
-		evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
-
-		// collect and process all adventurer commands
-
-		for (crauto adventurer : adventurers) {
-			commands.push(adventurer.think());
-		}
-
-		entity_registry.process_commands(commands);
-
-		good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
-
-		evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+		update<ALL_NPCS>(commands);
 	}
 
 	inline bool entity_registry_t::is_command_valid(cref<entity_command_t> command) const noexcept {
@@ -466,7 +351,7 @@ namespace necrowarp {
 		return true;
 	}
 
-	inline void entity_registry_t::random_warp(cref<offset_t> source) noexcept {
+	inline bool entity_registry_t::random_warp(cref<offset_t> source) noexcept {
 		cauto random_safe_position{ evil_goal_map.find_random<zone_region_t::Interior>(game_map, random_engine, cell_trait_t::Open, entity_registry, 8) };
 
 		if (!random_safe_position.has_value()) {
@@ -477,21 +362,23 @@ namespace necrowarp {
 
 				draw_warp_cursor = false;
 
-				return;
+				return false;
 			}
-			
+
 			player.receive_unsafe_warp_boon();
 
 			entity_registry.update(source, random_unsafe_position.value());
-			
+
 			draw_warp_cursor = true;
 
-			return;
+			return true;
 		}
 
 		entity_registry.update(source, random_safe_position.value());
 
 		draw_warp_cursor = true;
+
+		return true;
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::None>(cref<entity_command_t> command) noexcept {}
@@ -579,25 +466,51 @@ namespace necrowarp {
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::SummonWraith>(cref<entity_command_t> command) noexcept {
-		if (!player.can_summon_wraith()) {
+		if (!player.can_summon_wraith() || entity_storage<skull_t>.empty()) {
+			return;
+		}
+
+		i8 wraith_health{ 0 };
+
+		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
+			const offset_t position{ player.position + offset };
+
+			if (!game_map.within<zone_region_t::Interior>(position) || entity_registry.at(position) != entity_type_t::Skull) {
+				continue;
+			}
+
+			entity_registry.remove<entity_type_t::Skull>(position);
+
+			++wraith_health;
+		}
+
+		if (wraith_health <= 0) {
 			return;
 		}
 
 		player.pay_summon_wraith_cost();
+
+		if (!random_warp(command.source.value())) {
+			player.bolster_armor(wraith_health);
+
+			return;
+		}
+
+		entity_registry.add<wraith_t>(wraith_t{ command.source.value(), wraith_health });
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::GrandSummoning>(cref<entity_command_t> command) noexcept {
-		if (!player.can_grand_summon() || !skulls.empty()) {
+		if (!player.can_grand_summon() || entity_storage<skull_t>.empty()) {
 			return;
 		}
 
 		std::vector<offset_t> skull_positions{};
 
-		for (crauto skull : skulls) {
+		for (crauto skull : entity_storage<skull_t>) {
 			skull_positions.push_back(skull.position);
 		}
 
-		skulls.clear();
+		entity_storage<skull_t>.clear();
 
 		for (rvauto position : skull_positions) {
 			entity_registry_t::add(skeleton_t{ std::move(position) });
@@ -640,7 +553,7 @@ namespace necrowarp {
 		case entity_type_t::Wraith: {
 			const i8 armor_boon = entity_registry.at<wraith_t>(target_position)->armor_boon();
 
-			entity_registry.remove<entity_type_t::Wraith>(target_position);
+			// entity_registry.remove<entity_type_t::Wraith>(target_position);
 
 			entity_registry.update(source_position, target_position);
 
@@ -673,7 +586,7 @@ namespace necrowarp {
 		}
 
 		player.pay_random_warp_cost();
-		
+
 		random_warp(command.source.value());
 	}
 
@@ -692,6 +605,12 @@ namespace necrowarp {
 		case command_type_t::Clash: {
 			return process_command<command_type_t::Clash>(command);
 		}
+		case command_type_t::SummonWraith: {
+			return process_command<command_type_t::SummonWraith>(command);
+		}
+		case command_type_t::GrandSummoning: {
+			return process_command<command_type_t::GrandSummoning>(command);
+		}
 		case command_type_t::ConsumeWarp: {
 			return process_command<command_type_t::ConsumeWarp>(command);
 		}
@@ -708,42 +627,46 @@ namespace necrowarp {
 
 	inline void entity_registry_t::process_commands(ref<std::queue<entity_command_t>> commands) noexcept {
 		while (!commands.empty()) {
-			const entity_command_t command{ commands.front() };
+			const entity_command_t command{ std::move(commands.front()) };
 			commands.pop();
 
 			entity_registry.process_command(command);
 		}
 	}
 
-	inline void entity_registry_t::draw() noexcept {
-		player.draw();
+	template<typename... EntityTypes>
+		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
+	inline void entity_registry_t::draw() const noexcept {
+		auto draw_entities{ [](crauto entities) {
+			for (crauto entity : entities) {
+				entity.draw();
+			}
+		} };
 
-		for (crauto skull : skulls) {
-			skull.draw();
-		}
-
-		for (crauto skeleton : skeletons) {
-			skeleton.draw();
-		}
-
-		for (crauto adventurer : adventurers) {
-			adventurer.draw();
-		}
+		(draw_entities(entity_storage<EntityTypes>), ...);
 	}
 
-	inline void entity_registry_t::draw(cref<camera_t> camera) noexcept {
+	template<typename... EntityTypes>
+		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
+	inline void entity_registry_t::draw(cref<camera_t> camera) const noexcept {
+		auto draw_entities{ [&camera](crauto entities) {
+			for (crauto entity : entities) {
+				entity.draw(camera);
+			}
+		} };
+
+		(draw_entities(entity_storage<EntityTypes>), ...);
+	}
+
+	inline void entity_registry_t::draw() const noexcept {
+		player.draw();
+
+		draw<ALL_NON_PLAYER>();
+	}
+
+	inline void entity_registry_t::draw(cref<camera_t> camera) const noexcept {
 		player.draw(camera);
 
-		for (crauto skull : skulls) {
-			skull.draw(camera);
-		}
-
-		for (crauto skeleton : skeletons) {
-			skeleton.draw(camera);
-		}
-
-		for (crauto adventurer : adventurers) {
-			adventurer.draw(camera);
-		}
+		draw<ALL_NON_PLAYER>(camera);
 	}
 } // namespace necrowarp

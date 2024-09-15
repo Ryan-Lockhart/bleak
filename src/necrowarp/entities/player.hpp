@@ -156,4 +156,8 @@ namespace necrowarp {
 	template<> struct is_entity_type<player_t, entity_type_t::Player> {
 		static constexpr bool value = true;
 	};
+
+	template<> struct to_entity_type<entity_type_t::Player> {
+		using type = player_t;
+	};
 } // namespace necrowarp
