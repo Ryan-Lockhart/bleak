@@ -1,9 +1,9 @@
 #pragma once
 
+#include <necrowarp/entities/wraith.hpp>
+
 #include <necrowarp/entity_state.hpp>
 #include <necrowarp/entity_state.tpp>
-
-#include <necrowarp/entities/wraith.hpp>
 
 namespace necrowarp {
 	inline entity_command_t wraith_t::think() const noexcept {
@@ -12,12 +12,12 @@ namespace necrowarp {
 			const entity_type_t current_entity{ entity_registry.at(current_position) };
 
 			switch (current_entity) {
-			case entity_type_t::Player:
-			case entity_type_t::Skeleton:
-			case entity_type_t::Wraith:
-				continue;
-			default:
+			case entity_type_t::Adventurer:
+			case entity_type_t::Paladin:
+			case entity_type_t::Priest:
 				break;
+			default:
+				continue;
 			}
 
 			return entity_command_t{ command_type_t::Clash, position, current_position };

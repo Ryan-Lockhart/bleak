@@ -42,15 +42,14 @@ namespace necrowarp {
 	static inline timer_t input_timer{ 125.0 };
 	static inline timer_t cursor_timer{ 125.0 };
 	static inline timer_t epoch_timer{ 250.0 };
-	static inline timer_t animation_timer{ 1000.0 / 3 };
 
 	static inline wave_t sine_wave{ 1.0, 0.5, 1.0 };
 
 	static inline mixer_s mixer{};
 
-	static inline path_t test_path{};
-
 	static inline bool player_acted{ false };
+
+	static inline usize spawns_remaining{ globals::StartingAdventurers };
 	
 	static inline i16 player_kills{ 0 };
 	static inline i16 skeleton_kills{ 0 };

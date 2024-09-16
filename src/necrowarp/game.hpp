@@ -2,6 +2,8 @@
 
 #include <bleak.hpp>
 
+#include <cstdlib>
+
 #include <necrowarp/entities.hpp>
 #include <necrowarp/entity_state.hpp>
 #include <necrowarp/entity_state.tpp>
@@ -222,23 +224,19 @@ namespace necrowarp {
 			}
 
 			player.position = player_pos.value();
-
-			entity_registry.spawn<skull_t>(globals::SkullDebris);
-
 			good_goal_map += player_pos.value();
-			good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 
-			entity_registry.spawn<adventurer_t>(globals::AdventurerPopulation);
+			entity_registry.spawn<ladder_t>(globals::NumberOfLadders);
+			entity_registry.spawn<skull_t>(globals::StartingSkulls);
 
 			evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+			good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 
 			Clock::tick();
 
 			input_timer.reset();
 			cursor_timer.reset();
 			epoch_timer.reset();
-
-			animation_timer.reset();
 
 			message_log.flush_to_console(std::cout);
 			error_log.flush_to_console(std::cerr);
@@ -277,8 +275,40 @@ namespace necrowarp {
 			if (player_acted) {
 				entity_registry.update();
 
-				if (entity_registry.empty<entity_type_t::Adventurer>()) {
-					entity_registry.spawn<adventurer_t>(globals::AdventurerPopulation + total_kills() / 4);
+				if (entity_registry.empty<entity_type_t::Adventurer>() && spawns_remaining <= 0) {
+					spawns_remaining = globals::StartingAdventurers + total_kills() / 4;
+				}
+
+				while (spawns_remaining > 0) {
+					std::optional<offset_t> spawn_pos{};
+
+					for (cref<ladder_t> ladder : entity_storage<ladder_t>) {
+						if (entity_registry.contains<adventurer_t, paladin_t, priest_t>(ladder.position)) {
+							continue;
+						}
+
+						spawn_pos = ladder.position;
+					}
+
+					if (!spawn_pos.has_value()) {
+						break;
+					}
+
+					/*static std::uniform_int_distribution<u16> spawn_distribution{ 0, 9 };
+
+					u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
+
+					if (spawn_chance < 6) {
+						entity_registry.add<adventurer_t, true>(spawn_pos.value());
+					} else if (spawn_chance < 9) {
+						entity_registry.add<paladin_t, true>(spawn_pos.value());
+					} else {
+						entity_registry.add<priest_t, true>(spawn_pos.value());
+					}*/
+
+					entity_registry.add<adventurer_t, true>(spawn_pos.value());
+
+					--spawns_remaining;
 				}
 
 				player_acted = false;

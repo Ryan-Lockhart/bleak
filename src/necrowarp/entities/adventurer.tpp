@@ -1,13 +1,22 @@
 #pragma once
 
+#include <necrowarp/entities/adventurer.hpp>
+
 #include <necrowarp/entity_state.hpp>
+#include <necrowarp/entity_state.tpp>
 
 namespace necrowarp {
 	inline entity_command_t adventurer_t::think() const noexcept {
 		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
 			const offset_t current_position{ position + offset };
+			const entity_type_t current_entity{ entity_registry.at(current_position) };
 
-			if (entity_registry.at(current_position) != entity_type_t::Player) {
+			switch (current_entity) {
+			case entity_type_t::Player:
+			case entity_type_t::Skeleton:
+			case entity_type_t::Wraith:
+				break;
+			default:
 				continue;
 			}
 

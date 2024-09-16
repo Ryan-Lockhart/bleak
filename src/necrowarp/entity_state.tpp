@@ -1,9 +1,5 @@
 #pragma once
 
-#include "bleak/offset.hpp"
-#include "entities/entity.hpp"
-#include "necrowarp/entity_state.hpp"
-#include "necrowarp/game_state.hpp"
 #include <necrowarp/entities.hpp>
 
 #include <cstddef>
@@ -15,15 +11,7 @@ namespace necrowarp {
 
 	static inline player_t player{};
 
-	template<typename T> static inline std::unordered_set<T, typename T::hasher, typename T::comparator> entity_storage;
-
-	template<> static inline std::unordered_set<skull_t, skull_t::hasher, skull_t::comparator> entity_storage<skull_t>{};
-	template<> static inline std::unordered_set<skeleton_t, skeleton_t::hasher, skeleton_t::comparator> entity_storage<skeleton_t>{};
-	template<> static inline std::unordered_set<wraith_t, wraith_t::hasher, wraith_t::comparator> entity_storage<wraith_t>{};
-	template<> static inline std::unordered_set<ladder_t, ladder_t::hasher, ladder_t::comparator> entity_storage<ladder_t>{};
-	template<> static inline std::unordered_set<adventurer_t, adventurer_t::hasher, adventurer_t::comparator> entity_storage<adventurer_t>{};
-	template<> static inline std::unordered_set<paladin_t, paladin_t::hasher, paladin_t::comparator> entity_storage<paladin_t>{};
-	template<> static inline std::unordered_set<priest_t, priest_t::hasher, priest_t::comparator> entity_storage<priest_t>{};
+	template<typename T> static inline std::unordered_set<T, typename T::hasher, typename T::comparator> entity_storage{};
 
 	template<typename... EntityTypes>
 		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
@@ -46,20 +34,20 @@ namespace necrowarp {
 	inline entity_type_t entity_registry_t::at(cref<offset_t> position) const noexcept {
 		if (player.position == position) {
 			return entity_type_t::Player;
-		} else if (entity_storage<skull_t>.contains(position)) {
-			return entity_type_t::Skull;
 		} else if (entity_storage<skeleton_t>.contains(position)) {
 			return entity_type_t::Skeleton;
 		} else if (entity_storage<wraith_t>.contains(position)) {
 			return entity_type_t::Wraith;
-		} else if (entity_storage<ladder_t>.contains(position)) {
-			return entity_type_t::Ladder;
 		} else if (entity_storage<adventurer_t>.contains(position)) {
 			return entity_type_t::Adventurer;
 		} else if (entity_storage<paladin_t>.contains(position)) {
 			return entity_type_t::Paladin;
 		} else if (entity_storage<priest_t>.contains(position)) {
 			return entity_type_t::Priest;
+		} else if (entity_storage<skull_t>.contains(position)) {
+			return entity_type_t::Skull;
+		} else if (entity_storage<ladder_t>.contains(position)) {
+			return entity_type_t::Ladder;
 		} else {
 			return entity_type_t::None;
 		}
@@ -135,6 +123,28 @@ namespace necrowarp {
 		if (entity_registry.contains(entity.position)) {
 			return false;
 		}
+
+		cauto[iter, inserted]{ entity_storage<T>.emplace(std::move(entity)) };
+
+		if (inserted) {
+			if constexpr (is_evil_entity<T>::value) {
+				good_goal_map += iter->position;
+			} else if constexpr (is_good_entity<T>::value) {
+				evil_goal_map += iter->position;
+			}
+		}
+
+		return inserted;
+	}
+
+	template<typename T, bool Force>
+		requires is_entity<T>::value && (!is_entity_type<T, entity_type_t::Player>::value)
+	inline bool entity_registry_t::add(rval<T> entity) noexcept {
+		if constexpr (!Force) {
+			if (entity_registry.contains(entity.position)) {
+			return false;
+			}
+		}		
 
 		cauto[iter, inserted]{ entity_storage<T>.emplace(std::move(entity)) };
 
@@ -393,10 +403,14 @@ namespace necrowarp {
 		const entity_type_t target_type{ entity_registry.at(target_position) };
 
 		if (target_type == entity_type_t::Skull) {
+			const bool is_fresh{ entity_registry.at<skull_t>(target_position)->fresh };
+
 			entity_registry.remove<entity_type_t::Skull>(target_position);
 			entity_registry.add<skeleton_t>(skeleton_t{ target_position });
 
-			player.receive_skull_boon();
+			if (is_fresh) {
+				player.receive_skull_boon();
+			}
 
 			random_warp(source_position);
 		} else if (target_type == entity_type_t::Skeleton) {
@@ -428,10 +442,7 @@ namespace necrowarp {
 			}
 
 			entity_registry.remove<entity_type_t::Adventurer>(source_position);
-
-			evil_goal_map -= source_position;
-
-			entity_registry.add<skull_t>(skull_t{ source_position });
+			entity_registry.add<skull_t>(skull_t{ source_position, true });
 
 			player.receive_death_boon<entity_type_t::Adventurer>();
 			player.receive_damage<entity_type_t::Adventurer>();
@@ -439,9 +450,10 @@ namespace necrowarp {
 			++player_kills;
 		} else if (source_type == entity_type_t::Skeleton && target_type == entity_type_t::Adventurer) {
 			entity_registry.remove<entity_type_t::Skeleton>(source_position);
-			entity_registry.remove<entity_type_t::Adventurer>(target_position);
+			entity_registry.add<skull_t>(skull_t{ source_position, false });
 
-			entity_registry.add<skull_t>(skull_t{ target_position });
+			entity_registry.remove<entity_type_t::Adventurer>(target_position);
+			entity_registry.add<skull_t>(skull_t{ target_position, true });
 
 			player.receive_death_boon<entity_type_t::Adventurer>();
 
@@ -453,8 +465,7 @@ namespace necrowarp {
 			}
 
 			entity_registry.remove<entity_type_t::Adventurer>(target_position);
-
-			entity_registry.add<skull_t>(skull_t{ target_position });
+			entity_registry.add<skull_t>(skull_t{ target_position, true });
 
 			player.receive_death_boon<entity_type_t::Adventurer>();
 			player.receive_damage<entity_type_t::Adventurer>();
@@ -540,12 +551,14 @@ namespace necrowarp {
 			return;
 		}
 		case entity_type_t::Skeleton: {
+			const i8 armor_boon = entity_registry.at<skeleton_t>(target_position)->armor_boon();
+
 			entity_registry.remove<entity_type_t::Skeleton>(target_position);
 
 			entity_registry.update(source_position, target_position);
 
 			player.pay_target_warp_cost();
-			player.bolster_armor(skeleton_t::ArmorBoon);
+			player.bolster_armor(armor_boon);
 
 			draw_warp_cursor = false;
 			return;
@@ -553,7 +566,7 @@ namespace necrowarp {
 		case entity_type_t::Wraith: {
 			const i8 armor_boon = entity_registry.at<wraith_t>(target_position)->armor_boon();
 
-			// entity_registry.remove<entity_type_t::Wraith>(target_position);
+			entity_registry.remove<entity_type_t::Wraith>(target_position);
 
 			entity_registry.update(source_position, target_position);
 

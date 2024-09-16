@@ -38,6 +38,10 @@ namespace necrowarp {
 			requires is_entity<T>::value && (!is_entity_type<T, entity_type_t::Player>::value)
 		inline bool add(rval<T> entity) noexcept;
 
+		template<typename T, bool Force>
+			requires is_entity<T>::value && (!is_entity_type<T, entity_type_t::Player>::value)
+		inline bool add(rval<T> entity) noexcept;
+
 		template<entity_type_t EntityType> inline bool remove(cref<offset_t> position) noexcept;
 
 		template<typename T>

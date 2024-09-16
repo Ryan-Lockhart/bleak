@@ -58,8 +58,10 @@ namespace necrowarp {
 		constexpr u32 ViewDistance{ 8 };
 		constexpr f64 ViewSpan{ 135.0 };
 
-		constexpr u32 AdventurerPopulation{ 5 };
-		constexpr u32 SkullDebris{ 10 };
+		constexpr u32 NumberOfLadders{ 3 };
+
+		constexpr u32 StartingAdventurers{ 5 };
+		constexpr u32 StartingSkulls{ 10 };
 
 		constexpr bool UseSimpleGraphics{ false };
 	} // namespace globals
