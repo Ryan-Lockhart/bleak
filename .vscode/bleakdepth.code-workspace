@@ -5,7 +5,7 @@
 		}
 	],
 	"settings": {
-		"mesonbuild.configureOnOpen": true,
+		"mesonbuild.configureOnOpen": false,
 		"mesonbuild.buildFolder": "build",
 		"mesonbuild.configureEnvironment": {
 			"CC": "clang",

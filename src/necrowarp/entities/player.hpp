@@ -54,9 +54,13 @@ namespace necrowarp {
 
 		inline bool has_armor() const noexcept { return armor > 0; }
 
-		inline i8 max_energy() const noexcept { return MinimumEnergy + skeleton_kills / 16; }
+		inline i8 max_energy() const noexcept { return MinimumEnergy + minion_kills / 16; }
 
 		inline i8 max_armor() const noexcept { return MinimumArmor + player_kills / 8; }
+
+		inline bool can_survive(i8 damage_amount) const noexcept { return armor >= damage_amount; }
+
+		inline void receive_damage(i8 damage_amount) noexcept { set_armor(armor - damage_amount); }
 
 		inline bool can_random_warp() const noexcept { return energy >= RandomWarpCost; }
 

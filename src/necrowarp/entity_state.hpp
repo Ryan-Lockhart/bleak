@@ -16,6 +16,10 @@ namespace necrowarp {
 			requires is_entity<T>::value
 		inline cptr<T> at(cref<offset_t> position) const noexcept;
 
+		template<typename T>
+			requires is_entity<T>::value
+		inline ptr<T> at(cref<offset_t> position) noexcept;
+
 		inline usize count() const noexcept;
 
 		template<typename... EntityTypes>
@@ -56,7 +60,9 @@ namespace necrowarp {
 
 		inline bool random_warp(cref<offset_t> source) noexcept;
 
-		template<entity_type_t Initiator> inline void process_clash(cref<offset_t> source, cref<offset_t> target) noexcept;
+		template<entity_type_t Victim>
+			requires (Victim != entity_type_t::None)
+		inline bool process_clash(cref<offset_t> target_position, i8 damage_amount) noexcept;
 
 		template<command_type_t CommandType> inline void process_command(cref<entity_command_t> command) noexcept;
 

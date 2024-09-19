@@ -9,7 +9,7 @@ namespace necrowarp {
 
 	struct skull_t {
 		offset_t position;
-		bool fresh;
+		const bool fresh;
 
 		inline skull_t(cref<offset_t> position) noexcept : position{ position }, fresh{ false } {}
 

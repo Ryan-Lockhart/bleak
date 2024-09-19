@@ -9,13 +9,28 @@ namespace necrowarp {
 
 	struct priest_t {
 		offset_t position;
+		
+	private:
 		i8 health;
 
+		inline void set_health(i8 value) noexcept { health = clamp<i8>(value, 0, max_health()); }
+
+	public:
 		static constexpr i8 MaximumHealth{ 4 };
 		static constexpr i8 MaximumDamage{ 2 };
 		static constexpr i8 DeathBoon{ 4 };
 
 		inline priest_t(cref<offset_t> position) noexcept : position{ position }, health{ MaximumHealth } {}
+		
+		inline i8 get_health() const noexcept { return health; }
+
+		inline bool has_health() const noexcept { return health > 0; }
+
+		constexpr i8 max_health() const noexcept { return MaximumHealth; }
+
+		inline bool can_survive(i8 damage_amount) const noexcept { return health > damage_amount; }
+
+		inline void receive_damage(i8 damage_amount) noexcept { set_health(health - damage_amount); }
 
 		inline entity_command_t think() const noexcept;
 

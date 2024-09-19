@@ -113,7 +113,7 @@ namespace necrowarp {
 
 				return true;
 			} else if (Keyboard::is_key_down(bindings::GrandSummoning)) {
-				player.command = entity_command_t{ command_type_t::GrandSummoning };
+				player.command = entity_command_t{ command_type_t::GrandSummoning, player.position };
 
 				input_timer.record();
 				epoch_timer.record();
@@ -275,8 +275,10 @@ namespace necrowarp {
 			if (player_acted) {
 				entity_registry.update();
 
+				wave_size = globals::StartingAdventurers + total_kills() / 4;
+
 				if (entity_registry.empty<entity_type_t::Adventurer>() && spawns_remaining <= 0) {
-					spawns_remaining = globals::StartingAdventurers + total_kills() / 4;
+					spawns_remaining = wave_size;
 				}
 
 				while (spawns_remaining > 0) {
@@ -294,19 +296,49 @@ namespace necrowarp {
 						break;
 					}
 
-					/*static std::uniform_int_distribution<u16> spawn_distribution{ 0, 9 };
+					if (wave_size > 32) {
+						static std::uniform_int_distribution<u16> spawn_distribution{ 0, 9 };
 
-					u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
+						const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
 
-					if (spawn_chance < 6) {
+						if (spawn_chance < 4) {
+							entity_registry.add<adventurer_t, true>(spawn_pos.value());
+						} else if (spawn_chance < 8) {
+							entity_registry.add<paladin_t, true>(spawn_pos.value());
+						} else {
+							entity_registry.add<priest_t, true>(spawn_pos.value());
+						}
+
 						entity_registry.add<adventurer_t, true>(spawn_pos.value());
-					} else if (spawn_chance < 9) {
-						entity_registry.add<paladin_t, true>(spawn_pos.value());
-					} else {
-						entity_registry.add<priest_t, true>(spawn_pos.value());
-					}*/
+					} else if (wave_size > 16) {
+						static std::uniform_int_distribution<u16> spawn_distribution{ 0, 9 };
 
-					entity_registry.add<adventurer_t, true>(spawn_pos.value());
+						const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
+
+						if (spawn_chance < 6) {
+							entity_registry.add<adventurer_t, true>(spawn_pos.value());
+						} else if (spawn_chance < 9) {
+							entity_registry.add<paladin_t, true>(spawn_pos.value());
+						} else {
+							entity_registry.add<priest_t, true>(spawn_pos.value());
+						}
+
+						entity_registry.add<adventurer_t, true>(spawn_pos.value());
+					} else if (wave_size > 8) {
+						static std::uniform_int_distribution<u16> spawn_distribution{ 0, 9 };
+
+						const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
+
+						if (spawn_chance < 9) {
+							entity_registry.add<adventurer_t, true>(spawn_pos.value());
+						} else {
+							entity_registry.add<paladin_t, true>(spawn_pos.value());
+						}
+
+						entity_registry.add<adventurer_t, true>(spawn_pos.value());
+					} else {
+						entity_registry.add<adventurer_t, true>(spawn_pos.value());
+					}
 
 					--spawns_remaining;
 				}

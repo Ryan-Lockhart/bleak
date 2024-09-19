@@ -9,15 +9,16 @@ namespace necrowarp {
 
 	struct skeleton_t {
 		offset_t position;
+		const bool rotted;
 
-		// the maximum amount of health a skeleton can have
 		static constexpr i8 MaximumHealth{ 1 };
-		// the maximum amount of damage a skeleton can do
 		static constexpr i8 MaximumDamage{ 1 };
 		
 		constexpr i8 armor_boon() const noexcept { return 2; }
 
-		inline skeleton_t(cref<offset_t> position) noexcept : position{ position } {}
+		inline skeleton_t(cref<offset_t> position, bool rotted) noexcept : position{ position }, rotted{ rotted } {}
+
+		inline bool can_survive(i8 damage_amount) const noexcept { return damage_amount <= 0; }
 
 		inline entity_command_t think() const noexcept;
 

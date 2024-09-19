@@ -12,6 +12,8 @@ namespace necrowarp {
 
 		inline adventurer_t(cref<offset_t> position) noexcept : position{ position } {}
 
+		inline bool can_survive(i8 damage_amount) const noexcept { return damage_amount <= 0; }
+
 		inline entity_command_t think() const noexcept;
 
 		inline void draw() const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Adventurer], position); }

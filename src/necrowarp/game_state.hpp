@@ -49,10 +49,12 @@ namespace necrowarp {
 
 	static inline bool player_acted{ false };
 
+	static inline usize wave_size{ globals::StartingAdventurers };
+
 	static inline usize spawns_remaining{ globals::StartingAdventurers };
 	
 	static inline i16 player_kills{ 0 };
-	static inline i16 skeleton_kills{ 0 };
+	static inline i16 minion_kills{ 0 };
 
-	static inline i16 total_kills() noexcept { return player_kills + skeleton_kills; };
+	static inline i16 total_kills() noexcept { return player_kills + minion_kills; };
 } // namespace necrowarp
