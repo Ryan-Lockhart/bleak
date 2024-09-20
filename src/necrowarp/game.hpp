@@ -275,7 +275,7 @@ namespace necrowarp {
 			if (player_acted) {
 				entity_registry.update();
 
-				wave_size = globals::StartingAdventurers + total_kills() / 4;
+				wave_size = globals::StartingAdventurers + total_kills() / globals::KillsPerPopulation;
 
 				if (entity_registry.empty<entity_type_t::Adventurer>() && spawns_remaining <= 0) {
 					spawns_remaining = wave_size;

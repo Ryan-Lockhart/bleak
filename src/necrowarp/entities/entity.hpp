@@ -9,23 +9,15 @@ namespace necrowarp {
 	using namespace bleak;
 
 	struct player_t;
+
 	struct skull_t;
+	struct ladder_t;
+
 	struct skeleton_t;
 	struct wraith_t;
-	struct ladder_t;
 	struct adventurer_t;
 	struct paladin_t;
 	struct priest_t;
-
-#define ALL_ENTITIES \
-		player_t, \
-		skull_t, \
-		skeleton_t, \
-		wraith_t, \
-		ladder_t, \
-		adventurer_t, \
-		paladin_t, \
-		priest_t
 
 #define ALL_NPCS \
 		skeleton_t, \
@@ -34,26 +26,21 @@ namespace necrowarp {
 		paladin_t, \
 		priest_t
 
-#define ALL_NON_PLAYER \
-		skull_t, \
-		skeleton_t, \
-		wraith_t, \
-		ladder_t, \
-		adventurer_t, \
-		paladin_t, \
-		priest_t
+#define ALL_ANIMATE \
+		player_t, \
+		ALL_NPCS
 
 #define ALL_INANIMATE \
 		skull_t, \
-		ladder_t, \
+		ladder_t
 
-#define ALL_ANIMATE \
-		player_t, \
-		skeleton_t, \
-		wraith_t, \
-		adventurer_t, \
-		paladin_t, \
-		priest_t
+#define ALL_NON_PLAYER \
+		ALL_NPCS, \
+		ALL_INANIMATE
+
+#define ALL_ENTITIES \
+		ALL_ANIMATE, \
+		ALL_INANIMATE
 
 	enum struct entity_type_t : u8 {
 		None = 0,
@@ -136,10 +123,6 @@ namespace necrowarp {
 
 	template<typename T> constexpr bool is_evil_entity_v = is_evil_entity<T>::value;
 
-	template<> struct is_evil_entity<player_t> {
-		static constexpr bool value = true;
-	};
-
 	template<> struct is_evil_entity<skeleton_t> {
 		static constexpr bool value = true;
 	};
@@ -147,6 +130,64 @@ namespace necrowarp {
 	template<> struct is_evil_entity<wraith_t> {
 		static constexpr bool value = true;
 	};
+
+	template<typename T> struct is_npc {
+		static constexpr bool value = false;
+	};
+
+	template<typename T> constexpr bool is_npc_v = is_npc<T>::value;
+
+	template<typename T> struct is_animate {
+		static constexpr bool value = false;
+	};
+
+	template<typename T> constexpr bool is_animate_v = is_animate<T>::value;
+
+	template<> struct is_animate<skeleton_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_animate<wraith_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_animate<adventurer_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_animate<paladin_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_animate<priest_t> {
+		static constexpr bool value = true;
+	};
+
+	template<typename T> struct is_inanimate {
+		static constexpr bool value = false;
+	};
+
+	template<typename T> constexpr bool is_inanimate_v = is_inanimate<T>::value;
+
+	template<> struct is_inanimate<skull_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_inanimate<ladder_t> {
+		static constexpr bool value = true;
+	};
+
+	template<typename T> struct is_non_player {
+		static constexpr bool value = false;
+	};
+
+	template<typename T> constexpr bool is_non_player_v = is_non_player<T>::value;
+
+	template<typename T> struct is_player {
+		static constexpr bool value = false;
+	};
+
+	template<typename T> constexpr bool is_player_v = is_player<T>::value;
 
 	enum struct command_type_t : u8 {
 		None = 0,

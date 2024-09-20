@@ -1,20 +1,18 @@
 #pragma once
 
-#include "necrowarp/entities/entity.hpp"
 #include <necrowarp/entities.hpp>
 
 #include <cstddef>
 #include <type_traits>
-#include <unordered_set>
+
+#include <bleak/sparse.hpp>
 
 namespace necrowarp {
 	using namespace bleak;
 
 	static inline player_t player{};
 
-	template<typename T> static inline std::unordered_set<T, typename T::hasher, typename T::comparator> entity_storage{};
-
-	std::unordered_set<wraith_t, wraith_t::hasher, wraith_t::comparator> wraiths{};
+	template<typename T> static inline sparse_t<T> entity_storage{};
 
 	template<typename... EntityTypes>
 		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
@@ -37,6 +35,10 @@ namespace necrowarp {
 	inline entity_type_t entity_registry_t::at(cref<offset_t> position) const noexcept {
 		if (player.position == position) {
 			return entity_type_t::Player;
+		}
+		
+		if (entity_storage<skull_t>.contains(position)) {
+			return entity_type_t::Skull;
 		} else if (entity_storage<skeleton_t>.contains(position)) {
 			return entity_type_t::Skeleton;
 		} else if (entity_storage<wraith_t>.contains(position)) {
@@ -47,13 +49,11 @@ namespace necrowarp {
 			return entity_type_t::Paladin;
 		} else if (entity_storage<priest_t>.contains(position)) {
 			return entity_type_t::Priest;
-		} else if (entity_storage<skull_t>.contains(position)) {
-			return entity_type_t::Skull;
 		} else if (entity_storage<ladder_t>.contains(position)) {
 			return entity_type_t::Ladder;
-		} else {
-			return entity_type_t::None;
 		}
+		
+		return entity_type_t::None;
 	}
 
 	template<typename T>
@@ -68,13 +68,7 @@ namespace necrowarp {
 
 			return &player;
 		} else {
-			cauto iter{ entity_storage<T>.find(position) };
-
-			if (iter == entity_storage<T>.end()) {
-				return nullptr;
-			}
-
-			return const_cast<ptr<T>>(deref_addr_of<T>(iter));
+			return entity_storage<T>[position];
 		}
 	}
 
@@ -89,15 +83,9 @@ namespace necrowarp {
 			}
 
 			return &player;
+		} else {
+			return entity_storage<T>[position];
 		}
-
-		cauto iter{ entity_storage<T>.find(position) };
-
-		if (iter == entity_storage<T>.end()) {
-			return nullptr;
-		}
-
-		return deref_addr_of<T>(iter);
 	}
 
 	template<typename... EntityTypes>
@@ -138,14 +126,15 @@ namespace necrowarp {
 		if (entity_registry.contains(entity.position)) {
 			return false;
 		}
-
-		cauto [iter, inserted]{ entity_storage<T>.emplace(std::move(entity)) };
+		
+		const offset_t position{ entity.position };
+		const bool inserted{ entity_storage<T>.add(std::move(entity)) };
 
 		if (inserted) {
 			if constexpr (is_evil_entity<T>::value) {
-				good_goal_map += iter->position;
+				good_goal_map += position;
 			} else if constexpr (is_good_entity<T>::value) {
-				evil_goal_map += iter->position;
+				evil_goal_map += position;
 			}
 		}
 
@@ -157,17 +146,18 @@ namespace necrowarp {
 	inline bool entity_registry_t::add(rval<T> entity) noexcept {
 		if constexpr (!Force) {
 			if (entity_registry.contains(entity.position)) {
-			return false;
+				return false;
 			}
-		}		
-
-		cauto [iter, inserted]{ entity_storage<T>.emplace(std::move(entity)) };
+		}
+		
+		const offset_t position{ entity.position };
+		const bool inserted{ entity_storage<T>.add(std::move(entity)) };
 
 		if (inserted) {
 			if constexpr (is_evil_entity<T>::value) {
-				good_goal_map += iter->position;
+				good_goal_map += position;
 			} else if constexpr (is_good_entity<T>::value) {
-				evil_goal_map += iter->position;
+				evil_goal_map += position;
 			}
 		}
 
@@ -183,14 +173,10 @@ namespace necrowarp {
 			}
 
 			using entity_type = typename to_entity_type<EntityType>::type;
-
-			cauto iter{ entity_storage<entity_type>.find(position) };
-
-			if (iter == entity_storage<entity_type>.end()) {
+			
+			if (!entity_storage<entity_type>.remove(position)) {
 				return false;
 			}
-			
-			entity_storage<entity_type>.erase(iter);
 			
 			if constexpr (is_evil_entity<entity_type>::value) {
 				good_goal_map -= position;
@@ -259,18 +245,10 @@ namespace necrowarp {
 		}
 
 		using entity_type = typename to_entity_type<EntityType>::type;
-
-		cauto entity{ entity_storage<entity_type>.find(current) };
-
-		if (entity == entity_storage<entity_type>.end()) {
+		
+		if (!entity_storage<entity_type>.move(current, target)) {
 			return false;
 		}
-
-		rvauto node{ entity_storage<entity_type>.extract(entity) };
-
-		node.value().position = target;
-
-		entity_storage<entity_type>.insert(std::move(node));
 
 		if constexpr (is_evil_entity<entity_type>::value) {
 			good_goal_map.update(current, target);
@@ -284,17 +262,15 @@ namespace necrowarp {
 	template<typename... EntityTypes>
 		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
 	inline void entity_registry_t::update(ref<std::queue<entity_command_t>> commands) noexcept {
-		auto process_entities{ [&commands](crauto entities) {
-			for (crauto entity : entities) {
-				commands.push(entity.think());
+		auto process_entities{
+			[&commands](crauto entities) {
+				for (crauto entity : entities) {
+					commands.push(entity.think());
+				}
+
+				entity_registry.process_commands(commands);
 			}
-
-			entity_registry.process_commands(commands);
-
-			good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
-
-			evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
-		} };
+		};
 
 		(process_entities(entity_storage<EntityTypes>), ...);
 	}
@@ -309,6 +285,10 @@ namespace necrowarp {
 		std::queue<entity_command_t> commands{};
 
 		update<ALL_NPCS>(commands);
+
+		good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+
+		evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 	}
 
 	inline bool entity_registry_t::is_command_valid(cref<entity_command_t> command) const noexcept {
@@ -325,32 +305,36 @@ namespace necrowarp {
 		const entity_type_t source_type{ entity_registry.at(source_position) };
 
 		switch (source_type) {
-		case entity_type_t::None:
-		case entity_type_t::Skull:
-			return false;
-		default:
-			break;
-		}
-
-		if (source_type != entity_type_t::Player) {
-			switch (command.type) {
-			case command_type_t::Consume:
-			case command_type_t::RandomWarp:
-			case command_type_t::TargetWarp:
-			case command_type_t::ConsumeWarp:
+			case entity_type_t::None:
+			case entity_type_t::Skull: {
 				return false;
-			default:
+			} default: {
 				break;
 			}
 		}
 
+		if (source_type != entity_type_t::Player) {
+			switch (command.type) {
+				case command_type_t::Consume:
+				case command_type_t::RandomWarp:
+				case command_type_t::TargetWarp:
+				case command_type_t::ConsumeWarp: {
+					return false;
+				} default: {
+					break;
+				}
+			}
+		}
+
 		switch (command.type) {
-		case command_type_t::RandomWarp:
-		case command_type_t::SummonWraith:
-		case command_type_t::GrandSummoning:
-			return true;
-		default:
-			break;
+			case command_type_t::RandomWarp:
+			case command_type_t::SummonWraith:
+			case command_type_t::GrandSummoning: {
+				return true;
+			}
+			default: {
+				break;
+			}
 		}
 
 		const offset_t target_position{ command.target.value() };
@@ -362,23 +346,24 @@ namespace necrowarp {
 		const entity_type_t target_type{ entity_registry.at(target_position) };
 
 		switch (command.type) {
-		case command_type_t::Move:
-		case command_type_t::TargetWarp:
-			if (entity_registry.contains(target_position) || target_type != entity_type_t::None) {
-				return false;
-			}
+			case command_type_t::Move:
+			case command_type_t::TargetWarp: {
+				if (entity_registry.contains(target_position) || target_type != entity_type_t::None) {
+					return false;
+				}
 
-			break;
-		case command_type_t::Clash:
-		case command_type_t::Consume:
-		case command_type_t::ConsumeWarp:
-			if (!entity_registry.contains(target_position) || target_type == entity_type_t::None) {
-				return false;
-			}
+				break;
+			} case command_type_t::Clash:
+			case command_type_t::Consume:
+			case command_type_t::ConsumeWarp: {
+				if (!entity_registry.contains(target_position) || target_type == entity_type_t::None) {
+					return false;
+				}
 
-			break;
-		default:
-			break;
+				break;
+			} default: {
+				break;
+			}
 		}
 
 		return true;
@@ -430,7 +415,7 @@ namespace necrowarp {
 				const bool is_fresh{ entity_registry.at<skull_t>(target_position)->fresh };
 
 				entity_registry.remove<entity_type_t::Skull>(target_position);
-				entity_registry.add<skeleton_t>(skeleton_t{ target_position, !is_fresh });
+				entity_registry.add(skeleton_t{ target_position, !is_fresh });
 
 				if (is_fresh) {
 					player.receive_skull_boon();
@@ -499,17 +484,17 @@ namespace necrowarp {
 				return true;
 			}
 
-			entity_registry.add<skull_t>(skull_t{ target_position, false });
+			entity_registry.add(skull_t{ target_position, false });
 
 			return true;
 		} else if constexpr (Victim == entity_type_t::Wraith) {
 			entity_registry.remove<Victim>(target_position);
-			entity_registry.add<skull_t>(skull_t{ target_position, false });
+			entity_registry.add(skull_t{ target_position, false });
 
 			return true;
 		} else {
 			entity_registry.remove<Victim>(target_position);
-			entity_registry.add<skull_t>(skull_t{ target_position, true });
+			entity_registry.add(skull_t{ target_position, true });
 
 			player.receive_death_boon<Victim>();
 
@@ -677,7 +662,7 @@ namespace necrowarp {
 			return;
 		}
 
-		entity_registry.add<wraith_t>(wraith_t{ command.source.value(), wraith_health });
+		entity_registry.add(wraith_t{ command.source.value(), wraith_health });
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::GrandSummoning>(cref<entity_command_t> command) noexcept {
@@ -720,7 +705,7 @@ namespace necrowarp {
 			}
 
 			entity_registry.remove<entity_type_t::Skull>(target_position);
-			entity_registry.add<skeleton_t>(skeleton_t{ target_position, !is_fresh });
+			entity_registry.add(skeleton_t{ target_position, !is_fresh });
 
 			player.pay_target_warp_cost(is_fresh ? player_t::SkullBoon : 0);
 
@@ -850,14 +835,16 @@ namespace necrowarp {
 	}
 
 	inline void entity_registry_t::draw() const noexcept {
-		player.draw();
+		draw<ALL_INANIMATE>();
+		draw<ALL_NPCS>();
 
-		draw<ALL_NON_PLAYER>();
+		player.draw();
 	}
 
 	inline void entity_registry_t::draw(cref<camera_t> camera) const noexcept {
-		player.draw(camera);
+		draw<ALL_INANIMATE>(camera);
+		draw<ALL_NPCS>(camera);
 
-		draw<ALL_NON_PLAYER>(camera);
+		player.draw(camera);
 	}
 } // namespace necrowarp

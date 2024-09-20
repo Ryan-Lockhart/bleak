@@ -4,12 +4,12 @@
 
 #include <cmath>
 #include <limits>
+#include <type_traits>
 
 #include <bleak/cardinal.hpp>
 #include <bleak/concepts.hpp>
 #include <bleak/lut.hpp>
 #include <bleak/offset.hpp>
-#include <type_traits>
 
 namespace bleak {
 	template<typename T>

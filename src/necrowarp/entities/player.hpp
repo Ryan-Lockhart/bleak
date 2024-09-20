@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bleak/offset.hpp"
+#include "necrowarp/globals.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <necrowarp/game_state.hpp>
@@ -54,9 +55,9 @@ namespace necrowarp {
 
 		inline bool has_armor() const noexcept { return armor > 0; }
 
-		inline i8 max_energy() const noexcept { return MinimumEnergy + minion_kills / 16; }
+		inline i8 max_energy() const noexcept { return MinimumEnergy + minion_kills / globals::KillsPerEnergySlot; }
 
-		inline i8 max_armor() const noexcept { return MinimumArmor + player_kills / 8; }
+		inline i8 max_armor() const noexcept { return MinimumArmor + player_kills / globals::KillsPerArmorSlot; }
 
 		inline bool can_survive(i8 damage_amount) const noexcept { return armor >= damage_amount; }
 
@@ -163,5 +164,17 @@ namespace necrowarp {
 
 	template<> struct to_entity_type<entity_type_t::Player> {
 		using type = player_t;
+	};
+
+	template<> struct is_evil_entity<player_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_animate<player_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_player<player_t> {
+		static constexpr bool value = true;
 	};
 } // namespace necrowarp

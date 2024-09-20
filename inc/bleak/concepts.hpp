@@ -216,8 +216,10 @@ namespace bleak {
 
 	template<typename T>
 	concept HasPosition = requires(T t) {
-		{ t.position } -> std::convertible_to<offset_t>;
-		{ t.get_position() } -> std::convertible_to<offset_t>;
+		requires(
+			requires{ { t.position } -> std::convertible_to<offset_t>; } ||
+			requires{ { t.get_position() } -> std::convertible_to<offset_t>; }
+		);
 	};
 
 	template<typename T> struct has_position {
@@ -228,8 +230,6 @@ namespace bleak {
 
 	template<typename T>
 	concept HashableByPosition = requires(T t) {
-		{ t.position } -> std::convertible_to<offset_t>;
-		{ t.get_position() } -> std::convertible_to<offset_t>;
 		{ T::hasher::offset::operator()(t) } -> std::convertible_to<usize>;
 	};
 

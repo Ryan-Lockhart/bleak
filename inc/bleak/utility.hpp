@@ -48,17 +48,9 @@ namespace bleak {
 
 	template<Numeric N> constexpr inline bool between(N value, N min, N max) { return value >= min && value <= max; }
 
-	template<typename T> constexpr ref<T> deref(ptr<T> pointer) { return *pointer; }
+	template<typename T> ptr<T> cast_away(cptr<T> pointer) { return const_cast<ptr<T>>(pointer); }
 
-	template<typename T> constexpr cref<T> deref(cptr<T> pointer) { return *pointer; }
-
-	template<typename T> constexpr ptr<T> addr_of(ref<T> pointer) { return *pointer; }
-
-	template<typename T> constexpr cptr<T> addr_of(cref<T> pointer) { return *pointer; }
-
-	template<typename T, typename U> constexpr ptr<T> deref_addr_of(ref<U> iterator) { return &(*iterator); }
-
-	template<typename T, typename U> constexpr cptr<T> deref_addr_of(cref<U> iterator) { return &(*iterator); }
+	template<typename T> ref<T> cast_away(cref<T> reference) { return const_cast<ref<T>>(reference); }
 
 	template<usize Length, usize Start, usize End>
 		requires(End - Start + 1 == Length)

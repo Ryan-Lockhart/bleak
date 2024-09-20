@@ -2,7 +2,6 @@
 
 #include <bleak/typedef.hpp>
 
-#include <limits>
 #include <optional>
 #include <queue>
 #include <unordered_set>
@@ -22,7 +21,7 @@ namespace bleak {
 
 	  public:
 		static constexpr D goal_value{ 0 };
-		static constexpr D obstacle_value{ std::numeric_limits<D>::max() };
+		static constexpr D obstacle_value{ ZoneSize.area() };
 
 		constexpr field_t() noexcept : distances{}, goals{} { reset<zone_region_t::All>(); }
 

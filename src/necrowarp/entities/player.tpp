@@ -1,6 +1,5 @@
 #pragma once
 
-#include "necrowarp/entities/entity.hpp"
 #include <necrowarp/entities/adventurer.hpp>
 #include <necrowarp/entities/paladin.hpp>
 #include <necrowarp/entities/player.hpp>
@@ -46,18 +45,17 @@ namespace necrowarp {
 		const entity_type_t type{ entity_registry.at(position) };
 		
 		switch (type) {
-		case entity_type_t::Adventurer:
-		case entity_type_t::Paladin:
-		case entity_type_t::Priest:
-			return command_type_t::Clash;
-		
-		case entity_type_t::Skull:
-		case entity_type_t::Skeleton:
-		case entity_type_t::Wraith:
-			return command_type_t::Consume;
-
-		default:
-			return command_type_t::None;
+			case entity_type_t::Adventurer:
+			case entity_type_t::Paladin:
+			case entity_type_t::Priest: {
+				return command_type_t::Clash;			
+			} case entity_type_t::Skull:
+			  case entity_type_t::Skeleton:
+			  case entity_type_t::Wraith: {
+				return command_type_t::Consume;
+			} default: {
+				return command_type_t::None;
+			}
 		}
 	}
 } // namespace necrowarp

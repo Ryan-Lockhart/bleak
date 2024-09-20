@@ -51,18 +51,21 @@ namespace necrowarp {
 		constexpr extent_t CameraExtent{ MapSize - globals::GameGridSize };
 		constexpr offset_t::scalar_t CameraSpeed{ 2 };
 
-		constexpr f64 FillPercent{ 0.45 };
-		constexpr u32 AutomotaIterations{ 10 };
+		constexpr f64 FillPercent{ 0.425 };
+		constexpr u32 AutomotaIterations{ 128 };
 		constexpr u32 AutomotaThreshold{ 4 };
 
 		constexpr u32 ViewDistance{ 8 };
 		constexpr f64 ViewSpan{ 135.0 };
 
-		constexpr u32 NumberOfLadders{ 3 };
+		constexpr u32 NumberOfLadders{ 4 };
 
-		constexpr u32 StartingAdventurers{ 5 };
-		constexpr u32 StartingSkulls{ 10 };
+		constexpr u32 StartingAdventurers{ 4 };
+		constexpr u32 StartingSkulls{ 8 };
 
-		constexpr bool UseSimpleGraphics{ false };
+		constexpr u32 KillsPerPopulation{ 4 };
+
+		constexpr u32 KillsPerEnergySlot{ 16 };
+		constexpr u32 KillsPerArmorSlot{ 8 };
 	} // namespace globals
 } // namespace necrowarp
