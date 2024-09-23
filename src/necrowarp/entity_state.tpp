@@ -1,5 +1,8 @@
 #pragma once
 
+#include "bleak/offset.hpp"
+#include "necrowarp/entities/entity.hpp"
+#include "necrowarp/entity_state.hpp"
 #include <necrowarp/entities.hpp>
 
 #include <cstddef>
@@ -118,6 +121,12 @@ namespace necrowarp {
 		using entity_type = typename to_entity_type<EntityType>::type;
 
 		return entity_storage<entity_type>.empty();
+	}
+
+	template<typename... EntityTypes>
+		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...)&& !(is_entity_type<EntityTypes, entity_type_t::None>::value && ...))
+	inline bool entity_registry_t::empty() const noexcept {
+		return (entity_storage<EntityTypes>.empty() && ...);
 	}
 
 	template<typename T>
@@ -326,6 +335,17 @@ namespace necrowarp {
 			}
 		}
 
+		if (source_type != entity_type_t::Priest) {
+			switch (command.type) {
+				case command_type_t::Exorcise:
+				case command_type_t::Resurrect: {
+					return false;
+				} default: {
+					break;
+				}
+			}
+		}
+
 		switch (command.type) {
 			case command_type_t::RandomWarp:
 			case command_type_t::SummonWraith:
@@ -464,7 +484,7 @@ namespace necrowarp {
 			return false;
 		}
 
-		if constexpr (Victim != entity_type_t::Skeleton && Victim != entity_type_t::Adventurer) {
+		if constexpr (Victim != entity_type_t::Skeleton && Victim != entity_type_t::Adventurer && Victim != entity_type_t::Priest) {
 			if (victim->can_survive(damage_amount)) {
 				victim->receive_damage(damage_amount);
 
@@ -764,6 +784,96 @@ namespace necrowarp {
 		player.pay_random_warp_cost();
 
 		random_warp(command.source.value());
+	}
+
+	template<> void entity_registry_t::process_command<command_type_t::Exorcise>(cref<entity_command_t> command) noexcept {
+		const offset_t source_position{ command.source.value() };
+
+		if (!entity_registry.contains<entity_type_t::Priest>(source_position)) {
+			return;
+		}
+
+		const offset_t target_position{ command.target.value() };
+
+		if (!entity_registry.contains<entity_type_t::Skull>(target_position)) {
+			return;
+		}
+
+		cauto skull{ entity_registry.at<skull_t>(target_position) };
+
+		if (skull == nullptr) {
+			return;
+		}
+
+		const bool is_fresh{ skull->fresh };
+
+		auto priest{ entity_registry.at<priest_t>(source_position) };
+
+		if (priest == nullptr) {
+			return;
+		}
+
+		entity_registry.remove<entity_type_t::Skull>(target_position);
+
+		priest->receive_exorcism_boon(is_fresh);
+	}
+
+	template<> void entity_registry_t::process_command<command_type_t::Resurrect>(cref<entity_command_t> command) noexcept {
+		const offset_t source_position{ command.source.value() };
+
+		if (!entity_registry.contains<entity_type_t::Priest>(source_position)) {
+			return;
+		}
+
+		const offset_t target_position{ command.target.value() };
+
+		if (!entity_registry.contains<entity_type_t::Skull>(target_position)) {
+			return;
+		}
+
+		cauto skull{ entity_registry.at<skull_t>(target_position) };
+
+		if (skull == nullptr || !skull->fresh) {
+			return;
+		}
+
+		auto priest{ entity_registry.at<priest_t>(source_position) };
+
+		if (priest == nullptr || !priest->can_resurrect()) {
+			return;
+		}
+
+		entity_registry.remove<entity_type_t::Skull>(target_position);
+
+		entity_registry.add(adventurer_t{ target_position });
+
+		priest->pay_resurrect_cost();
+	}
+
+	template<> void entity_registry_t::process_command<command_type_t::Ordain>(cref<entity_command_t> command) noexcept {
+		const offset_t source_position{ command.source.value() };
+
+		if (!entity_registry.contains<entity_type_t::Priest>(source_position)) {
+			return;
+		}
+
+		const offset_t target_position{ command.target.value() };
+
+		if (!entity_registry.contains<entity_type_t::Adventurer>(target_position)) {
+			return;
+		}
+
+		auto priest{ entity_registry.at<priest_t>(source_position) };
+
+		if (priest == nullptr || !priest->can_ordain()) {
+			return;
+		}
+
+		entity_registry.remove<entity_type_t::Adventurer>(target_position);
+
+		entity_registry.add(paladin_t{ target_position });
+
+		priest->pay_ordain_cost();
 	}
 
 	inline void entity_registry_t::process_command(cref<entity_command_t> command) noexcept {

@@ -30,6 +30,10 @@ namespace necrowarp {
 
 		template<entity_type_t EntityType> inline bool empty() const noexcept;
 
+		template<typename... EntityTypes>
+			requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...)&& !(is_entity_type<EntityTypes, entity_type_t::None>::value && ...))
+		inline bool empty() const noexcept;
+
 		inline bool contains(cref<offset_t> position) const noexcept;
 
 		template<typename... EntityTypes>

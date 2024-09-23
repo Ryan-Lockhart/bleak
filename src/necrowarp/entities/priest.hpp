@@ -11,26 +11,44 @@ namespace necrowarp {
 		offset_t position;
 		
 	private:
-		i8 health;
+		i8 energy;
 
-		inline void set_health(i8 value) noexcept { health = clamp<i8>(value, 0, max_health()); }
+		inline void set_energy(i8 value) noexcept { energy = clamp<i8>(value, 0, max_energy()); }
 
 	public:
-		static constexpr i8 MaximumHealth{ 4 };
-		static constexpr i8 MaximumDamage{ 2 };
-		static constexpr i8 DeathBoon{ 4 };
+		static constexpr i8 MaximumHealth{ 1 };
+		static constexpr i8 MaximumEnergy{ 2 };
+		static constexpr i8 MaximumDamage{ 1 };
 
-		inline priest_t(cref<offset_t> position) noexcept : position{ position }, health{ MaximumHealth } {}
-		
-		inline i8 get_health() const noexcept { return health; }
+		static constexpr i8 DeathBoon{ 2 };
+		static constexpr i8 ExorcismBoon{ 1 };
 
-		inline bool has_health() const noexcept { return health > 0; }
+		static constexpr i8 StartingEnergy{ 1 };
 
-		constexpr i8 max_health() const noexcept { return MaximumHealth; }
+		static constexpr i8 ResurrectCost{ 1 };
+		static constexpr i8 OrdainCost{ 2 };
 
-		inline bool can_survive(i8 damage_amount) const noexcept { return health > damage_amount; }
+		inline priest_t(cref<offset_t> position) noexcept : position{ position }, energy{ StartingEnergy } {}
 
-		inline void receive_damage(i8 damage_amount) noexcept { set_health(health - damage_amount); }
+		inline i8 get_energy() const noexcept { return energy; }
+
+		inline bool has_energy() const noexcept { return energy > 0; }
+
+		inline i8 max_energy() const noexcept { return MaximumEnergy; }
+
+		inline bool can_survive(i8 damage_amount) const noexcept { return damage_amount <= 0; }
+
+		inline bool can_resurrect() const noexcept { return energy >= ResurrectCost; }
+
+		inline bool can_ordain() const noexcept { return energy >= OrdainCost; }
+
+		inline void pay_resurrect_cost() noexcept { set_energy(energy - ResurrectCost); }
+
+		inline void pay_ordain_cost() noexcept { set_energy(energy - OrdainCost); }
+
+		inline void receive_exorcism_boon() noexcept { set_energy(energy + ExorcismBoon); }
+
+		inline void receive_exorcism_boon(bool is_fresh) noexcept { set_energy(energy + ExorcismBoon * is_fresh ? 2 : 1); }
 
 		inline entity_command_t think() const noexcept;
 

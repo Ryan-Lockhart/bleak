@@ -19,12 +19,18 @@ namespace necrowarp {
 	struct paladin_t;
 	struct priest_t;
 
-#define ALL_NPCS \
+#define ALL_EVIL_NPCS \
 		skeleton_t, \
-		wraith_t, \
+		wraith_t
+
+#define ALL_GOOD_NPCS \
 		adventurer_t, \
 		paladin_t, \
 		priest_t
+
+#define ALL_NPCS \
+		ALL_EVIL_NPCS, \
+		ALL_GOOD_NPCS
 
 #define ALL_ANIMATE \
 		player_t, \
@@ -193,12 +199,15 @@ namespace necrowarp {
 		None = 0,
 		Move,
 		Consume,
-		Clash,		
-		SummonWraith,
-		GrandSummoning,
+		Clash,
 		RandomWarp,
 		TargetWarp,
 		ConsumeWarp,
+		SummonWraith,
+		GrandSummoning,
+		Exorcise,
+		Resurrect,
+		Ordain
 	};
 
 	static constexpr cstr to_string(cref<command_type_t> command) noexcept {
@@ -211,16 +220,22 @@ namespace necrowarp {
 			return "consume";
 		case command_type_t::Clash:
 			return "clash";
-		case command_type_t::SummonWraith:
-			return "summon wraith";
-		case command_type_t::GrandSummoning:
-			return "grand summoning";
 		case command_type_t::RandomWarp:
 			return "random warp";
 		case command_type_t::TargetWarp:
 			return "target warp";
 		case command_type_t::ConsumeWarp:
 			return "consume warp";
+		case command_type_t::SummonWraith:
+			return "summon wraith";
+		case command_type_t::GrandSummoning:
+			return "grand summoning";
+		case command_type_t::Exorcise:
+			return "exorcise";
+		case command_type_t::Resurrect:
+			return "resurrect";
+		case command_type_t::Ordain:
+			return "ordain";
 		}
 	}
 

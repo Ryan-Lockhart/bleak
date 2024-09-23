@@ -63,6 +63,13 @@ namespace necrowarp {
 		constexpr u32 StartingAdventurers{ 4 };
 		constexpr u32 StartingSkulls{ 8 };
 
+		constexpr u32 SpawnDistributionLow{ 0 };
+		constexpr u32 SpawnDistributionHigh{ 9 };
+
+		constexpr u32 SmallWaveSize{ 8 };
+		constexpr u32 MediumWaveSize{ 16 };
+		constexpr u32 LargeWaveSize{ 32 };
+
 		constexpr u32 KillsPerPopulation{ 4 };
 
 		constexpr u32 KillsPerEnergySlot{ 16 };
