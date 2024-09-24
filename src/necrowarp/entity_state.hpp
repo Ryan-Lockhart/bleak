@@ -28,11 +28,13 @@ namespace necrowarp {
 
 		template<entity_type_t EntityType> inline usize count() const noexcept;
 
-		template<entity_type_t EntityType> inline bool empty() const noexcept;
+		inline bool empty() const noexcept { return false; }
 
 		template<typename... EntityTypes>
-			requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...)&& !(is_entity_type<EntityTypes, entity_type_t::None>::value && ...))
+			requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::None>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
 		inline bool empty() const noexcept;
+
+		template<entity_type_t EntityType> inline bool empty() const noexcept;
 
 		inline bool contains(cref<offset_t> position) const noexcept;
 
@@ -42,11 +44,7 @@ namespace necrowarp {
 
 		template<entity_type_t EntityType> inline bool contains(cref<offset_t> position) const noexcept;
 
-		template<typename T>
-			requires is_entity<T>::value && (!is_entity_type<T, entity_type_t::Player>::value)
-		inline bool add(rval<T> entity) noexcept;
-
-		template<typename T, bool Force>
+		template<bool Force = false, typename T>
 			requires is_entity<T>::value && (!is_entity_type<T, entity_type_t::Player>::value)
 		inline bool add(rval<T> entity) noexcept;
 
@@ -79,6 +77,18 @@ namespace necrowarp {
 		template<typename... EntityTypes>
 			requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
 		inline void update(ref<std::queue<entity_command_t>> commands) noexcept;
+
+		inline void recalculate_goal_maps() noexcept;
+
+		template<typename... EntityTypes>
+			requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::None>::value && ...))
+		inline void recalculate_goal_maps() noexcept;
+
+		inline void recalculate_good_goal_map() noexcept;
+
+		inline void recalculate_evil_goal_map() noexcept;
+
+		inline void recalculate_alignment_goal_maps() noexcept;
 
 		template<typename... EntityTypes>
 			requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "necrowarp/entities/entity.hpp"
+#include "necrowarp/entities/priest.hpp"
 #include <bleak.hpp>
 
 #include <cstdlib>
@@ -225,7 +226,7 @@ namespace necrowarp {
 			}
 
 			player.position = player_pos.value();
-			good_goal_map += player_pos.value();
+			good_goal_map.add(player_pos.value());
 
 			entity_registry.spawn<ladder_t>(globals::NumberOfLadders);
 			entity_registry.spawn<skull_t>(globals::StartingSkulls);
@@ -297,17 +298,20 @@ namespace necrowarp {
 						break;
 					}
 
+					entity_registry.add<true>(priest_t{ spawn_pos.value() });
+					goto decrement;
+
 					if (wave_size >= globals::LargeWaveSize) {
 						static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
 
 						const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
 
 						if (spawn_chance < 5) {
-							entity_registry.add<adventurer_t, true>(spawn_pos.value());
+							entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 						} else if (spawn_chance < 8) {
-							entity_registry.add<paladin_t, true>(spawn_pos.value());
+							entity_registry.add<true>(paladin_t{ spawn_pos.value() });
 						} else {
-							entity_registry.add<priest_t, true>(spawn_pos.value());
+							entity_registry.add<true>(priest_t{ spawn_pos.value() });
 						}
 					} else if (wave_size >= globals::MediumWaveSize) {
 						static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
@@ -315,11 +319,11 @@ namespace necrowarp {
 						const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
 
 						if (spawn_chance < 7) {
-							entity_registry.add<adventurer_t, true>(spawn_pos.value());
+							entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 						} else if (spawn_chance < 9) {
-							entity_registry.add<paladin_t, true>(spawn_pos.value());
+							entity_registry.add<true>(paladin_t{ spawn_pos.value() });
 						} else {
-							entity_registry.add<priest_t, true>(spawn_pos.value());
+							entity_registry.add<true>(priest_t{ spawn_pos.value() });
 						}
 					} else if (wave_size >= globals::SmallWaveSize) {
 						static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
@@ -327,14 +331,15 @@ namespace necrowarp {
 						const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
 
 						if (spawn_chance < 9) {
-							entity_registry.add<adventurer_t, true>(spawn_pos.value());
+							entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 						} else {
-							entity_registry.add<paladin_t, true>(spawn_pos.value());
+							entity_registry.add<true>(paladin_t{ spawn_pos.value() });
 						}
 					} else {
-						entity_registry.add<adventurer_t, true>(spawn_pos.value());
+						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 					}
-
+					
+				decrement:
 					--spawns_remaining;
 				}
 

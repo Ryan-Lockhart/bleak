@@ -1,6 +1,9 @@
 #pragma once
 
+#include <necrowarp/entities/paladin.hpp>
+
 #include <necrowarp/entity_state.hpp>
+#include <necrowarp/entity_state.tpp>
 
 namespace necrowarp {
 	inline entity_command_t paladin_t::think() const noexcept {

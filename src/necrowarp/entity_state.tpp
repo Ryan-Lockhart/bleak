@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/offset.hpp"
 #include "necrowarp/entities/entity.hpp"
 #include "necrowarp/entity_state.hpp"
 #include <necrowarp/entities.hpp>
@@ -16,6 +15,11 @@ namespace necrowarp {
 	static inline player_t player{};
 
 	template<typename T> static inline sparse_t<T> entity_storage{};
+
+	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> good_goal_map{};
+	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> evil_goal_map{};
+
+	template<typename T> static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> entity_goal_map{};
 
 	template<typename... EntityTypes>
 		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
@@ -110,6 +114,12 @@ namespace necrowarp {
 			return entity_storage<entity_type>.size();
 		}
 	}
+	
+	template<typename... EntityTypes>
+		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::None>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
+	inline bool entity_registry_t::empty() const noexcept {
+		return (entity_storage<EntityTypes>.empty() && ...);
+	}
 
 	template<entity_type_t EntityType> inline bool entity_registry_t::empty() const noexcept {
 		if constexpr (EntityType == entity_type_t::None) {
@@ -123,34 +133,7 @@ namespace necrowarp {
 		return entity_storage<entity_type>.empty();
 	}
 
-	template<typename... EntityTypes>
-		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...)&& !(is_entity_type<EntityTypes, entity_type_t::None>::value && ...))
-	inline bool entity_registry_t::empty() const noexcept {
-		return (entity_storage<EntityTypes>.empty() && ...);
-	}
-
-	template<typename T>
-		requires is_entity<T>::value && (!is_entity_type<T, entity_type_t::Player>::value)
-	inline bool entity_registry_t::add(rval<T> entity) noexcept {
-		if (entity_registry.contains(entity.position)) {
-			return false;
-		}
-		
-		const offset_t position{ entity.position };
-		const bool inserted{ entity_storage<T>.add(std::move(entity)) };
-
-		if (inserted) {
-			if constexpr (is_evil_entity<T>::value) {
-				good_goal_map += position;
-			} else if constexpr (is_good_entity<T>::value) {
-				evil_goal_map += position;
-			}
-		}
-
-		return inserted;
-	}
-
-	template<typename T, bool Force>
+	template<bool Force, typename T>
 		requires is_entity<T>::value && (!is_entity_type<T, entity_type_t::Player>::value)
 	inline bool entity_registry_t::add(rval<T> entity) noexcept {
 		if constexpr (!Force) {
@@ -164,10 +147,12 @@ namespace necrowarp {
 
 		if (inserted) {
 			if constexpr (is_evil_entity<T>::value) {
-				good_goal_map += position;
+				good_goal_map.add(position);
 			} else if constexpr (is_good_entity<T>::value) {
-				evil_goal_map += position;
+				evil_goal_map.add(position);
 			}
+
+			entity_goal_map<T>.add(position);
 		}
 
 		return inserted;
@@ -188,10 +173,12 @@ namespace necrowarp {
 			}
 			
 			if constexpr (is_evil_entity<entity_type>::value) {
-				good_goal_map -= position;
+				good_goal_map.remove(position);
 			} else if constexpr (is_good_entity<entity_type>::value) {
-				evil_goal_map -= position;
+				evil_goal_map.remove(position);
 			}
+
+			entity_goal_map<entity_type>.remove(position);
 
 			return true;
 		}
@@ -265,6 +252,8 @@ namespace necrowarp {
 			evil_goal_map.update(current, target);
 		}
 
+		entity_goal_map<entity_type>.update(current, target);
+
 		return true;
 	}
 
@@ -293,11 +282,36 @@ namespace necrowarp {
 
 		std::queue<entity_command_t> commands{};
 
+		recalculate_goal_maps();
+
 		update<ALL_NPCS>(commands);
 
-		good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+		recalculate_goal_maps();
+	}
 
+	inline void entity_registry_t::recalculate_goal_maps() noexcept {
+		recalculate_goal_maps<ALL_ENTITIES>();
+
+		recalculate_alignment_goal_maps();
+	}
+
+	template<typename... EntityTypes>
+		requires ((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::None>::value && ...))
+	inline void entity_registry_t::recalculate_goal_maps() noexcept {
+		(entity_goal_map<EntityTypes>.template recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry), ...);
+	}
+
+	inline void entity_registry_t::recalculate_good_goal_map() noexcept {
+		good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+	}
+
+	inline void entity_registry_t::recalculate_evil_goal_map() noexcept {
 		evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+	}
+
+	inline void entity_registry_t::recalculate_alignment_goal_maps() noexcept {
+		recalculate_good_goal_map();
+		recalculate_evil_goal_map();
 	}
 
 	inline bool entity_registry_t::is_command_valid(cref<entity_command_t> command) const noexcept {
@@ -374,8 +388,11 @@ namespace necrowarp {
 
 				break;
 			} case command_type_t::Clash:
-			case command_type_t::Consume:
-			case command_type_t::ConsumeWarp: {
+			  case command_type_t::Consume:
+			  case command_type_t::ConsumeWarp:
+			  case command_type_t::Exorcise:
+			  case command_type_t::Resurrect:
+			  case command_type_t::Ordain: {
 				if (!entity_registry.contains(target_position) || target_type == entity_type_t::None) {
 					return false;
 				}
@@ -882,32 +899,31 @@ namespace necrowarp {
 		}
 
 		switch (command.type) {
-		case command_type_t::Move: {
-			return process_command<command_type_t::Move>(command);
-		}
-		case command_type_t::Consume: {
-			return process_command<command_type_t::Consume>(command);
-		}
-		case command_type_t::Clash: {
-			return process_command<command_type_t::Clash>(command);
-		}
-		case command_type_t::SummonWraith: {
-			return process_command<command_type_t::SummonWraith>(command);
-		}
-		case command_type_t::GrandSummoning: {
-			return process_command<command_type_t::GrandSummoning>(command);
-		}
-		case command_type_t::ConsumeWarp: {
-			return process_command<command_type_t::ConsumeWarp>(command);
-		}
-		case command_type_t::TargetWarp: {
-			return process_command<command_type_t::TargetWarp>(command);
-		}
-		case command_type_t::RandomWarp: {
-			return process_command<command_type_t::RandomWarp>(command);
-		}
-		default:
-			return;
+			case command_type_t::Move: {
+				return process_command<command_type_t::Move>(command);
+			} case command_type_t::Consume: {
+				return process_command<command_type_t::Consume>(command);
+			} case command_type_t::Clash: {
+				return process_command<command_type_t::Clash>(command);
+			} case command_type_t::SummonWraith: {
+				return process_command<command_type_t::SummonWraith>(command);
+			} case command_type_t::GrandSummoning: {
+				return process_command<command_type_t::GrandSummoning>(command);
+			} case command_type_t::ConsumeWarp: {
+				return process_command<command_type_t::ConsumeWarp>(command);
+			} case command_type_t::TargetWarp: {
+				return process_command<command_type_t::TargetWarp>(command);
+			} case command_type_t::RandomWarp: {
+				return process_command<command_type_t::RandomWarp>(command);
+			} case command_type_t::Exorcise: {
+				return process_command<command_type_t::Exorcise>(command);
+			} case command_type_t::Resurrect: {
+				return process_command<command_type_t::Resurrect>(command);
+			} case command_type_t::Ordain: {
+				return process_command<command_type_t::Ordain>(command);
+			} default: {
+				return;
+			}
 		}
 	}
 

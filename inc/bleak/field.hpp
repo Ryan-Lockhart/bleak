@@ -54,7 +54,7 @@ namespace bleak {
 			return *this;
 		}
 
-		constexpr cref<D> operator[](cref<offset_t> position) const noexcept { return distances[position]; }
+		constexpr D at(cref<offset_t> position) const noexcept { return distances[position]; }
 
 		template<zone_region_t Region, typename T> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value) noexcept {
 			reset();
@@ -644,7 +644,7 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		constexpr bool operator+=(cref<offset_t> goal) noexcept {
+		constexpr bool add(cref<offset_t> goal) noexcept {
 			if (!distances.template within<zone_region_t::All>(goal)) {
 				return false;
 			}
@@ -652,8 +652,24 @@ namespace bleak {
 			return goals.insert(goal).second;
 		}
 
-		constexpr bool operator-=(cref<offset_t> goal) noexcept {
+		template<zone_region_t Region> constexpr bool add(cref<offset_t> goal) noexcept {
+			if (!distances.template within<Region>(goal)) {
+				return false;
+			}
+
+			return goals.insert(goal).second;
+		}
+
+		constexpr bool remove(cref<offset_t> goal) noexcept {
 			if (!distances.template within<zone_region_t::All>(goal)) {
+				return false;
+			}
+
+			return goals.erase(goal);
+		}
+
+		template<zone_region_t Region> constexpr bool remove(cref<offset_t> goal) noexcept {
+			if (!distances.template within<Region>(goal)) {
 				return false;
 			}
 
@@ -664,12 +680,36 @@ namespace bleak {
 			if (!distances.template within<zone_region_t::All>(from) || !distances.template within<zone_region_t::All>(to)) {
 				return false;
 			}
+			
+			cauto iter{ goals.find(from) };
 
-			if (goals.erase(from)) {
-				return goals.insert(to).second;
+			if (iter == goals.end()) {
+				return false;
 			}
 
-			return false;
+			auto node{ goals.extract(iter) };
+
+			node.value() = to;
+
+			return goals.emplace(std::move(node)).second;
+		}
+
+		template<zone_region_t Region> constexpr bool update(cref<offset_t> from, cref<offset_t> to) noexcept {
+			if (!distances.template within<Region>(from) || !distances.template within<Region>(to)) {
+				return false;
+			}
+			
+			cauto iter{ goals.find(from) };
+
+			if (iter == goals.end()) {
+				return false;
+			}
+
+			auto node{ goals.extract(iter) };
+
+			node.value() = to;
+
+			return goals.emplace(std::move(node)).second;
 		}
 	};
 } // namespace bleak

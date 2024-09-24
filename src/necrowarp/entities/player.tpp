@@ -1,9 +1,6 @@
 #pragma once
 
-#include <necrowarp/entities/adventurer.hpp>
-#include <necrowarp/entities/paladin.hpp>
 #include <necrowarp/entities/player.hpp>
-#include <necrowarp/entities/priest.hpp>
 
 #include <necrowarp/entity_state.hpp>
 #include <necrowarp/entity_state.tpp>
