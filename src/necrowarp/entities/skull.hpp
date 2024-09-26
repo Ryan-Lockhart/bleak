@@ -7,6 +7,24 @@
 namespace necrowarp {
 	using namespace bleak;
 
+	template<> struct is_entity<skull_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_entity_type<skull_t, entity_type_t::Skull> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct to_entity_type<entity_type_t::Skull> {
+		using type = skull_t;
+	};
+
+	template<> struct is_inanimate<skull_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> inline constexpr glyph_t entity_glyphs<skull_t>{ 0x43, colors::White };
+
 	struct skull_t {
 		offset_t position;
 		const bool fresh;
@@ -15,13 +33,13 @@ namespace necrowarp {
 
 		inline skull_t(cref<offset_t> position, bool fresh) noexcept : position{ position }, fresh{ fresh } {}
 
-		inline void draw() const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Skull], position); }
+		inline void draw() const noexcept { game_atlas.draw(entity_glyphs<skull_t>, position); }
 
-		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(fresh ? EntityGlyphs[entity_type_t::Skull] : AnimatedSkullGlyph, position + offset); }
+		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(fresh ? entity_glyphs<skull_t> : AnimatedSkullGlyph, position + offset); }
 
-		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(fresh ? EntityGlyphs[entity_type_t::Skull] : AnimatedSkullGlyph, position + camera.get_offset()); }
+		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(fresh ? entity_glyphs<skull_t> : AnimatedSkullGlyph, position + camera.get_offset()); }
 
-		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(fresh ? EntityGlyphs[entity_type_t::Skull] : AnimatedSkullGlyph, position + camera.get_offset() + offset); }
+		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(fresh ? entity_glyphs<skull_t> : AnimatedSkullGlyph, position + camera.get_offset() + offset); }
 
 		constexpr operator entity_type_t() const noexcept { return entity_type_t::Skull; }
 
@@ -46,17 +64,5 @@ namespace necrowarp {
 				static constexpr bool operator()(cref<offset_t> lhs, cref<skull_t> rhs) noexcept { return offset_t::hasher::operator()(lhs) == offset_t::hasher::operator()(rhs.position); }
 			};
 		};
-	};
-
-	template<> struct is_entity<skull_t> {
-		static constexpr bool value = true;
-	};
-
-	template<> struct is_entity_type<skull_t, entity_type_t::Skull> {
-		static constexpr bool value = true;
-	};
-
-	template<> struct to_entity_type<entity_type_t::Skull> {
-		using type = skull_t;
 	};
 } // namespace necrowarp

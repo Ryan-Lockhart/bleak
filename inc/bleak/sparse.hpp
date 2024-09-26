@@ -83,7 +83,7 @@ namespace bleak {
 
 			node.value().position = to;
 
-			return values.emplace(std::move(node)).second;
+			return values.insert(std::move(node)).inserted;
 		}
 
 		constexpr bool add(cref<T> value) noexcept {

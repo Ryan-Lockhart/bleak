@@ -1,13 +1,41 @@
 #pragma once
 
-#include "bleak/offset.hpp"
-#include "necrowarp/globals.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <necrowarp/game_state.hpp>
 
 namespace necrowarp {
 	using namespace bleak;
+
+	template<> struct is_entity<player_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_entity_type<player_t, entity_type_t::Player> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct to_entity_type<entity_type_t::Player> {
+		using type = player_t;
+	};
+
+	template<> struct is_evil_entity<player_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_animate<player_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_non_player_entity<player_t> {
+		static constexpr bool value = false;
+	};
+
+	template<> struct is_player<player_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> inline constexpr glyph_t entity_glyphs<player_t>{ 0x41, colors::White };
 
 	struct player_t {
 		entity_command_t command;
@@ -119,62 +147,14 @@ namespace necrowarp {
 
 		inline void bolster_armor(i8 value) noexcept { set_armor(armor + value); }
 
-		inline void increment_energy() noexcept {
-			if (energy < max_energy()) {
-				++energy;
-			}
-		}
+		inline void draw() const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : entity_glyphs<player_t>, position); }
 
-		inline void decrement_energy() noexcept {
-			if (energy > MinimumEnergy) {
-				--energy;
-			}
-		}
+		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : entity_glyphs<player_t>, position + offset); }
 
-		inline void increment_armor() noexcept {
-			if (armor < max_armor()) {
-				++armor;
-			}
-		}
+		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : entity_glyphs<player_t>, position + camera.get_offset()); }
 
-		inline void decrement_armor() noexcept {
-			if (armor > MinimumArmor) {
-				--armor;
-			}
-		}
-
-		inline void draw() const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : EntityGlyphs[entity_type_t::Player], position); }
-
-		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : EntityGlyphs[entity_type_t::Player], position + offset); }
-
-		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : EntityGlyphs[entity_type_t::Player], position + camera.get_offset()); }
-
-		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : EntityGlyphs[entity_type_t::Player], position + camera.get_offset() + offset); }
+		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(has_armor() ? PlayerArmoredGlyph : entity_glyphs<player_t>, position + camera.get_offset() + offset); }
 
 		constexpr operator entity_type_t() const noexcept { return entity_type_t::Player; }
-	};
-
-	template<> struct is_entity<player_t> {
-		static constexpr bool value = true;
-	};
-
-	template<> struct is_entity_type<player_t, entity_type_t::Player> {
-		static constexpr bool value = true;
-	};
-
-	template<> struct to_entity_type<entity_type_t::Player> {
-		using type = player_t;
-	};
-
-	template<> struct is_evil_entity<player_t> {
-		static constexpr bool value = true;
-	};
-
-	template<> struct is_animate<player_t> {
-		static constexpr bool value = true;
-	};
-
-	template<> struct is_player<player_t> {
-		static constexpr bool value = true;
 	};
 } // namespace necrowarp

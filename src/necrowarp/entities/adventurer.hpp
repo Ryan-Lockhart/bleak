@@ -7,6 +7,28 @@
 namespace necrowarp {
 	using namespace bleak;
 
+	template<> struct is_entity<adventurer_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_entity_type<adventurer_t, entity_type_t::Adventurer> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct to_entity_type<entity_type_t::Adventurer> {
+		using type = adventurer_t;
+	};
+
+	template<> struct is_good_entity<adventurer_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_animate<adventurer_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> inline constexpr glyph_t entity_glyphs<adventurer_t>{ 0x48, colors::White };
+
 	struct adventurer_t {
 		offset_t position;
 
@@ -16,13 +38,13 @@ namespace necrowarp {
 
 		inline entity_command_t think() const noexcept;
 
-		inline void draw() const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Adventurer], position); }
+		inline void draw() const noexcept { game_atlas.draw(entity_glyphs<adventurer_t>, position); }
 
-		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Adventurer], position + offset); }
+		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(entity_glyphs<adventurer_t>, position + offset); }
 
-		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Adventurer], position + camera.get_offset()); }
+		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(entity_glyphs<adventurer_t>, position + camera.get_offset()); }
 
-		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Adventurer], position + camera.get_offset() + offset); }
+		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(entity_glyphs<adventurer_t>, position + camera.get_offset() + offset); }
 
 		constexpr operator entity_type_t() const noexcept { return entity_type_t::Adventurer; }
 
@@ -51,17 +73,5 @@ namespace necrowarp {
 				static constexpr bool operator()(cref<offset_t> lhs, cref<adventurer_t> rhs) noexcept { return offset_t::hasher::operator()(lhs) == offset_t::hasher::operator()(rhs.position); }
 			};
 		};
-	};
-
-	template<> struct is_entity<adventurer_t> {
-		static constexpr bool value = true;
-	};
-
-	template<> struct is_entity_type<adventurer_t, entity_type_t::Adventurer> {
-		static constexpr bool value = true;
-	};
-
-	template<> struct to_entity_type<entity_type_t::Adventurer> {
-		using type = adventurer_t;
 	};
 } // namespace necrowarp

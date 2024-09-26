@@ -691,7 +691,7 @@ namespace bleak {
 
 			node.value() = to;
 
-			return goals.emplace(std::move(node)).second;
+			return goals.insert(std::move(node)).inserted;
 		}
 
 		template<zone_region_t Region> constexpr bool update(cref<offset_t> from, cref<offset_t> to) noexcept {
@@ -709,7 +709,7 @@ namespace bleak {
 
 			node.value() = to;
 
-			return goals.emplace(std::move(node)).second;
+			return goals.insert(std::move(node)).inserted;
 		}
 	};
 } // namespace bleak

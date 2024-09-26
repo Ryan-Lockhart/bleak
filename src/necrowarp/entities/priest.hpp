@@ -7,6 +7,28 @@
 namespace necrowarp {
 	using namespace bleak;
 
+	template<> struct is_entity<priest_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_entity_type<priest_t, entity_type_t::Priest> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct to_entity_type<entity_type_t::Priest> {
+		using type = priest_t;
+	};
+
+	template<> struct is_good_entity<priest_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_animate<priest_t> {
+		static constexpr bool value = true;
+	};
+
+	template<> inline constexpr glyph_t entity_glyphs<priest_t>{ 0x40, colors::White };
+
 	struct priest_t {
 		offset_t position;
 		
@@ -52,13 +74,13 @@ namespace necrowarp {
 
 		inline entity_command_t think() const noexcept;
 
-		inline void draw() const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Priest], position); }
+		inline void draw() const noexcept { game_atlas.draw(entity_glyphs<priest_t>, position); }
 
-		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Priest], position + offset); }
+		inline void draw(cref<offset_t> offset) const noexcept { game_atlas.draw(entity_glyphs<priest_t>, position + offset); }
 
-		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Priest], position + camera.get_offset()); }
+		inline void draw(cref<camera_t> camera) const noexcept { game_atlas.draw(entity_glyphs<priest_t>, position + camera.get_offset()); }
 
-		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(EntityGlyphs[entity_type_t::Priest], position + camera.get_offset() + offset); }
+		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(entity_glyphs<priest_t>, position + camera.get_offset() + offset); }
 
 		constexpr operator entity_type_t() const noexcept { return entity_type_t::Priest; }
 
@@ -83,17 +105,5 @@ namespace necrowarp {
 				static constexpr bool operator()(cref<offset_t> lhs, cref<priest_t> rhs) noexcept { return offset_t::hasher::operator()(lhs) == offset_t::hasher::operator()(rhs.position); }
 			};
 		};
-	};
-
-	template<> struct is_entity<priest_t> {
-		static constexpr bool value = true;
-	};
-
-	template<> struct is_entity_type<priest_t, entity_type_t::Priest> {
-		static constexpr bool value = true;
-	};
-
-	template<> struct to_entity_type<entity_type_t::Priest> {
-		using type = priest_t;
 	};
 } // namespace necrowarp

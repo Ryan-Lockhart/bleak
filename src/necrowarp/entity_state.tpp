@@ -1,7 +1,7 @@
 #pragma once
 
-#include "necrowarp/entities/entity.hpp"
-#include "necrowarp/entity_state.hpp"
+#include "bleak/concepts.hpp"
+#include "entities/entity.hpp"
 #include <necrowarp/entities.hpp>
 
 #include <cstddef>
@@ -14,20 +14,12 @@ namespace necrowarp {
 
 	static inline player_t player{};
 
-	template<typename T> static inline sparse_t<T> entity_storage{};
+	template<NonPlayerEntity EntityType> static inline sparse_t<EntityType> entity_storage{};
 
 	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> good_goal_map{};
 	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> evil_goal_map{};
 
 	template<typename T> static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> entity_goal_map{};
-
-	template<typename... EntityTypes>
-		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
-	inline bool entity_registry_t::contains(cref<offset_t> position) const noexcept {
-		return (entity_storage<EntityTypes>.contains(position) || ...);
-	}
-
-	inline bool entity_registry_t::contains(cref<offset_t> position) const noexcept { return player.position == position || contains<ALL_NON_PLAYER>(position); }
 
 	template<entity_type_t EntityType> inline bool entity_registry_t::contains(cref<offset_t> position) const noexcept {
 		if constexpr (EntityType == entity_type_t::None) {
@@ -35,16 +27,28 @@ namespace necrowarp {
 		} else if constexpr (EntityType == entity_type_t::Player) {
 			return player.position == position;
 		} else {
-			return entity_storage<typename to_entity_type<EntityType>::type>.contains(position);
+			using entity_type = to_entity_type_t<EntityType>;
+
+			return entity_storage<entity_type>.contains(position);
 		}
 	}
+
+	template<NonPlayerEntity EntityType> inline bool entity_registry_t::contains(cref<offset_t> position) const noexcept {
+		return entity_storage<EntityType>.contains(position);
+	}
+
+	template<NonPlayerEntity... EntityTypes>
+		requires is_plurary<EntityTypes...>::value
+	inline bool entity_registry_t::contains(cref<offset_t> position) const noexcept {
+		return (contains<EntityTypes>(position) || ...);
+	}
+
+	inline bool entity_registry_t::contains(cref<offset_t> position) const noexcept { return player.position == position || contains<ALL_NON_PLAYER>(position); }
 
 	inline entity_type_t entity_registry_t::at(cref<offset_t> position) const noexcept {
 		if (player.position == position) {
 			return entity_type_t::Player;
-		}
-		
-		if (entity_storage<skull_t>.contains(position)) {
+		} else  if (entity_storage<skull_t>.contains(position)) {
 			return entity_type_t::Skull;
 		} else if (entity_storage<skeleton_t>.contains(position)) {
 			return entity_type_t::Skeleton;
@@ -58,50 +62,38 @@ namespace necrowarp {
 			return entity_type_t::Priest;
 		} else if (entity_storage<ladder_t>.contains(position)) {
 			return entity_type_t::Ladder;
+		} else {
+			return entity_type_t::None;
 		}
-		
-		return entity_type_t::None;
 	}
 
-	template<typename T>
-		requires is_entity<T>::value
-	inline ptr<T> entity_registry_t::at(cref<offset_t> position) noexcept {
-		if constexpr (std::is_same<T, std::nullptr_t>::value) {
+	template<Entity EntityType> inline ptr<EntityType> entity_registry_t::at(cref<offset_t> position) noexcept {
+		if constexpr (std::is_same<EntityType, std::nullptr_t>::value) {
 			return nullptr;
-		} else if constexpr (std::is_same<T, player_t>::value) {
+		} else if constexpr (std::is_same<EntityType, player_t>::value) {
 			if (player.position != position) {
 				return nullptr;
 			}
 
 			return &player;
 		} else {
-			return entity_storage<T>[position];
+			return entity_storage<EntityType>[position];
 		}
 	}
 
-	template<typename T>
-		requires is_entity<T>::value
-	inline cptr<T> entity_registry_t::at(cref<offset_t> position) const noexcept {
-		if constexpr (std::is_same<T, std::nullptr_t>::value) {
+	template<Entity EntityType> inline cptr<EntityType> entity_registry_t::at(cref<offset_t> position) const noexcept {
+		if constexpr (std::is_same<EntityType, std::nullptr_t>::value) {
 			return nullptr;
-		} else if constexpr (std::is_same<T, player_t>::value) {
+		} else if constexpr (std::is_same<EntityType, player_t>::value) {
 			if (player.position != position) {
 				return nullptr;
 			}
 
 			return &player;
 		} else {
-			return entity_storage<T>[position];
+			return entity_storage<EntityType>[position];
 		}
 	}
-
-	template<typename... EntityTypes>
-		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
-	inline usize entity_registry_t::count() const noexcept {
-		return (entity_storage<EntityTypes>.size() + ...);
-	}
-
-	inline usize entity_registry_t::count() const noexcept { return count<ALL_NON_PLAYER>() + 1; }
 
 	template<entity_type_t EntityType> inline usize entity_registry_t::count() const noexcept {
 		if constexpr (EntityType == entity_type_t::None) {
@@ -109,17 +101,23 @@ namespace necrowarp {
 		} else if constexpr (EntityType == entity_type_t::Player) {
 			return 1;
 		} else {
-			using entity_type = typename to_entity_type<EntityType>::type;
+			using entity_type = to_entity_type_t<EntityType>;
 
 			return entity_storage<entity_type>.size();
 		}
 	}
-	
-	template<typename... EntityTypes>
-		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::None>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
-	inline bool entity_registry_t::empty() const noexcept {
-		return (entity_storage<EntityTypes>.empty() && ...);
+
+	template<NonPlayerEntity EntityTypes> inline usize entity_registry_t::count() const noexcept {
+		return entity_storage<EntityTypes>.size();
 	}
+
+	template<NonPlayerEntity... EntityTypes>
+		requires is_plurary<EntityTypes...>::value
+	inline usize entity_registry_t::count() const noexcept {
+		return (count<EntityTypes>() + ...);
+	}
+
+	inline usize entity_registry_t::count() const noexcept { return count<ALL_NON_PLAYER>() + 1; }
 
 	template<entity_type_t EntityType> inline bool entity_registry_t::empty() const noexcept {
 		if constexpr (EntityType == entity_type_t::None) {
@@ -128,14 +126,22 @@ namespace necrowarp {
 			return false;
 		}
 
-		using entity_type = typename to_entity_type<EntityType>::type;
+		using entity_type = to_entity_type_t<EntityType>;
 
 		return entity_storage<entity_type>.empty();
 	}
+	
+	template<NonPlayerEntity EntityType> inline bool entity_registry_t::empty() const noexcept {
+		return entity_storage<EntityType>.empty();
+	}
+	
+	template<NonPlayerEntity... EntityTypes>
+		requires is_plurary<EntityTypes...>::value
+	inline bool entity_registry_t::empty() const noexcept {
+		return (empty<EntityTypes>() && ...);
+	}
 
-	template<bool Force, typename T>
-		requires is_entity<T>::value && (!is_entity_type<T, entity_type_t::Player>::value)
-	inline bool entity_registry_t::add(rval<T> entity) noexcept {
+	template<bool Force, NonPlayerEntity EntityType> inline bool entity_registry_t::add(rval<EntityType> entity) noexcept {
 		if constexpr (!Force) {
 			if (entity_registry.contains(entity.position)) {
 				return false;
@@ -143,16 +149,16 @@ namespace necrowarp {
 		}
 		
 		const offset_t position{ entity.position };
-		const bool inserted{ entity_storage<T>.add(std::move(entity)) };
+		const bool inserted{ entity_storage<EntityType>.add(std::move(entity)) };
 
 		if (inserted) {
-			if constexpr (is_evil_entity<T>::value) {
+			if constexpr (is_evil_entity<EntityType>::value) {
 				good_goal_map.add(position);
-			} else if constexpr (is_good_entity<T>::value) {
+			} else if constexpr (is_good_entity<EntityType>::value) {
 				evil_goal_map.add(position);
 			}
 
-			entity_goal_map<T>.add(position);
+			entity_goal_map<EntityType>.add(position);
 		}
 
 		return inserted;
@@ -166,7 +172,7 @@ namespace necrowarp {
 				return false;
 			}
 
-			using entity_type = typename to_entity_type<EntityType>::type;
+			using entity_type = to_entity_type_t<EntityType>;
 			
 			if (!entity_storage<entity_type>.remove(position)) {
 				return false;
@@ -184,9 +190,7 @@ namespace necrowarp {
 		}
 	}
 
-	template<typename T>
-		requires is_entity<T>::value && (!is_entity_type<T, entity_type_t::Player>::value)
-	inline bool entity_registry_t::spawn(usize count) noexcept {
+	template<NonPlayerEntity EntityType> inline bool entity_registry_t::spawn(usize count) noexcept {
 		for (usize i{ 0 }; i < count; ++i) {
 			cauto maybe_position{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open, entity_registry) };
 
@@ -194,7 +198,7 @@ namespace necrowarp {
 				return false;
 			}
 
-			entity_registry.add(T{ maybe_position.value() });
+			entity_registry.add(EntityType{ maybe_position.value() });
 		}
 
 		return true;
@@ -240,7 +244,7 @@ namespace necrowarp {
 			return false;
 		}
 
-		using entity_type = typename to_entity_type<EntityType>::type;
+		using entity_type = to_entity_type_t<EntityType>;
 		
 		if (!entity_storage<entity_type>.move(current, target)) {
 			return false;
@@ -257,20 +261,18 @@ namespace necrowarp {
 		return true;
 	}
 
-	template<typename... EntityTypes>
-		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
+	template<NonPlayerEntity EntityType> inline void entity_registry_t::update(ref<std::queue<entity_command_t>> commands) noexcept {
+		for (crauto entity : entity_storage<EntityType>) {
+			commands.push(entity.think());
+		}
+
+		entity_registry.process_commands(commands);
+	}
+
+	template<NonPlayerEntity... EntityTypes>
+		requires is_plurary<EntityTypes...>::value
 	inline void entity_registry_t::update(ref<std::queue<entity_command_t>> commands) noexcept {
-		auto process_entities{
-			[&commands](crauto entities) {
-				for (crauto entity : entities) {
-					commands.push(entity.think());
-				}
-
-				entity_registry.process_commands(commands);
-			}
-		};
-
-		(process_entities(entity_storage<EntityTypes>), ...);
+		(update<EntityTypes>(commands), ...);
 	}
 
 	inline void entity_registry_t::update() noexcept {
@@ -289,16 +291,14 @@ namespace necrowarp {
 		recalculate_goal_maps();
 	}
 
-	inline void entity_registry_t::recalculate_goal_maps() noexcept {
-		recalculate_goal_maps<ALL_ENTITIES>();
-
-		recalculate_alignment_goal_maps();
+	template<Entity EntityType> inline void entity_registry_t::recalculate_goal_map() noexcept {
+		entity_goal_map<EntityType>.template recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 	}
 
-	template<typename... EntityTypes>
-		requires ((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::None>::value && ...))
+	template<Entity... EntityTypes>
+		requires is_plurary<EntityTypes...>::value
 	inline void entity_registry_t::recalculate_goal_maps() noexcept {
-		(entity_goal_map<EntityTypes>.template recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry), ...);
+		(recalculate_goal_map<EntityTypes>(), ...);
 	}
 
 	inline void entity_registry_t::recalculate_good_goal_map() noexcept {
@@ -312,6 +312,12 @@ namespace necrowarp {
 	inline void entity_registry_t::recalculate_alignment_goal_maps() noexcept {
 		recalculate_good_goal_map();
 		recalculate_evil_goal_map();
+	}
+
+	inline void entity_registry_t::recalculate_goal_maps() noexcept {
+		recalculate_goal_maps<ALL_ENTITIES>();
+
+		recalculate_alignment_goal_maps();
 	}
 
 	inline bool entity_registry_t::is_command_valid(cref<entity_command_t> command) const noexcept {
@@ -493,7 +499,7 @@ namespace necrowarp {
 			return false;
 		}
 
-		using entity_type = typename to_entity_type<Victim>::type;
+		using entity_type = to_entity_type_t<Victim>;
 
 		ptr<entity_type> victim{ entity_registry.at<entity_type>(target_position) };
 
@@ -936,28 +942,28 @@ namespace necrowarp {
 		}
 	}
 
-	template<typename... EntityTypes>
-		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
-	inline void entity_registry_t::draw() const noexcept {
-		auto draw_entities{ [](crauto entities) {
-			for (crauto entity : entities) {
-				entity.draw();
-			}
-		} };
-
-		(draw_entities(entity_storage<EntityTypes>), ...);
+	template<NonPlayerEntity EntityType> inline void entity_registry_t::draw() const noexcept {
+		for (crauto entity : entity_storage<EntityType>) {
+			entity.draw();
+		}
 	}
 
-	template<typename... EntityTypes>
-		requires((is_entity<EntityTypes>::value && ...) && !(is_entity_type<EntityTypes, entity_type_t::Player>::value && ...))
-	inline void entity_registry_t::draw(cref<camera_t> camera) const noexcept {
-		auto draw_entities{ [&camera](crauto entities) {
-			for (crauto entity : entities) {
-				entity.draw(camera);
-			}
-		} };
+	template<NonPlayerEntity EntityType> inline void entity_registry_t::draw(cref<camera_t> camera) const noexcept {
+		for (crauto entity : entity_storage<EntityType>) {
+			entity.draw(camera);
+		}
+	}
 
-		(draw_entities(entity_storage<EntityTypes>), ...);
+	template<NonPlayerEntity... EntityTypes>
+		requires is_plurary<EntityTypes...>::value
+	inline void entity_registry_t::draw() const noexcept {
+		(draw<EntityTypes>(), ...);
+	}
+
+	template<NonPlayerEntity... EntityTypes>
+		requires is_plurary<EntityTypes...>::value
+	inline void entity_registry_t::draw(cref<camera_t> camera) const noexcept {
+		(draw<EntityTypes>(camera), ...);
 	}
 
 	inline void entity_registry_t::draw() const noexcept {
