@@ -7,14 +7,22 @@
 
 namespace necrowarp {
 	inline entity_command_t priest_t::think() const noexcept {
-		if (entity_registry.empty<adventurer_t, skull_t>()) {
-			cauto ascent_pos{ good_goal_map.ascend<zone_region_t::Interior>(position, entity_registry) };
+		if (entity_registry.empty<skull_t>() && !entity_registry.empty<adventurer_t, paladin_t>()) {
+			cauto flock_to_paladin_pos{ entity_goal_map<paladin_t>.descend<zone_region_t::Interior>(position, entity_registry) };
 
-			if (!ascent_pos.has_value()) {
+			if (!flock_to_paladin_pos.has_value() && entity_registry.empty<adventurer_t>()) {
+				return entity_command_t{ command_type_t::None };
+			} else if (flock_to_paladin_pos.has_value()) {
+				return entity_command_t{ command_type_t::Move, position, flock_to_paladin_pos.value() };
+			}
+
+			cauto flock_to_adventurer_pos { entity_goal_map<adventurer_t>.descend<zone_region_t::Interior>(position, entity_registry) };
+
+			if (!flock_to_adventurer_pos.has_value()) {
 				return entity_command_t{ command_type_t::None };
 			}
 
-			return entity_command_t{ command_type_t::Move, position, ascent_pos.value() };
+			return entity_command_t{ command_type_t::Move, position, flock_to_adventurer_pos.value() };
 		}
 
 		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {

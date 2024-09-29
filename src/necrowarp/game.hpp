@@ -1,10 +1,9 @@
 #pragma once
 
-#include "necrowarp/entities/entity.hpp"
-#include "necrowarp/entities/priest.hpp"
 #include <bleak.hpp>
 
 #include <cstdlib>
+#include <thread>
 
 #include <necrowarp/entities.hpp>
 #include <necrowarp/entity_state.hpp>
@@ -20,7 +19,18 @@ namespace necrowarp {
 		static inline int run() noexcept {
 			startup();
 
+			auto processing_thread{
+				std::thread([]() -> void {
+					do {
+						process_turn();
+					} while (window.is_running());
+				})
+			};
+			
+			processing_thread.detach();
+
 			do {
+				input();
 				update();
 				render();
 			} while (window.is_running());
@@ -164,11 +174,6 @@ namespace necrowarp {
 			return false;
 		}
 
-		static inline void input() noexcept {
-			character_input();
-			camera_input();
-		}
-
 		static inline void startup() noexcept {
 			Mouse::initialize();
 			Keyboard::initialize();
@@ -244,7 +249,7 @@ namespace necrowarp {
 			error_log.flush_to_console(std::cerr);
 		}
 
-		static inline void update() noexcept {
+		static inline void input() noexcept {
 			if (window.is_closing()) {
 				return;
 			}
@@ -266,86 +271,95 @@ namespace necrowarp {
 				game_map.apply<zone_region_t::All>(cell_trait_t::Explored);
 			}
 
+			if (processing_turn) {
+				return;
+			}
+
 			if (input_timer.ready()) {
-				if (epoch_timer.ready()) {
+				if (epoch_timer.ready() && !player_acted) {
 					player_acted = character_input();
 				}
 
 				camera_input();
 			}
+		}
 
-			if (player_acted) {
-				entity_registry.update();
-
-				wave_size = globals::StartingAdventurers + total_kills() / globals::KillsPerPopulation;
-
-				if (entity_registry.empty<ALL_GOOD_NPCS>() && spawns_remaining <= 0) {
-					spawns_remaining = wave_size;
-				}
-
-				while (spawns_remaining > 0) {
-					std::optional<offset_t> spawn_pos{};
-
-					for (cref<ladder_t> ladder : entity_storage<ladder_t>) {
-						if (entity_registry.contains<ALL_GOOD_NPCS>(ladder.position)) {
-							continue;
-						}
-
-						spawn_pos = ladder.position;
-					}
-
-					if (!spawn_pos.has_value()) {
-						break;
-					}
-
-					entity_registry.add<true>(priest_t{ spawn_pos.value() });
-					goto decrement;
-
-					if (wave_size >= globals::LargeWaveSize) {
-						static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
-
-						const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
-
-						if (spawn_chance < 5) {
-							entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-						} else if (spawn_chance < 8) {
-							entity_registry.add<true>(paladin_t{ spawn_pos.value() });
-						} else {
-							entity_registry.add<true>(priest_t{ spawn_pos.value() });
-						}
-					} else if (wave_size >= globals::MediumWaveSize) {
-						static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
-
-						const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
-
-						if (spawn_chance < 7) {
-							entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-						} else if (spawn_chance < 9) {
-							entity_registry.add<true>(paladin_t{ spawn_pos.value() });
-						} else {
-							entity_registry.add<true>(priest_t{ spawn_pos.value() });
-						}
-					} else if (wave_size >= globals::SmallWaveSize) {
-						static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
-
-						const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
-
-						if (spawn_chance < 9) {
-							entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-						} else {
-							entity_registry.add<true>(paladin_t{ spawn_pos.value() });
-						}
-					} else {
-						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-					}
-					
-				decrement:
-					--spawns_remaining;
-				}
-
-				player_acted = false;
+		static inline void process_turn() noexcept {
+			if (!player_acted) {
+				return;
 			}
 
+			processing_turn = true;
+
+			wave_size = globals::StartingAdventurers + total_kills() / globals::KillsPerPopulation;
+
+			if (entity_registry.empty<ALL_GOOD_NPCS>() && spawns_remaining <= 0) {
+				spawns_remaining = wave_size;
+			}
+
+			while (spawns_remaining > 0) {
+				std::optional<offset_t> spawn_pos{};
+
+				for (cref<ladder_t> ladder : entity_storage<ladder_t>) {
+					if (entity_registry.contains<ALL_GOOD_NPCS>(ladder.position)) {
+						continue;
+					}
+
+					spawn_pos = ladder.position;
+				}
+
+				if (!spawn_pos.has_value()) {
+					break;
+				}
+
+				if (wave_size >= globals::LargeWaveSize) {
+					static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
+
+					const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
+
+					if (spawn_chance < 5) {
+						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
+					} else if (spawn_chance < 8) {
+						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
+					} else {
+						entity_registry.add<true>(priest_t{ spawn_pos.value() });
+					}
+				} else if (wave_size >= globals::MediumWaveSize) {
+					static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
+
+					const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
+
+					if (spawn_chance < 7) {
+						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
+					} else if (spawn_chance < 9) {
+						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
+					} else {
+						entity_registry.add<true>(priest_t{ spawn_pos.value() });
+					}
+				} else if (wave_size >= globals::SmallWaveSize) {
+					static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
+
+					const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
+
+					if (spawn_chance < 9) {
+						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
+					} else {
+						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
+					}
+				} else {
+					entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
+				}
+				
+				--spawns_remaining;
+			}
+			
+			entity_registry.update();
+
+			player_acted = false;
+			processing_turn = false;
+		}
+
+		static inline void update() noexcept {
 			sine_wave.update<wave_type_t::Sine>(Clock::elapsed());
 
 			const offset_t mouse_pos{ Mouse::get_position() };

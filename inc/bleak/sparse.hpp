@@ -10,6 +10,57 @@
 #include <bleak/utility.hpp>
 
 namespace bleak {
+	template<typename T> struct sparseling_t {
+		T value;
+		offset_t position;
+
+		constexpr sparseling_t(cref<offset_t> position) : value{}, position{ position } {}
+
+		constexpr sparseling_t(cref<T> value, cref<offset_t> position) : value{ value }, position{ position } {}
+
+		constexpr sparseling_t(rval<T> value, cref<offset_t> position) : value{ std::move(value) }, position{ position } {}
+
+		constexpr sparseling_t(cref<sparseling_t> other) : value{ other.value }, position{ other.position } {}
+
+		constexpr sparseling_t(rval<sparseling_t> other) : value{ std::move(other.value) }, position{ std::move(other.position) } {}
+		
+		constexpr ref<sparseling_t<T>> operator=(cref<sparseling_t> other) {
+			value = other.value;
+			position = other.position;
+
+			return *this;
+		}
+
+		constexpr ref<sparseling_t<T>> operator=(rval<sparseling_t> other) {
+			value = std::move(other.value);
+			position = std::move(other.position);
+
+			return *this;
+		}
+
+		struct hasher {
+			struct offset {
+				using is_transparent = void;
+
+				static constexpr size_t operator()(cref<sparseling_t> sparseling) noexcept { return offset_t::hasher::operator()(sparseling.position); }
+
+				static constexpr size_t operator()(cref<offset_t> position) noexcept { return offset_t::hasher::operator()(position); }
+			};
+		};
+
+		struct comparator {
+			struct offset {
+				using is_transparent = void;
+
+				static constexpr bool operator()(cref<sparseling_t> lhs, cref<sparseling_t> rhs) noexcept { return offset_t::hasher::operator()(lhs.position) == offset_t::hasher::operator()(rhs.position); }
+
+				static constexpr bool operator()(cref<sparseling_t> lhs, cref<offset_t> rhs) noexcept { return offset_t::hasher::operator()(lhs.position) == offset_t::hasher::operator()(rhs); }
+
+				static constexpr bool operator()(cref<offset_t> lhs, cref<sparseling_t> rhs) noexcept { return offset_t::hasher::operator()(lhs) == offset_t::hasher::operator()(rhs.position); }
+			};
+		};
+	};
+
 	template<typename T>
 		requires is_hashable_by_position<T>::value
 	struct sparse_t {

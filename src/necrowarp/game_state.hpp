@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <bleak.hpp>
 
 #include <necrowarp/globals.hpp>
@@ -43,8 +44,9 @@ namespace necrowarp {
 	static inline wave_t sine_wave{ 1.0, 0.5, 1.0 };
 
 	static inline mixer_s mixer{};
-
-	static inline bool player_acted{ false };
+	
+	static inline volatile std::atomic_bool player_acted{ false };
+	static inline volatile std::atomic_bool processing_turn{ false };
 
 	static inline usize wave_size{ globals::StartingAdventurers };
 

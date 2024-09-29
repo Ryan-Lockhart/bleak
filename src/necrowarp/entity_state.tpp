@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/concepts.hpp"
 #include "entities/entity.hpp"
 #include <necrowarp/entities.hpp>
 
@@ -15,6 +14,8 @@ namespace necrowarp {
 	static inline player_t player{};
 
 	template<NonPlayerEntity EntityType> static inline sparse_t<EntityType> entity_storage{};
+
+	static inline sparse_t<sparseling_t<bool>> newborns{};
 
 	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> good_goal_map{};
 	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> evil_goal_map{};
@@ -159,6 +160,10 @@ namespace necrowarp {
 			}
 
 			entity_goal_map<EntityType>.add(position);
+
+			if constexpr (is_animate<EntityType>::value) {
+				newborns.add(sparseling_t<bool>{ position });
+			}
 		}
 
 		return inserted;
@@ -263,6 +268,11 @@ namespace necrowarp {
 
 	template<NonPlayerEntity EntityType> inline void entity_registry_t::update(ref<std::queue<entity_command_t>> commands) noexcept {
 		for (crauto entity : entity_storage<EntityType>) {
+			if (newborns.contains(entity.position)) {
+				newborns.remove(entity.position);
+				continue;
+			}
+
 			commands.push(entity.think());
 		}
 
