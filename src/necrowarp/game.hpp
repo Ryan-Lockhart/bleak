@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bleak/constants/colors.hpp"
+#include "entities/entity.hpp"
 #include <bleak.hpp>
 
 #include <cstdlib>
@@ -19,20 +21,14 @@ namespace necrowarp {
 		static inline int run() noexcept {
 			startup();
 
-			auto processing_thread{
-				std::thread([]() -> void {
-					do {
-						process_turn();
-					} while (window.is_running());
-				})
-			};
-			
-			processing_thread.detach();
+			std::thread([]() -> void {
+				do { process_turn(); } while (window.is_running());
+			}).detach();
 
 			do {
+				render();
 				input();
 				update();
-				render();
 			} while (window.is_running());
 
 			shutdown();
@@ -64,24 +60,25 @@ namespace necrowarp {
 				return camera.center_on(player.position);
 			}
 
-			offset_t direction{};
+			const offset_t direction = []() -> offset_t {
+				offset_t::scalar_t x{ 0 }, y{ 0 };
 
-			if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::North])) {
-				--direction.y;
-			}
-			if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::South])) {
-				++direction.y;
-			}
-			if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::West])) {
-				--direction.x;
-			}
-			if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::East])) {
-				++direction.x;
-			}
+				if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::North])) {
+					--y;
+				} if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::South])) {
+					++y;
+				} if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::West])) {
+					--x;
+				} if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::East])) {
+					++x;
+				}
 
-			if (gamepad_enabled && direction == offset_t::Zero) {
-				direction = static_cast<offset_t>(primary_gamepad->right_stick.current_state);
-			}
+				if (gamepad_enabled && x == 0 && y == 0) {
+					return static_cast<offset_t>(primary_gamepad->right_stick.current_state);
+				}
+
+				return offset_t{ x, y };
+			}();
 
 			if (direction != offset_t::Zero) {
 				input_timer.record();
@@ -133,24 +130,25 @@ namespace necrowarp {
 				return true;
 			}
 
-			offset_t direction{};
+			const offset_t direction = []() -> offset_t {
+				offset_t::scalar_t x{ 0 }, y{ 0 };
 
-			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::North])) {
-				--direction.y;
-			}
-			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::South])) {
-				++direction.y;
-			}
-			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::West])) {
-				--direction.x;
-			}
-			if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::East])) {
-				++direction.x;
-			}
+				if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::North])) {
+					--y;
+				} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::South])) {
+					++y;
+				} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::West])) {
+					--x;
+				} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::East])) {
+					++x;
+				}
 
-			if (gamepad_enabled && direction == offset_t::Zero) {
-				direction = static_cast<offset_t>(primary_gamepad->dpad.current_state);
-			}
+				if (gamepad_enabled && x == 0 && y == 0) {
+					return static_cast<offset_t>(primary_gamepad->dpad.current_state);
+				}
+
+				return offset_t{ x, y };
+			}();
 
 			if (direction != offset_t::Zero) {
 				const offset_t target_position{ player.position + direction };
@@ -285,7 +283,7 @@ namespace necrowarp {
 		}
 
 		static inline void process_turn() noexcept {
-			if (!player_acted) {
+			if (window.is_closing() || !player_acted) {
 				return;
 			}
 
@@ -298,49 +296,47 @@ namespace necrowarp {
 			}
 
 			while (spawns_remaining > 0) {
-				std::optional<offset_t> spawn_pos{};
+				cauto spawn_pos = []() -> std::optional<offset_t> {
+					for (cref<ladder_t> ladder : entity_storage<ladder_t>) {
+						if (entity_registry.contains<ALL_GOOD_NPCS>(ladder.position)) {
+							continue;
+						}
 
-				for (cref<ladder_t> ladder : entity_storage<ladder_t>) {
-					if (entity_registry.contains<ALL_GOOD_NPCS>(ladder.position)) {
-						continue;
+						return ladder.position;
 					}
 
-					spawn_pos = ladder.position;
-				}
+					return std::nullopt;
+				}();
 
 				if (!spawn_pos.has_value()) {
 					break;
 				}
 
+				static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
+
+				const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
+
 				if (wave_size >= globals::LargeWaveSize) {
-					static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
-
-					const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
-
 					if (spawn_chance < 5) {
 						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 					} else if (spawn_chance < 8) {
 						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
-					} else {
+					} else if (entity_registry.count<entity_type_t::Priest>() < 3) {
 						entity_registry.add<true>(priest_t{ spawn_pos.value() });
+					} else {
+						continue;
 					}
 				} else if (wave_size >= globals::MediumWaveSize) {
-					static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
-
-					const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
-
 					if (spawn_chance < 7) {
 						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 					} else if (spawn_chance < 9) {
 						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
-					} else {
+					} else if (entity_registry.count<entity_type_t::Priest>() < 2) {
 						entity_registry.add<true>(priest_t{ spawn_pos.value() });
+					} else {
+						continue;
 					}
 				} else if (wave_size >= globals::SmallWaveSize) {
-					static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
-
-					const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
-
 					if (spawn_chance < 9) {
 						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 					} else {
@@ -383,7 +379,6 @@ namespace necrowarp {
 			}
 
 			if (draw_warp_cursor) {
-				warp_cursor.set(player.position);
 				warp_cursor.color.set_alpha(sine_wave.current_value());
 			}
 		}
@@ -415,12 +410,12 @@ namespace necrowarp {
 
 			renderer.draw_composite_rect(offset_t{ globals::GlyphSize }, extent_t{ max(player.max_energy(), player.max_armor()) + 1, 3 } * globals::CellSize - globals::GlyphSize, colors::Black, colors::White, 1);
 
-			for (u8 i{ 0 }; i < player.get_energy(); ++i) {
-				game_atlas.draw(EnergyGlyph, offset_t{ i, 0 }, offset_t{ 4, 4 });
+			for (u8 i{ 0 }; i < player.max_energy(); ++i) {
+				game_atlas.draw(glyph_t{ EnergyGlyph.index, color_t{ 0xFF, static_cast<u8>(player.get_energy() > i ? 0xFF : 0x80) } }, offset_t{ i, 0 }, offset_t{ 4, 4 });
 			}
 
-			for (u8 i{ 0 }; i < player.get_armor(); ++i) {
-				game_atlas.draw(ArmorGlyph, offset_t{ i, 1 }, offset_t{ 4, 4 });
+			for (u8 i{ 0 }; i < player.max_armor(); ++i) {
+				game_atlas.draw(glyph_t{ ArmorGlyph.index, color_t{ 0xFF, static_cast<u8>(player.get_armor() > i ? 0xFF : 0x80) } }, offset_t{ i, 1 }, offset_t{ 4, 4 });
 			}
 
 			const runes_t fps_text{ std::format("FPS:{:4}", static_cast<u32>(Clock::frame_time())), colors::Green };
@@ -430,15 +425,6 @@ namespace necrowarp {
 			runes_t title_text{ globals::GameTitle, colors::Marble };
 
 			ui_atlas.draw_label(renderer, title_text, offset_t{ globals::UIGridSize.w / 2, 0 }, cardinal_t::South, extent_t{ 1, 1 }, colors::Black, colors::White);
-
-			const bool on_left_side{ grid_cursor.get_quadrant().left };
-
-			const offset_t tooltip_pos{ on_left_side ? globals::UIGridSize.w - 1 : 0, globals::UIGridSize.h - 1 };
-			const cardinal_t tooltip_align{ on_left_side ? cardinal_t::Northwest : cardinal_t::Northeast };
-
-			const runes_t tooltip_text{ grid_cursor.hovered(game_map).to_tooltip(), colors::White };
-
-			ui_atlas.draw_label(renderer, tooltip_text, tooltip_pos, tooltip_align, extent_t{ 1, 1 }, colors::Black, colors::White);
 
 			renderer.present();
 		}

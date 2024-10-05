@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/offset.hpp"
 #include <bleak.hpp>
 
 namespace necrowarp {
@@ -15,7 +16,7 @@ namespace necrowarp {
 		constexpr sdl::window_flags WindowFlags{ static_cast<sdl::window_flags>(SDL_WINDOW_BORDERLESS | SDL_WINDOW_SHOWN) };
 		constexpr sdl::renderer_flags RendererFlags{ static_cast<sdl::renderer_flags>(SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) };
 
-		constexpr u32 FrameLimit{ 60u };
+		constexpr u32 FrameLimit{ 30u };
 		constexpr f32 FrameTime{ 1000.0f / FrameLimit };
 
 		constexpr bool UseFrameLimit{ true };
@@ -46,6 +47,17 @@ namespace necrowarp {
 		constexpr extent_t CellSize{ 16, 16 };
 		constexpr extent_t GlyphSize{ 8, 8 };
 
+		constexpr f32 CellToGlyphRatio{ 2.0f };
+		constexpr f32 GlyphToCellRatio{ 0.5f };
+
+		constexpr offset_t convert_cell_to_glyph(cref<offset_t> position) noexcept {
+			return offset_t{ offset_t::scalar_cast(position.x * CellToGlyphRatio), offset_t::scalar_cast(position.y * CellToGlyphRatio) };
+		}
+
+		constexpr offset_t convert_glyph_to_cell(cref<offset_t> position) noexcept {
+			return offset_t{ offset_t::scalar_cast(position.x * GlyphToCellRatio), offset_t::scalar_cast(position.y * GlyphToCellRatio) };
+		}
+
 		constexpr offset_t CursorOffset{ UniversalOffset - CellSize / 4 };
 
 		constexpr extent_t CameraExtent{ MapSize - globals::GameGridSize };
@@ -66,9 +78,9 @@ namespace necrowarp {
 		constexpr u32 SpawnDistributionLow{ 0 };
 		constexpr u32 SpawnDistributionHigh{ 9 };
 
-		constexpr u32 SmallWaveSize{ 8 };
-		constexpr u32 MediumWaveSize{ 16 };
-		constexpr u32 LargeWaveSize{ 32 };
+		constexpr u32 SmallWaveSize{ 16 };
+		constexpr u32 MediumWaveSize{ 64 };
+		constexpr u32 LargeWaveSize{ 128 };
 
 		constexpr u32 KillsPerPopulation{ 4 };
 

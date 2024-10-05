@@ -34,6 +34,13 @@ sources = [
     'src/program.cpp'
 ]
 
+includes = include_directories(
+	[
+		'inc',
+		'src'
+	]
+)
+
 assert(sources.length() == 1, 'project is designed for a single source executable')
 
 executable(
@@ -41,7 +48,7 @@ executable(
     sources,
 
     dependencies: [sdl_dependencies],
-    include_directories: include_directories(['inc', 'src']),
+    include_directories: includes,
 
     override_options: [
         'cpp_std=c++26',

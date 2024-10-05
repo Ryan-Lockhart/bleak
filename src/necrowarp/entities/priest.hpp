@@ -33,44 +33,44 @@ namespace necrowarp {
 		offset_t position;
 		
 	private:
-		i8 energy;
+		i8 piety;
 
-		inline void set_energy(i8 value) noexcept { energy = clamp<i8>(value, 0, max_energy()); }
+		inline void set_piety(i8 value) noexcept { piety = clamp<i8>(value, 0, max_piety()); }
 
 	public:
 		static constexpr i8 MaximumHealth{ 1 };
-		static constexpr i8 MaximumEnergy{ 2 };
+		static constexpr i8 MaximumPiety{ 8 };
 		static constexpr i8 MaximumDamage{ 1 };
 
 		static constexpr i8 DeathBoon{ 2 };
-		static constexpr i8 ExorcismBoon{ 1 };
 
-		static constexpr i8 StartingEnergy{ 1 };
+		static constexpr i8 StartingPiety{ 8 };
 
-		static constexpr i8 ResurrectCost{ 1 };
-		static constexpr i8 OrdainCost{ 2 };
+		static constexpr i8 ExorcismCost{ 1 };
+		static constexpr i8 ResurrectCost{ 2 };
+		static constexpr i8 AnointCost{ 4 };
 
-		inline priest_t(cref<offset_t> position) noexcept : position{ position }, energy{ StartingEnergy } {}
+		inline priest_t(cref<offset_t> position) noexcept : position{ position }, piety{ StartingPiety } {}
 
-		inline i8 get_energy() const noexcept { return energy; }
+		inline i8 get_piety() const noexcept { return piety; }
 
-		inline bool has_energy() const noexcept { return energy > 0; }
+		inline bool has_piety() const noexcept { return piety > 0; }
 
-		inline i8 max_energy() const noexcept { return MaximumEnergy; }
+		inline i8 max_piety() const noexcept { return MaximumPiety; }
 
 		inline bool can_survive(i8 damage_amount) const noexcept { return damage_amount <= 0; }
 
-		inline bool can_resurrect() const noexcept { return energy >= ResurrectCost; }
+		inline bool can_exorcise() const noexcept { return piety >= ExorcismCost; }
 
-		inline bool can_ordain() const noexcept { return energy >= OrdainCost; }
+		inline bool can_resurrect() const noexcept { return piety >= ResurrectCost; }
 
-		inline void pay_resurrect_cost() noexcept { set_energy(energy - ResurrectCost); }
+		inline bool can_anoint() const noexcept { return piety >= AnointCost; }
 
-		inline void pay_ordain_cost() noexcept { set_energy(energy - OrdainCost); }
+		inline void pay_exorcise_cost() noexcept { set_piety(piety - ExorcismCost); }
 
-		inline void receive_exorcism_boon() noexcept { set_energy(energy + ExorcismBoon); }
+		inline void pay_resurrect_cost() noexcept { set_piety(piety - ResurrectCost); }
 
-		inline void receive_exorcism_boon(bool is_fresh) noexcept { set_energy(energy + ExorcismBoon * is_fresh ? 2 : 1); }
+		inline void pay_ordain_cost() noexcept { set_piety(piety - AnointCost); }
 
 		inline entity_command_t think() const noexcept;
 

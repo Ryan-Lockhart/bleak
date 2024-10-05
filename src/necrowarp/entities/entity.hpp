@@ -173,7 +173,7 @@ namespace necrowarp {
 		GrandSummoning,
 		Exorcise,
 		Resurrect,
-		Ordain
+		Anoint
 	};
 
 	static constexpr cstr to_string(cref<command_type_t> command) noexcept {
@@ -200,8 +200,8 @@ namespace necrowarp {
 			return "exorcise";
 		case command_type_t::Resurrect:
 			return "resurrect";
-		case command_type_t::Ordain:
-			return "ordain";
+		case command_type_t::Anoint:
+			return "anoint";
 		}
 	}
 

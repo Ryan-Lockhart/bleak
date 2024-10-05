@@ -65,6 +65,13 @@ namespace bleak {
 			}
 		}
 
+		constexpr ref<quadrant_t> invert() noexcept {
+			upper = !upper;
+			left = !left;
+
+			return *this;
+		}
+
 		constexpr bool operator==(cref<quadrant_t> other) const noexcept { return value == other.value; }
 
 		constexpr bool operator!=(cref<quadrant_t> other) const noexcept { return value != other.value; }

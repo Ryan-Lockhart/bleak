@@ -1,6 +1,5 @@
 #pragma once
 
-#include "entities/entity.hpp"
 #include <necrowarp/entities.hpp>
 
 #include <cstddef>
@@ -286,10 +285,6 @@ namespace necrowarp {
 	}
 
 	inline void entity_registry_t::update() noexcept {
-		// command priority: player -> skeletons -> wraithes -> adventurers -> paladins -> priests
-
-		// process the player's command
-
 		entity_registry.process_command(player.command);
 
 		std::queue<entity_command_t> commands{};
@@ -408,7 +403,7 @@ namespace necrowarp {
 			  case command_type_t::ConsumeWarp:
 			  case command_type_t::Exorcise:
 			  case command_type_t::Resurrect:
-			  case command_type_t::Ordain: {
+			  case command_type_t::Anoint: {
 				if (!entity_registry.contains(target_position) || target_type == entity_type_t::None) {
 					return false;
 				}
@@ -440,6 +435,7 @@ namespace necrowarp {
 
 			entity_registry.update(source, random_unsafe_position.value());
 
+			warp_cursor.set(player.position);
 			draw_warp_cursor = true;
 
 			return true;
@@ -447,6 +443,7 @@ namespace necrowarp {
 
 		entity_registry.update(source, random_safe_position.value());
 
+		warp_cursor.set(player.position);
 		draw_warp_cursor = true;
 
 		return true;
@@ -477,11 +474,14 @@ namespace necrowarp {
 				random_warp(source_position);
 				return;
 			} case entity_type_t::Skeleton: {
+				const i8 armor_boon = entity_registry.at<skeleton_t>(target_position)->armor_boon();
+
 				entity_registry.remove<entity_type_t::Skeleton>(target_position);
 
 				entity_registry.update(source_position, target_position);
 
 				player.max_out_armor();
+				player.bolster_armor( armor_boon + player.get_armor() / 8);
 
 				draw_warp_cursor = false;
 				return;
@@ -492,7 +492,7 @@ namespace necrowarp {
 
 				entity_registry.update(source_position, target_position);
 
-				player.bolster_armor(armor_boon);
+				player.bolster_armor(armor_boon + player.get_armor() / 4);
 
 				draw_warp_cursor = false;
 				return;
@@ -774,7 +774,7 @@ namespace necrowarp {
 			entity_registry.update(source_position, target_position);
 
 			player.pay_target_warp_cost();
-			player.bolster_armor(armor_boon);
+			player.bolster_armor(armor_boon + player.get_armor() / 8);
 
 			draw_warp_cursor = false;
 			return;
@@ -787,7 +787,7 @@ namespace necrowarp {
 			entity_registry.update(source_position, target_position);
 
 			player.pay_target_warp_cost();
-			player.bolster_armor(armor_boon);
+			player.bolster_armor(armor_boon + player.get_armor() / 4);
 
 			draw_warp_cursor = false;
 			return;
@@ -832,23 +832,19 @@ namespace necrowarp {
 			return;
 		}
 
-		cauto skull{ entity_registry.at<skull_t>(target_position) };
-
-		if (skull == nullptr) {
-			return;
-		}
-
-		const bool is_fresh{ skull->fresh };
-
 		auto priest{ entity_registry.at<priest_t>(source_position) };
 
 		if (priest == nullptr) {
 			return;
 		}
 
+		if (!priest->can_exorcise()) {
+			return;
+		}
+
 		entity_registry.remove<entity_type_t::Skull>(target_position);
 
-		priest->receive_exorcism_boon(is_fresh);
+		priest->pay_exorcise_cost();
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::Resurrect>(cref<entity_command_t> command) noexcept {
@@ -883,7 +879,7 @@ namespace necrowarp {
 		priest->pay_resurrect_cost();
 	}
 
-	template<> void entity_registry_t::process_command<command_type_t::Ordain>(cref<entity_command_t> command) noexcept {
+	template<> void entity_registry_t::process_command<command_type_t::Anoint>(cref<entity_command_t> command) noexcept {
 		const offset_t source_position{ command.source.value() };
 
 		if (!entity_registry.contains<entity_type_t::Priest>(source_position)) {
@@ -898,7 +894,7 @@ namespace necrowarp {
 
 		auto priest{ entity_registry.at<priest_t>(source_position) };
 
-		if (priest == nullptr || !priest->can_ordain()) {
+		if (priest == nullptr || !priest->can_anoint()) {
 			return;
 		}
 
@@ -935,8 +931,8 @@ namespace necrowarp {
 				return process_command<command_type_t::Exorcise>(command);
 			} case command_type_t::Resurrect: {
 				return process_command<command_type_t::Resurrect>(command);
-			} case command_type_t::Ordain: {
-				return process_command<command_type_t::Ordain>(command);
+			} case command_type_t::Anoint: {
+				return process_command<command_type_t::Anoint>(command);
 			} default: {
 				return;
 			}
