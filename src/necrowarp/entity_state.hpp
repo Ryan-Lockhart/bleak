@@ -1,7 +1,5 @@
 #pragma once
 
-#include "bleak/concepts.hpp"
-#include "entities/entity.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <queue>
@@ -53,6 +51,8 @@ namespace necrowarp {
 		template<entity_type_t EntityType> inline bool remove(cref<offset_t> position) noexcept;
 
 		template<NonPlayerEntity EntityType> inline bool spawn(usize count) noexcept;
+
+		template<NonPlayerEntity EntityType> inline bool spawn(usize count, u32 minimum_distance) noexcept;
 
 		inline bool update(cref<offset_t> current, cref<offset_t> target) noexcept;
 

@@ -50,7 +50,7 @@ namespace bleak {
 	};
 
 	template<typename T, typename U>
-	concept Multiplicable = requires(T a, U b) {
+	concept Multipliable = requires(T a, U b) {
 		{ a* b } -> std::convertible_to<T>;
 		{ a *= b } -> std::convertible_to<ref<T>>;
 	};
@@ -62,7 +62,7 @@ namespace bleak {
 	};
 
 	template<typename T, typename U>
-	concept Moddable = requires(T a, U b) {
+	concept Modulable = requires(T a, U b) {
 		{ a % b } -> std::convertible_to<T>;
 		{ a %= b } -> std::convertible_to<ref<T>>;
 	};
@@ -78,7 +78,7 @@ namespace bleak {
 	};
 
 	template<typename T, typename U> struct is_operable<T, U, operator_t::Multiplication> {
-		static bool constexpr value = Multiplicable<T, U>;
+		static bool constexpr value = Multipliable<T, U>;
 	};
 
 	template<typename T, typename U> struct is_operable<T, U, operator_t::Division> {
@@ -86,7 +86,7 @@ namespace bleak {
 	};
 
 	template<typename T, typename U> struct is_operable<T, U, operator_t::Modulus> {
-		static bool constexpr value = Moddable<T, U>;
+		static bool constexpr value = Modulable<T, U>;
 	};
 
 	template<typename T, typename U, operator_t Operator> constexpr bool is_operable_v = is_operable<T, U, Operator>::value;
