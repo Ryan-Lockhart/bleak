@@ -30,6 +30,10 @@ sdl_dependencies = [
     dependency('sdl2_ttf'),
 ]
 
+misc_dependencies = [
+	dependency('flecs'),
+]
+
 sources = [
     'src/program.cpp'
 ]
@@ -47,7 +51,7 @@ executable(
     'necrowarp',
     sources,
 
-    dependencies: [sdl_dependencies],
+    dependencies: [sdl_dependencies, misc_dependencies],
     include_directories: includes,
 
     override_options: [

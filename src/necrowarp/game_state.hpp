@@ -1,9 +1,11 @@
 #pragma once
 
-#include <atomic>
 #include <bleak.hpp>
 
+#include <atomic>
+
 #include <necrowarp/globals.hpp>
+#include <necrowarp/ecs.hpp>
 
 namespace necrowarp {
 	using namespace bleak;
@@ -44,6 +46,8 @@ namespace necrowarp {
 	static inline wave_t sine_wave{ 1.0, 0.5, 1.0 };
 
 	static inline mixer_s mixer{};
+
+	static inline flecs::world ecs{};
 	
 	static inline volatile std::atomic_bool player_acted{ false };
 	static inline volatile std::atomic_bool processing_turn{ false };

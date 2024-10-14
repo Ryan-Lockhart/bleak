@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/offset.hpp"
 #include <bleak.hpp>
 
 namespace necrowarp {

@@ -1,15 +1,13 @@
 #pragma once
 
-#include "bleak/constants/colors.hpp"
-#include "entities/entity.hpp"
+#include "bleak/clock.hpp"
+#include "ecs/components.hpp"
+#include "ecs/systems.hpp"
 #include <bleak.hpp>
 
 #include <cstdlib>
 #include <thread>
 
-#include <necrowarp/entities.hpp>
-#include <necrowarp/entity_state.hpp>
-#include <necrowarp/entity_state.tpp>
 #include <necrowarp/game_state.hpp>
 #include <necrowarp/globals.hpp>
 
@@ -45,131 +43,6 @@ namespace necrowarp {
 		static inline void primary_gamepad_reconnected(cptr<gamepad_t> gamepad) noexcept {
 			gamepad_enabled = true;
 			primary_gamepad = gamepad;
-		}
-
-		static inline bool camera_input() noexcept {
-			if constexpr (globals::MapSize <= globals::GameGridSize) {
-				return camera.center_on<true>(globals::MapCenter);
-			}
-
-			if (Keyboard::is_key_down(bindings::CameraLock)) {
-				camera_locked = !camera_locked;
-			}
-
-			if (camera_locked) {
-				return camera.center_on(player.position);
-			}
-
-			const offset_t direction = []() -> offset_t {
-				offset_t::scalar_t x{ 0 }, y{ 0 };
-
-				if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::North])) {
-					--y;
-				} if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::South])) {
-					++y;
-				} if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::West])) {
-					--x;
-				} if (Keyboard::is_key_pressed(bindings::CameraMovement[cardinal_t::East])) {
-					++x;
-				}
-
-				if (gamepad_enabled && x == 0 && y == 0) {
-					return static_cast<offset_t>(primary_gamepad->right_stick.current_state);
-				}
-
-				return offset_t{ x, y };
-			}();
-
-			if (direction != offset_t::Zero) {
-				input_timer.record();
-				return camera.move(direction * globals::CameraSpeed);
-			}
-
-			return false;
-		}
-
-		static inline bool character_input() noexcept {
-			player.command = entity_command_t{};
-
-			if (Keyboard::any_keys_pressed(bindings::Wait)) {
-				input_timer.record();
-				epoch_timer.record();
-
-				return true;
-			} else if (Keyboard::is_key_down(bindings::RandomWarp)) {
-				player.command = entity_command_t{ command_type_t::RandomWarp, player.position };
-
-				input_timer.record();
-				epoch_timer.record();
-
-				return true;
-			} else if (Keyboard::is_key_down(bindings::TargetWarp)) {
-				if (!game_map.within<zone_region_t::Interior>(grid_cursor.get_position()) || game_map[grid_cursor.get_position()].solid) {
-					return false;
-				}
-
-				player.command = entity_command_t{ entity_registry.contains(grid_cursor.get_position()) ? command_type_t::ConsumeWarp : command_type_t::TargetWarp, player.position, grid_cursor.get_position() };
-
-				input_timer.record();
-				epoch_timer.record();
-
-				return true;
-			} else if (Keyboard::is_key_down(bindings::SummonWraith)) {
-				player.command = entity_command_t{ command_type_t::SummonWraith, player.position };
-
-				input_timer.record();
-				epoch_timer.record();
-
-				return true;
-			} else if (Keyboard::is_key_down(bindings::GrandSummoning)) {
-				player.command = entity_command_t{ command_type_t::GrandSummoning, player.position };
-
-				input_timer.record();
-				epoch_timer.record();
-
-				return true;
-			}
-
-			const offset_t direction = []() -> offset_t {
-				offset_t::scalar_t x{ 0 }, y{ 0 };
-
-				if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::North])) {
-					--y;
-				} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::South])) {
-					++y;
-				} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::West])) {
-					--x;
-				} if (Keyboard::any_keys_pressed(bindings::CharacterMovement[cardinal_t::East])) {
-					++x;
-				}
-
-				if (gamepad_enabled && x == 0 && y == 0) {
-					return static_cast<offset_t>(primary_gamepad->dpad.current_state);
-				}
-
-				return offset_t{ x, y };
-			}();
-
-			if (direction != offset_t::Zero) {
-				const offset_t target_position{ player.position + direction };
-
-				if (!game_map.within<zone_region_t::Interior>(target_position) || game_map[target_position].solid) {
-					return false;
-				}
-
-				const command_type_t command_type{ !entity_registry.contains(target_position) ? command_type_t::Move : player.clash_or_consume(target_position) };
-
-				player.command = entity_command_t{ command_type, player.position, target_position };
-
-				draw_warp_cursor = false;
-
-				input_timer.record();
-				epoch_timer.record();
-
-				return true;
-			}
-
-			return false;
 		}
 
 		static inline void startup() noexcept {
@@ -221,22 +94,6 @@ namespace necrowarp {
 				}
 			}
 
-			cauto player_pos{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open) };
-
-			if (!player_pos.has_value()) {
-				error_log.add("could not find open position for player!");
-				terminate_prematurely();
-			}
-
-			player.position = player_pos.value();
-			good_goal_map.add(player_pos.value());
-
-			entity_registry.spawn<ladder_t>(globals::NumberOfLadders, globals::MinimumLadderDistance);
-			entity_registry.spawn<skull_t>(globals::StartingSkulls, globals::MinimumSkullDistance);
-
-			evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
-			good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
-
 			Clock::tick();
 
 			input_timer.reset();
@@ -245,6 +102,20 @@ namespace necrowarp {
 
 			message_log.flush_to_console(std::cout);
 			error_log.flush_to_console(std::cerr);
+
+			ecs.entity("player")
+				.set<components::health_t>({ 100 });
+			
+			ecs.entity("minion")
+				.set<components::health_t>({ 50 });
+			
+			ecs.entity("vermin")
+				.set<components::health_t>({ 25 })
+				.add<components::afflicted_t>();
+
+			systems::affliction_system::initialize(ecs);
+			systems::health_system::initialize(ecs);
+			systems::emit_health_system::initialize(ecs);
 		}
 
 		static inline void input() noexcept {
@@ -272,99 +143,20 @@ namespace necrowarp {
 			if (processing_turn) {
 				return;
 			}
-
-			if (input_timer.ready()) {
-				if (epoch_timer.ready() && !player_acted) {
-					player_acted = character_input();
-				}
-
-				camera_input();
-			}
 		}
 
 		static inline void process_turn() noexcept {
-			if (window.is_closing() || !player_acted) {
+			if (window.is_closing()) {
 				return;
 			}
 
 			processing_turn = true;
 
-			wave_size = clamp(globals::StartingAdventurers + total_kills() / globals::KillsPerPopulation, globals::MinimumWaveSize, globals::MaximumWaveSize);
+			ecs.progress();
 
-			if (entity_registry.empty<ALL_GOOD_NPCS>() && spawns_remaining <= 0) {
-				spawns_remaining = wave_size;
-			}
-
-			while (spawns_remaining > 0) {
-				cauto spawn_pos = []() -> std::optional<offset_t> {
-					for (cref<ladder_t> ladder : entity_storage<ladder_t>) {
-						if (entity_registry.contains<ALL_GOOD_NPCS>(ladder.position)) {
-							continue;
-						}
-
-						return ladder.position;
-					}
-
-					return std::nullopt;
-				}();
-
-				if (!spawn_pos.has_value()) {
-					break;
-				}
-				
-				entity_registry.add<true>(priest_t{ spawn_pos.value() });
-
-				--spawns_remaining;
-
-				continue;
-
-				static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
-
-				const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
-
-				if (wave_size >= globals::HugeWaveSize) {
-					if (spawn_chance < 60) {
-						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-					} else if (spawn_chance < 96) {
-						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
-					} else {
-						entity_registry.add<true>(priest_t{ spawn_pos.value() });
-					}
-				} else if (wave_size >= globals::LargeWaveSize) {
-					if (spawn_chance < 70) {
-						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-					} else if (spawn_chance < 97) {
-						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
-					} else  {
-						entity_registry.add<true>(priest_t{ spawn_pos.value() });
-					}
-				} else if (wave_size >= globals::MediumWaveSize) {
-					if (spawn_chance < 80) {
-						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-					} else if (spawn_chance < 98) {
-						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
-					} else {
-						entity_registry.add<true>(priest_t{ spawn_pos.value() });
-					}
-				} else if (wave_size >= globals::SmallWaveSize) {
-					if (spawn_chance < 90) {
-						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-					} else if (spawn_chance < 99) {
-						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
-					} else {
-						entity_registry.add<true>(priest_t{ spawn_pos.value() });
-					}
-				} else {
-					entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-				}
-				
-				--spawns_remaining;
-			}
-			
-			entity_registry.update();
-
-			player_acted = false;
 			processing_turn = false;
+
+			sdl::delay(1000);
 		}
 
 		static inline void update() noexcept {
@@ -416,18 +208,6 @@ namespace necrowarp {
 
 			if (draw_warp_cursor) {
 				warp_cursor.draw(camera, globals::CursorOffset);
-			}
-
-			entity_registry.draw(camera);
-
-			renderer.draw_composite_rect(offset_t{ globals::GlyphSize }, extent_t{ max(player.max_energy(), player.max_armor()) + 1, 3 } * globals::CellSize - globals::GlyphSize, colors::Black, colors::White, 1);
-
-			for (u8 i{ 0 }; i < player.max_energy(); ++i) {
-				game_atlas.draw(glyph_t{ EnergyGlyph.index, color_t{ 0xFF, static_cast<u8>(player.get_energy() > i ? 0xFF : 0x80) } }, offset_t{ i, 0 }, offset_t{ 4, 4 });
-			}
-
-			for (u8 i{ 0 }; i < player.max_armor(); ++i) {
-				game_atlas.draw(glyph_t{ ArmorGlyph.index, color_t{ 0xFF, static_cast<u8>(player.get_armor() > i ? 0xFF : 0x80) } }, offset_t{ i, 1 }, offset_t{ 4, 4 });
 			}
 
 			const runes_t fps_text{ std::format("FPS:{:4}", static_cast<u32>(Clock::frame_time())), colors::Green };
