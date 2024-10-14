@@ -2,8 +2,8 @@
 
 #include <bleak/typedef.hpp>
 
-#include "bleak/cardinal.hpp"
-#include "bleak/lut.hpp"
+#include <bleak/cardinal.hpp>
+#include <bleak/lut.hpp>
 
 namespace bleak {
 	namespace characters {

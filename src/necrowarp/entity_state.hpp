@@ -1,7 +1,5 @@
 #pragma once
 
-#include "bleak/concepts.hpp"
-#include "entities/entity.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <queue>

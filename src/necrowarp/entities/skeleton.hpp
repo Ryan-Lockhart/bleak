@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/offset.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <necrowarp/game_state.hpp>

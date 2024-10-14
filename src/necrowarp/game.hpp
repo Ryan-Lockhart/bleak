@@ -1,7 +1,5 @@
 #pragma once
 
-#include "bleak/constants/colors.hpp"
-#include "entities/entity.hpp"
 #include <bleak.hpp>
 
 #include <cstdlib>

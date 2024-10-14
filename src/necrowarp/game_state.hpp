@@ -1,7 +1,8 @@
 #pragma once
 
-#include <atomic>
 #include <bleak.hpp>
+
+#include <atomic>
 
 #include <necrowarp/globals.hpp>
 

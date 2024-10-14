@@ -1,11 +1,12 @@
 #pragma once
 
-#include "bleak/log.hpp"
 #include <bleak/typedef.hpp>
 
 #include <cassert>
 
 #include <SDL_mixer.h>
+
+#include <bleak/log.hpp>
 
 namespace bleak {
 	namespace sdl {
