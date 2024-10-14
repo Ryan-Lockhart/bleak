@@ -36,7 +36,7 @@ namespace necrowarp {
 
 			switch (entity_registry.at(offset_pos)) {
 				case entity_type_t::Skull: {
-					if (!can_anoint() && !can_exorcise()) {
+					if (!can_resurrect() && !can_exorcise()) {
 						continue;
 					}
 
@@ -71,14 +71,23 @@ namespace necrowarp {
 			cauto adventurer_pos = entity_goal_map<adventurer_t>.descend<zone_region_t::Interior>(position, entity_registry);
 
 			if (skull_pos.has_value() && adventurer_pos.has_value()) {
-				return entity_goal_map<skull_t>.at(skull_pos.value()) < entity_goal_map<adventurer_t>.at(adventurer_pos.value()) ? skull_pos : adventurer_pos;
+				cauto skull_distance{ entity_goal_map<skull_t>.at(skull_pos.value()) };
+				cauto adventurer_distance{ entity_goal_map<adventurer_t>.at(adventurer_pos.value()) };
+
+				return skull_distance < adventurer_distance ? skull_pos : adventurer_pos;
 			} else if (skull_pos.has_value()) {
 				return skull_pos;
 			} else if (adventurer_pos.has_value()) {
 				return adventurer_pos;
 			}
 
-			return std::nullopt;
+			cauto flee_from_evil_pos{ evil_goal_map.ascend<zone_region_t::Interior>(position, entity_registry) };
+
+			if (!flee_from_evil_pos.has_value()) {
+				return std::nullopt;
+			}
+
+			return flee_from_evil_pos;
 		}();
 
 		if (!descent_pos.has_value()) {

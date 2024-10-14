@@ -229,8 +229,8 @@ namespace necrowarp {
 			player.position = player_pos.value();
 			good_goal_map.add(player_pos.value());
 
-			entity_registry.spawn<ladder_t>(globals::NumberOfLadders);
-			entity_registry.spawn<skull_t>(globals::StartingSkulls);
+			entity_registry.spawn<ladder_t>(globals::NumberOfLadders, globals::MinimumLadderDistance);
+			entity_registry.spawn<skull_t>(globals::StartingSkulls, globals::MinimumSkullDistance);
 
 			evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 			good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
@@ -287,7 +287,7 @@ namespace necrowarp {
 
 			processing_turn = true;
 
-			wave_size = globals::StartingAdventurers + total_kills() / globals::KillsPerPopulation;
+			wave_size = clamp(globals::StartingAdventurers + total_kills() / globals::KillsPerPopulation, globals::MinimumWaveSize, globals::MaximumWaveSize);
 
 			if (entity_registry.empty<ALL_GOOD_NPCS>() && spawns_remaining <= 0) {
 				spawns_remaining = wave_size;
@@ -309,36 +309,48 @@ namespace necrowarp {
 				if (!spawn_pos.has_value()) {
 					break;
 				}
+				
+				entity_registry.add<true>(priest_t{ spawn_pos.value() });
+
+				--spawns_remaining;
+
+				continue;
 
 				static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
 
 				const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
 
-				if (wave_size >= globals::LargeWaveSize) {
-					if (spawn_chance < 5) {
+				if (wave_size >= globals::HugeWaveSize) {
+					if (spawn_chance < 60) {
 						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-					} else if (spawn_chance < 8) {
+					} else if (spawn_chance < 96) {
 						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
-					} else if (entity_registry.count<entity_type_t::Priest>() < 3) {
-						entity_registry.add<true>(priest_t{ spawn_pos.value() });
 					} else {
-						continue;
+						entity_registry.add<true>(priest_t{ spawn_pos.value() });
+					}
+				} else if (wave_size >= globals::LargeWaveSize) {
+					if (spawn_chance < 70) {
+						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
+					} else if (spawn_chance < 97) {
+						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
+					} else  {
+						entity_registry.add<true>(priest_t{ spawn_pos.value() });
 					}
 				} else if (wave_size >= globals::MediumWaveSize) {
-					if (spawn_chance < 7) {
+					if (spawn_chance < 80) {
 						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-					} else if (spawn_chance < 9) {
+					} else if (spawn_chance < 98) {
 						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
-					} else if (entity_registry.count<entity_type_t::Priest>() < 2) {
-						entity_registry.add<true>(priest_t{ spawn_pos.value() });
 					} else {
-						continue;
+						entity_registry.add<true>(priest_t{ spawn_pos.value() });
 					}
 				} else if (wave_size >= globals::SmallWaveSize) {
-					if (spawn_chance < 9) {
+					if (spawn_chance < 90) {
 						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
-					} else {
+					} else if (spawn_chance < 99) {
 						entity_registry.add<true>(paladin_t{ spawn_pos.value() });
+					} else {
+						entity_registry.add<true>(priest_t{ spawn_pos.value() });
 					}
 				} else {
 					entity_registry.add<true>(adventurer_t{ spawn_pos.value() });

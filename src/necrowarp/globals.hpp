@@ -70,18 +70,25 @@ namespace necrowarp {
 		constexpr f64 ViewSpan{ 135.0 };
 
 		constexpr u32 NumberOfLadders{ 4 };
+		constexpr u32 MinimumLadderDistance{ 16 };
 
 		constexpr u32 StartingAdventurers{ 4 };
+
 		constexpr u32 StartingSkulls{ 8 };
+		constexpr u32 MinimumSkullDistance{ 8 };
 
 		constexpr u32 SpawnDistributionLow{ 0 };
-		constexpr u32 SpawnDistributionHigh{ 9 };
+		constexpr u32 SpawnDistributionHigh{ 99 };
 
-		constexpr u32 SmallWaveSize{ 16 };
-		constexpr u32 MediumWaveSize{ 64 };
-		constexpr u32 LargeWaveSize{ 128 };
+		constexpr u32 SmallWaveSize{ 8 };
+		constexpr u32 MediumWaveSize{ 16 };
+		constexpr u32 LargeWaveSize{ 32 };
+		constexpr u32 HugeWaveSize{ 64 };
 
-		constexpr u32 KillsPerPopulation{ 4 };
+		constexpr u32 MinimumWaveSize{ 4 };
+		constexpr u32 MaximumWaveSize{ 64 };
+
+		constexpr u32 KillsPerPopulation{ 8 };
 
 		constexpr u32 KillsPerEnergySlot{ 16 };
 		constexpr u32 KillsPerArmorSlot{ 8 };

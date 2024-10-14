@@ -208,6 +208,22 @@ namespace necrowarp {
 		return true;
 	}
 
+	template<NonPlayerEntity EntityType> inline bool entity_registry_t::spawn(usize count, u32 minimum_distance) noexcept {
+		for (usize i{ 0 }; i < count; ++i) {
+			cauto maybe_position{ entity_goal_map<EntityType>.template find_random<zone_region_t::Interior>(game_map, random_engine, cell_trait_t::Open, entity_registry, minimum_distance) };
+
+			if (!maybe_position.has_value()) {
+				return false;
+			}
+
+			entity_registry.add(EntityType{ maybe_position.value() });
+
+			entity_goal_map<EntityType>.template recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+		}
+
+		return true;
+	}
+
 	inline bool entity_registry_t::update(cref<offset_t> current, cref<offset_t> target) noexcept {
 		if (!entity_registry.contains(current) || entity_registry.contains(target)) {
 			return false;

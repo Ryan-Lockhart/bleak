@@ -265,7 +265,7 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region> constexpr std::optional<offset_t> ascend(cref<offset_t> position) const noexcept {
-			if (!distances.template within<Region>(position) || distances[position] == obstacle_value) {
+			if (!distances.template within<Region>(position)) {
 				return std::nullopt;
 			}
 
@@ -296,7 +296,7 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, SparseBlockage Blockage> constexpr std::optional<offset_t> ascend(cref<offset_t> position, cref<Blockage> sparse_blockage) const noexcept {
-			if (!distances.template within<Region>(position) || distances[position] == obstacle_value) {
+			if (!distances.template within<Region>(position)) {
 				return std::nullopt;
 			}
 
@@ -329,7 +329,7 @@ namespace bleak {
 		template<zone_region_t Region, typename Generator>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> ascend(cref<offset_t> position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
-			if (!distances.template within<Region>(position) || distances[position] == obstacle_value) {
+			if (!distances.template within<Region>(position)) {
 				return std::nullopt;
 			}
 
@@ -365,7 +365,7 @@ namespace bleak {
 		template<zone_region_t Region, typename Generator, SparseBlockage Blockage>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> ascend(cref<offset_t> position, cref<Blockage> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
-			if (!distances.template within<Region>(position) || distances[position] == obstacle_value) {
+			if (!distances.template within<Region>(position)) {
 				return std::nullopt;
 			}
 
