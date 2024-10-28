@@ -1,15 +1,8 @@
 #pragma once
 
-#include <bleak.hpp>
-
-namespace necrowarp {
-	using namespace bleak;
-
-	namespace components {
-		struct health_t {
-			i16 value;
-		};
-
-		struct afflicted_t {};
-	} // namespace components
-} // namespace necrowarp
+// IWYU pragma: begin_exports
+#include <necrowarp/ecs/components/animate.hpp>
+#include <necrowarp/ecs/components/commands.hpp>
+#include <necrowarp/ecs/components/inanimate.hpp>
+#include <necrowarp/ecs/components/status.hpp>
+// IWYU pragma: end_exports

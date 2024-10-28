@@ -1,8 +1,7 @@
 #pragma once
 
-#include "bleak/clock.hpp"
-#include "ecs/components.hpp"
-#include "ecs/systems.hpp"
+#include "necrowarp/ecs/systems.hpp"
+#include "necrowarp/ecs/systems/base.hpp"
 #include <bleak.hpp>
 
 #include <cstdlib>
@@ -35,16 +34,6 @@ namespace necrowarp {
 		};
 
 	  private:
-		static inline void primary_gamepad_disconnected() noexcept {
-			gamepad_enabled = false;
-			primary_gamepad = nullptr;
-		}
-
-		static inline void primary_gamepad_reconnected(cptr<gamepad_t> gamepad) noexcept {
-			gamepad_enabled = true;
-			primary_gamepad = gamepad;
-		}
-
 		static inline void startup() noexcept {
 			Mouse::initialize();
 			Keyboard::initialize();
@@ -53,7 +42,17 @@ namespace necrowarp {
 
 			Mouse::hide_cursor();
 
-			primary_gamepad = GamepadManager::lease(0, &primary_gamepad_disconnected, &primary_gamepad_reconnected);
+			primary_gamepad = GamepadManager::lease(0,
+				[]() {
+					gamepad_enabled = false;
+					primary_gamepad = nullptr;
+				},
+				[](cptr<gamepad_t> gamepad) {
+					gamepad_enabled = true;
+					primary_gamepad = gamepad;
+				}
+			);
+
 			gamepad_enabled = primary_gamepad != nullptr;
 
 			if (primary_gamepad == nullptr) {
@@ -103,19 +102,7 @@ namespace necrowarp {
 			message_log.flush_to_console(std::cout);
 			error_log.flush_to_console(std::cerr);
 
-			ecs.entity("player")
-				.set<components::health_t>({ 100 });
-			
-			ecs.entity("minion")
-				.set<components::health_t>({ 50 });
-			
-			ecs.entity("vermin")
-				.set<components::health_t>({ 25 })
-				.add<components::afflicted_t>();
-
-			systems::affliction_system::initialize(ecs);
-			systems::health_system::initialize(ecs);
-			systems::emit_health_system::initialize(ecs);
+			systems::initialize<systems::status_systems>(ecs);
 		}
 
 		static inline void input() noexcept {
