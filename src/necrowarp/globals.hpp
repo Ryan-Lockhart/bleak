@@ -15,7 +15,7 @@ namespace necrowarp {
 		constexpr sdl::window_flags WindowFlags{ static_cast<sdl::window_flags>(SDL_WINDOW_BORDERLESS | SDL_WINDOW_SHOWN) };
 		constexpr sdl::renderer_flags RendererFlags{ static_cast<sdl::renderer_flags>(SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) };
 
-		constexpr u32 FrameLimit{ 30u };
+		constexpr u32 FrameLimit{ 60u };
 		constexpr f32 FrameTime{ 1000.0f / FrameLimit };
 
 		constexpr bool UseFrameLimit{ true };
@@ -69,28 +69,28 @@ namespace necrowarp {
 		constexpr u32 ViewDistance{ 8 };
 		constexpr f64 ViewSpan{ 135.0 };
 
-		constexpr u32 NumberOfLadders{ 4 };
-		constexpr u32 MinimumLadderDistance{ 16 };
+		constexpr i16 NumberOfLadders{ 4 };
+		constexpr i16 MinimumLadderDistance{ 16 };
 
-		constexpr u32 StartingAdventurers{ 4 };
+		constexpr i16 StartingAdventurers{ 4 };
 
-		constexpr u32 StartingSkulls{ 8 };
-		constexpr u32 MinimumSkullDistance{ 8 };
+		constexpr i16 StartingSkulls{ 8 };
+		constexpr i16 MinimumSkullDistance{ 8 };
 
-		constexpr u32 SpawnDistributionLow{ 0 };
-		constexpr u32 SpawnDistributionHigh{ 99 };
+		constexpr i16 SpawnDistributionLow{ 0 };
+		constexpr i16 SpawnDistributionHigh{ 99 };
 
-		constexpr u32 SmallWaveSize{ 8 };
-		constexpr u32 MediumWaveSize{ 16 };
-		constexpr u32 LargeWaveSize{ 32 };
-		constexpr u32 HugeWaveSize{ 64 };
+		constexpr i16 SmallWaveSize{ 8 };
+		constexpr i16 MediumWaveSize{ 16 };
+		constexpr i16 LargeWaveSize{ 32 };
+		constexpr i16 HugeWaveSize{ 64 };
 
-		constexpr u32 MinimumWaveSize{ 4 };
-		constexpr u32 MaximumWaveSize{ 64 };
+		constexpr i16 MinimumWaveSize{ 4 };
+		constexpr i16 MaximumWaveSize{ 64 };
 
-		constexpr u32 KillsPerPopulation{ 8 };
+		constexpr i16 KillsPerPopulation{ 8 };
 
-		constexpr u32 KillsPerEnergySlot{ 16 };
-		constexpr u32 KillsPerArmorSlot{ 8 };
+		constexpr i16 KillsPerEnergySlot{ 16 };
+		constexpr i16 KillsPerArmorSlot{ 8 };
 	} // namespace globals
 } // namespace necrowarp

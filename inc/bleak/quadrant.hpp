@@ -41,20 +41,20 @@ namespace bleak {
 		constexpr quadrant_t(c_quadrant_t quadrant) noexcept : c_quadrant_t{ .value = quadrant.value } {}
 
 		constexpr quadrant_t(cardinal_t direction) noexcept {
-			switch (static_cast<u8>(direction)) {
-			case cardinal_t::Southeast:
+			switch (direction) {
+			case cardinal_e::Southeast:
 				upper = false;
 				left = false;
 				break;
-			case cardinal_t::Northeast:
+			case cardinal_e::Northeast:
 				upper = true;
 				left = false;
 				break;
-			case cardinal_t::Southwest:
+			case cardinal_e::Southwest:
 				upper = false;
 				left = true;
 				break;
-			case cardinal_t::Northwest:
+			case cardinal_e::Northwest:
 				upper = true;
 				left = true;
 				break;
@@ -81,15 +81,15 @@ namespace bleak {
 		constexpr operator cardinal_t() const noexcept {
 			if (upper) {
 				if (left) {
-					return cardinal_t::Northwest;
+					return cardinal_e::Northwest;
 				} else {
-					return cardinal_t::Northeast;
+					return cardinal_e::Northeast;
 				}
 			} else {
 				if (left) {
-					return cardinal_t::Southwest;
+					return cardinal_e::Southwest;
 				} else {
-					return cardinal_t::Southeast;
+					return cardinal_e::Southeast;
 				}
 			}
 		}

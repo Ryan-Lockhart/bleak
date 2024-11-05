@@ -8,6 +8,11 @@
 #include <bleak/sparse.hpp>
 
 namespace necrowarp {
+	extern grid_cursor_t<globals::CellSize> warp_cursor;
+
+	extern bool draw_cursor;
+	extern bool draw_warp_cursor;
+	
 	using namespace bleak;
 
 	static inline player_t player{};

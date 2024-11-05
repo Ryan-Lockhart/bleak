@@ -17,19 +17,19 @@ namespace bleak {
 		template<usize Count> using key_collection_t = std::array<sdl::key, Count>;
 
 		constexpr const lut_t<cardinal_t, key_collection_t<4>, 4> CharacterMovement { 
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::North, { keys::Alpha::W, keys::Keypad::Numeric::Seven, keys::Keypad::Numeric::Eight, keys::Keypad::Numeric::Nine } },
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::South, { keys::Alpha::S, keys::Keypad::Numeric::One, keys::Keypad::Numeric::Two, keys::Keypad::Numeric::Three } },
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::West, { keys::Alpha::A, keys::Keypad::Numeric::One, keys::Keypad::Numeric::Four, keys::Keypad::Numeric::Seven } },
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_t::East, { keys::Alpha::D, keys::Keypad::Numeric::Three, keys::Keypad::Numeric::Six, keys::Keypad::Numeric::Nine } }
+			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_e::North, { keys::Alpha::W, keys::Keypad::Numeric::Seven, keys::Keypad::Numeric::Eight, keys::Keypad::Numeric::Nine } },
+			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_e::South, { keys::Alpha::S, keys::Keypad::Numeric::One, keys::Keypad::Numeric::Two, keys::Keypad::Numeric::Three } },
+			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_e::West, { keys::Alpha::A, keys::Keypad::Numeric::One, keys::Keypad::Numeric::Four, keys::Keypad::Numeric::Seven } },
+			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_e::East, { keys::Alpha::D, keys::Keypad::Numeric::Three, keys::Keypad::Numeric::Six, keys::Keypad::Numeric::Nine } }
 		};
 
 		constexpr const std::array<sdl::key, 2> Wait{ keys::Space, keys::Keypad::Numeric::Five };
 		
 		constexpr const lut_t<cardinal_t, sdl::key, 4> CameraMovement { 
-			pair_t<cardinal_t, sdl::key>{ cardinal_t::North, keys::Arrow::Up },
-			pair_t<cardinal_t, sdl::key>{ cardinal_t::South, keys::Arrow::Down },
-			pair_t<cardinal_t, sdl::key>{ cardinal_t::West, keys::Arrow::Left },
-			pair_t<cardinal_t, sdl::key>{ cardinal_t::East, keys::Arrow::Right }
+			pair_t<cardinal_t, sdl::key>{ cardinal_e::North, keys::Arrow::Up },
+			pair_t<cardinal_t, sdl::key>{ cardinal_e::South, keys::Arrow::Down },
+			pair_t<cardinal_t, sdl::key>{ cardinal_e::West, keys::Arrow::Left },
+			pair_t<cardinal_t, sdl::key>{ cardinal_e::East, keys::Arrow::Right }
 		};
 
 		constexpr const sdl::key Quit{ keys::Escape };

@@ -75,6 +75,26 @@ namespace bleak {
 
 		constexpr void set_alpha(f64 alpha) noexcept { a = wrap_cast(alpha); }
 
+		constexpr color_t dimmed(f32 factor) const noexcept {
+			if (factor < 0.0f) {
+				return *this;
+			}
+			
+			return color_t{ static_cast<u8>(r * factor), static_cast<u8>(g * factor), static_cast<u8>(b * factor), a };
+		}
+
+		constexpr ref<color_t> dim(f32 factor) noexcept {
+			if (factor < 0.0f) {
+				return *this;
+			}
+
+			r = static_cast<u8>(r * factor);
+			g = static_cast<u8>(g * factor);
+			b = static_cast<u8>(b * factor);
+
+			return *this;
+		}
+
 		constexpr explicit operator u32() const noexcept { return packed; }
 
 		inline operator std::string() const noexcept { return std::format("[{}, {}, {}, {}]", r, g, b, a); }

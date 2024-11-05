@@ -56,40 +56,40 @@ namespace bleak {
 		struct stick_t {
 		  private:
 			static inline constexpr cardinal_t to_cardinal(i16 x, i16 y) noexcept {
-				cardinal_t result{ cardinal_t::Central };
+				cardinal_t result{ cardinal_e::Central };
 
 				if (x < -JOYSTICK_DEAD_ZONE) {
-					result += cardinal_t::West;
+					result += cardinal_e::West;
 				}
 				if (x > JOYSTICK_DEAD_ZONE) {
-					result += cardinal_t::East;
+					result += cardinal_e::East;
 				}
 
 				if (y < -JOYSTICK_DEAD_ZONE) {
-					result += cardinal_t::North;
+					result += cardinal_e::North;
 				}
 				if (y > JOYSTICK_DEAD_ZONE) {
-					result += cardinal_t::South;
+					result += cardinal_e::South;
 				}
 
 				return result;
 			}
 
 			static inline constexpr cardinal_t to_cardinal(i16 x, i16 y, i16 deadzone) noexcept {
-				cardinal_t result{ cardinal_t::Central };
+				cardinal_t result{ cardinal_e::Central };
 
 				if (x < -deadzone) {
-					result += cardinal_t::West;
+					result += cardinal_e::West;
 				}
 				if (x > deadzone) {
-					result += cardinal_t::East;
+					result += cardinal_e::East;
 				}
 
 				if (y < -deadzone) {
-					result += cardinal_t::North;
+					result += cardinal_e::North;
 				}
 				if (y > deadzone) {
-					result += cardinal_t::South;
+					result += cardinal_e::South;
 				}
 
 				return result;
@@ -160,18 +160,18 @@ namespace bleak {
 		struct dpad_t {
 		  private:
 			static inline constexpr cardinal_t to_cardinal(cref<buttons_t> buttons) noexcept {
-				cardinal_t result{ cardinal_t::Central };
+				cardinal_t result{ cardinal_e::Central };
 
 				if (buttons.current_state[SDL_JOYSTICK_BUTTON_UP]) {
-					result += cardinal_t::North;
+					result += cardinal_e::North;
 				} else if (buttons.current_state[SDL_JOYSTICK_BUTTON_DOWN]) {
-					result += cardinal_t::South;
+					result += cardinal_e::South;
 				}
 
 				if (buttons.current_state[SDL_JOYSTICK_BUTTON_LEFT]) {
-					result += cardinal_t::West;
+					result += cardinal_e::West;
 				} else if (buttons.current_state[SDL_JOYSTICK_BUTTON_RIGHT]) {
-					result += cardinal_t::East;
+					result += cardinal_e::East;
 				}
 
 				return result;

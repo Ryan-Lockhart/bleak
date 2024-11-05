@@ -5,11 +5,14 @@
 #include <atomic>
 
 #include <necrowarp/globals.hpp>
+#include <necrowarp/phase.hpp>
 
 namespace necrowarp {
 	using namespace bleak;
 
 	static inline subsystem_s subsystem{};
+
+	static inline phase_t phase{};
 
 	static inline window_t window{ globals::GameTitle.c_str(), globals::WindowSize + globals::WindowBorder * 2, globals::WindowFlags };
 	static inline renderer_t renderer{ window, globals::RendererFlags };
@@ -21,12 +24,6 @@ namespace necrowarp {
 
 	static inline zone_t<cell_state_t, globals::MapSize, globals::BorderSize> game_map{};
 
-	static inline bool gamepad_enabled{ true };
-
-	static inline cptr<gamepad_t> primary_gamepad{ nullptr };
-
-	static inline bool gamepad_active{ false };
-
 	static inline cursor_t cursor{ renderer, "res\\sprites\\cursor.png", colors::White };
 
 	static inline grid_cursor_t<globals::CellSize> grid_cursor{ renderer, "res\\sprites\\grid_cursor.png", colors::metals::Gold, game_map.zone_origin, game_map.zone_extent };
@@ -34,6 +31,12 @@ namespace necrowarp {
 
 	static inline bool draw_cursor{ true };
 	static inline bool draw_warp_cursor{ false };
+
+	static inline bool gamepad_enabled{ true };
+
+	static inline cptr<gamepad_t> primary_gamepad{ nullptr };
+
+	static inline bool gamepad_active{ false };
 
 	static inline camera_t camera{ globals::GameGridSize, extent_t::Zero, globals::CameraExtent };
 	static inline bool camera_locked{ true };
@@ -53,8 +56,8 @@ namespace necrowarp {
 
 	static inline usize spawns_remaining{ globals::StartingAdventurers };
 	
-	static inline i16 player_kills{ 0 };
-	static inline i16 minion_kills{ 0 };
+	static inline i16 player_kills{ 512 };
+	static inline i16 minion_kills{ 512 };
 
 	static inline i16 total_kills() noexcept { return player_kills + minion_kills; };
 } // namespace necrowarp

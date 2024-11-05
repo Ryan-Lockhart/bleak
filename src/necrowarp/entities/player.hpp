@@ -41,13 +41,13 @@ namespace necrowarp {
 		entity_command_t command;
 		offset_t position;
 
-		static constexpr i8 MaximumEnergy{ 32 };
+		static constexpr i8 MaximumEnergy{ 24 };
 		static constexpr i8 MinimumEnergy{ 4 };
 
 		static constexpr i8 StartingEnergy{ 3 };
 		static constexpr i8 StartingArmor{ 0 };
 
-		static constexpr i8 MaximumArmor{ 16 };
+		static constexpr i8 MaximumArmor{ 12 };
 		static constexpr i8 MinimumArmor{ 2 };
 
 		static constexpr i8 MaximumDamage{ 1 };
@@ -83,9 +83,9 @@ namespace necrowarp {
 
 		inline bool has_armor() const noexcept { return armor > 0; }
 
-		inline i8 max_energy() const noexcept { return MinimumEnergy + minion_kills / globals::KillsPerEnergySlot; }
+		inline i8 max_energy() const noexcept { return clamp(static_cast<i8>(minion_kills / globals::KillsPerEnergySlot), MinimumEnergy, MaximumEnergy); }
 
-		inline i8 max_armor() const noexcept { return MinimumArmor + player_kills / globals::KillsPerArmorSlot; }
+		inline i8 max_armor() const noexcept { return clamp(static_cast<i8>(player_kills / globals::KillsPerArmorSlot), MinimumArmor, MaximumArmor); }
 
 		inline bool can_survive(i8 damage_amount) const noexcept { return armor >= damage_amount; }
 

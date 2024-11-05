@@ -17,6 +17,8 @@ namespace bleak {
 	  public:
 		static constexpr color_t DEFAULT_COLOR{ colors::White };
 
+		constexpr runes_t() noexcept = default;
+
 		constexpr runes_t(cref<std::string> text) {
 			for (auto& ch : text) {
 				emplace_back(ch, DEFAULT_COLOR);

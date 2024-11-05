@@ -83,7 +83,7 @@ namespace bleak {
 		}
 
 		inline void update(cref<cardinal_t> direction) {
-			if (direction == cardinal_t::Central) {
+			if (direction == cardinal_e::Central) {
 				return;
 			}
 
@@ -128,7 +128,7 @@ namespace bleak {
 			const auto low{ lower_third() };
 			const auto up{ upper_third() };
 
-			return cardinal_t{ position.y < low.y ? cardinal_t::North : position.y < up.y ? cardinal_t::Central : cardinal_t::South, position.x < low.x ? cardinal_t::West : position.x < up.x ? cardinal_t::Central : cardinal_t::East };
+			return cardinal_t{ position.y < low.y ? cardinal_e::North : position.y < up.y ? cardinal_e::Central : cardinal_e::South, position.x < low.x ? cardinal_e::West : position.x < up.x ? cardinal_e::Central : cardinal_e::East };
 		}
 	};
 } // namespace bleak

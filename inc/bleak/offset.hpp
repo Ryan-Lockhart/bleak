@@ -87,7 +87,7 @@ namespace bleak {
 		constexpr explicit offset_t(X x, Y y) noexcept : underlying_t{ scalar_cast(x), scalar_cast(y) } {}
 
 		constexpr explicit offset_t(cref<cardinal_t> direction) noexcept : underlying_t{} {
-			if (direction == cardinal_t::Central) {
+			if (direction == cardinal_e::Central) {
 				return;
 			} else {
 				if (!direction.is_lat_neutral()) {
@@ -315,15 +315,15 @@ namespace bleak {
 
 		constexpr operator cardinal_t() const noexcept {
 			if (*this == offset_t::Zero) {
-				return cardinal_t::Central;
+				return cardinal_e::Central;
 			} else {
-				cardinal_t result = cardinal_t::Central;
+				cardinal_t result = cardinal_e::Central;
 
 				if (x != 0) {
-					result += x < 0 ? cardinal_t::West : cardinal_t::East;
+					result += x < 0 ? cardinal_e::West : cardinal_e::East;
 				}
 				if (y != 0) {
-					result += y < 0 ? cardinal_t::North : cardinal_t::South;
+					result += y < 0 ? cardinal_e::North : cardinal_e::South;
 				}
 
 				return result;

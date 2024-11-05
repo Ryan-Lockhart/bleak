@@ -151,22 +151,22 @@ namespace bleak {
 		constexpr bool on_edge(cref<offset_t> position) const noexcept { return on_x_edge(position) || on_y_edge(position); }
 
 		constexpr cardinal_t edge_state(cref<offset_t> position) const noexcept {
-			cardinal_t state{ cardinal_t::Central };
+			cardinal_t state{ cardinal_e::Central };
 
 			if (!on_edge(position)) {
 				return state;
 			}
 
 			if (position.x == zone_origin.x) {
-				state += cardinal_t::West;
+				state += cardinal_e::West;
 			} else if (position.x == zone_extent.x) {
-				state += cardinal_t::East;
+				state += cardinal_e::East;
 			}
 
 			if (position.y == zone_origin.y) {
-				state += cardinal_t::North;
+				state += cardinal_e::North;
 			} else if (position.y == zone_extent.y) {
-				state += cardinal_t::South;
+				state += cardinal_e::South;
 			}
 
 			return state;
@@ -872,15 +872,15 @@ namespace bleak {
 						index += 1 << 3;
 					}
 
-					if (edge == cardinal_t::East || cells[position + offset_t::East] == value) {
+					if (edge == cardinal_e::East || cells[position + offset_t::East] == value) {
 						index += 1 << 2;
 					}
 
-					if (edge == cardinal_t::Southeast || cells[position + offset_t::Southeast] == value) {
+					if (edge == cardinal_e::Southeast || cells[position + offset_t::Southeast] == value) {
 						index += 1 << 1;
 					}
 
-					if (edge == cardinal_t::South || cells[position + offset_t::South] == value) {
+					if (edge == cardinal_e::South || cells[position + offset_t::South] == value) {
 						index += 1 << 0;
 					}
 				}
@@ -981,15 +981,15 @@ namespace bleak {
 						index += 1 << 3;
 					}
 
-					if (edge == cardinal_t::East || cells[position + offset_t::East] == value) {
+					if (edge == cardinal_e::East || cells[position + offset_t::East] == value) {
 						index += 1 << 2;
 					}
 
-					if (edge == cardinal_t::Southeast || cells[position + offset_t::Southeast] == value) {
+					if (edge == cardinal_e::Southeast || cells[position + offset_t::Southeast] == value) {
 						index += 1 << 1;
 					}
 
-					if (edge == cardinal_t::South || cells[position + offset_t::South] == value) {
+					if (edge == cardinal_e::South || cells[position + offset_t::South] == value) {
 						index += 1 << 0;
 					}
 				}

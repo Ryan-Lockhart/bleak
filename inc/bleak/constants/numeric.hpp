@@ -86,15 +86,15 @@ namespace bleak {
 	inline constexpr f64 radians_to_degrees(f64 radians) { return radians * RadiansToDegrees; }
 
 	inline constexpr lut_t<cardinal_t, f64, 9> DirectionToAngle {
-		pair_t<cardinal_t, f64>{ cardinal_t::Central, std::numeric_limits<f64>::quiet_NaN() },
-		pair_t<cardinal_t, f64>{ cardinal_t::North, 0.0 },
-		pair_t<cardinal_t, f64>{ cardinal_t::Northwest, 315.0 },
-		pair_t<cardinal_t, f64>{ cardinal_t::West, 270.0 },
-		pair_t<cardinal_t, f64>{ cardinal_t::Southwest, 225.0 },
-		pair_t<cardinal_t, f64>{ cardinal_t::South, 180.0 },
-		pair_t<cardinal_t, f64>{ cardinal_t::Southeast, 135.0 },
-		pair_t<cardinal_t, f64>{ cardinal_t::East, 90.0 },
-		pair_t<cardinal_t, f64>{ cardinal_t::Northeast, 45.0 }
+		pair_t<cardinal_t, f64>{ cardinal_e::Central, std::numeric_limits<f64>::quiet_NaN() },
+		pair_t<cardinal_t, f64>{ cardinal_e::North, 0.0 },
+		pair_t<cardinal_t, f64>{ cardinal_e::Northwest, 315.0 },
+		pair_t<cardinal_t, f64>{ cardinal_e::West, 270.0 },
+		pair_t<cardinal_t, f64>{ cardinal_e::Southwest, 225.0 },
+		pair_t<cardinal_t, f64>{ cardinal_e::South, 180.0 },
+		pair_t<cardinal_t, f64>{ cardinal_e::Southeast, 135.0 },
+		pair_t<cardinal_t, f64>{ cardinal_e::East, 90.0 },
+		pair_t<cardinal_t, f64>{ cardinal_e::Northeast, 45.0 }
 	};
 
 	inline constexpr f64 direction_to_angle(cardinal_t direction) { return DirectionToAngle[direction]; }
