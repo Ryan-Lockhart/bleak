@@ -8,69 +8,12 @@
 
 namespace necrowarp {
 	using namespace bleak;
-
 	static inline label_t title_label{
 		anchor_t{ { globals::UIGridSize.w / 2, 1 }, cardinal_e::North },
 		embedded_label_t{
 			runes_t{ globals::GameTitle, colors::Marble },
 			embedded_box_t{ colors::Black,
 			border_t{ colors::White, 1 } },
-			extent_t{ 1, 1 }
-		}
-	};
-
-	static inline labeled_button_t play_button{
-		anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
-		embedded_label_t{
-			runes_t{ "Play", colors::Green },
-			embedded_box_t{ colors::Grey, { colors::White, 1 } },
-			extent_t{ 1, 1 }
-		}
-	};
-
-	static inline labeled_button_t config_button{
-		anchor_t{ { play_button.position.x, play_button.position.y + play_button.calculate_size().h + 3 }, cardinal_e::Central },
-		embedded_label_t{
-			runes_t{ "Config", colors::Orange },
-			embedded_box_t{ colors::Grey, { colors::White, 1 } },
-			extent_t{ 1, 1 }
-		}
-	};
-
-	static inline labeled_button_t quit_button{
-		anchor_t{ { config_button.position.x, config_button.position.y + config_button.calculate_size().h + 3 }, cardinal_e::Central },
-		embedded_label_t{
-			runes_t{ "Quit", colors::White },
-			embedded_box_t{ colors::Grey, { colors::White, 1 } },
-			extent_t{ 1, 1 }
-		}
-	};
-
-	static inline wave_t confirm_quit_wave{ 1.0, 0.5, 1.0 };
-
-	static inline label_t confirm_quit_label{
-		anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
-		embedded_label_t{
-			runes_t{ "Are you sure you want to quit?", colors::White },
-			embedded_box_t{ colors::Red, { colors::White, 1 } },
-			extent_t{ 1, 1 }
-		}
-	};
-
-	static inline labeled_button_t confirm_quit_button{
-		anchor_t{ { confirm_quit_label.position.x - 1, confirm_quit_label.position.y + 4 }, cardinal_e::East },
-		embedded_label_t{
-			runes_t{ "Yes", colors::Green },
-			embedded_box_t{ colors::Grey, { colors::White, 1 } },
-			extent_t{ 1, 1 }
-		}
-	};
-
-	static inline labeled_button_t cancel_quit_button{
-		anchor_t{ { confirm_quit_label.position.x + 1, confirm_quit_label.position.y + 4 }, cardinal_e::West },
-		embedded_label_t{
-			runes_t{ "No", colors::Red },
-			embedded_box_t{ colors::Grey, { colors::White, 1 } },
 			extent_t{ 1, 1 }
 		}
 	};
@@ -84,27 +27,385 @@ namespace necrowarp {
 		}
 	};
 
+	template<game_phase_t Phase> struct phase_state_t;
+
+	template<> struct phase_state_t<game_phase_t::MainMenu> {
+		static inline labeled_button_t play_button{
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Play", colors::Green },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline labeled_button_t config_button{
+			anchor_t{ { play_button.position.x, play_button.position.y + play_button.calculate_size().h + 3 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Config", colors::Orange },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline labeled_button_t quit_button{
+			anchor_t{ { config_button.position.x, config_button.position.y + config_button.calculate_size().h + 3 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Quit", colors::White },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline bool is_hovered() noexcept {
+			if (phase.current_phase != game_phase_t::MainMenu) {
+				return false;
+			}
+
+			return
+				play_button.is_hovered() ||
+				config_button.is_hovered() ||
+				quit_button.is_hovered();
+		}
+
+		static inline void update(Mouse::button_t button) noexcept {
+			if (phase.current_phase != game_phase_t::MainMenu) {
+				return;
+			}
+
+			play_button.update(Mouse::button_t::Left);
+			config_button.update(Mouse::button_t::Left);
+			quit_button.update(Mouse::button_t::Left);
+
+			if (play_button.is_active()) {
+				phase.transition(game_phase_t::Loading);
+			} else if (config_button.is_active()) {
+				phase.transition(game_phase_t::ConfigMenu);
+			} else if (quit_button.is_active()) {
+				phase.transition(game_phase_t::Exiting);
+			}
+		}
+
+		static inline void draw(renderer_t& renderer) noexcept {
+			play_button.draw(renderer);
+			config_button.draw(renderer);
+			quit_button.draw(renderer);
+		}
+	};
+
+	template<> struct phase_state_t<game_phase_t::Loading> {
+		static inline label_t loading_label{
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Loading...", colors::White },
+				embedded_box_t{ colors::Black, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline bool is_hovered() noexcept {
+			if (phase.current_phase != game_phase_t::Loading) {
+				return false;
+			}
+
+			return loading_label.is_hovered();
+		}
+
+		static inline void draw(renderer_t& renderer) noexcept {
+			loading_label.draw(renderer);
+		}
+	};
+
+	template<> struct phase_state_t<game_phase_t::Paused> {
+		static inline labeled_button_t resume_button{
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Resume", colors::Green },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline labeled_button_t config_button{
+			anchor_t{ { resume_button.position.x, resume_button.position.y + resume_button.calculate_size().h + 3 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Config", colors::Orange },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline labeled_button_t quit_button{
+			anchor_t{ { config_button.position.x, config_button.position.y + config_button.calculate_size().h + 3 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Quit", colors::White },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline bool is_hovered() noexcept {
+			if (phase.current_phase != game_phase_t::Paused) {
+				return false;
+			}
+
+			return
+				resume_button.is_hovered() ||
+				config_button.is_hovered() ||
+				quit_button.is_hovered();
+		}
+
+		static inline void update(Mouse::button_t button) noexcept {
+			if (phase.current_phase != game_phase_t::Paused) {
+				return;
+			}
+
+			resume_button.update(Mouse::button_t::Left);
+			config_button.update(Mouse::button_t::Left);
+			quit_button.update(Mouse::button_t::Left);
+
+			if (resume_button.is_active()) {
+				phase.transition(game_phase_t::Playing);
+			} else if (config_button.is_active()) {
+				phase.transition(game_phase_t::ConfigMenu);
+			} else if (quit_button.is_active()) {
+				phase.transition(game_phase_t::Exiting);
+			}
+		}
+
+		static inline void draw(renderer_t& renderer) noexcept {
+			resume_button.draw(renderer);
+			config_button.draw(renderer);
+			quit_button.draw(renderer);
+		}
+	};
+
+	template<> struct phase_state_t<game_phase_t::ConfigMenu> {
+		static inline labeled_button_t back_button{
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Back", colors::White },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline bool is_hovered() noexcept {
+			if (phase.current_phase != game_phase_t::ConfigMenu) {
+				return false;
+			}
+
+			return back_button.is_hovered();
+		}
+
+		static inline void update(Mouse::button_t button) noexcept {
+			if (phase.current_phase != game_phase_t::ConfigMenu) {
+				return;
+			}
+
+			back_button.update(Mouse::button_t::Left);
+
+			if (back_button.is_active()) {
+				phase.revert();
+			}
+		}
+
+		static inline void draw(renderer_t& renderer) noexcept {
+			back_button.draw(renderer);
+		}
+	};
+
+	template<> struct phase_state_t<game_phase_t::GameOver> {
+		static inline labeled_button_t retry_button{
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Retry", colors::Green },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline labeled_button_t quit_button{
+			anchor_t{ { retry_button.position.x, retry_button.position.y + retry_button.calculate_size().h + 3 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Quit", colors::Red },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline bool is_hovered() noexcept {
+			if (phase.current_phase != game_phase_t::GameOver) {
+				return false;
+			}
+
+			return
+				retry_button.is_hovered() ||
+				quit_button.is_hovered();
+		}
+
+		static inline void update(Mouse::button_t button) noexcept {
+			if (phase.current_phase != game_phase_t::GameOver) {
+				return;
+			}
+
+			retry_button.update(Mouse::button_t::Left);
+			quit_button.update(Mouse::button_t::Left);
+
+			if (retry_button.is_active()) {
+				phase.transition(game_phase_t::Loading);
+			} else if (quit_button.is_active()) {
+				phase.transition(game_phase_t::Exiting);
+			}
+		}
+
+		static inline void draw(renderer_t& renderer) noexcept {
+			title_label.draw(renderer);
+			retry_button.draw(renderer);
+			quit_button.draw(renderer);
+		}
+	};
+
+	template<> struct phase_state_t<game_phase_t::Exiting> {
+		static inline label_t confirm_quit_label{
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Are you sure you want to quit?", colors::White },
+				embedded_box_t{ colors::Red, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline labeled_button_t confirm_quit_button{
+			anchor_t{ { confirm_quit_label.position.x - 1, confirm_quit_label.position.y + 4 }, cardinal_e::East },
+			embedded_label_t{
+				runes_t{ "Yes", colors::Green },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline labeled_button_t cancel_quit_button{
+			anchor_t{ { confirm_quit_label.position.x + 1, confirm_quit_label.position.y + 4 }, cardinal_e::West },
+			embedded_label_t{
+				runes_t{ "No", colors::Red },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline bool is_hovered() noexcept {
+			if (phase.current_phase != game_phase_t::Exiting) {
+				return false;
+			}
+
+			return
+				confirm_quit_label.is_hovered() ||
+				confirm_quit_button.is_hovered() ||
+				cancel_quit_button.is_hovered();
+		}
+
+		static inline void update(Mouse::button_t button) noexcept {
+			if (phase.current_phase != game_phase_t::Exiting) {
+				return;
+			}
+
+			confirm_quit_button.update(Mouse::button_t::Left);
+			cancel_quit_button.update(Mouse::button_t::Left);
+
+			if (confirm_quit_button.is_active()) {
+				window.close();
+			} else if (cancel_quit_button.is_active()) {
+				phase.revert();
+			}
+		}
+
+		static inline void draw(renderer_t& renderer) noexcept {
+			title_label.draw(renderer);
+
+			confirm_quit_label.draw(renderer, confirm_quit_label.box.background.dimmed(sine_wave.current_value()));
+
+			confirm_quit_button.draw(renderer);
+			cancel_quit_button.draw(renderer);
+		}
+	};
+
 	constexpr glyph_t ActiveEnergyGlyph{ EnergyGlyph.index, color_t{ 0xFF, static_cast<u8>(0xFF) } };
 	constexpr glyph_t InactiveEnergyGlyph{ EnergyGlyph.index, color_t{ 0xFF, static_cast<u8>(0x80) } };
 
 	constexpr glyph_t ActiveArmorGlyph{ ArmorGlyph.index, color_t{ 0xFF, static_cast<u8>(0xFF) } };
 	constexpr glyph_t InactiveArmorGlyph{ ArmorGlyph.index, color_t{ 0xFF, static_cast<u8>(0x80) } };
 
-	static inline status_bar_t<2> player_statuses{
-		anchor_t{ offset_t{ 1, 1 }, cardinal_e::Northwest},
-		std::array<status_t, 2>{
-			status_t{ player_t::MaximumEnergy, ActiveEnergyGlyph, InactiveEnergyGlyph },
-			status_t{ player_t::MaximumArmor, ActiveArmorGlyph, InactiveArmorGlyph }
-		},
-		embedded_box_t{ colors::Black, { colors::White, 1 } },
-		extent_t{ 1, 1 }
+	template<> struct phase_state_t<game_phase_t::Playing> {
+		static inline status_bar_t<2> player_statuses{
+			anchor_t{ offset_t{ 1, 1 }, cardinal_e::Northwest},
+			std::array<status_t, 2>{
+				status_t{ player_t::MaximumEnergy, ActiveEnergyGlyph, InactiveEnergyGlyph },
+				status_t{ player_t::MaximumArmor, ActiveArmorGlyph, InactiveArmorGlyph }
+			},
+			embedded_box_t{ colors::Black, { colors::White, 1 } },
+			extent_t{ 1, 1 }
+		};
+		static inline bool is_hovered() noexcept {
+			if (phase.current_phase != game_phase_t::Playing) {
+				return false;
+			}
+
+			return
+				player_statuses.is_hovered();
+		}
+
+		static inline void update() noexcept {
+			if (phase.current_phase != game_phase_t::Playing) {
+				return;
+			}
+
+			player_statuses[0].current_value = player.get_energy();
+			player_statuses[0].max_value = player.max_energy();
+
+			player_statuses[1].current_value = player.get_armor();
+			player_statuses[1].max_value = player.max_armor();
+
+			if (gamepad_enabled && gamepad_active) {
+				if (primary_gamepad->left_stick.current_state != cardinal_e::Central && cursor_timer.ready()) {
+					grid_cursor.update(primary_gamepad->left_stick.current_state);
+
+					cursor_timer.record();
+				}
+			} else {
+				grid_cursor.update(camera.get_position());
+			}
+
+			grid_cursor.color.set_alpha(sine_wave.current_value());
+			warp_cursor.color.set_alpha(sine_wave.current_value());
+		}
+
+		static inline void draw(renderer_t& renderer) noexcept {
+			player_statuses.draw(renderer);
+		}
 	};
 
 	static inline bool any_hovered() noexcept {
-		return
-			title_label.is_hovered() ||
-			fps_label.is_hovered() ||
-			player_statuses.is_hovered();
+		if (title_label.is_hovered() || fps_label.is_hovered()) {
+			return true;
+		}
+
+		switch (phase.current_phase) {
+		case game_phase_t::MainMenu:
+			return phase_state_t<game_phase_t::MainMenu>::is_hovered();
+		case game_phase_t::Exiting:
+			return phase_state_t<game_phase_t::Exiting>::is_hovered();
+		case game_phase_t::Paused:
+			return phase_state_t<game_phase_t::Paused>::is_hovered();
+		case game_phase_t::Loading:
+			return phase_state_t<game_phase_t::Loading>::is_hovered();
+		case game_phase_t::ConfigMenu:
+			return phase_state_t<game_phase_t::ConfigMenu>::is_hovered();
+		case game_phase_t::GameOver:
+			return phase_state_t<game_phase_t::GameOver>::is_hovered();
+		default:
+			return false;
+		}
 	}
 
 	static inline bool on_border() noexcept {
@@ -129,29 +430,6 @@ namespace necrowarp {
 				return;
 			}
 
-			if (phase.current_phase == game_phase_t::MainMenu) {
-				play_button.update(Mouse::button_t::Left);
-				config_button.update(Mouse::button_t::Left);
-				quit_button.update(Mouse::button_t::Left);
-
-				if (play_button.is_active()) {
-					phase.current_phase = game_phase_t::Playing;
-				} else if (config_button.is_active()) {
-					phase.transition(game_phase_t::ConfigMenu);
-				} else if (quit_button.is_active()) {
-					phase.transition(game_phase_t::Exiting);
-				}
-			} else if (phase.current_phase == game_phase_t::Exiting) {
-				confirm_quit_button.update(Mouse::button_t::Left);
-				cancel_quit_button.update(Mouse::button_t::Left);
-
-				if (confirm_quit_button.is_active()) {
-					window.close();
-				} else if (cancel_quit_button.is_active()) {
-					phase.transition(game_phase_t::MainMenu);
-				}
-			}
-
 			fps_label.text = {
 				std::format("FPS: {:2}", static_cast<u32>(Clock::frame_time())),
 				colors::Green
@@ -161,24 +439,19 @@ namespace necrowarp {
 
 			cursor.update();
 
-			if (gamepad_enabled && gamepad_active) {
-				if (primary_gamepad->left_stick.current_state != cardinal_e::Central && cursor_timer.ready()) {
-					grid_cursor.update(primary_gamepad->left_stick.current_state);
-
-					cursor_timer.record();
-				}
-			} else {
-				grid_cursor.update(camera.get_position());
+			if (phase.current_phase == game_phase_t::MainMenu) {
+				phase_state_t<game_phase_t::MainMenu>::update(Mouse::button_t::Left); 
+			} else if (phase.current_phase == game_phase_t::ConfigMenu) {
+				phase_state_t<game_phase_t::ConfigMenu>::update(Mouse::button_t::Left);
+			} else if (phase.current_phase == game_phase_t::Exiting) {
+				phase_state_t<game_phase_t::Exiting>::update(Mouse::button_t::Left);
+			} else if (phase.current_phase == game_phase_t::Playing) {
+				phase_state_t<game_phase_t::Playing>::update();
+			} else if (phase.current_phase == game_phase_t::Paused) {
+				phase_state_t<game_phase_t::Paused>::update(Mouse::button_t::Left);
+			} else if (phase.current_phase == game_phase_t::GameOver) {
+				phase_state_t<game_phase_t::GameOver>::update(Mouse::button_t::Left);
 			}
-
-			grid_cursor.color.set_alpha(sine_wave.current_value());
-			warp_cursor.color.set_alpha(sine_wave.current_value());
-
-			player_statuses[0].current_value = player.get_energy();
-			player_statuses[0].max_value = player.max_energy();
-
-			player_statuses[1].current_value = player.get_armor();
-			player_statuses[1].max_value = player.max_armor();
 		}
 
 		inline void render() const noexcept {
@@ -199,26 +472,35 @@ namespace necrowarp {
 			draw_window_border();
 
 			title_label.draw(renderer);
+			fps_label.draw(renderer);
+			
+			switch (phase.current_phase) {
+			case game_phase_t::MainMenu:
+				phase_state_t<game_phase_t::MainMenu>::draw(renderer);
+				break;
+			case game_phase_t::ConfigMenu:
+				phase_state_t<game_phase_t::ConfigMenu>::draw(renderer);
+				break;
+			case game_phase_t::Exiting:
+				phase_state_t<game_phase_t::Exiting>::draw(renderer);
+				break;
+			case game_phase_t::Playing:
+				phase_state_t<game_phase_t::Playing>::draw(renderer);
+				break;
+			case game_phase_t::Paused:
+				phase_state_t<game_phase_t::Paused>::draw(renderer);
+				break;
+			case game_phase_t::Loading:
+				phase_state_t<game_phase_t::Loading>::draw(renderer);
+				break;
+			case game_phase_t::GameOver:
+				phase_state_t<game_phase_t::GameOver>::draw(renderer);
+				break;
+			default:
+				break;
+			}
 
-			if (phase.current_phase == game_phase_t::Playing) {
-				fps_label.draw(renderer);
-
-				player_statuses.draw(renderer);
-
-				if (draw_cursor) {
-					cursor.draw();
-				}
-			} else if (phase.current_phase == game_phase_t::MainMenu) {
-				play_button.draw(renderer);
-				config_button.draw(renderer);
-				quit_button.draw(renderer);
-
-				cursor.draw();
-			} else if (phase.current_phase == game_phase_t::Exiting) {
-				confirm_quit_label.draw(renderer, confirm_quit_label.box.background.dimmed(sine_wave.current_value()));
-				confirm_quit_button.draw(renderer);
-				cancel_quit_button.draw(renderer);
-
+			if (phase.current_phase != game_phase_t::Playing || draw_cursor) {
 				cursor.draw();
 			}
 		}

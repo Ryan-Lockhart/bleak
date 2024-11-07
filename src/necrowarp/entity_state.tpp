@@ -199,6 +199,22 @@ namespace necrowarp {
 		}
 	}
 
+	template<NonPlayerEntity EntityType> inline void entity_registry_t::clear() noexcept {
+		entity_storage<EntityType>.clear();
+	}
+
+	template<NonPlayerEntity... EntityTypes>
+		requires is_plurary<EntityTypes...>::value
+	inline void entity_registry_t::clear() noexcept {
+		(clear<EntityTypes>(), ...);
+	}
+
+	inline void entity_registry_t::clear() noexcept {
+		clear<ALL_NON_PLAYER>();
+
+		player = player_t{};
+	}
+
 	template<NonPlayerEntity EntityType> inline bool entity_registry_t::spawn(usize count) noexcept {
 		for (usize i{ 0 }; i < count; ++i) {
 			cauto maybe_position{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open, entity_registry) };
@@ -547,7 +563,7 @@ namespace necrowarp {
 		}
 
 		if constexpr (Victim == entity_type_t::Player) {
-			// game over
+			phase.transition(game_phase_t::GameOver);
 			return true;
 		} else if constexpr (Victim == entity_type_t::Skeleton) {
 			const bool is_rotted{ victim->rotted };
@@ -650,12 +666,12 @@ namespace necrowarp {
 		if (target_killed) {
 			switch (source_type) {
 				case entity_type_t::Player: {
-					++player_kills;
+					++game_stats.player_kills;
 					draw_warp_cursor = false;
 					break;
 				} case entity_type_t::Skeleton:
 				  case entity_type_t::Wraith: {
-					++minion_kills;
+					++game_stats.minion_kills;
 					break;
 				} default: {
 					break;
@@ -692,11 +708,11 @@ namespace necrowarp {
 		if (source_killed) {
 			switch (target_type) {
 				case entity_type_t::Player: {
-					++player_kills;
+					++game_stats.player_kills;
 					break;
 				} case entity_type_t::Skeleton:
 				  case entity_type_t::Wraith: {
-					++minion_kills;
+					++game_stats.minion_kills;
 					break;
 				} default: {
 					break;

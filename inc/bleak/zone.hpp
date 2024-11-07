@@ -122,7 +122,17 @@ namespace bleak {
 			return view;
 		}
 
-		constexpr array_t<ref<T>, Size> proxy() {
+		constexpr array_t<ref<T>, Size> proxy() noexcept {
+			array_t<ref<T>, Size> proxy{};
+
+			for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+				proxy[i] = ref<T>(cells[i]);
+			}
+
+			return proxy;
+		}
+
+		constexpr array_t<cref<T>, Size> proxy() const noexcept {
 			array_t<ref<T>, Size> proxy{};
 
 			for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
@@ -240,6 +250,12 @@ namespace bleak {
 					}
 				}
 			}
+
+			return *this;
+		}
+
+		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> reset() noexcept {
+			set<Region>(T{});
 
 			return *this;
 		}

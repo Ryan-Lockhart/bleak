@@ -3,6 +3,7 @@
 #include <bleak.hpp>
 
 #include <atomic>
+#include <random>
 
 #include <necrowarp/globals.hpp>
 #include <necrowarp/phase.hpp>
@@ -20,7 +21,7 @@ namespace necrowarp {
 	static inline atlas_t<globals::TilesetSize> game_atlas{ renderer, "res\\tiles\\tileset_16x16.png", globals::UniversalOffset };
 	static inline atlas_t<globals::GlyphsetSize> ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png", globals::UniversalOffset };
 
-	static inline std::mt19937 random_engine{ std::random_device{}() };
+	static inline std::mt19937 random_engine{};
 
 	static inline zone_t<cell_state_t, globals::MapSize, globals::BorderSize> game_map{};
 
@@ -52,12 +53,28 @@ namespace necrowarp {
 	static inline volatile std::atomic_bool player_acted{ false };
 	static inline volatile std::atomic_bool processing_turn{ false };
 
-	static inline usize wave_size{ globals::StartingAdventurers };
+	static inline volatile std::atomic_bool game_running{ false };
 
-	static inline usize spawns_remaining{ globals::StartingAdventurers };
-	
-	static inline i16 player_kills{ 512 };
-	static inline i16 minion_kills{ 512 };
+	struct game_stats_t {
+		usize game_seed{};
 
-	static inline i16 total_kills() noexcept { return player_kills + minion_kills; };
+		usize wave_size{ globals::StartingAdventurers };
+		usize spawns_remaining{ globals::StartingAdventurers };
+
+		i16	 player_kills{ 0 };
+		i16	 minion_kills{ 0 };
+
+		i16	 total_kills() noexcept { return player_kills + minion_kills; };
+
+		void reset() noexcept {
+			game_seed = std::random_device{}();
+			random_engine.seed(game_seed);
+
+			wave_size = globals::StartingAdventurers;
+			spawns_remaining = globals::StartingAdventurers;
+
+			player_kills = 0;
+			minion_kills = 0;
+		}
+	} static inline game_stats{};
 } // namespace necrowarp

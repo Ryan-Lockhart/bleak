@@ -83,9 +83,9 @@ namespace necrowarp {
 
 		inline bool has_armor() const noexcept { return armor > 0; }
 
-		inline i8 max_energy() const noexcept { return clamp(static_cast<i8>(minion_kills / globals::KillsPerEnergySlot), MinimumEnergy, MaximumEnergy); }
+		inline i8 max_energy() const noexcept { return clamp(static_cast<i8>(game_stats.minion_kills / globals::KillsPerEnergySlot), MinimumEnergy, MaximumEnergy); }
 
-		inline i8 max_armor() const noexcept { return clamp(static_cast<i8>(player_kills / globals::KillsPerArmorSlot), MinimumArmor, MaximumArmor); }
+		inline i8 max_armor() const noexcept { return clamp(static_cast<i8>(game_stats.player_kills / globals::KillsPerArmorSlot), MinimumArmor, MaximumArmor); }
 
 		inline bool can_survive(i8 damage_amount) const noexcept { return armor >= damage_amount; }
 

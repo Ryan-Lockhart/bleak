@@ -50,6 +50,14 @@ namespace necrowarp {
 
 		template<entity_type_t EntityType> inline bool remove(cref<offset_t> position) noexcept;
 
+		template<NonPlayerEntity EntityType> inline void clear() noexcept;
+
+		template<NonPlayerEntity... EntityTypes>
+			requires is_plurary<EntityTypes...>::value
+		inline void clear() noexcept;
+
+		inline void clear() noexcept;
+
 		template<NonPlayerEntity EntityType> inline bool spawn(usize count) noexcept;
 
 		template<NonPlayerEntity EntityType> inline bool spawn(usize count, u32 minimum_distance) noexcept;

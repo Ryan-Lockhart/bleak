@@ -20,10 +20,6 @@ namespace necrowarp {
 		static inline int run() noexcept {
 			startup();
 
-			std::thread([]() -> void {
-				do { process_turn(); } while (window.is_running());
-			}).detach();
-
 			do {
 				render();
 				input();
@@ -186,6 +182,16 @@ namespace necrowarp {
 				message_log.add("no gamepad detected\n");
 			}
 
+			Clock::tick();
+
+			input_timer.reset();
+			cursor_timer.reset();
+			epoch_timer.reset();
+		}
+
+		static inline void load() noexcept {
+			game_stats.reset();
+			
 			region_t<cell_state_t, globals::RegionSize, globals::ZoneSize, globals::BorderSize> region{ "res\\maps\\test_region.map" };
 
 			constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored };
@@ -194,16 +200,14 @@ namespace necrowarp {
 			constexpr binary_applicator_t<cell_state_t> cell_applicator{ closed_state, open_state };
 
 			for (extent_t::product_t i{ 0 }; i < region.region_area; ++i) {
-				region[i].set<zone_region_t::Border>(closed_state);
-				region[i].generate<zone_region_t::Interior>(random_engine, globals::FillPercent, globals::AutomotaIterations, globals::AutomotaThreshold, cell_applicator);
-
-				region[i].collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open);
-
-				region[i].randomize<zone_region_t::All>(random_engine, 0.25, cell_trait_t::Smooth, cell_trait_t::Rough);
-				region[i].randomize<zone_region_t::All>(random_engine, 2.0 / 3.0, cell_trait_t::Protrudes, cell_trait_t::Recedes);
-
-				region[i].randomize<zone_region_t::All, rock_type_t>(random_engine);
-				region[i].randomize<zone_region_t::All, mineral_type_t>(random_engine);
+				region[i]
+					.set<zone_region_t::Border>(closed_state)
+					.generate<zone_region_t::Interior>(random_engine, globals::FillPercent, globals::AutomotaIterations, globals::AutomotaThreshold, cell_applicator)
+					.collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open)
+					.randomize<zone_region_t::All>(random_engine, 0.25, cell_trait_t::Smooth, cell_trait_t::Rough)
+					.randomize<zone_region_t::All>(random_engine, 2.0 / 3.0, cell_trait_t::Protrudes, cell_trait_t::Recedes)
+					.randomize<zone_region_t::All, rock_type_t>(random_engine)
+					.randomize<zone_region_t::All, mineral_type_t>(random_engine);
 			}
 
 			region.compile(game_map);
@@ -236,14 +240,14 @@ namespace necrowarp {
 			evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 			good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 
-			Clock::tick();
+			phase.transition(game_phase_t::Playing);
 
-			input_timer.reset();
-			cursor_timer.reset();
-			epoch_timer.reset();
+			game_running = true;
+			process_turn_async();
+		}
 
-			message_log.flush_to_console(std::cout);
-			error_log.flush_to_console(std::cerr);
+		static inline void load_async() noexcept {
+			std::thread([]() -> void { load(); }).detach();
 		}
 
 		static inline void input() noexcept {
@@ -260,7 +264,22 @@ namespace necrowarp {
 			window.poll_events();
 
 			if (Keyboard::is_key_down(bindings::Quit)) {
-				window.close();
+				switch(phase.current_phase) {
+					case game_phase_t::MainMenu:
+						phase.transition(game_phase_t::Exiting);
+						break;
+					case game_phase_t::Playing:
+						phase.transition(game_phase_t::Paused);
+						break;
+					case game_phase_t::Loading:
+						break;
+					default:
+						phase.revert();
+						break;
+				}
+			}
+
+			if (phase.current_phase != game_phase_t::Playing) {
 				return;
 			}
 
@@ -288,14 +307,14 @@ namespace necrowarp {
 
 			processing_turn = true;
 
-			wave_size = clamp(
-				static_cast<i16>(globals::StartingAdventurers + total_kills() / globals::KillsPerPopulation),
+			game_stats.wave_size = clamp(
+				static_cast<i16>(globals::StartingAdventurers + game_stats.total_kills() / globals::KillsPerPopulation),
 				globals::MinimumWaveSize,
 				globals::MaximumWaveSize
 			);
 
-			if (entity_registry.empty<ALL_GOOD_NPCS>() && spawns_remaining <= 0) {
-				spawns_remaining = wave_size;
+			if (entity_registry.empty<ALL_GOOD_NPCS>() && game_stats.spawns_remaining <= 0) {
+				game_stats.spawns_remaining = game_stats.wave_size;
 			}
 
 			cauto spawn_positioner = []() -> std::optional<offset_t> {
@@ -310,7 +329,7 @@ namespace necrowarp {
 				return std::nullopt;
 			};
 
-			while (spawns_remaining > 0) {
+			while (game_stats.spawns_remaining > 0) {
 				cauto spawn_pos = spawn_positioner();
 
 				if (!spawn_pos.has_value()) {
@@ -321,7 +340,7 @@ namespace necrowarp {
 
 				const u8 spawn_chance{ static_cast<u8>(spawn_distribution(random_engine)) };
 
-				if (wave_size >= globals::HugeWaveSize) {
+				if (game_stats.wave_size >= globals::HugeWaveSize) {
 					if (spawn_chance < 60) {
 						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 					} else if (spawn_chance < 96) {
@@ -329,7 +348,7 @@ namespace necrowarp {
 					} else {
 						entity_registry.add<true>(priest_t{ spawn_pos.value() });
 					}
-				} else if (wave_size >= globals::LargeWaveSize) {
+				} else if (game_stats.wave_size >= globals::LargeWaveSize) {
 					if (spawn_chance < 70) {
 						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 					} else if (spawn_chance < 97) {
@@ -337,7 +356,7 @@ namespace necrowarp {
 					} else  {
 						entity_registry.add<true>(priest_t{ spawn_pos.value() });
 					}
-				} else if (wave_size >= globals::MediumWaveSize) {
+				} else if (game_stats.wave_size >= globals::MediumWaveSize) {
 					if (spawn_chance < 80) {
 						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 					} else if (spawn_chance < 98) {
@@ -345,7 +364,7 @@ namespace necrowarp {
 					} else {
 						entity_registry.add<true>(priest_t{ spawn_pos.value() });
 					}
-				} else if (wave_size >= globals::SmallWaveSize) {
+				} else if (game_stats.wave_size >= globals::SmallWaveSize) {
 					if (spawn_chance < 90) {
 						entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 					} else if (spawn_chance < 99) {
@@ -357,7 +376,7 @@ namespace necrowarp {
 					entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 				}
 				
-				--spawns_remaining;
+				--game_stats.spawns_remaining;
 			}
 			
 			entity_registry.update();
@@ -366,10 +385,28 @@ namespace necrowarp {
 			processing_turn = false;
 		}
 
+		static inline void process_turn_async() noexcept {
+			std::thread([]() -> void {
+				do { process_turn(); } while (game_running);
+			}).detach();
+		}
+
 		static inline void update() noexcept {
 			sine_wave.update<wave_type_t::Sine>(Clock::elapsed());
 
 			ui_registry.update();
+
+			if (phase.current_phase == game_phase_t::Loading && phase.previous_phase != game_phase_t::Loading) {
+				phase.previous_phase = game_phase_t::Loading;
+
+				load_async();
+			}
+
+			if (phase.current_phase == game_phase_t::GameOver && phase.previous_phase != game_phase_t::GameOver) {
+				phase.previous_phase = game_phase_t::GameOver;
+
+				unload_async();
+			}
 		}
 
 		static inline void render() noexcept {
@@ -388,6 +425,20 @@ namespace necrowarp {
 			ui_registry.render();
 
 			renderer.present();
+		}
+
+		static inline void unload() noexcept {
+			game_running = false;
+
+			while (processing_turn) {}
+
+			game_map.reset<zone_region_t::All>();
+			
+			entity_registry.clear();
+		}
+
+		static inline void unload_async() noexcept {
+			std::thread([]() -> void { unload(); }).detach();
 		}
 
 		static inline void shutdown() noexcept {
