@@ -45,6 +45,8 @@ namespace necrowarp {
 
 		constexpr color_t current_background() const noexcept { return is_active() ? background : is_hovered() ? background.dimmed(0.75f) : background.dimmed(0.5f); }
 
+		constexpr void update(Mouse::button_t button) noexcept { embedded_button_t::update(button, get_offset(), size); }
+
 		constexpr void draw(ref<renderer_t> renderer) const noexcept {
 			embedded_box_t::draw(renderer, get_offset(), size, current_background());
 		}

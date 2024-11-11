@@ -17,7 +17,7 @@ namespace necrowarp {
 
 		constexpr offset_t get_offset(extent_t size) const noexcept {
 			const offset_t half_size{ size / 2 };
-			return position - (static_cast<offset_t>(alignment) + offset_t::Southeast) * half_size + globals::UniversalOffset / globals::GlyphSize;
+			return position - (static_cast<offset_t>(alignment) - offset_t::Northwest) * half_size + globals::UniversalOffset / globals::GlyphSize;
 		}
 	};
 

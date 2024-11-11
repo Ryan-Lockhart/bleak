@@ -30,6 +30,24 @@ namespace bleak {
 				emplace_back(ch, color);
 			}
 		}
+		
+		constexpr ref<runes_t> concatenate(cref<runes_t> runes) {
+			if (this == &runes) {
+				return *this;
+			}
+
+			if (runes.empty()) {
+				return *this;
+			}
+
+			if (empty()) {
+				assign(runes.cbegin(), runes.cend());
+				return *this;
+			}
+			insert(cend(), runes.cbegin(), runes.cend());
+
+			return *this;
+		}
 
 		constexpr ref<runes_t> operator+=(cref<glyph_t> glyph) {
 			push_back(glyph);

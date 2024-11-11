@@ -33,6 +33,7 @@ namespace bleak {
 		};
 
 		constexpr const sdl::key Quit{ keys::Escape };
+		constexpr const sdl::key ToggleControls{ keys::Function::One };
 
 		constexpr const sdl::key CameraLock{ keys::Tab };
 		constexpr const sdl::key RevealMap{ keys::Grave };

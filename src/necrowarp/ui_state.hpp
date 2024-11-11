@@ -30,19 +30,18 @@ namespace necrowarp {
 	template<game_phase_t Phase> struct phase_state_t;
 
 	template<> struct phase_state_t<game_phase_t::MainMenu> {
-		static inline labeled_button_t play_button{
+		static inline labeled_button_t config_button{
 			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
 			embedded_label_t{
-				runes_t{ "Play", colors::Green },
+				runes_t{ "Config", colors::Orange },
 				embedded_box_t{ colors::Grey, { colors::White, 1 } },
 				extent_t{ 1, 1 }
 			}
 		};
-
-		static inline labeled_button_t config_button{
-			anchor_t{ { play_button.position.x, play_button.position.y + play_button.calculate_size().h + 3 }, cardinal_e::Central },
+		static inline labeled_button_t play_button{
+			anchor_t{ { config_button.position.x, config_button.position.y - config_button.calculate_size().h - 3 }, cardinal_e::Central },
 			embedded_label_t{
-				runes_t{ "Config", colors::Orange },
+				runes_t{ "Play", colors::Green },
 				embedded_box_t{ colors::Grey, { colors::White, 1 } },
 				extent_t{ 1, 1 }
 			}
@@ -117,19 +116,19 @@ namespace necrowarp {
 	};
 
 	template<> struct phase_state_t<game_phase_t::Paused> {
-		static inline labeled_button_t resume_button{
+		static inline labeled_button_t config_button{
 			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
 			embedded_label_t{
-				runes_t{ "Resume", colors::Green },
+				runes_t{ "Config", colors::Orange },
 				embedded_box_t{ colors::Grey, { colors::White, 1 } },
 				extent_t{ 1, 1 }
 			}
 		};
 
-		static inline labeled_button_t config_button{
-			anchor_t{ { resume_button.position.x, resume_button.position.y + resume_button.calculate_size().h + 3 }, cardinal_e::Central },
+		static inline labeled_button_t resume_button{
+			anchor_t{ { config_button.position.x, config_button.position.y - config_button.calculate_size().h - 3 }, cardinal_e::Central },
 			embedded_label_t{
-				runes_t{ "Config", colors::Orange },
+				runes_t{ "Resume", colors::Green },
 				embedded_box_t{ colors::Grey, { colors::White, 1 } },
 				extent_t{ 1, 1 }
 			}
@@ -216,8 +215,18 @@ namespace necrowarp {
 	};
 
 	template<> struct phase_state_t<game_phase_t::GameOver> {
-		static inline labeled_button_t retry_button{
+		static inline bool show_statistics{ false };
+
+		static inline label_t game_over_label{
 			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ runes_t{ "You were slain! Game over... ", colors::White }.concatenate(runes_t{ " or is it?", colors::dark::Magenta }) },
+				embedded_box_t{ colors::Red, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+		static inline labeled_button_t retry_button{
+			anchor_t{ { game_over_label.position.x - 1, game_over_label.position.y + 4 }, cardinal_e::East },
 			embedded_label_t{
 				runes_t{ "Retry", colors::Green },
 				embedded_box_t{ colors::Grey, { colors::White, 1 } },
@@ -226,10 +235,34 @@ namespace necrowarp {
 		};
 
 		static inline labeled_button_t quit_button{
-			anchor_t{ { retry_button.position.x, retry_button.position.y + retry_button.calculate_size().h + 3 }, cardinal_e::Central },
+			anchor_t{ { game_over_label.position.x + 1, game_over_label.position.y + 4 }, cardinal_e::West },
 			embedded_label_t{
 				runes_t{ "Quit", colors::Red },
 				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline label_t statistics_hidden_label{
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h }, cardinal_e::South },
+			embedded_label_t{
+				runes_t{ "Statistics", colors::White },
+				embedded_box_t{ colors::Black, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline label_t statistics_expanded_label{
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h }, cardinal_e::South },
+			embedded_label_t{
+				runes_t{
+					"Player Kills: 0000\n\n"
+					"Minion Kills: 0000\n\n\n"
+					"Total Kills:  0000\n\n\n"
+					"    Statistics    ",
+					colors::White
+				},
+				embedded_box_t{ colors::Black, { colors::White, 1 } },
 				extent_t{ 1, 1 }
 			}
 		};
@@ -240,8 +273,10 @@ namespace necrowarp {
 			}
 
 			return
+				game_over_label.is_hovered() ||
 				retry_button.is_hovered() ||
-				quit_button.is_hovered();
+				quit_button.is_hovered() ||
+				(show_statistics ? statistics_expanded_label.is_hovered() : statistics_hidden_label.is_hovered());
 		}
 
 		static inline void update(Mouse::button_t button) noexcept {
@@ -257,12 +292,29 @@ namespace necrowarp {
 			} else if (quit_button.is_active()) {
 				phase.transition(game_phase_t::Exiting);
 			}
+
+			show_statistics = show_statistics ? statistics_expanded_label.is_hovered() : statistics_hidden_label.is_hovered();
+
+			if (show_statistics) {
+				statistics_expanded_label.text = runes_t{
+					"Player Kills: " + std::format("{:4}", game_stats.player_kills) + "\n\n"
+					"Minion Kills: " + std::format("{:4}", game_stats.minion_kills) + "\n\n\n"
+					"Total Kills:  " + std::format("{:4}", game_stats.total_kills()) + "\n\n\n"
+					"    Statistics    ",
+					colors::White
+				};
+			}
 		}
 
 		static inline void draw(renderer_t& renderer) noexcept {
 			title_label.draw(renderer);
+			game_over_label.draw(renderer);
 			retry_button.draw(renderer);
 			quit_button.draw(renderer);
+
+			show_statistics ?
+				statistics_expanded_label.draw(renderer) :
+				statistics_hidden_label.draw(renderer);
 		}
 	};
 
@@ -346,13 +398,45 @@ namespace necrowarp {
 			embedded_box_t{ colors::Black, { colors::White, 1 } },
 			extent_t{ 1, 1 }
 		};
+
+		static inline bool show_help{ false };
+
+		static inline label_t help_hidden_label{
+			anchor_t{ { 1, globals::UIGridSize.h }, cardinal_e::Southwest },
+			embedded_label_t{
+				runes_t{ "F1: Show Controls", colors::White },
+				embedded_box_t{ colors::Black, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline label_t help_expanded_label{
+			anchor_t{ { 1, globals::UIGridSize.h }, cardinal_e::Southwest },
+			embedded_label_t{
+				runes_t{
+					" Movement: WASD / Numpad \n\n\n"
+					" Random Warp:     1\n\n"
+					" Target Warp:     2\n\n"
+					" Summon Wraith:   3\n\n"
+					" Grand Summoning: 4\n\n\n"
+					"F1: Hide Controls",
+					colors::White
+				},
+				embedded_box_t{ colors::Black, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
 		static inline bool is_hovered() noexcept {
 			if (phase.current_phase != game_phase_t::Playing) {
 				return false;
 			}
 
 			return
-				player_statuses.is_hovered();
+				player_statuses.is_hovered() ||
+				(show_help ?
+					help_expanded_label.is_hovered() :
+					help_hidden_label.is_hovered());
 		}
 
 		static inline void update() noexcept {
@@ -365,6 +449,10 @@ namespace necrowarp {
 
 			player_statuses[1].current_value = player.get_armor();
 			player_statuses[1].max_value = player.max_armor();
+
+			if (Keyboard::is_key_down(bindings::ToggleControls)) {
+				show_help = !show_help;
+			}
 
 			if (gamepad_enabled && gamepad_active) {
 				if (primary_gamepad->left_stick.current_state != cardinal_e::Central && cursor_timer.ready()) {
@@ -382,6 +470,10 @@ namespace necrowarp {
 
 		static inline void draw(renderer_t& renderer) noexcept {
 			player_statuses.draw(renderer);
+
+			show_help ?
+				help_expanded_label.draw(renderer) :
+				help_hidden_label.draw(renderer);
 		}
 	};
 
@@ -403,6 +495,8 @@ namespace necrowarp {
 			return phase_state_t<game_phase_t::ConfigMenu>::is_hovered();
 		case game_phase_t::GameOver:
 			return phase_state_t<game_phase_t::GameOver>::is_hovered();
+		case game_phase_t::Playing:
+			return phase_state_t<game_phase_t::Playing>::is_hovered();
 		default:
 			return false;
 		}

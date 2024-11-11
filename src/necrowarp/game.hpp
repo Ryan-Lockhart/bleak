@@ -76,7 +76,6 @@ namespace necrowarp {
 			}();
 
 			if (direction != offset_t::Zero) {
-				input_timer.record();
 				return camera.move(direction * globals::CameraSpeed);
 			}
 
@@ -87,15 +86,9 @@ namespace necrowarp {
 			player.command = entity_command_t{};
 
 			if (Keyboard::any_keys_pressed(bindings::Wait)) {
-				input_timer.record();
-				epoch_timer.record();
-
 				return true;
 			} else if (Keyboard::is_key_down(bindings::RandomWarp)) {
 				player.command = entity_command_t{ command_type_t::RandomWarp, player.position };
-
-				input_timer.record();
-				epoch_timer.record();
 
 				return true;
 			} else if (Keyboard::is_key_down(bindings::TargetWarp)) {
@@ -105,22 +98,13 @@ namespace necrowarp {
 
 				player.command = entity_command_t{ entity_registry.contains(grid_cursor.get_position()) ? command_type_t::ConsumeWarp : command_type_t::TargetWarp, player.position, grid_cursor.get_position() };
 
-				input_timer.record();
-				epoch_timer.record();
-
 				return true;
 			} else if (Keyboard::is_key_down(bindings::SummonWraith)) {
 				player.command = entity_command_t{ command_type_t::SummonWraith, player.position };
 
-				input_timer.record();
-				epoch_timer.record();
-
 				return true;
 			} else if (Keyboard::is_key_down(bindings::GrandSummoning)) {
 				player.command = entity_command_t{ command_type_t::GrandSummoning, player.position };
-
-				input_timer.record();
-				epoch_timer.record();
 
 				return true;
 			}
@@ -157,9 +141,6 @@ namespace necrowarp {
 				player.command = entity_command_t{ command_type, player.position, target_position };
 
 				draw_warp_cursor = false;
-
-				input_timer.record();
-				epoch_timer.record();
 
 				return true;
 			}
@@ -294,9 +275,15 @@ namespace necrowarp {
 			if (input_timer.ready()) {
 				if (epoch_timer.ready() && !player_acted) {
 					player_acted = character_input();
+
+					if (player_acted) {
+						epoch_timer.record();
+					}
 				}
 
-				camera_input();
+				if (player_acted || camera_input()) {
+					input_timer.record();
+				}
 			}
 		}
 
