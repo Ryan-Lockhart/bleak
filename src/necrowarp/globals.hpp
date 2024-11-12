@@ -92,5 +92,6 @@ namespace necrowarp {
 
 		constexpr i16 KillsPerEnergySlot{ 16 };
 		constexpr i16 KillsPerArmorSlot{ 8 };
+		constexpr i16 KillsPerDivinityTurn{ 64 };
 	} // namespace globals
 } // namespace necrowarp

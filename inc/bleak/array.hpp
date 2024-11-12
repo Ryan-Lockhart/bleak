@@ -22,8 +22,8 @@ namespace bleak {
 
 		static constexpr usize byte_size{ size * sizeof(T) };
 
-		static_assert(size > 0, "array must have a size greater than zero!");
-		static_assert(size * sizeof(T) <= memory::Maximum, "array must not exceed the maximum size of an array!");
+		static_assert(size > 0, "array size must have a size greater than zero!");
+		static_assert(size * sizeof(T) <= memory::Maximum, "array size must not exceed the maximum!");
 
 		static constexpr usize first{ 0 };
 		static constexpr usize last{ size - 1 };

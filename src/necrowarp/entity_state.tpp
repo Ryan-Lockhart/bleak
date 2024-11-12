@@ -516,9 +516,8 @@ namespace necrowarp {
 				entity_registry.remove<entity_type_t::Skeleton>(target_position);
 
 				entity_registry.update(source_position, target_position);
-
-				player.max_out_armor();
-				player.bolster_armor( armor_boon + player.get_armor() / 8);
+				
+				player.bolster_armor(armor_boon + player.max_armor() / 8);
 
 				draw_warp_cursor = false;
 				return;
@@ -529,7 +528,7 @@ namespace necrowarp {
 
 				entity_registry.update(source_position, target_position);
 
-				player.bolster_armor(armor_boon + player.get_armor() / 4);
+				player.bolster_armor(armor_boon + player.max_armor() / 4);
 
 				draw_warp_cursor = false;
 				return;
@@ -722,7 +721,7 @@ namespace necrowarp {
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::SummonWraith>(cref<entity_command_t> command) noexcept {
-		if (!player.can_summon_wraith() || entity_storage<skull_t>.empty()) {
+		if (!player.can_perform_spectral_invocation() || entity_storage<skull_t>.empty()) {
 			return;
 		}
 
@@ -744,7 +743,7 @@ namespace necrowarp {
 			return;
 		}
 
-		player.pay_summon_wraith_cost();
+		player.pay_spectral_invocation_cost();
 
 		if (!random_warp(command.source.value())) {
 			player.bolster_armor(wraith_health);
@@ -756,23 +755,24 @@ namespace necrowarp {
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::GrandSummoning>(cref<entity_command_t> command) noexcept {
-		if (!player.can_grand_summon() || entity_storage<skull_t>.empty()) {
+		if (!player.can_perform_calcitic_invocation() || entity_storage<skull_t>.empty()) {
 			return;
 		}
 
-		std::vector<skull_t> skulls{};
+		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
+			const offset_t position{ player.position + offset };
 
-		for (rvauto skull : entity_storage<skull_t>) {
-			skulls.emplace_back(std::move(skull));
+			if (!game_map.within<zone_region_t::Interior>(position) || entity_registry.at(position) != entity_type_t::Skull) {
+				continue;
+			}
+
+			const bool is_fresh{ entity_registry.at<skull_t>(position)->fresh };
+
+			entity_registry.remove<entity_type_t::Skull>(position);
+			entity_registry.add(skeleton_t{ position, !is_fresh });
 		}
 
-		entity_storage<skull_t>.clear();
-
-		for (rvauto skull : skulls) {
-			entity_registry_t::add(skeleton_t{ std::move(skull.position), !skull.fresh });
-		}
-
-		player.pay_grand_summon_cost();
+		player.pay_calcitic_invocation_cost();
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::ConsumeWarp>(cref<entity_command_t> command) noexcept {
@@ -811,7 +811,7 @@ namespace necrowarp {
 			entity_registry.update(source_position, target_position);
 
 			player.pay_target_warp_cost();
-			player.bolster_armor(armor_boon + player.get_armor() / 8);
+			player.bolster_armor(armor_boon + player.max_armor() / 8);
 
 			draw_warp_cursor = false;
 			return;
@@ -824,7 +824,7 @@ namespace necrowarp {
 			entity_registry.update(source_position, target_position);
 
 			player.pay_target_warp_cost();
-			player.bolster_armor(armor_boon + player.get_armor() / 4);
+			player.bolster_armor(armor_boon + player.max_armor() / 4);
 
 			draw_warp_cursor = false;
 			return;

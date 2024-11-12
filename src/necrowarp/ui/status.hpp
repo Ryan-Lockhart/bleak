@@ -67,7 +67,9 @@ namespace necrowarp {
 
 			for (usize i{ 0 }; i < Statuses; ++i) {
 				for (usize j{ 0 }; j < max_len; ++j) {
-					game_atlas.draw(statuses[i].current_value > j ? statuses[i].active_glyph : statuses[i].inactive_glyph, pos + offset_t{ j, i }, offset_t{ -8, -8 });
+					if (j < statuses[i].max_value) {
+						game_atlas.draw(statuses[i].current_value > j ? statuses[i].active_glyph : statuses[i].inactive_glyph, pos + offset_t{ j, i }, offset_t{ -8, -8 });
+					}
 				}
 			}
 		}
