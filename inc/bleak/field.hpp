@@ -23,6 +23,16 @@ namespace bleak {
 		static constexpr D goal_value{ 0 };
 		static constexpr D obstacle_value{ ZoneSize.area() };
 
+		static constexpr D close_to_obstacle_value{ obstacle_value - 1 };
+
+		constexpr bool goal_reached(cref<offset_t> position) const noexcept { return distances[position] == goal_value; }
+
+		constexpr bool goal_reached(cref<offset_t> position, D threshold) const noexcept { return distances[position] <= threshold; }
+
+		constexpr bool obstacle_reached(cref<offset_t> position) const noexcept { return distances[position] >= close_to_obstacle_value; }
+
+		constexpr bool obstacle_reached(cref<offset_t> position, D threshold) const noexcept { return distances[position] >= close_to_obstacle_value - threshold; }
+
 		constexpr field_t() noexcept : distances{}, goals{} { reset<zone_region_t::All>(); }
 
 		template<typename... Goals>
@@ -87,21 +97,14 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-					for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-						if (x_offs == 0 && y_offs == 0) {
-							continue;
-						}
+				for (cauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
+					const offset_t offset_position{ current.position + offset };
 
-						const offset_t offset{ x_offs, y_offs };
-						const offset_t offset_position{ current.position + offset };
-
-						if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value) {
-							continue;
-						}
-
-						frontier.emplace(offset_position, D{ current.distance + 1 });
+					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value) {
+						continue;
 					}
+
+					frontier.emplace(offset_position, D{ current.distance + 1 });					
 				}
 			}
 
@@ -139,21 +142,14 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-					for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-						if (x_offs == 0 && y_offs == 0) {
-							continue;
-						}
+				for (cauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
+					const offset_t offset_position{ current.position + offset };
 
-						const offset_t offset{ x_offs, y_offs };
-						const offset_t offset_position{ current.position + offset };
-
-						if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value) {
-							continue;
-						}
-
-						frontier.emplace(offset_position, D{ current.distance + 1 });
+					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value) {
+						continue;
 					}
+
+					frontier.emplace(offset_position, D{ current.distance + 1 });
 				}
 			}
 
@@ -191,21 +187,14 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-					for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-						if (x_offs == 0 && y_offs == 0) {
-							continue;
-						}
+				for (cauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
+					const offset_t offset_position{ current.position + offset };
 
-						const offset_t offset{ x_offs, y_offs };
-						const offset_t offset_position{ current.position + offset };
-
-						if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {
-							continue;
-						}
-
-						frontier.emplace(offset_position, D{ current.distance + 1 });
+					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {
+						continue;
 					}
+
+					frontier.emplace(offset_position, D{ current.distance + 1 });
 				}
 			}
 
@@ -243,21 +232,14 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-					for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-						if (x_offs == 0 && y_offs == 0) {
-							continue;
-						}
+				for (cauto offset : neighbourhood_creepers<distance_function_t::Chebyshev, D>) {
+					cauto offset_position{ current.position + offset.first };
 
-						const offset_t offset{ x_offs, y_offs };
-						const offset_t offset_position{ current.position + offset };
-
-						if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {
-							continue;
-						}
-
-						frontier.emplace(offset_position, D{ current.distance + 1 });
+					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {
+						continue;
 					}
+
+					frontier.emplace(offset_position, D{ current.distance + offset.second });
 				}
 			}
 
@@ -265,7 +247,7 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region> constexpr std::optional<offset_t> ascend(cref<offset_t> position) const noexcept {
-			if (!distances.template within<Region>(position)) {
+			if (!distances.template within<Region>(position) || obstacle_reached(position)) {
 				return std::nullopt;
 			}
 
@@ -296,7 +278,7 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, SparseBlockage Blockage> constexpr std::optional<offset_t> ascend(cref<offset_t> position, cref<Blockage> sparse_blockage) const noexcept {
-			if (!distances.template within<Region>(position)) {
+			if (!distances.template within<Region>(position) || obstacle_reached(position)) {
 				return std::nullopt;
 			}
 
@@ -329,7 +311,7 @@ namespace bleak {
 		template<zone_region_t Region, typename Generator>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> ascend(cref<offset_t> position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
-			if (!distances.template within<Region>(position)) {
+			if (!distances.template within<Region>(position) || obstacle_reached(position)) {
 				return std::nullopt;
 			}
 
@@ -365,7 +347,7 @@ namespace bleak {
 		template<zone_region_t Region, typename Generator, SparseBlockage Blockage>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> ascend(cref<offset_t> position, cref<Blockage> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
-			if (!distances.template within<Region>(position)) {
+			if (!distances.template within<Region>(position) || obstacle_reached(position)) {
 				return std::nullopt;
 			}
 
@@ -399,7 +381,7 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region> constexpr std::optional<offset_t> descend(cref<offset_t> position) const noexcept {
-			if (!distances.template within<Region>(position) || distances[position] == goal_value) {
+			if (!distances.template within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}
 
@@ -430,7 +412,7 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, SparseBlockage Blockage> constexpr std::optional<offset_t> descend(cref<offset_t> position, cref<Blockage> sparse_blockage) const noexcept {
-			if (!distances.template within<Region>(position) || distances[position] == goal_value) {
+			if (!distances.template within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}
 
@@ -463,7 +445,7 @@ namespace bleak {
 		template<zone_region_t Region, typename Generator>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> descend(cref<offset_t> position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
-			if (!distances.template within<Region>(position) || distances[position] == goal_value) {
+			if (!distances.template within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}
 
@@ -498,7 +480,7 @@ namespace bleak {
 		template<zone_region_t Region, typename Generator, SparseBlockage Blockage>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> descend(cref<offset_t> position, cref<Blockage> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
-			if (!distances.template within<Region>(position) || distances[position] == goal_value) {
+			if (!distances.template within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}
 

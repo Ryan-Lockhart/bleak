@@ -8,6 +8,7 @@
 
 namespace necrowarp {
 	using namespace bleak;
+
 	static inline label_t title_label{
 		anchor_t{ { globals::UIGridSize.w / 2, 1 }, cardinal_e::North },
 		embedded_label_t{
@@ -38,6 +39,7 @@ namespace necrowarp {
 				extent_t{ 1, 1 }
 			}
 		};
+
 		static inline labeled_button_t play_button{
 			anchor_t{ { config_button.position.x, config_button.position.y - config_button.calculate_size().h - 3 }, cardinal_e::Central },
 			embedded_label_t{
@@ -225,6 +227,7 @@ namespace necrowarp {
 				extent_t{ 1, 1 }
 			}
 		};
+
 		static inline labeled_button_t retry_button{
 			anchor_t{ { game_over_label.position.x - 1, game_over_label.position.y + 4 }, cardinal_e::East },
 			embedded_label_t{
@@ -388,6 +391,19 @@ namespace necrowarp {
 	constexpr glyph_t ActiveArmorGlyph{ ArmorGlyph.index, color_t{ 0xFF, static_cast<u8>(0xFF) } };
 	constexpr glyph_t InactiveArmorGlyph{ ArmorGlyph.index, color_t{ 0xFF, static_cast<u8>(0x80) } };
 
+	constexpr cstr help_hidden_text{ "F1: Show Controls" };
+
+	constexpr cstr help_expanded_text{
+		" Movement:  WASD / Numpad \n\n\n"
+		" Random Warp:           Q\n\n"
+		" Target Warp:           E\n\n\n"
+		" Calcitic Invocation:   1\n\n"
+		" Spectral Invocation:   2\n\n"
+		" Sanguinary Invocation: 3\n\n"
+		" Necromantic Ascension: 4\n\n\n"
+		"F1: Hide Controls"
+	};
+
 	template<> struct phase_state_t<game_phase_t::Playing> {
 		static inline status_bar_t<2> player_statuses{
 			anchor_t{ offset_t{ 1, 1 }, cardinal_e::Northwest},
@@ -399,44 +415,33 @@ namespace necrowarp {
 			extent_t{ 1, 1 }
 		};
 
+		static inline label_t help_label{
+			anchor_t{ { 1, globals::UIGridSize.h }, cardinal_e::Southwest },
+			embedded_label_t{
+				runes_t{ help_hidden_text, colors::White },
+				embedded_box_t{ colors::Black, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline label_t tooltip_label{
+			anchor_t{ { globals::UIGridSize.w, globals::UIGridSize.h }, cardinal_e::Southeast },
+			embedded_label_t{
+				runes_t{},
+				embedded_box_t{ colors::Black, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
 		static inline bool show_help{ false };
-
-		static inline label_t help_hidden_label{
-			anchor_t{ { 1, globals::UIGridSize.h }, cardinal_e::Southwest },
-			embedded_label_t{
-				runes_t{ "F1: Show Controls", colors::White },
-				embedded_box_t{ colors::Black, { colors::White, 1 } },
-				extent_t{ 1, 1 }
-			}
-		};
-
-		static inline label_t help_expanded_label{
-			anchor_t{ { 1, globals::UIGridSize.h }, cardinal_e::Southwest },
-			embedded_label_t{
-				runes_t{
-					" Movement: WASD / Numpad \n\n\n"
-					" Random Warp:     1\n\n"
-					" Target Warp:     2\n\n"
-					" Summon Wraith:   3\n\n"
-					" Grand Summoning: 4\n\n\n"
-					"F1: Hide Controls",
-					colors::White
-				},
-				embedded_box_t{ colors::Black, { colors::White, 1 } },
-				extent_t{ 1, 1 }
-			}
-		};
+		static inline bool show_tooltip{ false };
 
 		static inline bool is_hovered() noexcept {
 			if (phase.current_phase != game_phase_t::Playing) {
 				return false;
 			}
 
-			return
-				player_statuses.is_hovered() ||
-				(show_help ?
-					help_expanded_label.is_hovered() :
-					help_hidden_label.is_hovered());
+			return player_statuses.is_hovered() || help_label.is_hovered();
 		}
 
 		static inline void update() noexcept {
@@ -452,6 +457,8 @@ namespace necrowarp {
 
 			if (Keyboard::is_key_down(bindings::ToggleControls)) {
 				show_help = !show_help;
+
+				help_label.text = runes_t{ show_help ? help_expanded_text : help_hidden_text, colors::White };
 			}
 
 			if (gamepad_enabled && gamepad_active) {
@@ -464,6 +471,22 @@ namespace necrowarp {
 				grid_cursor.update(camera.get_position());
 			}
 
+			const entity_type_t entity_type{ entity_registry.at(grid_cursor.position) };
+			const bool bloodied{ game_map[grid_cursor.position].bloodied };
+
+			show_tooltip = entity_type != entity_type_t::None || bloodied;
+
+			if (show_tooltip) {
+				if (entity_type != entity_type_t::None && bloodied) {
+					tooltip_label.text = to_colored_string(entity_type);
+					tooltip_label.text
+						.concatenate({ " | ", colors::White })
+						.concatenate({"bloodied", colors::materials::LightBlood });
+				} else {
+					tooltip_label.text = entity_type == entity_type_t::None ? runes_t{ "bloodied", colors::materials::LightBlood } : to_colored_string(entity_type);
+				}
+			}
+
 			grid_cursor.color.set_alpha(sine_wave.current_value());
 			warp_cursor.color.set_alpha(sine_wave.current_value());
 		}
@@ -471,9 +494,11 @@ namespace necrowarp {
 		static inline void draw(renderer_t& renderer) noexcept {
 			player_statuses.draw(renderer);
 
-			show_help ?
-				help_expanded_label.draw(renderer) :
-				help_hidden_label.draw(renderer);
+			help_label.draw(renderer);
+
+			if (!draw_cursor && show_tooltip) {
+				tooltip_label.draw(renderer);
+			}
 		}
 	};
 
@@ -534,7 +559,7 @@ namespace necrowarp {
 			cursor.update();
 
 			if (phase.current_phase == game_phase_t::MainMenu) {
-				phase_state_t<game_phase_t::MainMenu>::update(Mouse::button_t::Left); 
+				phase_state_t<game_phase_t::MainMenu>::update(Mouse::button_t::Left);
 			} else if (phase.current_phase == game_phase_t::ConfigMenu) {
 				phase_state_t<game_phase_t::ConfigMenu>::update(Mouse::button_t::Left);
 			} else if (phase.current_phase == game_phase_t::Exiting) {

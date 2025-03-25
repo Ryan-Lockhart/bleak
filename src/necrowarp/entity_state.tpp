@@ -32,9 +32,7 @@ namespace necrowarp {
 		} else if constexpr (EntityType == entity_type_t::Player) {
 			return player.position == position;
 		} else {
-			using entity_type = to_entity_type_t<EntityType>;
-
-			return entity_storage<entity_type>.contains(position);
+			return entity_storage<to_entity_type_t<EntityType>>.contains(position);
 		}
 	}
 
@@ -53,12 +51,14 @@ namespace necrowarp {
 	inline entity_type_t entity_registry_t::at(cref<offset_t> position) const noexcept {
 		if (player.position == position) {
 			return entity_type_t::Player;
-		} else  if (entity_storage<skull_t>.contains(position)) {
+		} else if (entity_storage<skull_t>.contains(position)) {
 			return entity_type_t::Skull;
 		} else if (entity_storage<skeleton_t>.contains(position)) {
 			return entity_type_t::Skeleton;
 		} else if (entity_storage<wraith_t>.contains(position)) {
 			return entity_type_t::Wraith;
+		} else if (entity_storage<flesh_golem_t>.contains(position)) {
+			return entity_type_t::FleshGolem;
 		} else if (entity_storage<adventurer_t>.contains(position)) {
 			return entity_type_t::Adventurer;
 		} else if (entity_storage<paladin_t>.contains(position)) {
@@ -106,9 +106,7 @@ namespace necrowarp {
 		} else if constexpr (EntityType == entity_type_t::Player) {
 			return 1;
 		} else {
-			using entity_type = to_entity_type_t<EntityType>;
-
-			return entity_storage<entity_type>.size();
+			return entity_storage<to_entity_type_t<EntityType>>.size();
 		}
 	}
 
@@ -131,9 +129,7 @@ namespace necrowarp {
 			return false;
 		}
 
-		using entity_type = to_entity_type_t<EntityType>;
-
-		return entity_storage<entity_type>.empty();
+		return entity_storage<to_entity_type_t<EntityType>>.empty();
 	}
 	
 	template<NonPlayerEntity EntityType> inline bool entity_registry_t::empty() const noexcept {
@@ -253,26 +249,29 @@ namespace necrowarp {
 		cauto entity_type{ entity_registry.at(current) };
 
 		switch (entity_type) {
-		case entity_type_t::None:
-		case entity_type_t::Skull:
-		case entity_type_t::Ladder:
-			return false;
-		case entity_type_t::Player:
-			player.position = target;
-			good_goal_map.update(current, target);
-			return true;
-		case entity_type_t::Skeleton:
-			return update<entity_type_t::Skeleton>(current, target);
-		case entity_type_t::Wraith:
-			return update<entity_type_t::Wraith>(current, target);
-		case entity_type_t::Adventurer:
-			return update<entity_type_t::Adventurer>(current, target);
-		case entity_type_t::Paladin:
-			return update<entity_type_t::Paladin>(current, target);
-		case entity_type_t::Priest:
-			return update<entity_type_t::Priest>(current, target);
-		default:
-			return false;
+		  	case entity_type_t::None:
+		  	case entity_type_t::Skull:
+		  	case entity_type_t::Ladder: {
+				return false;
+			} case entity_type_t::Player: {
+				player.position = target;
+				good_goal_map.update(current, target);
+				return true;
+			} case entity_type_t::Skeleton: {
+				return update<entity_type_t::Skeleton>(current, target);
+			} case entity_type_t::Wraith: {
+				return update<entity_type_t::Wraith>(current, target);
+			} case entity_type_t::FleshGolem: {
+				return update<entity_type_t::FleshGolem>(current, target);
+			} case entity_type_t::Adventurer: {
+				return update<entity_type_t::Adventurer>(current, target);
+			} case entity_type_t::Paladin: {
+				return update<entity_type_t::Paladin>(current, target);
+			} case entity_type_t::Priest: {
+				return update<entity_type_t::Priest>(current, target);
+			} default: {
+				return false;
+			} 
 		}
 	}
 
@@ -326,9 +325,11 @@ namespace necrowarp {
 
 		std::queue<entity_command_t> commands{};
 
-		recalculate_goal_maps();
-
 		update<ALL_NPCS>(commands);
+
+		if (player.has_ascended()) {
+			player.erode_divinity();
+		}
 
 		recalculate_goal_maps();
 	}
@@ -389,7 +390,11 @@ namespace necrowarp {
 				case command_type_t::Consume:
 				case command_type_t::RandomWarp:
 				case command_type_t::TargetWarp:
-				case command_type_t::ConsumeWarp: {
+				case command_type_t::ConsumeWarp:
+				case command_type_t::CalciticInvocation:
+				case command_type_t::SpectralInvocation:
+				case command_type_t::SanguinaryInvocation:
+				case command_type_t::NecromanticAscendance: {
 					return false;
 				} default: {
 					break;
@@ -410,8 +415,10 @@ namespace necrowarp {
 
 		switch (command.type) {
 			case command_type_t::RandomWarp:
-			case command_type_t::SummonWraith:
-			case command_type_t::GrandSummoning: {
+			case command_type_t::CalciticInvocation:
+			case command_type_t::SpectralInvocation:
+			case command_type_t::SanguinaryInvocation:
+			case command_type_t::NecromanticAscendance: {
 				return true;
 			}
 			default: {
@@ -563,6 +570,7 @@ namespace necrowarp {
 
 		if constexpr (Victim == entity_type_t::Player) {
 			phase.transition(game_phase_t::GameOver);
+
 			return true;
 		} else if constexpr (Victim == entity_type_t::Skeleton) {
 			const bool is_rotted{ victim->rotted };
@@ -581,6 +589,11 @@ namespace necrowarp {
 			entity_registry.add(skull_t{ target_position, false });
 
 			return true;
+		} else if constexpr (Victim == entity_type_t::FleshGolem) {
+			entity_registry.remove<Victim>(target_position);
+			game_map[target_position].set(cell_trait_t::Bloodied);
+
+			return true;
 		} else {
 			entity_registry.remove<Victim>(target_position);
 			entity_registry.add(skull_t{ target_position, true });
@@ -593,11 +606,9 @@ namespace necrowarp {
 
 	template<> inline void entity_registry_t::process_command<command_type_t::Clash>(cref<entity_command_t> command) noexcept {
 		const offset_t source_position{ command.source.value() };
-
 		const entity_type_t source_type{ entity_registry.at(source_position) };
 
 		const offset_t target_position{ command.target.value() };
-
 		const entity_type_t target_type{ entity_registry.at(target_position) };
 
 		i8 source_damage{ 0 };
@@ -605,6 +616,7 @@ namespace necrowarp {
 		switch (source_type) {
 			case entity_type_t::Player:
 			case entity_type_t::Skeleton:
+			case entity_type_t::FleshGolem:
 			case entity_type_t::Adventurer:
 			case entity_type_t::Paladin: {
 				source_damage = 1;
@@ -623,6 +635,7 @@ namespace necrowarp {
 		switch (target_type) {
 			case entity_type_t::Player:
 			case entity_type_t::Skeleton:
+			case entity_type_t::FleshGolem:
 			case entity_type_t::Adventurer:
 			case entity_type_t::Paladin: {
 				target_damage = 1;
@@ -648,6 +661,9 @@ namespace necrowarp {
 			} case entity_type_t::Wraith: {
 				target_killed = process_clash<entity_type_t::Wraith>(target_position, source_damage);
 				break;
+			} case entity_type_t::FleshGolem: {
+				target_killed = process_clash<entity_type_t::FleshGolem>(target_position, source_damage);
+				break;
 			} case entity_type_t::Adventurer: {
 				target_killed = process_clash<entity_type_t::Adventurer>(target_position, source_damage);
 				break;
@@ -669,9 +685,20 @@ namespace necrowarp {
 					draw_warp_cursor = false;
 					break;
 				} case entity_type_t::Skeleton:
-				  case entity_type_t::Wraith: {
+				  case entity_type_t::Wraith:
+				  case entity_type_t::FleshGolem: {
 					++game_stats.minion_kills;
 					break;
+				} default: {
+					break;
+				}
+			}
+
+			switch (target_type) {
+				case entity_type_t::Adventurer:
+				case entity_type_t::Paladin:
+				case entity_type_t::Priest: {
+					game_map[target_position].set(cell_trait_t::Bloodied);
 				} default: {
 					break;
 				}
@@ -689,6 +716,9 @@ namespace necrowarp {
 				break;
 			} case entity_type_t::Wraith: {
 				target_killed = process_clash<entity_type_t::Wraith>(source_position, target_damage);
+				break;
+			} case entity_type_t::FleshGolem: {
+				target_killed = process_clash<entity_type_t::FleshGolem>(source_position, target_damage);
 				break;
 			} case entity_type_t::Adventurer: {
 				source_killed = process_clash<entity_type_t::Adventurer>(source_position, target_damage);
@@ -710,9 +740,20 @@ namespace necrowarp {
 					++game_stats.player_kills;
 					break;
 				} case entity_type_t::Skeleton:
-				  case entity_type_t::Wraith: {
+				  case entity_type_t::Wraith:
+				  case entity_type_t::FleshGolem: {
 					++game_stats.minion_kills;
 					break;
+				} default: {
+					break;
+				}
+			}
+
+			switch (source_type) {
+				case entity_type_t::Adventurer:
+				case entity_type_t::Paladin:
+				case entity_type_t::Priest: {
+					game_map[source_position].set(cell_trait_t::Bloodied);
 				} default: {
 					break;
 				}
@@ -720,7 +761,106 @@ namespace necrowarp {
 		}
 	}
 
-	template<> void entity_registry_t::process_command<command_type_t::SummonWraith>(cref<entity_command_t> command) noexcept {
+	template<> void entity_registry_t::process_command<command_type_t::RandomWarp>(cref<entity_command_t> command) noexcept {
+		if (!player.can_random_warp()) {
+			return;
+		}
+
+		player.pay_random_warp_cost();
+
+		random_warp(command.source.value());
+	}
+
+	template<> void entity_registry_t::process_command<command_type_t::TargetWarp>(cref<entity_command_t> command) noexcept {
+		if (!player.can_target_warp()) {
+			return;
+		}
+
+		player.pay_target_warp_cost();
+
+		entity_registry.update(command.source.value(), command.target.value());
+
+		draw_warp_cursor = false;
+	}
+
+	template<> void entity_registry_t::process_command<command_type_t::ConsumeWarp>(cref<entity_command_t> command) noexcept {
+		const offset_t target_position{ command.target.value() };
+
+		const entity_type_t target_type{ entity_registry.at(target_position) };
+
+		if (target_type != entity_type_t::Skull && !player.can_target_warp()) {
+			return;
+		}
+
+		const offset_t source_position{ command.source.value() };
+
+		switch (target_type) {
+		case entity_type_t::Skull: {
+			const bool is_fresh{ entity_registry.at<skull_t>(target_position)->fresh };
+
+			if (!player.can_target_warp(is_fresh ? player_t::SkullBoon : 0)) {
+				return;
+			}
+
+			entity_registry.remove<entity_type_t::Skull>(target_position);
+			entity_registry.add(skeleton_t{ target_position, !is_fresh });
+
+			player.pay_target_warp_cost(is_fresh ? player_t::SkullBoon : 0);
+
+			random_warp(source_position);
+
+			return;
+		} case entity_type_t::Skeleton: {
+			const i8 armor_boon = entity_registry.at<skeleton_t>(target_position)->armor_boon();
+
+			entity_registry.remove<entity_type_t::Skeleton>(target_position);
+
+			entity_registry.update(source_position, target_position);
+
+			player.pay_target_warp_cost();
+			player.bolster_armor(armor_boon + player.max_armor() / 8);
+
+			draw_warp_cursor = false;
+			return;
+		} case entity_type_t::Wraith: {
+			const i8 armor_boon = entity_registry.at<wraith_t>(target_position)->armor_boon();
+
+			entity_registry.remove<entity_type_t::Wraith>(target_position);
+
+			entity_registry.update(source_position, target_position);
+
+			player.pay_target_warp_cost();
+			player.bolster_armor(armor_boon + player.max_armor() / 4);
+
+			draw_warp_cursor = false;
+			return;
+		} default:
+			return;
+		}
+	}
+
+	template<> void entity_registry_t::process_command<command_type_t::CalciticInvocation>(cref<entity_command_t> command) noexcept {
+		if (!player.can_perform_calcitic_invocation() || entity_storage<skull_t>.empty()) {
+			return;
+		}
+
+		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
+			const offset_t position{ player.position + offset };
+
+			if (!game_map.within<zone_region_t::Interior>(position) || entity_registry.at(position) != entity_type_t::Skull) {
+				continue;
+			}
+
+			const bool is_fresh{ entity_registry.at<skull_t>(position)->fresh };
+
+			entity_registry.remove<entity_type_t::Skull>(position);
+			entity_registry.add(skeleton_t{ position, !is_fresh });
+		}
+
+		player.pay_calcitic_invocation_cost();
+	}
+
+	template<> void entity_registry_t::process_command<command_type_t::SpectralInvocation>(cref<entity_command_t> command) noexcept {
 		if (!player.can_perform_spectral_invocation() || entity_storage<skull_t>.empty()) {
 			return;
 		}
@@ -754,106 +894,48 @@ namespace necrowarp {
 		entity_registry.add(wraith_t{ command.source.value(), wraith_health });
 	}
 
-	template<> void entity_registry_t::process_command<command_type_t::GrandSummoning>(cref<entity_command_t> command) noexcept {
-		if (!player.can_perform_calcitic_invocation() || entity_storage<skull_t>.empty()) {
+	template<> void entity_registry_t::process_command<command_type_t::SanguinaryInvocation>(cref<entity_command_t> command) noexcept {
+		if (!player.can_perform_spectral_invocation() || !game_map.template contains<zone_region_t::Interior>(cell_trait_t::Bloodied)) {
 			return;
 		}
+
+		i8 accumulated_health{ 0 };
 
 		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
 			const offset_t position{ player.position + offset };
 
-			if (!game_map.within<zone_region_t::Interior>(position) || entity_registry.at(position) != entity_type_t::Skull) {
+			if (!game_map.within<zone_region_t::Interior>(position) || !game_map[position].bloodied) {
 				continue;
 			}
+			
+			game_map[position].unset(cell_trait_t::Bloodied);
 
-			const bool is_fresh{ entity_registry.at<skull_t>(position)->fresh };
-
-			entity_registry.remove<entity_type_t::Skull>(position);
-			entity_registry.add(skeleton_t{ position, !is_fresh });
+			++accumulated_health;
 		}
 
-		player.pay_calcitic_invocation_cost();
+		if (accumulated_health <= 0) {
+			return;
+		}
+
+		player.pay_sanguinary_invocation_cost();
+
+		if (!random_warp(command.source.value())) {
+			player.bolster_armor(accumulated_health);
+
+			return;
+		}
+
+		entity_registry.add(flesh_golem_t{ command.source.value(), accumulated_health });
 	}
 
-	template<> void entity_registry_t::process_command<command_type_t::ConsumeWarp>(cref<entity_command_t> command) noexcept {
-		const offset_t target_position{ command.target.value() };
-
-		const entity_type_t target_type{ entity_registry.at(target_position) };
-
-		if (target_type != entity_type_t::Skull && !player.can_target_warp()) {
+	template<> void entity_registry_t::process_command<command_type_t::NecromanticAscendance>(cref<entity_command_t> command) noexcept {
+		if (!player.can_perform_necromantic_ascendance() || player.has_ascended()) {
 			return;
 		}
 
-		const offset_t source_position{ command.source.value() };
+		player.max_out_divinity();
 
-		switch (target_type) {
-		case entity_type_t::Skull: {
-			const bool is_fresh{ entity_registry.at<skull_t>(target_position)->fresh };
-
-			if (!player.can_target_warp(is_fresh ? player_t::SkullBoon : 0)) {
-				return;
-			}
-
-			entity_registry.remove<entity_type_t::Skull>(target_position);
-			entity_registry.add(skeleton_t{ target_position, !is_fresh });
-
-			player.pay_target_warp_cost(is_fresh ? player_t::SkullBoon : 0);
-
-			random_warp(source_position);
-
-			return;
-		}
-		case entity_type_t::Skeleton: {
-			const i8 armor_boon = entity_registry.at<skeleton_t>(target_position)->armor_boon();
-
-			entity_registry.remove<entity_type_t::Skeleton>(target_position);
-
-			entity_registry.update(source_position, target_position);
-
-			player.pay_target_warp_cost();
-			player.bolster_armor(armor_boon + player.max_armor() / 8);
-
-			draw_warp_cursor = false;
-			return;
-		}
-		case entity_type_t::Wraith: {
-			const i8 armor_boon = entity_registry.at<wraith_t>(target_position)->armor_boon();
-
-			entity_registry.remove<entity_type_t::Wraith>(target_position);
-
-			entity_registry.update(source_position, target_position);
-
-			player.pay_target_warp_cost();
-			player.bolster_armor(armor_boon + player.max_armor() / 4);
-
-			draw_warp_cursor = false;
-			return;
-		}
-		default:
-			return;
-		}
-	}
-
-	template<> void entity_registry_t::process_command<command_type_t::TargetWarp>(cref<entity_command_t> command) noexcept {
-		if (!player.can_target_warp()) {
-			return;
-		}
-
-		player.pay_target_warp_cost();
-
-		entity_registry.update(command.source.value(), command.target.value());
-
-		draw_warp_cursor = false;
-	}
-
-	template<> void entity_registry_t::process_command<command_type_t::RandomWarp>(cref<entity_command_t> command) noexcept {
-		if (!player.can_random_warp()) {
-			return;
-		}
-
-		player.pay_random_warp_cost();
-
-		random_warp(command.source.value());
+		player.pay_necromantic_ascendance_cost();
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::Exorcise>(cref<entity_command_t> command) noexcept {
@@ -954,16 +1036,20 @@ namespace necrowarp {
 				return process_command<command_type_t::Consume>(command);
 			} case command_type_t::Clash: {
 				return process_command<command_type_t::Clash>(command);
-			} case command_type_t::SummonWraith: {
-				return process_command<command_type_t::SummonWraith>(command);
-			} case command_type_t::GrandSummoning: {
-				return process_command<command_type_t::GrandSummoning>(command);
 			} case command_type_t::ConsumeWarp: {
 				return process_command<command_type_t::ConsumeWarp>(command);
 			} case command_type_t::TargetWarp: {
 				return process_command<command_type_t::TargetWarp>(command);
 			} case command_type_t::RandomWarp: {
 				return process_command<command_type_t::RandomWarp>(command);
+			} case command_type_t::CalciticInvocation: {
+				return process_command<command_type_t::CalciticInvocation>(command);
+			} case command_type_t::SpectralInvocation: {
+				return process_command<command_type_t::SpectralInvocation>(command);
+			} case command_type_t::SanguinaryInvocation: {
+				return process_command<command_type_t::SanguinaryInvocation>(command);
+			} case command_type_t::NecromanticAscendance: {
+				return process_command<command_type_t::NecromanticAscendance>(command);
 			} case command_type_t::Exorcise: {
 				return process_command<command_type_t::Exorcise>(command);
 			} case command_type_t::Resurrect: {

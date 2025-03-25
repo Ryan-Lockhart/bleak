@@ -2024,6 +2024,102 @@ namespace bleak {
 			return total;
 		}
 
+		template<zone_region_t Region> constexpr u32 contains(cref<T> value) const noexcept {
+			if constexpr (Region == zone_region_t::All) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					if (cells[i] == value) {
+						return true;
+					}
+				}
+
+				return false;
+			} else if constexpr (Region == zone_region_t::Interior) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						if (cells[x, y] == value) {
+							return true;
+						}
+					}
+				}
+
+				return false;
+			} else if constexpr (Region == zone_region_t::Border) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							if (cells[x, y] == value) {
+								return true;
+							}
+						}
+					} else {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							if (cells[i, y] == value) {
+								return true;
+							}
+							if (cells[zone_extent.x - i, y] == value) {
+								return true;
+							}
+						}
+					}
+				}
+
+				return false;
+			} else if constexpr (Region == zone_region_t::None) {
+				return false;
+			}
+
+			return false;
+		}
+
+		template<zone_region_t Region, typename U>
+			requires is_equatable<T, U>::value
+		constexpr u32 contains(cref<U> value) const noexcept {
+			if constexpr (Region == zone_region_t::All) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					if (cells[i] == value) {
+						return true;
+					}
+				}
+
+				return false;
+			} else if constexpr (Region == zone_region_t::Interior) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						if (cells[x, y] == value) {
+							return true;
+						}
+					}
+				}
+
+				return false;
+			} else if constexpr (Region == zone_region_t::Border) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							if (cells[x, y] == value) {
+								return true;
+							}
+						}
+					} else {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							if (cells[i, y] == value) {
+								return true;
+							}
+							if (cells[zone_extent.x - i, y] == value) {
+								return true;
+							}
+						}
+					}
+				}
+
+				return false;
+			} else if constexpr (Region == zone_region_t::None) {
+				return false;
+			}
+
+			return false;
+		}
+
 		constexpr bool linear_blockage(cref<offset_t> origin, cref<offset_t> target, cref<T> value, u32 distance) const noexcept {
 			if (cells[origin] == value || cells[target] == value) {
 				return true;

@@ -23,14 +23,14 @@ namespace bleak {
 				return Mix_Playing(channel);
 			}
 
-			static inline i32 num_playing() noexcept { return Mix_Playing(-1); }
+			static inline i32 playing_count() noexcept { return Mix_Playing(-1); }
 
 			static inline bool is_paused(i32 channel) noexcept {
 				assert(channel > -1);
 				return Mix_Paused(channel);
 			}
 
-			static inline i32 num_paused() noexcept { return Mix_Paused(-1); }
+			static inline i32 paused_count() noexcept { return Mix_Paused(-1); }
 
 			// sets the volume of all channels
 			static inline void set_volume(i32 volume) noexcept { Mix_Volume(-1, volume); }

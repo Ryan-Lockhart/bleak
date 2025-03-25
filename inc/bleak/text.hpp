@@ -20,12 +20,16 @@ namespace bleak {
 		constexpr runes_t() noexcept = default;
 
 		constexpr runes_t(cref<std::string> text) {
+			reserve(text.size());
+
 			for (auto& ch : text) {
 				emplace_back(ch, DEFAULT_COLOR);
 			}
 		}
 
 		constexpr runes_t(cref<std::string> text, color_t color) {
+			reserve(text.size());
+			
 			for (auto& ch : text) {
 				emplace_back(ch, color);
 			}

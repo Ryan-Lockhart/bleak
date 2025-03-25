@@ -109,8 +109,7 @@ namespace bleak {
 			extent_t::product_t index{ 0 };
 			for (int y = 0; y < size.h; ++y) {
 				for (int x = 0; x < size.w; ++x) {
-					rects[index] = rect_t{ offset_t{ x, y } * glyph_size, glyph_size };
-					++index;
+					rects[index++] = rect_t{ offset_t{ x, y } * glyph_size, glyph_size };
 				}
 			}
 		}

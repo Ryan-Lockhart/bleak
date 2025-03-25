@@ -3,12 +3,12 @@
 int main(int argc, char* argv[]) {
 	using namespace necrowarp;
 
-	const int exited_successfully{ Game::run() };
+	const int exit_code{ Game::run() };
 
-	if (!exited_successfully) {
-		message_log.flush_to_file();			
+	if (exit_code == EXIT_FAILURE) {
+		message_log.flush_to_file();
 		error_log.flush_to_file();
 	}
 
-	return exited_successfully;
+	return exit_code;
 }

@@ -36,7 +36,7 @@ namespace necrowarp {
 		static constexpr i8 MaximumHealth{ 1 };
 		static constexpr i8 MaximumDamage{ 1 };
 		
-		constexpr i8 armor_boon() const noexcept { return 2; }
+		constexpr i8 armor_boon() const noexcept { return rotted ? 1 : 2; }
 
 		inline skeleton_t(cref<offset_t> position, bool rotted) noexcept : position{ position }, rotted{ rotted } {}
 

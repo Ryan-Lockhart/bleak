@@ -29,7 +29,7 @@ extern "C" {
 }
 
 namespace bleak {
-	enum class distance_function_t { Manhattan, Chebyshev, Euclidean, Octile };
+	enum class distance_function_t { VonNeumann, Manhattan, Chebyshev, Euclidean, Octile };
 
 	struct offset_t : c_offset_t {
 		using underlying_t = c_offset_t;
@@ -423,6 +423,50 @@ namespace bleak {
 				return std::array<offset_t, 4>{ offset_t::North, offset_t::South, offset_t::West, offset_t::East };
 			} else {
 				return std::array<offset_t, 8>{ offset_t::North, offset_t::South, offset_t::West, offset_t::East, offset_t::Northwest, offset_t::Northeast, offset_t::Southwest, offset_t::Southeast };
+			}
+		}()
+	};
+
+	template<distance_function_t Distance, Numeric D> static constexpr auto neighbourhood_creepers{
+		[]() {
+			if constexpr (Distance == distance_function_t::VonNeumann) {
+				return std::array<std::pair<offset_t, D>, 4>{
+					std::pair{ offset_t::North, 1 },
+					std::pair{ offset_t::South, 1 },
+					std::pair{ offset_t::West, 1 },
+					std::pair{ offset_t::East, 1 } };
+			} else if constexpr (Distance == distance_function_t::Manhattan) {
+				return std::array<std::pair<offset_t, D>, 8>{
+					std::pair{ offset_t::North, 1 },
+					std::pair{ offset_t::South, 1 },
+					std::pair{ offset_t::West, 1 },
+					std::pair{ offset_t::East, 1 },
+					std::pair{ offset_t::Northwest, 2 },
+					std::pair{ offset_t::Northeast, 2 },
+					std::pair{ offset_t::Southwest, 2 },
+					std::pair{ offset_t::Southeast, 2 } };
+			} else if constexpr (Distance == distance_function_t::Chebyshev) {
+				return std::array<std::pair<offset_t, D>, 8>{
+					std::pair{ offset_t::North, 1 },
+					std::pair{ offset_t::South, 1 },
+					std::pair{ offset_t::West, 1 },
+					std::pair{ offset_t::East, 1 },
+					std::pair{ offset_t::Northwest, 1 },
+					std::pair{ offset_t::Northeast, 1 },
+					std::pair{ offset_t::Southwest, 1 },
+					std::pair{ offset_t::Southeast, 1 }
+				};
+			} else {
+				return std::array<std::pair<offset_t, D>, 8>{
+					std::pair{ offset_t::North, 1.0 },
+					std::pair{ offset_t::South, 1.0 },
+					std::pair{ offset_t::West, 1.0 },
+					std::pair{ offset_t::East, 1.0 },
+					std::pair{ offset_t::Northwest, 1.414 },
+					std::pair{ offset_t::Northeast, 1.414 },
+					std::pair{ offset_t::Southwest, 1.414 },
+					std::pair{ offset_t::Southeast, 1.414 }
+				};
 			}
 		}()
 	};

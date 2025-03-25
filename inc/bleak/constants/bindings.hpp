@@ -17,19 +17,60 @@ namespace bleak {
 		template<usize Count> using key_collection_t = std::array<sdl::key, Count>;
 
 		constexpr const lut_t<cardinal_t, key_collection_t<4>, 4> CharacterMovement { 
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_e::North, { keys::Alpha::W, keys::Keypad::Numeric::Seven, keys::Keypad::Numeric::Eight, keys::Keypad::Numeric::Nine } },
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_e::South, { keys::Alpha::S, keys::Keypad::Numeric::One, keys::Keypad::Numeric::Two, keys::Keypad::Numeric::Three } },
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_e::West, { keys::Alpha::A, keys::Keypad::Numeric::One, keys::Keypad::Numeric::Four, keys::Keypad::Numeric::Seven } },
-			pair_t<cardinal_t, key_collection_t<4>>{ cardinal_e::East, { keys::Alpha::D, keys::Keypad::Numeric::Three, keys::Keypad::Numeric::Six, keys::Keypad::Numeric::Nine } }
+			pair_t<cardinal_t, key_collection_t<4>>{
+				cardinal_e::North,
+				key_collection_t<4>{
+					keys::Alpha::W,
+					keys::Keypad::Numeric::Seven,
+					keys::Keypad::Numeric::Eight,
+					keys::Keypad::Numeric::Nine
+				}
+			}, pair_t<cardinal_t, key_collection_t<4>>{
+				cardinal_e::South,
+				key_collection_t<4>{
+					keys::Alpha::S,
+					keys::Keypad::Numeric::One,
+					keys::Keypad::Numeric::Two,
+					keys::Keypad::Numeric::Three
+				}
+			}, pair_t<cardinal_t, key_collection_t<4>>{
+				cardinal_e::West,
+				key_collection_t<4>{
+					keys::Alpha::A,
+					keys::Keypad::Numeric::One,
+					keys::Keypad::Numeric::Four,
+					keys::Keypad::Numeric::Seven
+				}
+			}, pair_t<cardinal_t, key_collection_t<4>>{
+				cardinal_e::East,
+				key_collection_t<4>{
+					keys::Alpha::D,
+					keys::Keypad::Numeric::Three,
+					keys::Keypad::Numeric::Six,
+					keys::Keypad::Numeric::Nine
+				}
+			}
 		};
 
-		constexpr const std::array<sdl::key, 2> Wait{ keys::Space, keys::Keypad::Numeric::Five };
+		constexpr const std::array<sdl::key, 2> Wait{
+			keys::Space,
+			keys::Keypad::Numeric::Five
+		};
 		
 		constexpr const lut_t<cardinal_t, sdl::key, 4> CameraMovement { 
-			pair_t<cardinal_t, sdl::key>{ cardinal_e::North, keys::Arrow::Up },
-			pair_t<cardinal_t, sdl::key>{ cardinal_e::South, keys::Arrow::Down },
-			pair_t<cardinal_t, sdl::key>{ cardinal_e::West, keys::Arrow::Left },
-			pair_t<cardinal_t, sdl::key>{ cardinal_e::East, keys::Arrow::Right }
+			pair_t<cardinal_t, sdl::key>{
+				cardinal_e::North,
+				keys::Arrow::Up
+			}, pair_t<cardinal_t, sdl::key>{
+				cardinal_e::South,
+				keys::Arrow::Down
+			}, pair_t<cardinal_t, sdl::key>{
+				cardinal_e::West,
+				keys::Arrow::Left
+			}, pair_t<cardinal_t, sdl::key>{
+				cardinal_e::East,
+				keys::Arrow::Right
+			}
 		};
 
 		constexpr const sdl::key Quit{ keys::Escape };
@@ -38,9 +79,12 @@ namespace bleak {
 		constexpr const sdl::key CameraLock{ keys::Tab };
 		constexpr const sdl::key RevealMap{ keys::Grave };
 
-		constexpr const sdl::key RandomWarp{ keys::Numeric::One };
-		constexpr const sdl::key TargetWarp{ keys::Numeric::Two };
-		constexpr const sdl::key SummonWraith{ keys::Numeric::Three };
-		constexpr const sdl::key GrandSummoning{ keys::Numeric::Four };
+		constexpr const sdl::key RandomWarp{ keys::Alpha::Q };
+		constexpr const sdl::key TargetWarp{ keys::Alpha::E };
+		
+		constexpr const sdl::key CalciticInvocation{ keys::Numeric::One };
+		constexpr const sdl::key SpectralInvocation{ keys::Numeric::Two };
+		constexpr const sdl::key SanguinaryInvocation{ keys::Numeric::Three };
+		constexpr const sdl::key NecromanticAscendance{ keys::Numeric::Four };
 	} // namespace Bindings
 } // namespace bleak

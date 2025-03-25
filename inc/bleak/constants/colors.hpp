@@ -60,8 +60,8 @@ namespace bleak {
 
 		namespace materials {
 			static constexpr color_t Blood{ u8{ 157 }, u8{ 34 }, u8{ 53 } };
-			static constexpr color_t lightBlood{ u8{ 177 }, u8{ 34 }, u8{ 53 } };
-			static constexpr color_t darkBlood{ u8{ 137 }, u8{ 14 }, u8{ 33 } };
+			static constexpr color_t LightBlood{ u8{ 177 }, u8{ 34 }, u8{ 53 } };
+			static constexpr color_t DarkBlood{ u8{ 137 }, u8{ 14 }, u8{ 33 } };
 
 			static constexpr color_t Ebony{ u8{ 40 }, u8{ 44 }, u8{ 52 } };
 			static constexpr color_t Ivory{ u8{ 255 }, u8{ 255 }, u8{ 240 } };

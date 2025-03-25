@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/constants/colors.hpp"
 #include <bleak/typedef.hpp>
 
 #include <bit>
@@ -17,81 +18,150 @@
 #include <bleak/constants/characters.hpp>
 
 namespace bleak {
-	enum class cell_trait_t : u8 { Open, Solid, Transperant, Opaque, Seen, Explored, Unseen, Unexplored, Dry, Damp, Cold, Warm, Rough, Smooth, Recedes, Protrudes, Odorless, Smelly, Safe, Toxic };
-
-	enum class rock_type_t : u8 {
-		Limestone, // Sedimentary
-		Granite,   // Igneous intrusive
-		Basalt,	   // Igneous extrusive
-		Marble	   // Metamorphic
+	enum class cell_trait_t : u8 {
+		Open,
+		Solid,
+		Transperant,
+		Opaque,
+		Unseen,
+		Seen,
+		Unexplored,
+		Explored,
+		Dry,
+		Damp,
+		Cold,
+		Warm,
+		Rough,
+		Smooth,
+		Recedes,
+		Protrudes,
+		Clean,
+		Bloodied,
+		Safe,
+		Toxic
 	};
 
-	constexpr cstr to_string(cref<rock_type_t> type) noexcept {
+	constexpr cstr to_string(cell_trait_t trait) noexcept {
+		switch (trait) {
+			case cell_trait_t::Open: {
+				return "open";
+			} case cell_trait_t::Solid: {
+				return "solid";
+			} case cell_trait_t::Transperant: {
+				return "transperant";
+			} case cell_trait_t::Opaque: {
+				return "opaque";
+			} case cell_trait_t::Unseen: {
+				return "unseen";
+			} case cell_trait_t::Seen: {
+				return "seen";
+			} case cell_trait_t::Unexplored: {
+				return "unexplored";
+			} case cell_trait_t::Explored: {
+				return "explored";
+			} case cell_trait_t::Dry: {
+				return "dry";
+			} case cell_trait_t::Damp: {
+				return "damp";
+			} case cell_trait_t::Cold: {
+				return "cold";
+			} case cell_trait_t::Warm: {
+				return "warm";
+			} case cell_trait_t::Rough: {
+				return "rough";
+			} case cell_trait_t::Smooth: {
+				return "smooth";
+			} case cell_trait_t::Recedes: {
+				return "recedes";
+			} case cell_trait_t::Protrudes: {
+				return "protrudes";
+			} case cell_trait_t::Clean: {
+				return "clean";
+			} case cell_trait_t::Bloodied: {
+				return "bloodied";
+			} case cell_trait_t::Safe: {
+				return "safe";
+			} case cell_trait_t::Toxic: {
+				return "toxic";
+			}
+		}
+	}
+
+	enum class rock_type_t : u8 {
+		Limestone, // a sedimentary stone
+		Granite,   // an igneous intrusive stone
+		Basalt,	   // an igneous extrusive stone
+		Marble	   // a metamorphic stone
+	};
+
+	constexpr cstr to_string(rock_type_t type) noexcept {
 		switch (type) {
-		case rock_type_t::Limestone:
-			return "limestone";
-		case rock_type_t::Granite:
-			return "granite";
-		case rock_type_t::Basalt:
-			return "basalt";
-		case rock_type_t::Marble:
-			return "marble";
+			case rock_type_t::Limestone: {
+				return "limestone";
+			} case rock_type_t::Granite: {
+				return "granite";
+			} case rock_type_t::Basalt: {
+				return "basalt";
+			} case rock_type_t::Marble: {
+				return "marble";
+			}
 		}
 	}
 
 	enum class mineral_type_t : u8 {
 		None,
-		Lignite,		// Mineral of coke
-		BituminousCoal, // Mineral of coke (200% of lignite)
-		NativeCopper,	// Native ore of copper
-		NativeSilver,	// Native ore of silver
-		NativeGold,		// Native ore of gold
-		NativePlatinum, // Native ore of platinum
-		Limonite,		// Ore of iron
-		Hematite,		// Ore of iron
-		Magnetite,		// Ore of iron
-		Malachite,		// Ore of copper
-		Tetrahedrite,	// Ore of copper and silver (5:1)
-		Garnierite,		// Ore of nickel
-		Galena,			// Ore of lead and silver (2:1)
-		Sphalerite,		// Ore of zinc
-		Cassiterite		// Ore of tin
+		Lignite,		// a low yield mineral of coke
+		BituminousCoal, // a medium yield mineral of coke
+		NativeCopper,	// a native deposit of copper
+		NativeSilver,	// a native deposit of silver
+		NativeGold,		// a native deposit of gold
+		NativePlatinum, // a native deposit of platinum
+		Limonite,		// a low yield ore of iron
+		Hematite,		// a medium yield ore of iron
+		Magnetite,		// a high yield ore of iron
+		Malachite,		// an ore of copper
+		Tetrahedrite,	// an ore of copper and silver (5:1)
+		Garnierite,		// an ore of nickel
+		Galena,			// an ore of lead and silver (2:1)
+		Sphalerite,		// an ore of zinc
+		Cassiterite		// an ore of tin
 	};
 
-	constexpr cstr to_string(cref<mineral_type_t> type) noexcept {
+	constexpr cstr to_string(mineral_type_t type) noexcept {
 		switch (type) {
-		case mineral_type_t::None:
-			return "no minerals";
-		case mineral_type_t::Lignite:
-			return "lignite";
-		case mineral_type_t::BituminousCoal:
-			return "bituminous coal";
-		case mineral_type_t::NativeCopper:
-			return "native copper";
-		case mineral_type_t::NativeSilver:
-			return "native silver";
-		case mineral_type_t::NativeGold:
-			return "native gold";
-		case mineral_type_t::NativePlatinum:
-			return "native platinum";
-		case mineral_type_t::Limonite:
-			return "limonite";
-		case mineral_type_t::Hematite:
-			return "hematite";
-		case mineral_type_t::Magnetite:
-			return "magnetite";
-		case mineral_type_t::Malachite:
-			return "malachite";
-		case mineral_type_t::Tetrahedrite:
-			return "tetrahedrite";
-		case mineral_type_t::Garnierite:
-			return "garnierite";
-		case mineral_type_t::Galena:
-			return "galena";
-		case mineral_type_t::Sphalerite:
-			return "sphalerite";
-		case mineral_type_t::Cassiterite:
-			return "cassiterite";
+			case mineral_type_t::None: {
+				return "no minerals";
+			} case mineral_type_t::Lignite: {
+				return "lignite";
+			} case mineral_type_t::BituminousCoal: {
+				return "bituminous coal";
+			} case mineral_type_t::NativeCopper: {
+				return "native copper";
+			} case mineral_type_t::NativeSilver: {
+				return "native silver";
+			} case mineral_type_t::NativeGold: {
+				return "native gold";
+			} case mineral_type_t::NativePlatinum: {
+				return "native platinum";
+			} case mineral_type_t::Limonite: {
+				return "limonite";
+			} case mineral_type_t::Hematite: {
+				return "hematite";
+			} case mineral_type_t::Magnetite: {
+				return "magnetite";
+			} case mineral_type_t::Malachite: {
+				return "malachite";
+			} case mineral_type_t::Tetrahedrite: {
+				return "tetrahedrite";
+			} case mineral_type_t::Garnierite: {
+				return "garnierite";
+			} case mineral_type_t::Galena: {
+				return "galena";
+			} case mineral_type_t::Sphalerite: {
+				return "sphalerite";
+			} case mineral_type_t::Cassiterite: {
+				return "cassiterite";
+			}
 		}
 	}
 
@@ -105,7 +175,7 @@ namespace bleak {
 		bool warm : 1 { false };
 		bool smooth : 1 { false };
 		bool protrudes : 1 { false };
-		bool smelly : 1 { false };
+		bool bloodied : 1 { false };
 		bool toxic : 1 { false };
 
 		rock_type_t rock_type : 2 { rock_type_t::Limestone };
@@ -208,11 +278,11 @@ namespace bleak {
 			case cell_trait_t::Protrudes:
 				protrudes = true;
 				break;
-			case cell_trait_t::Odorless:
-				smelly = false;
+			case cell_trait_t::Clean:
+				bloodied = false;
 				break;
-			case cell_trait_t::Smelly:
-				smelly = true;
+			case cell_trait_t::Bloodied:
+				bloodied = true;
 				break;
 			case cell_trait_t::Safe:
 				toxic = false;
@@ -275,11 +345,11 @@ namespace bleak {
 			case cell_trait_t::Recedes:
 				protrudes = false;
 				break;
-			case cell_trait_t::Odorless:
-				smelly = true;
+			case cell_trait_t::Clean:
+				bloodied = true;
 				break;
-			case cell_trait_t::Smelly:
-				smelly = false;
+			case cell_trait_t::Bloodied:
+				bloodied = false;
 				break;
 			case cell_trait_t::Safe:
 				toxic = true;
@@ -312,12 +382,12 @@ namespace bleak {
 
 		constexpr bool operator==(cref<cell_state_t> other) const noexcept {
 			return solid == other.solid && opaque == other.opaque && seen == other.seen && explored == other.explored && damp == other.damp && warm == other.warm && smooth == other.smooth && protrudes == other.protrudes
-				&& smelly == other.smelly && toxic == other.toxic && rock_type == other.rock_type && mineral_type == other.mineral_type;
+				&& bloodied == other.bloodied && toxic == other.toxic && rock_type == other.rock_type && mineral_type == other.mineral_type;
 		}
 
 		constexpr bool operator!=(cref<cell_state_t> other) const noexcept {
 			return solid != other.solid || opaque != other.opaque || seen != other.seen || explored != other.explored || damp != other.damp || warm != other.warm || smooth != other.smooth || protrudes != other.protrudes
-				|| smelly != other.smelly || toxic != other.toxic || rock_type != other.rock_type || mineral_type != other.mineral_type;
+				|| bloodied != other.bloodied || toxic != other.toxic || rock_type != other.rock_type || mineral_type != other.mineral_type;
 		}
 
 		constexpr bool operator==(cref<cell_trait_t> other) const noexcept { return contains(other); }
@@ -358,10 +428,10 @@ namespace bleak {
 				return protrudes;
 			case cell_trait_t::Recedes:
 				return !protrudes;
-			case cell_trait_t::Smelly:
-				return smelly;
-			case cell_trait_t::Odorless:
-				return !smelly;
+			case cell_trait_t::Bloodied:
+				return bloodied;
+			case cell_trait_t::Clean:
+				return !bloodied;
 			case cell_trait_t::Toxic:
 				return toxic;
 			case cell_trait_t::Safe:
@@ -385,8 +455,10 @@ namespace bleak {
 					damp ? "damp" : "dry",
 					warm ? "warm" : "cold",
 					smooth ? "smooth" : "rough",
-					mineral_type == mineral_type_t::None || !solid ? "" : std::format("\nIts surface is encrusted with {}", to_string(mineral_type)),
-					solid ? "" : std::format("\nThe air within is {} and {}.", smelly ? "pungent" : "odorless", toxic ? "toxic" : "innocuous")
+					std::format(
+						"\nIts surface is {}{}",
+						bloodied ? "spattered with blood" : "clean", mineral_type == mineral_type_t::None || !solid ? "." : std::format(" and encrusted with {}.", to_string(mineral_type))),
+					solid ? "" : std::format("\nThe air within is {}.", toxic ? "toxic" : "innocuous")
 				);
 			} else if (explored) {
 				return std::format(
@@ -412,7 +484,7 @@ namespace bleak {
 				warm ? "Warm" : "Cold",
 				smooth ? "Smooth" : "Rough",
 				protrudes ? "Protrudes" : "Recedes",
-				smelly ? "Smelly" : "Odorless",
+				bloodied ? "Bloodied" : "Clean",
 				toxic ? "Toxic" : "Safe"
 			);
 		}
@@ -457,7 +529,7 @@ namespace bleak {
 
 			const u8 alpha{ seen ? u8{ 0xFF } : u8{ 0x80 } };
 
-			atlas.draw(glyph_t{ characters::Floor, color_t{ 0x40, alpha } }, position + offset);
+			atlas.draw(glyph_t{ characters::Floor, bloodied ? seen ? colors::materials::LightBlood : colors::materials::DarkBlood : color_t{ 0x40, alpha } }, position + offset);
 
 			if (!solid) {
 				return;

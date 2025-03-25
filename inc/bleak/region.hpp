@@ -51,37 +51,27 @@ namespace bleak {
 
 		constexpr region_t() : zones{} {};
 
-		constexpr region_t(cref<std::string> path) : zones{} {
-			std::ifstream file{};
-			str buffer;
+		constexpr region_t(cref<std::string> path) noexcept : zones{} {
+			str buffer = static_cast<str>(std::malloc(zone_type::byte_size));
 
-			try {
-				file.open(path, std::ios::in | std::ios::binary);
-
-				buffer = static_cast<str>(std::malloc(zone_type::byte_size));
-
-				if (buffer == nullptr) {
-					error_log.add("failed to allocate buffer for reading region file.", __TIME_FILE_LINE__);
-					throw std::bad_alloc();
-				}
-
-				for (extent_t::product_t i{ 0 }; i < region_area; ++i) {
-					file.read(buffer, zone_type::byte_size);
-					zones[i].deserialize(buffer);
-				}
-
-				std::free(buffer);
-				buffer = nullptr;
-
-				file.close();
-			} catch (cref<std::exception> e) {
-				error_log.add(e.what(), __TIME_FILE_LINE__);
-
-				if (buffer != nullptr) {
-					std::free(buffer);
-					buffer = nullptr;
-				}
+			if (buffer == nullptr) {
+				error_log.add("failed to allocate buffer for reading region file.", __TIME_FILE_LINE__);
+				return;
 			}
+
+			std::ifstream file{};
+
+			file.open(path, std::ios::in | std::ios::binary);
+
+			for (extent_t::product_t i{ 0 }; i < region_area; ++i) {
+				file.read(buffer, zone_type::byte_size);
+				zones[i].deserialize(buffer);
+			}
+
+			file.close();
+
+			std::free(buffer);
+			buffer = nullptr;
 		}
 
 		constexpr region_t(cref<region_t> other) : zones{ other.zones } {}
@@ -159,9 +149,8 @@ namespace bleak {
 		}
 
 		template<extent_t AtlasSize>
-		constexpr void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas)
 			requires is_drawable<T>::value
-		{
+		constexpr void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas) const noexcept {
 			for (extent_t::scalar_t y{ 0 }; y < region_size.h; ++y) {
 				for (extent_t::scalar_t x{ 0 }; x < region_size.w; ++x) {
 					const offset_t pos{ x, y };
@@ -171,9 +160,8 @@ namespace bleak {
 		}
 
 		template<extent_t AtlasSize>
-		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset)
 			requires is_drawable<T>::value
-		{
+		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset) const noexcept {
 			for (extent_t::scalar_t y{ 0 }; y < region_size.h; ++y) {
 				for (extent_t::scalar_t x{ 0 }; x < region_size.w; ++x) {
 					const offset_t pos{ x, y };
@@ -183,9 +171,8 @@ namespace bleak {
 		}
 
 		template<extent_t AtlasSize>
-		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset, cref<extent_t> scale)
 			requires is_drawable<T>::value
-		{
+		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> offset, cref<extent_t> scale) const noexcept {
 			for (extent_t::scalar_t y{ 0 }; y < region_size.h; ++y) {
 				for (extent_t::scalar_t x{ 0 }; x < region_size.w; ++x) {
 					const offset_t pos{ x, y };
@@ -210,6 +197,12 @@ namespace bleak {
 			}
 
 			return true;
+		}
+
+		constexpr void deserialize(cstr buffer) noexcept {
+			for (extent_t::product_t i{ 0 }; i < region_area; ++i) {
+				zones[i].deserialize(buffer + i * zone_type::byte_size);
+			}
 		}
 	};
 } // namespace bleak

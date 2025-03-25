@@ -99,12 +99,20 @@ namespace necrowarp {
 				player.command = entity_command_t{ entity_registry.contains(grid_cursor.get_position()) ? command_type_t::ConsumeWarp : command_type_t::TargetWarp, player.position, grid_cursor.get_position() };
 
 				return true;
-			} else if (Keyboard::is_key_down(bindings::SummonWraith)) {
-				player.command = entity_command_t{ command_type_t::SummonWraith, player.position };
+			} else if (Keyboard::is_key_down(bindings::CalciticInvocation)) {
+				player.command = entity_command_t{ command_type_t::CalciticInvocation, player.position };
 
 				return true;
-			} else if (Keyboard::is_key_down(bindings::GrandSummoning)) {
-				player.command = entity_command_t{ command_type_t::GrandSummoning, player.position };
+			} else if (Keyboard::is_key_down(bindings::SpectralInvocation)) {
+				player.command = entity_command_t{ command_type_t::SpectralInvocation, player.position };
+
+				return true;
+			} else if (Keyboard::is_key_down(bindings::SanguinaryInvocation)) {
+				player.command = entity_command_t{ command_type_t::SanguinaryInvocation, player.position };
+
+				return true;
+			} else if (Keyboard::is_key_down(bindings::NecromanticAscendance)) {
+				player.command = entity_command_t{ command_type_t::NecromanticAscendance, player.position };
 
 				return true;
 			}

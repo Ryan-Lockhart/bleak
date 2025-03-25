@@ -20,6 +20,7 @@ namespace necrowarp {
 
 	static inline atlas_t<globals::TilesetSize> game_atlas{ renderer, "res\\tiles\\tileset_16x16.png", globals::UniversalOffset };
 	static inline atlas_t<globals::GlyphsetSize> ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png", globals::UniversalOffset };
+	static inline atlas_t<globals::IconsetSize> icon_atlas{ renderer, "res\\icons\\icons_32x32.png", globals::UniversalOffset };
 
 	static inline std::mt19937 random_engine{};
 

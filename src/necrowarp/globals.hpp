@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/extent.hpp"
 #include <bleak.hpp>
 
 namespace necrowarp {
@@ -30,9 +31,11 @@ namespace necrowarp {
 
 		constexpr extent_t UIGridSize{ WindowSize / 8 };
 		constexpr extent_t GameGridSize{ WindowSize / 16 };
+		constexpr extent_t IconGridSize{ WindowSize / 32 };
 
 		constexpr extent_t GlyphsetSize{ 16, 16 };
 		constexpr extent_t TilesetSize{ 16, 5 };
+		constexpr extent_t IconsetSize{ 3, 2 };
 
 		constexpr extent_t ZoneSize{ globals::GameGridSize };
 		constexpr extent_t RegionSize{ 1, 1 };
@@ -43,6 +46,7 @@ namespace necrowarp {
 
 		constexpr extent_t BorderSize{ 4, 4 };
 
+		constexpr extent_t IconSize{ 32, 32 };
 		constexpr extent_t CellSize{ 16, 16 };
 		constexpr extent_t GlyphSize{ 8, 8 };
 

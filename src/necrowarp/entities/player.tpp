@@ -7,6 +7,10 @@
 
 namespace necrowarp {
 	template<entity_type_t EntityType> inline bool player_t::will_perish() const noexcept {
+		if (has_ascended()) {
+			return false;
+		}
+
 		if constexpr (EntityType == entity_type_t::Adventurer) {
 			return armor < adventurer_t::MaximumDamage;
 		} else if constexpr (EntityType == entity_type_t::Paladin) {
@@ -19,6 +23,10 @@ namespace necrowarp {
 	}
 
 	template<entity_type_t EntityType> inline void player_t::receive_damage() noexcept {
+		if (has_ascended()) {
+			return;
+		}
+		
 		if constexpr (EntityType == entity_type_t::Adventurer) {
 			set_armor(armor - adventurer_t::MaximumDamage);
 		} else if constexpr (EntityType == entity_type_t::Paladin) {
