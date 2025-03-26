@@ -1,11 +1,11 @@
 #pragma once
 
-#include "necrowarp/globals.hpp"
 #include <bleak.hpp>
 
 #include <necrowarp/ui/base.hpp>
-#include <necrowarp/game_state.hpp>
 #include <necrowarp/ui/box.hpp>
+
+#include <necrowarp/game_state.hpp>
 
 namespace necrowarp {
 	using namespace bleak;

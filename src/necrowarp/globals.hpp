@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/extent.hpp"
 #include <bleak.hpp>
 
 namespace necrowarp {
