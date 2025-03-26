@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/constants/colors.hpp"
 #include <bleak/typedef.hpp>
 
 #include <bit>

@@ -1,10 +1,5 @@
 #pragma once
 
-#include "bleak/constants/characters.hpp"
-#include "bleak/constants/colors.hpp"
-#include "necrowarp/entities/entity.hpp"
-#include "necrowarp/entities/ladder.hpp"
-#include "necrowarp/entity_state.hpp"
 #include <bleak.hpp>
 
 #include <necrowarp/ui.hpp>

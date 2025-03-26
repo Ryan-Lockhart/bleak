@@ -1,6 +1,5 @@
 #pragma once
 
-#include "necrowarp/entities/ladder.hpp"
 #include <bleak.hpp>
 
 #include <cstdlib>

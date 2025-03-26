@@ -1,8 +1,5 @@
 #pragma once
 
-#include "bleak/constants/characters.hpp"
-#include "bleak/constants/colors.hpp"
-#include "bleak/constants/glyphs.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <necrowarp/game_state.hpp>
