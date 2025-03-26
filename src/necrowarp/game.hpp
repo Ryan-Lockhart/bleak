@@ -1,5 +1,6 @@
 #pragma once
 
+#include "necrowarp/entities/ladder.hpp"
 #include <bleak.hpp>
 
 #include <cstdlib>
@@ -191,7 +192,13 @@ namespace necrowarp {
 			for (extent_t::product_t i{ 0 }; i < region.region_area; ++i) {
 				region[i]
 					.set<zone_region_t::Border>(closed_state)
-					.generate<zone_region_t::Interior>(random_engine, globals::FillPercent, globals::AutomotaIterations, globals::AutomotaThreshold, cell_applicator)
+					.generate<zone_region_t::Interior>(
+						random_engine,
+						globals::FillPercent,
+						globals::AutomotaIterations,
+						globals::AutomotaThreshold,
+						cell_applicator
+					)
 					.collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open)
 					.randomize<zone_region_t::All>(random_engine, 0.25, cell_trait_t::Smooth, cell_trait_t::Rough)
 					.randomize<zone_region_t::All>(random_engine, 2.0 / 3.0, cell_trait_t::Protrudes, cell_trait_t::Recedes)
@@ -223,8 +230,24 @@ namespace necrowarp {
 			player.position = player_pos.value();
 			good_goal_map.add(player_pos.value());
 
-			entity_registry.spawn<ladder_t>(globals::NumberOfLadders, globals::MinimumLadderDistance);
-			entity_registry.spawn<skull_t>(globals::StartingSkulls, globals::MinimumSkullDistance);
+			entity_registry.spawn<ladder_t>(
+				static_cast<usize>(globals::NumberOfLadders),
+				static_cast<u32>(globals::MinimumLadderDistance),
+
+				verticality_t::Up
+			);
+
+			entity_registry.spawn<ladder_t>(
+				static_cast<usize>(globals::NumberOfLadders),
+				static_cast<u32>(globals::MinimumLadderDistance),
+
+				verticality_t::Down, true
+			);
+
+			entity_registry.spawn<skull_t>(
+				static_cast<usize>(globals::StartingSkulls),
+				static_cast<u32>(globals::MinimumSkullDistance)
+			);
 
 			evil_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 			good_goal_map.recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
@@ -314,7 +337,7 @@ namespace necrowarp {
 
 			cauto spawn_positioner = []() -> std::optional<offset_t> {
 				for (cref<ladder_t> ladder : entity_storage<ladder_t>) {
-					if (entity_registry.contains<ALL_GOOD_NPCS>(ladder.position)) {
+					if (entity_registry.contains<ALL_GOOD_NPCS>(ladder.position) || ladder.is_down_ladder() || ladder.has_shackle()) {
 						continue;
 					}
 

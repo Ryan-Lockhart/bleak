@@ -1,8 +1,14 @@
 #pragma once
 
+#include "bleak/offset.hpp"
+#include "necrowarp/entities/entity.hpp"
+#include "necrowarp/entities/ladder.hpp"
+#include "necrowarp/entities/skull.hpp"
+#include "necrowarp/entity_state.hpp"
 #include <necrowarp/entities.hpp>
 
 #include <cstddef>
+#include <optional>
 #include <type_traits>
 
 #include <bleak/sparse.hpp>
@@ -225,6 +231,20 @@ namespace necrowarp {
 		return true;
 	}
 
+	template<NonPlayerEntity EntityType, typename... Args> inline bool entity_registry_t::spawn(usize count, Args... args) noexcept {
+		for (usize i{ 0 }; i < count; ++i) {
+			cauto maybe_position{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open, entity_registry) };
+
+			if (!maybe_position.has_value()) {
+				return false;
+			}
+
+			entity_registry.add(EntityType{ maybe_position.value(), args... });
+		}
+
+		return true;
+	}
+
 	template<NonPlayerEntity EntityType> inline bool entity_registry_t::spawn(usize count, u32 minimum_distance) noexcept {
 		for (usize i{ 0 }; i < count; ++i) {
 			cauto maybe_position{ entity_goal_map<EntityType>.template find_random<zone_region_t::Interior>(game_map, random_engine, cell_trait_t::Open, entity_registry, minimum_distance) };
@@ -234,6 +254,22 @@ namespace necrowarp {
 			}
 
 			entity_registry.add(EntityType{ maybe_position.value() });
+
+			entity_goal_map<EntityType>.template recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+		}
+
+		return true;
+	}
+
+	template<NonPlayerEntity EntityType, typename... Args> inline bool entity_registry_t::spawn(usize count, u32 minimum_distance, Args... args) noexcept {
+		for (usize i{ 0 }; i < count; ++i) {
+			cauto maybe_position{ entity_goal_map<EntityType>.template find_random<zone_region_t::Interior>(game_map, random_engine, cell_trait_t::Open, entity_registry, minimum_distance) };
+
+			if (!maybe_position.has_value()) {
+				return false;
+			}
+
+			entity_registry.add(EntityType{ maybe_position.value(), args... });
 
 			entity_goal_map<EntityType>.template recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
 		}
@@ -840,58 +876,101 @@ namespace necrowarp {
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::CalciticInvocation>(cref<entity_command_t> command) noexcept {
-		if (!player.can_perform_calcitic_invocation() || entity_storage<skull_t>.empty()) {
+		if (!player.can_perform_calcitic_invocation() || entity_registry.empty<skull_t>()) {
 			return;
 		}
+
+		i8 accumulated_skulls{ 0 };
+
+		ptr<ladder_t> eligible_shackled_ladder{ nullptr };
 
 		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
 			const offset_t position{ player.position + offset };
 
-			if (!game_map.within<zone_region_t::Interior>(position) || entity_registry.at(position) != entity_type_t::Skull) {
+			const bool has_skull{ entity_registry.at(position) == entity_type_t::Skull };
+			const bool has_ladder{ entity_registry.at(position) == entity_type_t::Ladder };
+
+			if (!game_map.within<zone_region_t::Interior>(position) || (!has_skull && (eligible_shackled_ladder != nullptr || !has_ladder))) {
 				continue;
 			}
 
-			const bool is_fresh{ entity_registry.at<skull_t>(position)->fresh };
+			if (has_skull) {
+				const bool is_fresh{ entity_registry.at<skull_t>(position)->fresh };
 
-			entity_registry.remove<entity_type_t::Skull>(position);
-			entity_registry.add(skeleton_t{ position, !is_fresh });
+				entity_registry.remove<entity_type_t::Skull>(position);
+				entity_registry.add(skeleton_t{ position, !is_fresh });
+
+				++accumulated_skulls;
+			}
+
+			if (eligible_shackled_ladder == nullptr && has_ladder) {
+				eligible_shackled_ladder = entity_registry.at<ladder_t>(position);
+
+				if (eligible_shackled_ladder->shackle != shackle_type_t::Spectral) {
+					eligible_shackled_ladder = nullptr;
+				}
+			}
+		}
+
+		if (accumulated_skulls <= 0) {
+			return;
+		} else if (accumulated_skulls >= 4 && eligible_shackled_ladder != nullptr) {
+			eligible_shackled_ladder->unshackle();
+			eligible_shackled_ladder = nullptr;
 		}
 
 		player.pay_calcitic_invocation_cost();
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::SpectralInvocation>(cref<entity_command_t> command) noexcept {
-		if (!player.can_perform_spectral_invocation() || entity_storage<skull_t>.empty()) {
+		if (!player.can_perform_spectral_invocation() || entity_registry.empty<skull_t>()) {
 			return;
 		}
 
-		i8 wraith_health{ 0 };
+		i8 accumulated_health{ 0 };
+
+		ptr<ladder_t> eligible_shackled_ladder{ nullptr };
 
 		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
 			const offset_t position{ player.position + offset };
 
-			if (!game_map.within<zone_region_t::Interior>(position) || entity_registry.at(position) != entity_type_t::Skull) {
+			const bool has_skull{ entity_registry.at(position) == entity_type_t::Skull };
+			const bool has_ladder{ entity_registry.at(position) == entity_type_t::Ladder };
+
+			if (!game_map.within<zone_region_t::Interior>(position) || (!has_skull && (eligible_shackled_ladder != nullptr || !has_ladder))) {
 				continue;
 			}
 
-			entity_registry.remove<entity_type_t::Skull>(position);
+			if (has_skull && entity_registry.at<skull_t>(position)->fresh) {
+				entity_registry.remove<entity_type_t::Skull>(position);
+				++accumulated_health;
+			}
 
-			++wraith_health;
+			if (eligible_shackled_ladder == nullptr && has_ladder) {
+				eligible_shackled_ladder = entity_registry.at<ladder_t>(position);
+
+				if (eligible_shackled_ladder->shackle != shackle_type_t::Spectral) {
+					eligible_shackled_ladder = nullptr;
+				}
+			}
 		}
 
-		if (wraith_health <= 0) {
+		if (accumulated_health <= 0) {
 			return;
+		} else if (accumulated_health >= 4 && eligible_shackled_ladder != nullptr) {
+			eligible_shackled_ladder->unshackle();
+			eligible_shackled_ladder = nullptr;
 		}
 
 		player.pay_spectral_invocation_cost();
 
 		if (!random_warp(command.source.value())) {
-			player.bolster_armor(wraith_health);
+			player.bolster_armor(accumulated_health);
 
 			return;
 		}
 
-		entity_registry.add(wraith_t{ command.source.value(), wraith_health });
+		entity_registry.add(wraith_t{ command.source.value(), accumulated_health });
 	}
 
 	template<> void entity_registry_t::process_command<command_type_t::SanguinaryInvocation>(cref<entity_command_t> command) noexcept {
@@ -901,20 +980,37 @@ namespace necrowarp {
 
 		i8 accumulated_health{ 0 };
 
+		ptr<ladder_t> eligible_shackled_ladder{ nullptr };
+
 		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
 			const offset_t position{ player.position + offset };
 
-			if (!game_map.within<zone_region_t::Interior>(position) || !game_map[position].bloodied) {
+			const bool has_blood{ game_map[position].bloodied };
+			const bool has_ladder{ entity_registry.at(position) == entity_type_t::Ladder };
+
+			if (!game_map.within<zone_region_t::Interior>(position) || (!has_blood && (eligible_shackled_ladder != nullptr || !has_ladder))) {
 				continue;
 			}
-			
-			game_map[position].unset(cell_trait_t::Bloodied);
 
-			++accumulated_health;
+			if (has_blood) {
+				game_map[position].unset(cell_trait_t::Bloodied);
+				++accumulated_health;
+			}
+
+			if (eligible_shackled_ladder == nullptr && has_ladder) {
+				eligible_shackled_ladder = entity_registry.at<ladder_t>(position);
+
+				if (eligible_shackled_ladder->shackle != shackle_type_t::Sanguine) {
+					eligible_shackled_ladder = nullptr;
+				}
+			}
 		}
 
 		if (accumulated_health <= 0) {
 			return;
+		} else if (accumulated_health >= 4 && eligible_shackled_ladder != nullptr) {
+			eligible_shackled_ladder->unshackle();
+			eligible_shackled_ladder = nullptr;
 		}
 
 		player.pay_sanguinary_invocation_cost();

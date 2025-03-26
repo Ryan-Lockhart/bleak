@@ -489,7 +489,7 @@ namespace bleak {
 			);
 		}
 
-		template<extent_t AtlasSize> inline constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> position) const noexcept {
+		/*template<extent_t AtlasSize> inline constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<offset_t> position) const noexcept {
 			if (!explored) {
 				return;
 			}
@@ -519,7 +519,7 @@ namespace bleak {
 			}
 
 			atlas.draw(glyph_t{ characters::Wall, color_t{ 0xC0, alpha } }, position + offset);
-		}
+		}*/
 
 		template<extent_t AtlasSize, typename T, extent_t ZoneSize, extent_t ZoneBorder>
 		inline constexpr void draw(cref<atlas_t<AtlasSize>> atlas, cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<offset_t> position, cref<offset_t> offset) const noexcept {

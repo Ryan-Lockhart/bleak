@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/constants/colors.hpp"
 #include <bleak.hpp>
 
 #include <cstddef>
@@ -11,15 +10,16 @@ namespace necrowarp {
 
 	struct player_t;
 
-	struct skull_t;
-	struct ladder_t;
-
 	struct skeleton_t;
-	struct flesh_golem_t;
 	struct wraith_t;
+	struct flesh_golem_t;
+
 	struct adventurer_t;
 	struct paladin_t;
 	struct priest_t;
+
+	struct skull_t;
+	struct ladder_t;
 
 #define ALL_EVIL_NPCS \
 		skeleton_t, \
@@ -54,63 +54,63 @@ namespace necrowarp {
 	enum struct entity_type_t : u8 {
 		None = 0,
 		Player,
-		Skull,
 		Skeleton,
 		Wraith,
 		FleshGolem,
-		Ladder,
 		Adventurer,
 		Paladin,
-		Priest
+		Priest,
+		Skull,
+		Ladder,
 	};
 
-	static constexpr cstr to_string(cref<entity_type_t> type) noexcept {
+	static constexpr cstr to_string(entity_type_t type) noexcept {
 		switch (type) {
-		case entity_type_t::None:
-			return "none";
-		case entity_type_t::Player:
-			return "player";
-		case entity_type_t::Skull:
-			return "skull";
-		case entity_type_t::Skeleton:
-			return "skeleton";
-		case entity_type_t::Wraith:
-			return "wraith";
-		case entity_type_t::FleshGolem:
-			return "flesh golem";
-		case entity_type_t::Ladder:
-			return "ladder";
-		case entity_type_t::Adventurer:
-			return "adventurer";
-		case entity_type_t::Paladin:
-			return "paladin";
-		case entity_type_t::Priest:
-			return "priest";
+			case entity_type_t::None:
+				return "none";
+			case entity_type_t::Player:
+				return "player";
+			case entity_type_t::Skeleton:
+				return "skeleton";
+			case entity_type_t::Wraith:
+				return "wraith";
+			case entity_type_t::FleshGolem:
+				return "flesh golem";
+			case entity_type_t::Adventurer:
+				return "adventurer";
+			case entity_type_t::Paladin:
+				return "paladin";
+			case entity_type_t::Priest:
+				return "priest";
+			case entity_type_t::Skull:
+				return "skull";
+			case entity_type_t::Ladder:
+				return "ladder";
 		}
 	}
 
-	static constexpr runes_t to_colored_string(cref<entity_type_t> type) noexcept {
+	static constexpr runes_t to_colored_string(entity_type_t type) noexcept {
 		switch (type) {
-		case entity_type_t::None:
-			return runes_t{ "none", colors::Grey };
-		case entity_type_t::Player:
-			return runes_t{ "player", colors::Magenta };
-		case entity_type_t::Skull:
-			return runes_t{ "skull", colors::White };
-		case entity_type_t::Skeleton:
-			return runes_t{ "skeleton", colors::White };
-		case entity_type_t::Wraith:
-			return runes_t{ "wraith", colors::light::Green };
-		case entity_type_t::FleshGolem:
-			return runes_t{ "flesh golem", colors::materials::DarkBlood };
-		case entity_type_t::Ladder:
-			return runes_t{ "ladder", colors::materials::Oak };
-		case entity_type_t::Adventurer:
-			return runes_t{ "adventurer", colors::metals::Bronze };
-		case entity_type_t::Paladin:
-			return runes_t{ "paladin", colors::metals::Steel };
-		case entity_type_t::Priest:
-			return runes_t{ "priest", colors::metals::Gold };
+			case entity_type_t::None:
+				return runes_t{ to_string(type), colors::Grey };
+			case entity_type_t::Player:
+				return runes_t{ to_string(type), colors::Magenta };
+			case entity_type_t::Skeleton:
+				return runes_t{ to_string(type), colors::White };
+			case entity_type_t::Wraith:
+				return runes_t{ to_string(type), colors::light::Green };
+			case entity_type_t::FleshGolem:
+				return runes_t{ to_string(type), colors::materials::DarkBlood };
+			case entity_type_t::Adventurer:
+				return runes_t{ to_string(type), colors::metals::Bronze };
+			case entity_type_t::Paladin:
+				return runes_t{ to_string(type), colors::metals::Steel };
+			case entity_type_t::Priest:
+				return runes_t{ to_string(type), colors::metals::Gold };
+			case entity_type_t::Skull:
+				return runes_t{ to_string(type), colors::White };
+			case entity_type_t::Ladder:
+				return runes_t{ to_string(type), colors::materials::Oak };
 		}
 	}
 
@@ -266,11 +266,4 @@ namespace necrowarp {
 	template<command_type_t> inline constexpr glyph_t command_icons;
 
 	template<> inline constexpr glyph_t entity_glyphs<std::nullptr_t>{ 0x40, colors::White };
-
-	constexpr glyph_t PlayerArmoredGlyph{ 0x42, colors::White };
-
-	constexpr glyph_t AnimatedSkullGlyph{ 0x44, colors::White };
-
-	constexpr glyph_t EnergyGlyph{ 0x4B, colors::White };
-	constexpr glyph_t ArmorGlyph{ 0x4C, colors::White };
 } // namespace necrowarp

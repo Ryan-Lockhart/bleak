@@ -60,7 +60,11 @@ namespace necrowarp {
 
 		template<NonPlayerEntity EntityType> inline bool spawn(usize count) noexcept;
 
+		template<NonPlayerEntity EntityType, typename... Args> inline bool spawn(usize count, Args... args) noexcept;
+
 		template<NonPlayerEntity EntityType> inline bool spawn(usize count, u32 minimum_distance) noexcept;
+
+		template<NonPlayerEntity EntityType, typename... Args> inline bool spawn(usize count, u32 minimum_distance, Args... args) noexcept;
 
 		inline bool update(cref<offset_t> current, cref<offset_t> target) noexcept;
 

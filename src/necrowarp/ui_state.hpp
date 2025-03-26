@@ -1,5 +1,10 @@
 #pragma once
 
+#include "bleak/constants/characters.hpp"
+#include "bleak/constants/colors.hpp"
+#include "necrowarp/entities/entity.hpp"
+#include "necrowarp/entities/ladder.hpp"
+#include "necrowarp/entity_state.hpp"
 #include <bleak.hpp>
 
 #include <necrowarp/ui.hpp>
@@ -385,11 +390,11 @@ namespace necrowarp {
 		}
 	};
 
-	constexpr glyph_t ActiveEnergyGlyph{ EnergyGlyph.index, color_t{ 0xFF, static_cast<u8>(0xFF) } };
-	constexpr glyph_t InactiveEnergyGlyph{ EnergyGlyph.index, color_t{ 0xFF, static_cast<u8>(0x80) } };
+	constexpr glyph_t ActiveEnergyGlyph{ characters::Energy, color_t{ 0xFF, static_cast<u8>(0xFF) } };
+	constexpr glyph_t InactiveEnergyGlyph{ characters::Energy, color_t{ 0xFF, static_cast<u8>(0x80) } };
 
-	constexpr glyph_t ActiveArmorGlyph{ ArmorGlyph.index, color_t{ 0xFF, static_cast<u8>(0xFF) } };
-	constexpr glyph_t InactiveArmorGlyph{ ArmorGlyph.index, color_t{ 0xFF, static_cast<u8>(0x80) } };
+	constexpr glyph_t ActiveArmorGlyph{ characters::Armor, color_t{ 0xFF, static_cast<u8>(0xFF) } };
+	constexpr glyph_t InactiveArmorGlyph{ characters::Armor, color_t{ 0xFF, static_cast<u8>(0x80) } };
 
 	constexpr cstr help_hidden_text{ "F1: Show Controls" };
 
@@ -479,11 +484,34 @@ namespace necrowarp {
 			if (show_tooltip) {
 				if (entity_type != entity_type_t::None && bloodied) {
 					tooltip_label.text = to_colored_string(entity_type);
+
+					if (entity_type == entity_type_t::Ladder) {
+						tooltip_label.text
+							.concatenate(runes_t{ " (" })
+							.concatenate(runes_t{ to_string(entity_registry.at<ladder_t>(grid_cursor.position)->verticality) })
+							.concatenate({ " | " })
+							.concatenate(to_colored_string(entity_registry.at<ladder_t>(grid_cursor.position)->shackle))
+							.concatenate(runes_t{ ")"});
+					}
+					
 					tooltip_label.text
-						.concatenate({ " | ", colors::White })
+						.concatenate({ " | " })
 						.concatenate({"bloodied", colors::materials::LightBlood });
 				} else {
-					tooltip_label.text = entity_type == entity_type_t::None ? runes_t{ "bloodied", colors::materials::LightBlood } : to_colored_string(entity_type);
+					if (entity_type == entity_type_t::None) {
+						tooltip_label.text = runes_t{ "bloodied", colors::materials::LightBlood };
+					} else {
+						tooltip_label.text = to_colored_string(entity_type);						
+
+						if (entity_type == entity_type_t::Ladder) {
+							tooltip_label.text
+								.concatenate(runes_t{ " (" })
+								.concatenate(runes_t{ to_string(entity_registry.at<ladder_t>(grid_cursor.position)->verticality) })
+								.concatenate({ " | " })
+								.concatenate(to_colored_string(entity_registry.at<ladder_t>(grid_cursor.position)->shackle))
+								.concatenate(runes_t{ ")"});
+						}
+					}
 				}
 			}
 

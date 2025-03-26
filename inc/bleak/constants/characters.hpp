@@ -2,9 +2,6 @@
 
 #include <bleak/typedef.hpp>
 
-#include <bleak/cardinal.hpp>
-#include <bleak/lut.hpp>
-
 namespace bleak {
 	namespace characters {
 		constexpr const u8 RecedingJaggedSet{ 0x00 };
@@ -23,20 +20,30 @@ namespace bleak {
 
 		static constexpr u8 auto_set(bool smooth, bool protrudes, u8 index) { return smooth ? smooth_set(protrudes, index) : jagged_set(protrudes, index); }
 
-		constexpr const u8 Error{ 0x58 };
-
 		constexpr const u8 Empty{ 0x00 };
 
-		constexpr const lut_t<cardinal_t, u8, 9> Entity{ pair_t<cardinal_t, u8>{ cardinal_e::Northwest, u8{ 0x48 } }, pair_t<cardinal_t, u8>{ cardinal_e::North, u8{ 0x41 } },	 pair_t<cardinal_t, u8>{ cardinal_e::Northeast, u8{ 0x42 } },
-														 pair_t<cardinal_t, u8>{ cardinal_e::West, u8{ 0x47 } },	  pair_t<cardinal_t, u8>{ cardinal_e::Central, u8{ 0x40 } }, pair_t<cardinal_t, u8>{ cardinal_e::East, u8{ 0x43 } },
-														 pair_t<cardinal_t, u8>{ cardinal_e::Southwest, u8{ 0x46 } }, pair_t<cardinal_t, u8>{ cardinal_e::South, u8{ 0x45 } },	 pair_t<cardinal_t, u8>{ cardinal_e::Southeast, u8{ 0x44 } } };
+		constexpr const u8 UnarmoredPlayer{ 0x40 };
+		constexpr const u8 ArmoredPlayer{ 0x41 };
 
-		constexpr const u8 Ladder{ 0x49 };
-		constexpr const u8 Corpse{ 0x4A };
-		constexpr const u8 Asperand{ 0x4B };
-		constexpr const u8 Pound{ 0x4C };
-		constexpr const u8 Floor{ 0x4D };
-		constexpr const u8 Obstacle{ 0x4E };
-		constexpr const u8 Wall{ 0x4F };
+		constexpr const u8 Skeleton{ 0x42 };
+		constexpr const u8 Wraith{ 0x43 };
+		constexpr const u8 FleshGolem{ 0x44 };
+
+		constexpr const u8 FreshSkull{ 0x45 };
+		constexpr const u8 AnimateSkull{ 0x46 };
+
+		constexpr const u8 UpLadder{ 0x47 };
+		constexpr const u8 DownLadder{ 0x48 };
+		
+		constexpr const u8 Shackle{ 0x49 };
+
+		constexpr const u8 Adventurer{ 0x4A };
+		constexpr const u8 Paladin{ 0x4B };
+		constexpr const u8 Priest{ 0x4C };
+
+		constexpr const u8 Energy{ 0x4D };
+		constexpr const u8 Armor{ 0x4E };
+
+		constexpr const u8 Floor{ 0x4F };
 	} // namespace characters
 } // namespace bleak

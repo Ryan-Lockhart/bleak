@@ -100,7 +100,7 @@ namespace bleak {
 		}
 
 		constexpr ref<T> at(cref<offset_t> position) {
-			cauto iter{ values.find(position) };
+			auto iter{ values.find(position) };
 
 			if (iter == values.end()) {
 				throw std::out_of_range{ std::format("cannot get value at {}; it is not within the sparse set!", (std::string)position) };

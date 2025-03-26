@@ -84,6 +84,12 @@ namespace bleak {
 
 			static constexpr color_t Zinc{ u8{ 186 }, u8{ 196 }, u8{ 200 } };
 			static constexpr color_t Brass{ u8{ 181 }, u8{ 166 }, u8{ 66 } };
+
+			namespace shackles {
+				static constexpr color_t Calcitic{ u8{ 255 }, u8{ 255 }, u8{ 240 } };
+				static constexpr color_t Spectral{ u8{ 72 }, u8{ 100 }, u8{ 83 } };
+				static constexpr color_t Sanguine{ u8{ 157 }, u8{ 34 }, u8{ 53 } };
+			} // namespace shackles
 		} // namespace metals
 	} // namespace colors
 } // namespace bleak

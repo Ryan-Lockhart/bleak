@@ -27,7 +27,7 @@ namespace necrowarp {
 		static constexpr bool value = true;
 	};
 
-	template<> inline constexpr glyph_t entity_glyphs<adventurer_t>{ 0x48, colors::White };
+	template<> inline constexpr glyph_t entity_glyphs<adventurer_t>{ glyphs::Adventurer };
 
 	struct adventurer_t {
 		offset_t position;

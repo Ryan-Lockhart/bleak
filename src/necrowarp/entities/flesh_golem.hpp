@@ -27,7 +27,7 @@ namespace necrowarp {
 		static constexpr bool value = true;
 	};
 
-	template<> inline constexpr glyph_t entity_glyphs<flesh_golem_t>{ 0x40, colors::White };
+	template<> inline constexpr glyph_t entity_glyphs<flesh_golem_t>{ glyphs::FleshGolem };
 
 	struct flesh_golem_t {
 		offset_t position;
@@ -71,7 +71,7 @@ namespace necrowarp {
 
 		inline void draw(cref<camera_t> camera, cref<offset_t> offset) const noexcept { game_atlas.draw(entity_glyphs<flesh_golem_t>, position + camera.get_offset() + offset); }
 
-		constexpr operator entity_type_t() const noexcept { return entity_type_t::Wraith; }
+		constexpr operator entity_type_t() const noexcept { return entity_type_t::FleshGolem; }
 
 		struct hasher {
 			struct offset {

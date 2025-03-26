@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/constants/glyphs.hpp"
 #include <necrowarp/entities/entity.hpp>
 
 #include <necrowarp/game_state.hpp>
@@ -185,7 +186,7 @@ namespace necrowarp {
 
 		inline void erode_divinity() noexcept { set_divinity(divinity - DivinityErosionRate); }
 
-		inline cref<glyph_t> current_glyph() const noexcept { return has_armor() ? PlayerArmoredGlyph : entity_glyphs<player_t>; }
+		inline glyph_t current_glyph() const noexcept { return !has_armor() ? entity_glyphs<player_t> : glyphs::ArmoredPlayer; }
 
 		inline void draw() const noexcept { game_atlas.draw(current_glyph(), position); }
 
