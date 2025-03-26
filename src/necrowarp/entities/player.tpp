@@ -58,6 +58,8 @@ namespace necrowarp {
 			  case entity_type_t::Skeleton:
 			  case entity_type_t::Wraith: {
 				return command_type_t::Consume;
+			} case entity_type_t::Ladder: {
+				return command_type_t::Descend;
 			} default: {
 				return command_type_t::None;
 			}

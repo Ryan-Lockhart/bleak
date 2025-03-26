@@ -195,6 +195,7 @@ namespace necrowarp {
 	enum struct command_type_t : u8 {
 		None = 0,
 		Move,
+		Descend,
 		Consume,
 		Clash,
 		RandomWarp,
@@ -202,7 +203,7 @@ namespace necrowarp {
 		ConsumeWarp,
 		CalciticInvocation,
 		SpectralInvocation,
-		SanguinaryInvocation,
+		SanguineInvocation,
 		NecromanticAscendance,
 		Exorcise,
 		Resurrect,
@@ -215,6 +216,8 @@ namespace necrowarp {
 			return "none";
 		case command_type_t::Move:
 			return "move";
+		case command_type_t::Descend:
+			return "descend";
 		case command_type_t::Consume:
 			return "consume";
 		case command_type_t::Clash:
@@ -229,8 +232,8 @@ namespace necrowarp {
 			return "calcitic invocation";
 		case command_type_t::SpectralInvocation:
 			return "spectral invocation";
-		case command_type_t::SanguinaryInvocation:
-			return "sanguinary invocation";
+		case command_type_t::SanguineInvocation:
+			return "sanguine invocation";
 		case command_type_t::NecromanticAscendance:
 			return "necromantic ascendance";
 		case command_type_t::Exorcise:

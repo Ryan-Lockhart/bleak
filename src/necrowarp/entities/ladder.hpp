@@ -110,7 +110,7 @@ namespace necrowarp {
 			shackle{
 				[random]() -> shackle_type_t {
 					return random ?
-						(shackle_type_t)std::uniform_int_distribution<u16>{ (u16)shackle_type_t::Calcitic, (u16)shackle_type_t::Sanguine + 1}(random_engine) :
+						(shackle_type_t)std::uniform_int_distribution<u16>{ (u16)shackle_type_t::Calcitic, (u16)shackle_type_t::Sanguine }(random_engine) :
 						shackle_type_t::None;
 				}()
 			}
@@ -125,6 +125,14 @@ namespace necrowarp {
 		inline bool has_shackle() const noexcept { return shackle != shackle_type_t::None; }
 
 		inline glyph_t current_glyph() const noexcept { return is_up_ladder() ? entity_glyphs<ladder_t> : glyphs::DownLadder; }
+
+		inline void enshackle() noexcept {
+			if (has_shackle()) {
+				return;
+			}
+			
+			shackle = (shackle_type_t)std::uniform_int_distribution<u16>{ (u16)shackle_type_t::Calcitic, (u16)shackle_type_t::Sanguine }(random_engine);
+		}
 
 		inline void enshackle(shackle_type_t type) noexcept {
 			if (has_shackle() || type == shackle_type_t::None) {
@@ -194,7 +202,7 @@ namespace necrowarp {
 			struct offset {
 				using is_transparent = void;
 
-				static constexpr usize operator()(cref<ladder_t> skull) noexcept { return offset_t::hasher::operator()(skull.position); }
+				static constexpr usize operator()(cref<ladder_t> ladder) noexcept { return offset_t::hasher::operator()(ladder.position); }
 
 				static constexpr usize operator()(cref<offset_t> position) noexcept { return offset_t::hasher::operator()(position); }
 			};

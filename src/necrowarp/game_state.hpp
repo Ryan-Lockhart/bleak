@@ -59,13 +59,19 @@ namespace necrowarp {
 	struct game_stats_t {
 		usize game_seed{};
 
+		usize game_depth{ 0 };
+
 		usize wave_size{ globals::StartingAdventurers };
 		usize spawns_remaining{ globals::StartingAdventurers };
 
-		i16	 player_kills{ 0 };
-		i16	 minion_kills{ 0 };
+		i16	player_kills{ 0 };
+		i16	minion_kills{ 0 };
 
-		i16	 total_kills() noexcept { return player_kills + minion_kills; };
+		i16	total_kills() const noexcept { return player_kills + minion_kills; };
+
+		i16 current_reinforcements() const noexcept { return clamp<i16>(game_depth / globals::FloorsPerReinforcement, globals::MinimumReinforcements, globals::MaximumReinforcements); }
+		
+		bool has_reinforcements() const noexcept { return current_reinforcements() > 0; }
 
 		void reset() noexcept {
 			game_seed = std::random_device{}();

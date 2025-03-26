@@ -23,7 +23,7 @@ namespace necrowarp {
 		static constexpr bool value = true;
 	};
 
-	template<> inline constexpr glyph_t entity_glyphs<skull_t>{ 0x43, colors::White };
+	template<> inline constexpr glyph_t entity_glyphs<skull_t>{ glyphs::FreshSkull };
 
 	struct skull_t {
 		offset_t position;
@@ -35,7 +35,7 @@ namespace necrowarp {
 
 		inline bool is_fresh() const noexcept { return fresh; }
 
-		inline glyph_t current_glyph() const noexcept { return fresh ? glyphs::FreshSkull : glyphs::AnimateSkull; }
+		inline glyph_t current_glyph() const noexcept { return fresh ? entity_glyphs<skull_t> : glyphs::AnimateSkull; }
 
 		inline void draw() const noexcept { game_atlas.draw(entity_glyphs<skull_t>, position); }
 

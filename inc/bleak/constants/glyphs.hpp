@@ -8,6 +8,15 @@
 #include <bleak/constants/colors.hpp>
 
 namespace bleak {
+	namespace icons {
+		constexpr const glyph_t RandomWarp{ 0x00, colors::White };
+		constexpr const glyph_t TargetWarp{ 0x01, colors::White };
+
+		constexpr const glyph_t CalciticInvocation{ 0x02, colors::White };
+		constexpr const glyph_t SpectralInvocation{ 0x03, colors::White };
+		constexpr const glyph_t SanguineInvocation{ 0x04, colors::White };
+		constexpr const glyph_t NecromanticAscendance{ 0x05, colors::White };
+	} // namespace icons
 	namespace glyphs {
 		constexpr const glyph_t Empty{ characters::Empty, colors::Transparent };
 

@@ -391,6 +391,8 @@ namespace necrowarp {
 	constexpr glyph_t ActiveArmorGlyph{ characters::Armor, color_t{ 0xFF, static_cast<u8>(0xFF) } };
 	constexpr glyph_t InactiveArmorGlyph{ characters::Armor, color_t{ 0xFF, static_cast<u8>(0x80) } };
 
+	constexpr cstr depth_text{ "Depth: " };
+
 	constexpr cstr help_hidden_text{ "F1: Show Controls" };
 
 	constexpr cstr help_expanded_text{
@@ -399,7 +401,7 @@ namespace necrowarp {
 		" Target Warp:           E\n\n\n"
 		" Calcitic Invocation:   1\n\n"
 		" Spectral Invocation:   2\n\n"
-		" Sanguinary Invocation: 3\n\n"
+		" Sanguine Invocation: 3\n\n"
 		" Necromantic Ascension: 4\n\n\n"
 		"F1: Hide Controls"
 	};
@@ -413,6 +415,15 @@ namespace necrowarp {
 			},
 			embedded_box_t{ colors::Black, { colors::White, 1 } },
 			extent_t{ 1, 1 }
+		};
+
+		static inline label_t depth_label{
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h }, cardinal_e::South },
+			embedded_label_t{
+				runes_t{ depth_text, colors::White },
+				embedded_box_t{ colors::Black, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
 		};
 
 		static inline label_t help_label{
@@ -433,14 +444,47 @@ namespace necrowarp {
 			}
 		};
 
+		static inline label_t command_label{
+			anchor_t{ { globals::UIGridSize.w, globals::UIGridSize.h }, cardinal_e::West },
+			embedded_label_t{
+				runes_t{},
+				embedded_box_t{ colors::Black, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
 		static inline bool show_help{ false };
 		static inline bool show_tooltip{ false };
+		static inline bool show_command{ false };
+
+		static constexpr offset_t RandomWarpIconPosition{ offset_t{ 0, 2 } };
+		static constexpr offset_t TargetWarpIconPosition{ offset_t{ 0, 3 } };
+
+		static constexpr offset_t CalciticInvocationIconPosition{ offset_t{ 0, 5 } };
+		static constexpr offset_t SpectralInvocationIconPosition{ offset_t{ 0, 6 } };
+		static constexpr offset_t SanguineInvocationIconPosition{ offset_t{ 0, 7 } };
+
+		static constexpr offset_t NecromanticAscendanceIconPosition{ offset_t{ 0, 9 } };
 
 		static inline bool is_hovered() noexcept {
 			if (phase.current_phase != game_phase_t::Playing) {
 				return false;
 			}
 
+			if (Mouse::is_inside(RandomWarpIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				return true;
+			} else if (Mouse::is_inside(TargetWarpIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				return true;
+			} else if (Mouse::is_inside(CalciticInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				return true;
+			} else if (Mouse::is_inside(SpectralInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				return true;
+			} else if (Mouse::is_inside(SanguineInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				return true;
+			} else if (Mouse::is_inside(NecromanticAscendanceIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				return true;
+			}
+			
 			return player_statuses.is_hovered() || help_label.is_hovered();
 		}
 
@@ -454,6 +498,78 @@ namespace necrowarp {
 
 			player_statuses[1].current_value = player.get_armor();
 			player_statuses[1].max_value = player.max_armor();
+
+			show_command = true;
+
+			const offset_t mouse_pos{ Mouse::get_position() };
+
+			if (Mouse::is_inside(RandomWarpIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				command_label.text = runes_t{ to_string(command_type_t::RandomWarp) };
+				command_label.text
+					.concatenate(runes_t{ " ["})
+					.concatenate(runes_t{ std::format("{}", player.get_energy()), player.can_random_warp() ? colors::Green : colors::Red })
+					.concatenate(runes_t{ "/" })
+					.concatenate(runes_t{ std::format("{}", player_t::RandomWarpCost) })
+					.concatenate(runes_t{ "]" });
+				
+				command_label.position = (RandomWarpIconPosition + offset_t{ 1, 1 }) * globals::IconSize / globals::GlyphSize + offset_t{ 2, 0 };
+			} else if (Mouse::is_inside(TargetWarpIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				command_label.text = runes_t{ to_string(command_type_t::TargetWarp) };
+				command_label.text
+					.concatenate(runes_t{ " ["})
+					.concatenate(runes_t{ std::format("{}", player.get_energy()), player.can_target_warp() ? colors::Green : colors::Red })
+					.concatenate(runes_t{ "/" })
+					.concatenate(runes_t{ std::format("{}", player_t::TargetWarpCost) })
+					.concatenate(runes_t{ "]" });
+				
+					command_label.position = (TargetWarpIconPosition + offset_t{ 1, 1 }) * globals::IconSize / globals::GlyphSize + offset_t{ 2, 0 };
+			} else if (Mouse::is_inside(CalciticInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				command_label.text = runes_t{ to_string(command_type_t::CalciticInvocation) };
+				command_label.text
+					.concatenate(runes_t{ " ["})
+					.concatenate(runes_t{ std::format("{}", player.get_energy()), player.can_perform_calcitic_invocation() ? colors::Green : colors::Red })
+					.concatenate(runes_t{ "/" })
+					.concatenate(runes_t{ std::format("{}", player_t::CalciticInvocationCost) })
+					.concatenate(runes_t{ "]" });
+				
+					command_label.position = (CalciticInvocationIconPosition + offset_t{ 1, 1 }) * globals::IconSize / globals::GlyphSize + offset_t{ 2, 0 };
+			} else if (Mouse::is_inside(SpectralInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				command_label.text = runes_t{ to_string(command_type_t::SpectralInvocation) };
+				command_label.text
+					.concatenate(runes_t{ " ["})
+					.concatenate(runes_t{ std::format("{}", player.get_energy()), player.can_perform_spectral_invocation() ? colors::Green : colors::Red })
+					.concatenate(runes_t{ "/" })
+					.concatenate(runes_t{ std::format("{}", player_t::SpectralInvocationCost) })
+					.concatenate(runes_t{ "]" });
+				
+					command_label.position = (SpectralInvocationIconPosition + offset_t{ 1, 1 }) * globals::IconSize / globals::GlyphSize + offset_t{ 2, 0 };
+			} else if (Mouse::is_inside(SanguineInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				command_label.text = runes_t{ to_string(command_type_t::SanguineInvocation) };
+				command_label.text
+					.concatenate(runes_t{ " ["})
+					.concatenate(runes_t{ std::format("{}", player.get_energy()), player.can_perform_sanguine_invocation() ? colors::Green : colors::Red })
+					.concatenate(runes_t{ "/" })
+					.concatenate(runes_t{ std::format("{}", player_t::SanguineInvocationCost) })
+					.concatenate(runes_t{ "]" });
+				
+					command_label.position = (SanguineInvocationIconPosition + offset_t{ 1, 1 }) * globals::IconSize / globals::GlyphSize + offset_t{ 2, 0 };
+			} else if (Mouse::is_inside(NecromanticAscendanceIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+				command_label.text = runes_t{ to_string(command_type_t::NecromanticAscendance) };
+				command_label.text
+					.concatenate(runes_t{ " ["})
+					.concatenate(runes_t{ std::format("{}", player.get_energy()), player.can_perform_necromantic_ascendance() ? colors::Green : colors::Red })
+					.concatenate(runes_t{ "/" })
+					.concatenate(runes_t{ std::format("{}", player_t::NecromanticAscendanceCost) })
+					.concatenate(runes_t{ "]" });
+				
+					command_label.position = (NecromanticAscendanceIconPosition + offset_t{ 1, 1 }) * globals::IconSize / globals::GlyphSize + offset_t{ 2, 0 };
+			} else {
+				show_command = false;
+			}
+			
+			command_label.position.y = mouse_pos.y / globals::GlyphSize.h;
+
+			depth_label.text = runes_t{ std::format("Depth: {}", (isize)game_stats.game_depth * -1) };
 
 			if (Keyboard::is_key_down(bindings::ToggleControls)) {
 				show_help = !show_help;
@@ -487,14 +603,19 @@ namespace necrowarp {
 							.concatenate({ " | " })
 							.concatenate(to_colored_string(entity_registry.at<ladder_t>(grid_cursor.position)->shackle))
 							.concatenate(runes_t{ ")"});
+					} else if (entity_type == entity_type_t::Skull && entity_registry.at<skull_t>(grid_cursor.position)->fresh) {
+						tooltip_label.text
+							.concatenate(runes_t{ " (" })
+							.concatenate(runes_t{ "fresh", colors::light::Green })
+							.concatenate(runes_t{ ")"});
 					}
 					
 					tooltip_label.text
 						.concatenate({ " | " })
-						.concatenate({"bloodied", colors::materials::LightBlood });
+						.concatenate({"blood", colors::materials::LightBlood });
 				} else {
 					if (entity_type == entity_type_t::None) {
-						tooltip_label.text = runes_t{ "bloodied", colors::materials::LightBlood };
+						tooltip_label.text = runes_t{ "blood", colors::materials::LightBlood };
 					} else {
 						tooltip_label.text = to_colored_string(entity_type);						
 
@@ -504,6 +625,11 @@ namespace necrowarp {
 								.concatenate(runes_t{ to_string(entity_registry.at<ladder_t>(grid_cursor.position)->verticality) })
 								.concatenate({ " | " })
 								.concatenate(to_colored_string(entity_registry.at<ladder_t>(grid_cursor.position)->shackle))
+								.concatenate(runes_t{ ")"});
+						} else if (entity_type == entity_type_t::Skull && entity_registry.at<skull_t>(grid_cursor.position)->fresh) {
+							tooltip_label.text
+								.concatenate(runes_t{ " (" })
+								.concatenate(runes_t{ "fresh", colors::light::Green })
 								.concatenate(runes_t{ ")"});
 						}
 					}
@@ -516,6 +642,21 @@ namespace necrowarp {
 
 		static inline void draw(renderer_t& renderer) noexcept {
 			player_statuses.draw(renderer);
+
+			icon_atlas.draw(glyph_t{ icons::RandomWarp.index, player.can_random_warp() ? colors::White : colors::dark::Grey }, RandomWarpIconPosition);
+			icon_atlas.draw(glyph_t{ icons::TargetWarp.index, player.can_target_warp() ? colors::White : colors::dark::Grey }, TargetWarpIconPosition);
+
+			icon_atlas.draw(glyph_t{ icons::CalciticInvocation.index, player.can_perform_calcitic_invocation() ? colors::White : colors::dark::Grey }, CalciticInvocationIconPosition);
+			icon_atlas.draw(glyph_t{ icons::SpectralInvocation.index, player.can_perform_spectral_invocation() ? colors::White : colors::dark::Grey }, SpectralInvocationIconPosition);
+			icon_atlas.draw(glyph_t{ icons::SanguineInvocation.index, player.can_perform_sanguine_invocation() ? colors::White : colors::dark::Grey }, SanguineInvocationIconPosition);
+
+			icon_atlas.draw(glyph_t{ icons::NecromanticAscendance.index, player.can_perform_sanguine_invocation() ? colors::White : colors::dark::Grey }, NecromanticAscendanceIconPosition);
+
+			if (show_command) {
+				command_label.draw(renderer);
+			}
+
+			depth_label.draw(renderer);
 
 			help_label.draw(renderer);
 

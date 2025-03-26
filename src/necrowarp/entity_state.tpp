@@ -27,6 +27,8 @@ namespace necrowarp {
 
 	template<typename T> static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> entity_goal_map{};
 
+	static inline bool descent_flag{ false };
+
 	template<entity_type_t EntityType> inline bool entity_registry_t::contains(cref<offset_t> position) const noexcept {
 		if constexpr (EntityType == entity_type_t::None) {
 			return true;
@@ -257,6 +259,8 @@ namespace necrowarp {
 	}
 
 	template<NonPlayerEntity EntityType, typename... Args> inline bool entity_registry_t::spawn(usize count, u32 minimum_distance, Args... args) noexcept {
+		entity_goal_map<EntityType>.template recalculate<zone_region_t::Interior>(game_map, cell_trait_t::Open, entity_registry);
+		
 		for (usize i{ 0 }; i < count; ++i) {
 			cauto maybe_position{ entity_goal_map<EntityType>.template find_random<zone_region_t::Interior>(game_map, random_engine, cell_trait_t::Open, entity_registry, minimum_distance) };
 
@@ -354,6 +358,10 @@ namespace necrowarp {
 	inline void entity_registry_t::update() noexcept {
 		entity_registry.process_command(player.command);
 
+		if (descent_flag) {
+			return;
+		}
+
 		std::queue<entity_command_t> commands{};
 
 		update<ALL_NPCS>(commands);
@@ -409,7 +417,8 @@ namespace necrowarp {
 
 		switch (source_type) {
 			case entity_type_t::None:
-			case entity_type_t::Skull: {
+			case entity_type_t::Skull:
+			case entity_type_t::Ladder: {
 				return false;
 			} default: {
 				break;
@@ -418,13 +427,14 @@ namespace necrowarp {
 
 		if (source_type != entity_type_t::Player) {
 			switch (command.type) {
+				case command_type_t::Descend:
 				case command_type_t::Consume:
 				case command_type_t::RandomWarp:
 				case command_type_t::TargetWarp:
 				case command_type_t::ConsumeWarp:
 				case command_type_t::CalciticInvocation:
 				case command_type_t::SpectralInvocation:
-				case command_type_t::SanguinaryInvocation:
+				case command_type_t::SanguineInvocation:
 				case command_type_t::NecromanticAscendance: {
 					return false;
 				} default: {
@@ -448,7 +458,7 @@ namespace necrowarp {
 			case command_type_t::RandomWarp:
 			case command_type_t::CalciticInvocation:
 			case command_type_t::SpectralInvocation:
-			case command_type_t::SanguinaryInvocation:
+			case command_type_t::SanguineInvocation:
 			case command_type_t::NecromanticAscendance: {
 				return true;
 			}
@@ -480,6 +490,18 @@ namespace necrowarp {
 			  case command_type_t::Resurrect:
 			  case command_type_t::Anoint: {
 				if (!entity_registry.contains(target_position) || target_type == entity_type_t::None) {
+					return false;
+				}
+
+				break;
+			} case command_type_t::Descend: {
+				if (!entity_registry.contains(target_position) || target_type != entity_type_t::Ladder) {
+					return false;
+				}
+
+				cref<ladder_t> descension_point{ *entity_registry.at<ladder_t>(target_position) };
+
+				if (descension_point.is_up_ladder() || descension_point.has_shackle()) {
 					return false;
 				}
 
@@ -527,6 +549,14 @@ namespace necrowarp {
 	template<> void entity_registry_t::process_command<command_type_t::None>(cref<entity_command_t> command) noexcept {}
 
 	template<> void entity_registry_t::process_command<command_type_t::Move>(cref<entity_command_t> command) noexcept { entity_registry.update(command.source.value(), command.target.value()); }
+
+	template<> void entity_registry_t::process_command<command_type_t::Descend>(cref<entity_command_t> command) noexcept {
+		if (!command.target.has_value()) {
+			return;
+		}
+		
+		descent_flag = true;
+	}
 
 	template<> void entity_registry_t::process_command<command_type_t::Consume>(cref<entity_command_t> command) noexcept {
 		const offset_t source_position{ command.source.value() };
@@ -877,7 +907,7 @@ namespace necrowarp {
 
 		i8 accumulated_skulls{ 0 };
 
-		ptr<ladder_t> eligible_shackled_ladder{ nullptr };
+		ptr<ladder_t> eligible_ladder{ nullptr };
 
 		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
 			const offset_t position{ player.position + offset };
@@ -885,7 +915,7 @@ namespace necrowarp {
 			const bool has_skull{ entity_registry.at(position) == entity_type_t::Skull };
 			const bool has_ladder{ entity_registry.at(position) == entity_type_t::Ladder };
 
-			if (!game_map.within<zone_region_t::Interior>(position) || (!has_skull && (eligible_shackled_ladder != nullptr || !has_ladder))) {
+			if (!game_map.within<zone_region_t::Interior>(position) || (!has_skull && (eligible_ladder != nullptr || !has_ladder))) {
 				continue;
 			}
 
@@ -898,20 +928,35 @@ namespace necrowarp {
 				++accumulated_skulls;
 			}
 
-			if (eligible_shackled_ladder == nullptr && has_ladder) {
-				eligible_shackled_ladder = entity_registry.at<ladder_t>(position);
+			if (eligible_ladder == nullptr && has_ladder) {
+				eligible_ladder = entity_registry.at<ladder_t>(position);
 
-				if (eligible_shackled_ladder->shackle != shackle_type_t::Spectral) {
-					eligible_shackled_ladder = nullptr;
+				switch (eligible_ladder->shackle) {
+					case shackle_type_t::None: {
+						if (eligible_ladder->is_down_ladder()) {
+							eligible_ladder = nullptr;
+						}
+						break;
+					} default: {
+						if (eligible_ladder->is_up_ladder() || eligible_ladder->shackle != shackle_type_t::Calcitic) {
+							eligible_ladder = nullptr;
+						}
+						break;
+					}
 				}
 			}
 		}
 
 		if (accumulated_skulls <= 0) {
 			return;
-		} else if (accumulated_skulls >= 4 && eligible_shackled_ladder != nullptr) {
-			eligible_shackled_ladder->unshackle();
-			eligible_shackled_ladder = nullptr;
+		} else if (accumulated_skulls >= 4 && eligible_ladder != nullptr) {
+			if (eligible_ladder->is_down_ladder()) {
+				eligible_ladder->unshackle();
+			} else {
+				eligible_ladder->enshackle(shackle_type_t::Calcitic);
+			}
+
+			eligible_ladder = nullptr;
 		}
 
 		player.pay_calcitic_invocation_cost();
@@ -924,7 +969,7 @@ namespace necrowarp {
 
 		i8 accumulated_health{ 0 };
 
-		ptr<ladder_t> eligible_shackled_ladder{ nullptr };
+		ptr<ladder_t> eligible_ladder{ nullptr };
 
 		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
 			const offset_t position{ player.position + offset };
@@ -932,7 +977,7 @@ namespace necrowarp {
 			const bool has_skull{ entity_registry.at(position) == entity_type_t::Skull };
 			const bool has_ladder{ entity_registry.at(position) == entity_type_t::Ladder };
 
-			if (!game_map.within<zone_region_t::Interior>(position) || (!has_skull && (eligible_shackled_ladder != nullptr || !has_ladder))) {
+			if (!game_map.within<zone_region_t::Interior>(position) || (!has_skull && (eligible_ladder != nullptr || !has_ladder))) {
 				continue;
 			}
 
@@ -941,20 +986,35 @@ namespace necrowarp {
 				++accumulated_health;
 			}
 
-			if (eligible_shackled_ladder == nullptr && has_ladder) {
-				eligible_shackled_ladder = entity_registry.at<ladder_t>(position);
+			if (eligible_ladder == nullptr && has_ladder) {
+				eligible_ladder = entity_registry.at<ladder_t>(position);
 
-				if (eligible_shackled_ladder->shackle != shackle_type_t::Spectral) {
-					eligible_shackled_ladder = nullptr;
+				switch (eligible_ladder->shackle) {
+					case shackle_type_t::None: {
+						if (eligible_ladder->is_down_ladder()) {
+							eligible_ladder = nullptr;
+						}
+						break;
+					} default: {
+						if (eligible_ladder->is_up_ladder() || eligible_ladder->shackle != shackle_type_t::Spectral) {
+							eligible_ladder = nullptr;
+						}
+						break;
+					}
 				}
 			}
 		}
 
 		if (accumulated_health <= 0) {
 			return;
-		} else if (accumulated_health >= 4 && eligible_shackled_ladder != nullptr) {
-			eligible_shackled_ladder->unshackle();
-			eligible_shackled_ladder = nullptr;
+		} else if (accumulated_health >= 4 && eligible_ladder != nullptr) {
+			if (eligible_ladder->is_down_ladder()) {
+				eligible_ladder->unshackle();
+			} else {
+				eligible_ladder->enshackle(shackle_type_t::Spectral);
+			}
+
+			eligible_ladder = nullptr;
 		}
 
 		player.pay_spectral_invocation_cost();
@@ -968,14 +1028,14 @@ namespace necrowarp {
 		entity_registry.add(wraith_t{ command.source.value(), accumulated_health });
 	}
 
-	template<> void entity_registry_t::process_command<command_type_t::SanguinaryInvocation>(cref<entity_command_t> command) noexcept {
+	template<> void entity_registry_t::process_command<command_type_t::SanguineInvocation>(cref<entity_command_t> command) noexcept {
 		if (!player.can_perform_spectral_invocation() || !game_map.template contains<zone_region_t::Interior>(cell_trait_t::Bloodied)) {
 			return;
 		}
 
 		i8 accumulated_health{ 0 };
 
-		ptr<ladder_t> eligible_shackled_ladder{ nullptr };
+		ptr<ladder_t> eligible_ladder{ nullptr };
 
 		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
 			const offset_t position{ player.position + offset };
@@ -983,7 +1043,7 @@ namespace necrowarp {
 			const bool has_blood{ game_map[position].bloodied };
 			const bool has_ladder{ entity_registry.at(position) == entity_type_t::Ladder };
 
-			if (!game_map.within<zone_region_t::Interior>(position) || (!has_blood && (eligible_shackled_ladder != nullptr || !has_ladder))) {
+			if (!game_map.within<zone_region_t::Interior>(position) || (!has_blood && (eligible_ladder != nullptr || !has_ladder))) {
 				continue;
 			}
 
@@ -992,23 +1052,38 @@ namespace necrowarp {
 				++accumulated_health;
 			}
 
-			if (eligible_shackled_ladder == nullptr && has_ladder) {
-				eligible_shackled_ladder = entity_registry.at<ladder_t>(position);
+			if (eligible_ladder == nullptr && has_ladder) {
+				eligible_ladder = entity_registry.at<ladder_t>(position);
 
-				if (eligible_shackled_ladder->shackle != shackle_type_t::Sanguine) {
-					eligible_shackled_ladder = nullptr;
+				switch (eligible_ladder->shackle) {
+					case shackle_type_t::None: {
+						if (eligible_ladder->is_down_ladder()) {
+							eligible_ladder = nullptr;
+						}
+						break;
+					} default: {
+						if (eligible_ladder->is_up_ladder() || eligible_ladder->shackle != shackle_type_t::Sanguine) {
+							eligible_ladder = nullptr;
+						}
+						break;
+					}
 				}
 			}
 		}
 
 		if (accumulated_health <= 0) {
 			return;
-		} else if (accumulated_health >= 4 && eligible_shackled_ladder != nullptr) {
-			eligible_shackled_ladder->unshackle();
-			eligible_shackled_ladder = nullptr;
+		} else if (accumulated_health >= 4 && eligible_ladder != nullptr) {
+			if (eligible_ladder->is_down_ladder()) {
+				eligible_ladder->unshackle();
+			} else {
+				eligible_ladder->enshackle(shackle_type_t::Sanguine);
+			}
+
+			eligible_ladder = nullptr;
 		}
 
-		player.pay_sanguinary_invocation_cost();
+		player.pay_sanguine_invocation_cost();
 
 		if (!random_warp(command.source.value())) {
 			player.bolster_armor(accumulated_health);
@@ -1123,6 +1198,8 @@ namespace necrowarp {
 		switch (command.type) {
 			case command_type_t::Move: {
 				return process_command<command_type_t::Move>(command);
+			} case command_type_t::Descend: {
+				return process_command<command_type_t::Descend>(command);
 			} case command_type_t::Consume: {
 				return process_command<command_type_t::Consume>(command);
 			} case command_type_t::Clash: {
@@ -1137,8 +1214,8 @@ namespace necrowarp {
 				return process_command<command_type_t::CalciticInvocation>(command);
 			} case command_type_t::SpectralInvocation: {
 				return process_command<command_type_t::SpectralInvocation>(command);
-			} case command_type_t::SanguinaryInvocation: {
-				return process_command<command_type_t::SanguinaryInvocation>(command);
+			} case command_type_t::SanguineInvocation: {
+				return process_command<command_type_t::SanguineInvocation>(command);
 			} case command_type_t::NecromanticAscendance: {
 				return process_command<command_type_t::NecromanticAscendance>(command);
 			} case command_type_t::Exorcise: {

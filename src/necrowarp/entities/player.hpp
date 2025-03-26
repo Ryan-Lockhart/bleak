@@ -35,14 +35,14 @@ namespace necrowarp {
 		static constexpr bool value = true;
 	};
 
-	template<> inline constexpr glyph_t entity_glyphs<player_t>{ 0x41, colors::White };
+	template<> inline constexpr glyph_t entity_glyphs<player_t>{ glyphs::UnarmoredPlayer };
 
 	template<> inline constexpr glyph_t command_icons<command_type_t::RandomWarp>{ 0x00, colors::White };
 	template<> inline constexpr glyph_t command_icons<command_type_t::TargetWarp>{ 0x01, colors::White };
 
 	template<> inline constexpr glyph_t command_icons<command_type_t::CalciticInvocation>{ 0x02, colors::White };
 	template<> inline constexpr glyph_t command_icons<command_type_t::SpectralInvocation>{ 0x10, colors::White };
-	template<> inline constexpr glyph_t command_icons<command_type_t::SanguinaryInvocation>{ 0x11, colors::White };
+	template<> inline constexpr glyph_t command_icons<command_type_t::SanguineInvocation>{ 0x11, colors::White };
 
 	template<> inline constexpr glyph_t command_icons<command_type_t::NecromanticAscendance>{ 0x12, colors::White };
 
@@ -72,8 +72,8 @@ namespace necrowarp {
 		static constexpr i8 TargetWarpCost{ 2 };
 
 		static constexpr i8 CalciticInvocationCost{ 4 };
-		static constexpr i8 SpectralInvocationCost{ 8 };
-		static constexpr i8 SanguinaryInvocationCost{ 16 };
+		static constexpr i8 SpectralInvocationCost{ 6 };
+		static constexpr i8 SanguineInvocationCost{ 8 };
 
 		static constexpr i8 NecromanticAscendanceCost{ MaximumEnergy };
 
@@ -131,8 +131,8 @@ namespace necrowarp {
 		inline bool can_perform_spectral_invocation() const noexcept { return energy >= SpectralInvocationCost; }
 		inline bool can_perform_spectral_invocation(i8 discount) const noexcept { return energy >= SpectralInvocationCost - discount; }
 
-		inline bool can_perform_sanguinary_invocation() const noexcept { return energy >= SanguinaryInvocationCost; }
-		inline bool can_perform_sanguinary_invocation(i8 discount) const noexcept { return energy >= SanguinaryInvocationCost - discount; }
+		inline bool can_perform_sanguine_invocation() const noexcept { return energy >= SanguineInvocationCost; }
+		inline bool can_perform_sanguine_invocation(i8 discount) const noexcept { return energy >= SanguineInvocationCost - discount; }
 
 		inline bool can_perform_necromantic_ascendance() const noexcept { return energy >= NecromanticAscendanceCost; }
 		inline bool can_perform_necromantic_ascendance(i8 discount) const noexcept { return energy >= NecromanticAscendanceCost - discount; }
@@ -149,8 +149,8 @@ namespace necrowarp {
 		inline void pay_spectral_invocation_cost() noexcept { set_energy(energy - SpectralInvocationCost); }
 		inline void pay_spectral_invocation_cost(i8 discount) noexcept { set_energy(energy - SpectralInvocationCost + discount); }
 
-		inline void pay_sanguinary_invocation_cost() noexcept { set_energy(energy - SanguinaryInvocationCost); }
-		inline void pay_sanguinary_invocation_cost(i8 discount) noexcept { set_energy(energy - SanguinaryInvocationCost + discount); }
+		inline void pay_sanguine_invocation_cost() noexcept { set_energy(energy - SanguineInvocationCost); }
+		inline void pay_sanguine_invocation_cost(i8 discount) noexcept { set_energy(energy - SanguineInvocationCost + discount); }
 
 		inline void pay_necromantic_ascendance_cost() noexcept { set_energy(energy - NecromanticAscendanceCost); }
 		inline void pay_necromantic_ascendance_cost(i8 discount) noexcept { set_energy(energy - NecromanticAscendanceCost + discount); }

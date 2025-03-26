@@ -24,12 +24,22 @@ namespace bleak {
 		constexpr window_flags WINDOW_FLAGS_NONE{ SDL_WINDOW_SHOWN };
 		constexpr i32 WINDOW_POSITION_CENTERED{ SDL_WINDOWPOS_CENTERED };
 
+		static inline void show_window(ptr<window> handle) {
+			SDL_ShowWindow(handle);
+		}
+
+		static inline void hide_window(ptr<window> handle) {
+			SDL_HideWindow(handle);
+		}
+
 		static inline ptr<window> create_window(cstr title, cref<extent_t> size) noexcept {
 			ptr<window> handle = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, static_cast<i32>(size.w), static_cast<i32>(size.h), WINDOW_FLAGS_NONE);
 
 			if (handle == nullptr) {
 				error_log.add("failed to create window: {}", get_error());
 			}
+
+			SDL_HideWindow(handle);
 
 			return handle;
 		}
@@ -41,6 +51,8 @@ namespace bleak {
 				error_log.add("failed to create window: {}", get_error());
 			}
 
+			SDL_HideWindow(handle);
+
 			return handle;
 		}
 
@@ -50,6 +62,8 @@ namespace bleak {
 			if (handle == nullptr) {
 				error_log.add("failed to create window: {}", get_error());
 			}
+
+			SDL_HideWindow(handle);
 
 			return handle;
 		}
@@ -131,6 +145,10 @@ namespace bleak {
 		constexpr bool is_closing() const noexcept { return closing; }
 
 		constexpr bool is_running() const noexcept { return !closing; }
+
+		constexpr void show() noexcept { SDL_ShowWindow(window); }
+
+		constexpr void hide() noexcept { SDL_HideWindow(window); }
 
 		constexpr void close() noexcept { closing = true; }
 

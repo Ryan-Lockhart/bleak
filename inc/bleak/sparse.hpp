@@ -71,7 +71,13 @@ namespace bleak {
 
 		constexpr sparse_t() : values{} {}
 
-		constexpr bool contains(cref<offset_t> position) const noexcept { return values.contains(position); }
+		constexpr bool contains(cref<offset_t> position) const noexcept {
+			if (values.empty()) {
+				return false;
+			}
+			
+			return values.contains(position);
+		}
 
 		constexpr bool empty() const noexcept { return values.empty(); }
 

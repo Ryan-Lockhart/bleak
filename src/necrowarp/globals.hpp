@@ -72,8 +72,9 @@ namespace necrowarp {
 		constexpr u32 ViewDistance{ 8 };
 		constexpr f64 ViewSpan{ 135.0 };
 
-		constexpr i16 NumberOfLadders{ 4 };
-		constexpr i16 MinimumLadderDistance{ 16 };
+		constexpr i16 NumberOfUpLadders{ 4 };
+		constexpr i16 NumberOfDownLadders{ 2 };
+		constexpr i16 MinimumLadderDistance{ 8 };
 
 		constexpr i16 StartingAdventurers{ 4 };
 
@@ -96,5 +97,10 @@ namespace necrowarp {
 		constexpr i16 KillsPerEnergySlot{ 16 };
 		constexpr i16 KillsPerArmorSlot{ 8 };
 		constexpr i16 KillsPerDivinityTurn{ 64 };
+
+		constexpr i16 MinimumReinforcements{ 0 };
+		constexpr i16 MaximumReinforcements{ 4 };
+
+		constexpr i16 FloorsPerReinforcement{ 8 };
 	} // namespace globals
 } // namespace necrowarp

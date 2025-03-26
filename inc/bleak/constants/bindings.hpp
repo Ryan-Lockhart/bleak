@@ -84,7 +84,7 @@ namespace bleak {
 		
 		constexpr const sdl::key CalciticInvocation{ keys::Numeric::One };
 		constexpr const sdl::key SpectralInvocation{ keys::Numeric::Two };
-		constexpr const sdl::key SanguinaryInvocation{ keys::Numeric::Three };
+		constexpr const sdl::key SanguineInvocation{ keys::Numeric::Three };
 		constexpr const sdl::key NecromanticAscendance{ keys::Numeric::Four };
 	} // namespace Bindings
 } // namespace bleak
