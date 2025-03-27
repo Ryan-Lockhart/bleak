@@ -86,11 +86,29 @@ namespace necrowarp {
 		i8 armor;
 		i8 divinity;
 
-		inline void set_energy(i8 value) noexcept { energy = clamp<i8>(value, 0, max_energy()); }
+		inline void set_energy(i8 value) noexcept {
+			if (!game_stats.cheats.is_enabled() || !game_stats.cheats.energy.is_enabled()) {
+				energy = clamp<i8>(value, 0, max_energy());
+			}
+			
+			energy = max<i8>(game_stats.cheats.energy.current_minimum(), value);
+		}
 
-		inline void set_armor(i8 value) noexcept { armor = clamp<i8>(value, 0, max_armor()); }
+		inline void set_armor(i8 value) noexcept {
+			if (!game_stats.cheats.is_enabled() || !game_stats.cheats.armor.is_enabled()) {
+				armor = clamp<i8>(value, 0, max_armor());
+			}
+			
+			armor = max<i8>(game_stats.cheats.armor.current_minimum(), value);
+		}
 
-		inline void set_divinity(i8 value) noexcept { divinity = clamp<i8>(value, 0, max_divinity()); }
+		inline void set_divinity(i8 value) noexcept {
+			if (!game_stats.cheats.is_enabled() || !game_stats.cheats.divinity.is_enabled()) {
+				divinity = clamp<i8>(value, 0, max_divinity());
+			}
+			
+			divinity = max<i8>(game_stats.cheats.divinity.current_minimum(), value);
+		}
 
 	  public:
 		inline player_t() noexcept : command{}, position{}, energy{ StartingEnergy }, armor{ StartingArmor }, divinity{ StartingDivinity } {}
@@ -109,51 +127,174 @@ namespace necrowarp {
 
 		inline bool has_ascended() const noexcept { return divinity > 0; }
 
-		inline i8 max_energy() const noexcept { return clamp(static_cast<i8>(game_stats.minion_kills / globals::KillsPerEnergySlot), MinimumEnergy, MaximumEnergy); }
+		inline bool bypass_invocations_enabled() const noexcept { return game_stats.cheats.is_enabled() && game_stats.cheats.bypass_invocations; }
 
-		inline i8 max_armor() const noexcept { return clamp(static_cast<i8>(game_stats.player_kills / globals::KillsPerArmorSlot), MinimumArmor, MaximumArmor); }
+		inline i8 max_energy() const noexcept {
+			const i8 calculated_max{ clamp<i8>(game_stats.minion_kills / globals::KillsPerEnergySlot, MinimumEnergy, MaximumEnergy) };
 
-		inline i8 max_divinity() const noexcept { return clamp(static_cast<i8>((game_stats.total_kills() - globals::KillsPerEnergySlot * player_t::MaximumEnergy) / globals::KillsPerDivinityTurn), MinimumDivinity, MaximumDivinity); }
+			if (!game_stats.cheats.is_enabled() || !game_stats.cheats.energy.is_enabled()) {
+				return calculated_max;
+			}
 
-		inline bool can_survive(i8 damage_amount) const noexcept { return armor >= damage_amount; }
+			return max<i8>(game_stats.cheats.energy.current_maximum(), calculated_max);
+		}
 
-		inline void receive_damage(i8 damage_amount) noexcept { set_armor(armor - damage_amount); }
+		inline i8 max_armor() const noexcept {
+			const i8 calculated_max{ clamp<i8>(game_stats.player_kills / globals::KillsPerArmorSlot, MinimumArmor, MaximumArmor) };
 
-		inline bool can_random_warp() const noexcept { return energy >= RandomWarpCost; }
-		inline bool can_random_warp(i8 discount) const noexcept { return energy >= RandomWarpCost - discount; }
+			if (!game_stats.cheats.is_enabled() || !game_stats.cheats.armor.is_enabled()) {
+				return calculated_max;
+			}
 
-		inline bool can_target_warp() const noexcept { return energy >= TargetWarpCost; }
-		inline bool can_target_warp(i8 discount) const noexcept { return energy >= TargetWarpCost - discount; }
+			return max<i8>(game_stats.cheats.energy.current_maximum(), calculated_max);
+		}
 
-		inline bool can_perform_calcitic_invocation() const noexcept { return energy >= CalciticInvocationCost; }
-		inline bool can_perform_calcitic_invocation(i8 discount) const noexcept { return energy >= CalciticInvocationCost - discount; }
+		inline i8 max_divinity() const noexcept {
+			const i8 calculated_max{
+				clamp<i8>(game_stats.total_kills() - globals::KillsPerEnergySlot * player_t::MaximumEnergy / globals::KillsPerDivinityTurn, MinimumDivinity, MaximumDivinity)
+			};
 
-		inline bool can_perform_spectral_invocation() const noexcept { return energy >= SpectralInvocationCost; }
-		inline bool can_perform_spectral_invocation(i8 discount) const noexcept { return energy >= SpectralInvocationCost - discount; }
+			if (!game_stats.cheats.is_enabled() || !game_stats.cheats.divinity.is_enabled()) {
+				return calculated_max;
+			}
 
-		inline bool can_perform_sanguine_invocation() const noexcept { return energy >= SanguineInvocationCost; }
+			return max<i8>(game_stats.cheats.energy.current_maximum(), calculated_max);
+		}
+
+		inline bool no_hit_enabled() const noexcept { return game_stats.cheats.is_enabled() && game_stats.cheats.no_hit; }
+
+		inline bool can_survive(i8 damage_amount) const noexcept {
+			return no_hit_enabled() || has_ascended() || armor >= damage_amount;
+		}
+
+		inline void receive_damage(i8 damage_amount) noexcept {
+			if (no_hit_enabled() || has_ascended()) {
+				return;
+			}
+			
+			set_armor(armor - damage_amount);
+		}
+
+		inline bool free_costs_enabled() const noexcept { return game_stats.cheats.is_enabled() && game_stats.cheats.free_costs; }
+
+		inline bool can_random_warp() const noexcept { return free_costs_enabled() || energy >= RandomWarpCost; }
+		inline bool can_random_warp(i8 discount) const noexcept { return free_costs_enabled() || energy >= RandomWarpCost - discount; }
+
+		inline bool can_target_warp() const noexcept { return free_costs_enabled() || energy >= TargetWarpCost; }
+		inline bool can_target_warp(i8 discount) const noexcept { return free_costs_enabled() || energy >= TargetWarpCost - discount; }
+
+		inline bool can_perform_calcitic_invocation() const noexcept { return free_costs_enabled() || energy >= CalciticInvocationCost; }
+		inline bool can_perform_calcitic_invocation(i8 discount) const noexcept { return free_costs_enabled() || energy >= CalciticInvocationCost - discount; }
+
+		inline bool can_perform_spectral_invocation() const noexcept { return free_costs_enabled() || energy >= SpectralInvocationCost; }
+		inline bool can_perform_spectral_invocation(i8 discount) const noexcept { return free_costs_enabled() || energy >= SpectralInvocationCost - discount; }
+
+		inline bool can_perform_sanguine_invocation() const noexcept { return free_costs_enabled() || energy >= SanguineInvocationCost; }
 		inline bool can_perform_sanguine_invocation(i8 discount) const noexcept { return energy >= SanguineInvocationCost - discount; }
 
-		inline bool can_perform_necromantic_ascendance() const noexcept { return energy >= NecromanticAscendanceCost; }
-		inline bool can_perform_necromantic_ascendance(i8 discount) const noexcept { return energy >= NecromanticAscendanceCost - discount; }
+		inline bool can_perform_necromantic_ascendance() const noexcept { return free_costs_enabled() || energy >= NecromanticAscendanceCost; }
+		inline bool can_perform_necromantic_ascendance(i8 discount) const noexcept { return free_costs_enabled() || energy >= NecromanticAscendanceCost - discount; }
 
-		inline void pay_random_warp_cost() noexcept { set_energy(energy - RandomWarpCost); }
-		inline void pay_random_warp_cost(i8 discount) noexcept { set_energy(energy - RandomWarpCost + discount); }
+		inline void pay_random_warp_cost() noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}	
+			
+			set_energy(energy - RandomWarpCost);
+		}
 
-		inline void pay_target_warp_cost() noexcept { set_energy(energy - TargetWarpCost); }
-		inline void pay_target_warp_cost(i8 discount) noexcept { set_energy(energy - TargetWarpCost + discount); }
+		inline void pay_random_warp_cost(i8 discount) noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}	
+			
+			set_energy(energy - RandomWarpCost + discount);
+		}
 
-		inline void pay_calcitic_invocation_cost() noexcept { set_energy(energy - CalciticInvocationCost); }
-		inline void pay_calcitic_invocation_cost(i8 discount) noexcept { set_energy(energy - CalciticInvocationCost + discount); }
 
-		inline void pay_spectral_invocation_cost() noexcept { set_energy(energy - SpectralInvocationCost); }
-		inline void pay_spectral_invocation_cost(i8 discount) noexcept { set_energy(energy - SpectralInvocationCost + discount); }
+		inline void pay_target_warp_cost() noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}
+			
+			set_energy(energy - TargetWarpCost);
+		}
 
-		inline void pay_sanguine_invocation_cost() noexcept { set_energy(energy - SanguineInvocationCost); }
-		inline void pay_sanguine_invocation_cost(i8 discount) noexcept { set_energy(energy - SanguineInvocationCost + discount); }
+		inline void pay_target_warp_cost(i8 discount) noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}
+			
+			set_energy(energy - TargetWarpCost + discount);
+		}
 
-		inline void pay_necromantic_ascendance_cost() noexcept { set_energy(energy - NecromanticAscendanceCost); }
-		inline void pay_necromantic_ascendance_cost(i8 discount) noexcept { set_energy(energy - NecromanticAscendanceCost + discount); }
+
+		inline void pay_calcitic_invocation_cost() noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}
+			
+			set_energy(energy - CalciticInvocationCost);
+		}
+
+		inline void pay_calcitic_invocation_cost(i8 discount) noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}
+			
+			set_energy(energy - CalciticInvocationCost + discount);
+		}
+
+
+		inline void pay_spectral_invocation_cost() noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}
+			
+			set_energy(energy - SpectralInvocationCost);
+		}
+
+		inline void pay_spectral_invocation_cost(i8 discount) noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}
+			
+			set_energy(energy - SpectralInvocationCost + discount);
+		}
+
+
+		inline void pay_sanguine_invocation_cost() noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}
+			
+			set_energy(energy - SanguineInvocationCost);
+		}
+
+		inline void pay_sanguine_invocation_cost(i8 discount) noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}
+			
+			set_energy(energy - SanguineInvocationCost + discount);
+		}
+
+
+		inline void pay_necromantic_ascendance_cost() noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}
+			
+			set_energy(energy - NecromanticAscendanceCost);
+		}
+
+		inline void pay_necromantic_ascendance_cost(i8 discount) noexcept {
+			if (free_costs_enabled()) {
+				return;
+			}
+			
+			set_energy(energy - NecromanticAscendanceCost + discount);
+		}
 
 		inline void receive_skull_boon() noexcept { set_energy(energy + SkullBoon); }
 
@@ -167,11 +308,11 @@ namespace necrowarp {
 
 		inline void max_out_divinity() noexcept { divinity = max_divinity(); }
 
-		inline void zero_out_energy() noexcept { energy = 0; }
+		inline void zero_out_energy() noexcept { set_energy(0); }
 
-		inline void zero_out_armor() noexcept { armor = 0; }
+		inline void zero_out_armor() noexcept { set_armor(0); }
 
-		inline void zero_out_divinity() noexcept { divinity = 0; }
+		inline void zero_out_divinity() noexcept { set_divinity(0); }
 
 		template<entity_type_t EntityType> inline bool will_perish() const noexcept;
 

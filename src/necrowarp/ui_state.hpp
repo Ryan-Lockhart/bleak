@@ -220,9 +220,9 @@ namespace necrowarp {
 		static inline bool show_statistics{ false };
 
 		static inline label_t game_over_label{
-			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 - 2 }, cardinal_e::South },
 			embedded_label_t{
-				runes_t{ runes_t{ "You were slain! Game over... ", colors::White }.concatenate(runes_t{ " or is it?", colors::dark::Magenta }) },
+				runes_t{ runes_t{ "You were slain! Game over...", colors::White }.concatenate(runes_t{ "\n\n        ...or is it?", colors::dark::Magenta }) },
 				embedded_box_t{ colors::Red, { colors::White, 1 } },
 				extent_t{ 1, 1 }
 			}
@@ -259,6 +259,7 @@ namespace necrowarp {
 			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h }, cardinal_e::South },
 			embedded_label_t{
 				runes_t{
+					"Depth Reached:  000\n\n\n"
 					"Player Kills: 0000\n\n"
 					"Minion Kills: 0000\n\n\n"
 					"Total Kills:  0000\n\n\n"
@@ -296,10 +297,17 @@ namespace necrowarp {
 				phase.transition(game_phase_t::Exiting);
 			}
 
+			game_over_label.text = runes_t{ "You were slain! Game over...", colors::White };
+
+			if (retry_button.is_hovered()) {
+				game_over_label.text.concatenate(runes_t{ "\n\n        ...or is it?", colors::dark::Magenta });
+			}
+
 			show_statistics = show_statistics ? statistics_expanded_label.is_hovered() : statistics_hidden_label.is_hovered();
 
 			if (show_statistics) {
 				statistics_expanded_label.text = runes_t{
+					"Depth Reached: " + std::format("{:3}", game_stats.game_depth) + "\n\n\n"
 					"Player Kills: " + std::format("{:4}", game_stats.player_kills) + "\n\n"
 					"Minion Kills: " + std::format("{:4}", game_stats.minion_kills) + "\n\n\n"
 					"Total Kills:  " + std::format("{:4}", game_stats.total_kills()) + "\n\n\n"

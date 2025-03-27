@@ -56,7 +56,88 @@ namespace necrowarp {
 
 	static inline volatile std::atomic_bool game_running{ false };
 
+	enum class attribute_e {
+		Energy,
+		Armor,
+		Divinity
+	};
+
+	template<attribute_e Type> struct attribute_t {
+	  private:
+		i16 minimum;
+		i16 maximum;
+
+		bool enabled;
+
+	  public:
+		bool is_enabled() const noexcept { return enabled; };
+
+		i16 current_minimum() const noexcept { return minimum; };
+		i16 current_maximum() const noexcept { return maximum; };
+
+		void enable(i16 min, i16 max) noexcept {
+			if (is_enabled()) {
+				return;
+			}
+
+			minimum = min;
+			maximum = max;
+
+			enabled = true;
+		};
+
+		void disable() noexcept {
+			if (!is_enabled()) {
+				return;
+			}
+
+			enabled = false;
+
+			minimum = 0;
+			maximum = 0;
+		};
+
+		void set(i16 min, i16 max) noexcept {
+			if (!is_enabled()) {
+				return;
+			}
+
+			minimum = min;
+			maximum = max;
+		}
+	};
+
+	struct cheats_t {
+	  private:
+		bool enabled;
+
+	  public:
+	  	attribute_t<attribute_e::Energy> energy;
+	  	attribute_t<attribute_e::Armor> armor;
+	  	attribute_t<attribute_e::Divinity> divinity;
+
+		bool no_hit;
+		bool free_costs;
+		bool bypass_invocations;
+
+		bool is_enabled() const noexcept { return globals::CheatsAllowed && enabled; }
+
+		void activate() noexcept {
+			if (!globals::CheatsAllowed) {
+				return;
+			}
+
+			enabled = true;
+		}
+
+		void deactivate() noexcept {
+			enabled = false;
+		}
+	};
+
 	struct game_stats_t {
+		cheats_t cheats{};
+
 		usize game_seed{};
 
 		usize game_depth{ 0 };

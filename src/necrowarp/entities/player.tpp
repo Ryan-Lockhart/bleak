@@ -7,7 +7,7 @@
 
 namespace necrowarp {
 	template<entity_type_t EntityType> inline bool player_t::will_perish() const noexcept {
-		if (has_ascended()) {
+		if (has_ascended() || no_hit_enabled()) {
 			return false;
 		}
 
@@ -23,7 +23,7 @@ namespace necrowarp {
 	}
 
 	template<entity_type_t EntityType> inline void player_t::receive_damage() noexcept {
-		if (has_ascended()) {
+		if (has_ascended() || no_hit_enabled()) {
 			return;
 		}
 		

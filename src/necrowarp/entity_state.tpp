@@ -912,6 +912,15 @@ namespace necrowarp {
 		for (crauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
 			const offset_t position{ player.position + offset };
 
+			const bool is_empty{ entity_registry.at(position) == entity_type_t::None };
+
+			if (is_empty && player.bypass_invocations_enabled()) {
+				entity_registry.add(skeleton_t{ position, true });
+				++accumulated_skulls;
+
+				continue;
+			}
+
 			const bool has_skull{ entity_registry.at(position) == entity_type_t::Skull };
 			const bool has_ladder{ entity_registry.at(position) == entity_type_t::Ladder };
 
@@ -1005,6 +1014,10 @@ namespace necrowarp {
 			}
 		}
 
+		if (player.bypass_invocations_enabled()) {
+			accumulated_health = wraith_t::MaximumHealth;
+		}
+
 		if (accumulated_health <= 0) {
 			return;
 		} else if (accumulated_health >= 4 && eligible_ladder != nullptr) {
@@ -1069,6 +1082,10 @@ namespace necrowarp {
 					}
 				}
 			}
+		}
+
+		if (player.bypass_invocations_enabled()) {
+			accumulated_health = flesh_golem_t::MaximumHealth;
 		}
 
 		if (accumulated_health <= 0) {

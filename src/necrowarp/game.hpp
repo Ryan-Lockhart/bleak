@@ -420,11 +420,11 @@ namespace necrowarp {
 			return std::nullopt;
 		}
 
-		static inline void spawn_random() noexcept {
+		static inline bool spawn_random() noexcept {
 			cauto spawn_pos = find_spawn_position();
 
 			if (!spawn_pos.has_value()) {
-				return;
+				return false;
 			}
 
 			static std::uniform_int_distribution<u16> spawn_distribution{ globals::SpawnDistributionLow, globals::SpawnDistributionHigh };
@@ -466,6 +466,8 @@ namespace necrowarp {
 			} else {
 				entity_registry.add<true>(adventurer_t{ spawn_pos.value() });
 			}
+
+			return true;
 		}
 
 		static inline void process_turn() noexcept {
@@ -486,7 +488,9 @@ namespace necrowarp {
 			}
 
 			while (game_stats.spawns_remaining > 0) {
-				spawn_random();
+				if (!spawn_random()) {
+					break;
+				}
 				
 				--game_stats.spawns_remaining;
 			}

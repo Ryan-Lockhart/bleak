@@ -102,5 +102,7 @@ namespace necrowarp {
 		constexpr i16 MaximumReinforcements{ 4 };
 
 		constexpr i16 FloorsPerReinforcement{ 8 };
+
+		constexpr bool CheatsAllowed{ true };
 	} // namespace globals
 } // namespace necrowarp
