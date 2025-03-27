@@ -9,7 +9,7 @@
 #include <bleak/sparse.hpp>
 
 namespace necrowarp {
-	constexpr distance_function_t DistanceFunction{ distance_function_t::VonNeumann };
+	constexpr distance_function_t DistanceFunction{ distance_function_t::Octile };
 	
 	extern grid_cursor_t<globals::CellSize> warp_cursor;
 
@@ -24,10 +24,10 @@ namespace necrowarp {
 
 	static inline sparse_t<sparseling_t<bool>> newborns{};
 
-	static inline field_t<offset_t::product_t, DistanceFunction, globals::MapSize, globals::BorderSize> good_goal_map{};
-	static inline field_t<offset_t::product_t, DistanceFunction, globals::MapSize, globals::BorderSize> evil_goal_map{};
+	static inline field_t<float, DistanceFunction, globals::MapSize, globals::BorderSize> good_goal_map{};
+	static inline field_t<float, DistanceFunction, globals::MapSize, globals::BorderSize> evil_goal_map{};
 
-	template<typename T> static inline field_t<offset_t::product_t, DistanceFunction, globals::MapSize, globals::BorderSize> entity_goal_map{};
+	template<typename T> static inline field_t<float, DistanceFunction, globals::MapSize, globals::BorderSize> entity_goal_map{};
 
 	static inline bool descent_flag{ false };
 
@@ -230,7 +230,7 @@ namespace necrowarp {
 
 	inline void entity_registry_t::reset() noexcept {
 		clear();
-		
+
 		reset_goal_maps();
 	}
 

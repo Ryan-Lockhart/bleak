@@ -24,15 +24,13 @@ namespace necrowarp {
 		constexpr bool is_hovered(offset_t position) const noexcept { return box.is_hovered(apply_padding(position), calculate_size()); }
 
 		constexpr void draw(ref<renderer_t> renderer, offset_t position) const noexcept {
-			const offset_t pos = apply_padding(position);
-			box.draw(renderer, pos, calculate_size());
-			ui_atlas.draw(text, pos);
+			box.draw(renderer, apply_padding(position), calculate_size());
+			ui_atlas.draw(text, position);
 		}
 
 		constexpr void draw(ref<renderer_t> renderer, offset_t position, color_t background) const noexcept {
-			const offset_t pos = apply_padding(position);
-			box.draw(renderer, pos, calculate_size(), background);
-			ui_atlas.draw(text, pos);
+			box.draw(renderer, apply_padding(position), calculate_size(), background);
+			ui_atlas.draw(text, position);
 		}
 	};
 

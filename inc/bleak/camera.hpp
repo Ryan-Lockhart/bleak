@@ -4,6 +4,7 @@
 
 #include <bleak/extent.hpp>
 #include <bleak/offset.hpp>
+#include <bleak/utility.hpp>
 
 namespace bleak {
 	class camera_t {
@@ -32,6 +33,22 @@ namespace bleak {
 			}
 
 			position.clamp(min, max);
+		}
+
+		constexpr void constrain_width() noexcept {
+			if (min.w == max.w) {
+				return;
+			}
+
+			position.x = clamp<offset_t::scalar_t>(position.x, min.w, max.w);
+		}
+
+		constexpr void constrain_height() noexcept {
+			if (min.h == max.h) {
+				return;
+			}
+
+			position.y = clamp<offset_t::scalar_t>(position.y, min.h, max.h);
 		}
 
 		constexpr bool set(cref<offset_t> position) noexcept {
@@ -113,6 +130,32 @@ namespace bleak {
 			position = target_position;
 			if constexpr (!Force) {
 				constrain(min, max);
+			}
+
+			return original_position != position;
+		}
+
+		template<bool ForceWidth = false, bool ForceHeight = false> constexpr bool center_on(offset_t::scalar_t target_x, offset_t::scalar_t target_y) noexcept {
+			const offset_t target_position{ offset_t{ target_x, target_y } - half_size() };
+			
+			if (position == target_position) {
+				return false;
+			}
+
+			const offset_t original_position{ position };
+
+			position = target_position;
+
+			if constexpr (!ForceWidth && !ForceHeight) {
+				constrain();
+			} else {
+				if constexpr (!ForceWidth) {
+					constrain_width();
+				}
+
+				if constexpr (!ForceHeight) {
+					constrain_height();
+				}
 			}
 
 			return original_position != position;

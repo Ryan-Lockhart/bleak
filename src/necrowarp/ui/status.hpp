@@ -59,16 +59,14 @@ namespace necrowarp {
 		constexpr bool is_hovered(offset_t position) const noexcept { return box.is_hovered(apply_padding(position), bounding_size()); }
 
 		constexpr void draw(ref<renderer_t> renderer, offset_t position) const noexcept {
-			const offset_t pos = apply_padding(position);
-
-			box.draw(renderer, pos, bounding_size());
+			box.draw(renderer, apply_padding(position), bounding_size());
 
 			const usize max_len = max_length();
 
 			for (usize i{ 0 }; i < Statuses; ++i) {
 				for (usize j{ 0 }; j < max_len; ++j) {
 					if (j < statuses[i].max_value) {
-						game_atlas.draw(statuses[i].current_value > j ? statuses[i].active_glyph : statuses[i].inactive_glyph, pos + offset_t{ j, i }, offset_t{ -8, -8 });
+						game_atlas.draw(statuses[i].current_value > j ? statuses[i].active_glyph : statuses[i].inactive_glyph, position + offset_t{ j, i }, offset_t{ -8, -8 });
 					}
 				}
 			}

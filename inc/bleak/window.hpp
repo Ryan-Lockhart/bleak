@@ -33,7 +33,7 @@ namespace bleak {
 		}
 
 		static inline ptr<window> create_window(cstr title, cref<extent_t> size) noexcept {
-			ptr<window> handle = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, static_cast<i32>(size.w), static_cast<i32>(size.h), WINDOW_FLAGS_NONE);
+			ptr<window> handle = SDL_CreateWindow(title, WINDOW_POSITION_CENTERED, WINDOW_POSITION_CENTERED, static_cast<i32>(size.w), static_cast<i32>(size.h), WINDOW_FLAGS_NONE);
 
 			if (handle == nullptr) {
 				error_log.add("failed to create window: {}", get_error());
@@ -89,6 +89,7 @@ namespace bleak {
 
 	  private:
 		bool closing = false;
+		bool fullscreen = false;
 
 	  public:
 		inline window_t() = delete;
@@ -146,9 +147,19 @@ namespace bleak {
 
 		constexpr bool is_running() const noexcept { return !closing; }
 
-		constexpr void show() noexcept { SDL_ShowWindow(window); }
+		constexpr void show() noexcept { sdl::show_window(window); }
 
-		constexpr void hide() noexcept { SDL_HideWindow(window); }
+		constexpr void hide() noexcept { sdl::hide_window(window); }
+
+		constexpr void toggle_fullscreen() noexcept {
+			fullscreen = !fullscreen;
+
+			if (fullscreen) {
+				SDL_SetWindowFullscreen(window, sdl::window_flags::SDL_WINDOW_FULLSCREEN);
+			} else {
+				SDL_SetWindowFullscreen(window, 0);
+			}
+		}
 
 		constexpr void close() noexcept { closing = true; }
 

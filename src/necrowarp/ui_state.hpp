@@ -331,7 +331,7 @@ namespace necrowarp {
 
 	template<> struct phase_state_t<game_phase_t::Exiting> {
 		static inline label_t confirm_quit_label{
-			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 }, cardinal_e::Central },
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h / 2 - 2 }, cardinal_e::South },
 			embedded_label_t{
 				runes_t{ "Are you sure you want to quit?", colors::White },
 				embedded_box_t{ colors::Red, { colors::White, 1 } },
@@ -399,7 +399,14 @@ namespace necrowarp {
 	constexpr glyph_t ActiveArmorGlyph{ characters::Armor, color_t{ 0xFF, static_cast<u8>(0xFF) } };
 	constexpr glyph_t InactiveArmorGlyph{ characters::Armor, color_t{ 0xFF, static_cast<u8>(0x80) } };
 
-	constexpr cstr depth_text{ "Depth: " };
+	constexpr cstr depth_hidden_text{ "Depth: 000" };
+
+	constexpr cstr depth_expanded_text{
+		"Player Kills: 0000\n\n"
+		"Minion Kills: 0000\n\n\n"
+		"Total Kills:  0000\n\n\n"
+		"    Depth: 000    "
+	};
 
 	constexpr cstr help_hidden_text{ "F1: Show Controls" };
 
@@ -409,7 +416,7 @@ namespace necrowarp {
 		" Target Warp:           E\n\n\n"
 		" Calcitic Invocation:   1\n\n"
 		" Spectral Invocation:   2\n\n"
-		" Sanguine Invocation: 3\n\n"
+		" Sanguine Invocation:   3\n\n"
 		" Necromantic Ascension: 4\n\n\n"
 		"F1: Hide Controls"
 	};
@@ -425,10 +432,19 @@ namespace necrowarp {
 			extent_t{ 1, 1 }
 		};
 
-		static inline label_t depth_label{
+		static inline label_t depth_hidden_label{
 			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h }, cardinal_e::South },
 			embedded_label_t{
-				runes_t{ depth_text, colors::White },
+				runes_t{ depth_hidden_text, colors::White },
+				embedded_box_t{ colors::Black, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline label_t depth_expanded_label{
+			anchor_t{ { globals::UIGridSize.w / 2, globals::UIGridSize.h }, cardinal_e::South },
+			embedded_label_t{
+				runes_t{ depth_expanded_text, colors::White },
 				embedded_box_t{ colors::Black, { colors::White, 1 } },
 				extent_t{ 1, 1 }
 			}
@@ -463,37 +479,41 @@ namespace necrowarp {
 
 		static inline bool show_help{ false };
 		static inline bool show_tooltip{ false };
-		static inline bool show_command{ false };
+		static inline bool show_command{ false };		
+		static inline bool show_depth{ false };
 
-		static constexpr offset_t RandomWarpIconPosition{ offset_t{ 0, 2 } };
-		static constexpr offset_t TargetWarpIconPosition{ offset_t{ 0, 3 } };
+		static constexpr offset_t RandomWarpIconPosition{ offset_t{ 0, globals::IconGridSize.h / 2 - 4 } };
+		static constexpr offset_t TargetWarpIconPosition{ offset_t{ 0, globals::IconGridSize.h / 2 - 3 } };
 
-		static constexpr offset_t CalciticInvocationIconPosition{ offset_t{ 0, 5 } };
-		static constexpr offset_t SpectralInvocationIconPosition{ offset_t{ 0, 6 } };
-		static constexpr offset_t SanguineInvocationIconPosition{ offset_t{ 0, 7 } };
+		static constexpr offset_t CalciticInvocationIconPosition{ offset_t{ 0, globals::IconGridSize.h / 2 - 1 } };
+		static constexpr offset_t SpectralInvocationIconPosition{ offset_t{ 0, globals::IconGridSize.h / 2 } };
+		static constexpr offset_t SanguineInvocationIconPosition{ offset_t{ 0, globals::IconGridSize.h / 2 + 1 } };
 
-		static constexpr offset_t NecromanticAscendanceIconPosition{ offset_t{ 0, 9 } };
+		static constexpr offset_t NecromanticAscendanceIconPosition{ offset_t{ 0, globals::IconGridSize.h / 2 + 3 } };
 
 		static inline bool is_hovered() noexcept {
 			if (phase.current_phase != game_phase_t::Playing) {
 				return false;
 			}
 
-			if (Mouse::is_inside(RandomWarpIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			if (Mouse::is_inside(RandomWarpIconPosition * globals::IconSize, globals::IconSize)) {
 				return true;
-			} else if (Mouse::is_inside(TargetWarpIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			} else if (Mouse::is_inside(TargetWarpIconPosition * globals::IconSize, globals::IconSize)) {
 				return true;
-			} else if (Mouse::is_inside(CalciticInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			} else if (Mouse::is_inside(CalciticInvocationIconPosition * globals::IconSize, globals::IconSize)) {
 				return true;
-			} else if (Mouse::is_inside(SpectralInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			} else if (Mouse::is_inside(SpectralInvocationIconPosition * globals::IconSize, globals::IconSize)) {
 				return true;
-			} else if (Mouse::is_inside(SanguineInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			} else if (Mouse::is_inside(SanguineInvocationIconPosition * globals::IconSize, globals::IconSize)) {
 				return true;
-			} else if (Mouse::is_inside(NecromanticAscendanceIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			} else if (Mouse::is_inside(NecromanticAscendanceIconPosition * globals::IconSize, globals::IconSize)) {
 				return true;
 			}
 			
-			return player_statuses.is_hovered() || help_label.is_hovered() || depth_label.is_hovered();
+			return
+				player_statuses.is_hovered() ||
+				help_label.is_hovered() ||				
+				(show_depth ? depth_expanded_label.is_hovered() : depth_hidden_label.is_hovered());
 		}
 
 		static inline void update() noexcept {
@@ -511,7 +531,7 @@ namespace necrowarp {
 
 			const offset_t mouse_pos{ Mouse::get_position() };
 
-			if (Mouse::is_inside(RandomWarpIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			if (Mouse::is_inside(RandomWarpIconPosition * globals::IconSize, globals::IconSize)) {
 				command_label.text = runes_t{ to_string(command_type_t::RandomWarp) };
 				command_label.text
 					.concatenate(runes_t{ " ["})
@@ -521,7 +541,7 @@ namespace necrowarp {
 					.concatenate(runes_t{ "]" });
 				
 				command_label.position = (RandomWarpIconPosition + offset_t{ 1, 1 }) * globals::IconSize / globals::GlyphSize + offset_t{ 2, 0 };
-			} else if (Mouse::is_inside(TargetWarpIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			} else if (Mouse::is_inside(TargetWarpIconPosition * globals::IconSize, globals::IconSize)) {
 				command_label.text = runes_t{ to_string(command_type_t::TargetWarp) };
 				command_label.text
 					.concatenate(runes_t{ " ["})
@@ -531,7 +551,7 @@ namespace necrowarp {
 					.concatenate(runes_t{ "]" });
 				
 					command_label.position = (TargetWarpIconPosition + offset_t{ 1, 1 }) * globals::IconSize / globals::GlyphSize + offset_t{ 2, 0 };
-			} else if (Mouse::is_inside(CalciticInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			} else if (Mouse::is_inside(CalciticInvocationIconPosition * globals::IconSize, globals::IconSize)) {
 				command_label.text = runes_t{ to_string(command_type_t::CalciticInvocation) };
 				command_label.text
 					.concatenate(runes_t{ " ["})
@@ -541,7 +561,7 @@ namespace necrowarp {
 					.concatenate(runes_t{ "]" });
 				
 					command_label.position = (CalciticInvocationIconPosition + offset_t{ 1, 1 }) * globals::IconSize / globals::GlyphSize + offset_t{ 2, 0 };
-			} else if (Mouse::is_inside(SpectralInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			} else if (Mouse::is_inside(SpectralInvocationIconPosition * globals::IconSize, globals::IconSize)) {
 				command_label.text = runes_t{ to_string(command_type_t::SpectralInvocation) };
 				command_label.text
 					.concatenate(runes_t{ " ["})
@@ -551,7 +571,7 @@ namespace necrowarp {
 					.concatenate(runes_t{ "]" });
 				
 					command_label.position = (SpectralInvocationIconPosition + offset_t{ 1, 1 }) * globals::IconSize / globals::GlyphSize + offset_t{ 2, 0 };
-			} else if (Mouse::is_inside(SanguineInvocationIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			} else if (Mouse::is_inside(SanguineInvocationIconPosition * globals::IconSize, globals::IconSize)) {
 				command_label.text = runes_t{ to_string(command_type_t::SanguineInvocation) };
 				command_label.text
 					.concatenate(runes_t{ " ["})
@@ -561,7 +581,7 @@ namespace necrowarp {
 					.concatenate(runes_t{ "]" });
 				
 					command_label.position = (SanguineInvocationIconPosition + offset_t{ 1, 1 }) * globals::IconSize / globals::GlyphSize + offset_t{ 2, 0 };
-			} else if (Mouse::is_inside(NecromanticAscendanceIconPosition * globals::IconSize + globals::UniversalOffset, globals::IconSize)) {
+			} else if (Mouse::is_inside(NecromanticAscendanceIconPosition * globals::IconSize, globals::IconSize)) {
 				command_label.text = runes_t{ to_string(command_type_t::NecromanticAscendance) };
 				command_label.text
 					.concatenate(runes_t{ " ["})
@@ -577,7 +597,27 @@ namespace necrowarp {
 			
 			command_label.position.y = mouse_pos.y / globals::GlyphSize.h;
 
-			depth_label.text = runes_t{ std::format("Depth: {}", (isize)game_stats.game_depth * -1) };
+			
+
+			show_depth = show_depth ? depth_expanded_label.is_hovered() : depth_hidden_label.is_hovered();
+
+			if (show_depth) {
+				depth_expanded_label.text = runes_t{
+					std::format(
+						"Player Kills: {:4}\n\n"
+						"Minion Kills: {:4}\n\n\n"
+						"Total Kills:  {:4}\n\n\n"
+						"    Depth: {:3}    ",
+						game_stats.player_kills,
+						game_stats.minion_kills,
+						game_stats.total_kills(),
+						game_stats.game_depth
+					),
+					colors::White
+				};
+			} else {
+				depth_hidden_label.text = runes_t{ std::format("Depth: {:3}", (isize)game_stats.game_depth * -1) };
+			}
 
 			if (Keyboard::is_key_down(bindings::ToggleControls)) {
 				show_help = !show_help;
@@ -664,7 +704,9 @@ namespace necrowarp {
 				command_label.draw(renderer);
 			}
 
-			depth_label.draw(renderer);
+			show_depth ?
+				depth_expanded_label.draw(renderer) :
+				depth_hidden_label.draw(renderer);
 
 			help_label.draw(renderer);
 
@@ -699,22 +741,6 @@ namespace necrowarp {
 		}
 	}
 
-	static inline bool on_border() noexcept {
-		const offset_t mouse_pos{ Mouse::get_position() };
-
-		return
-			mouse_pos.x <= globals::UniversalOrigin.x ||
-			mouse_pos.y <= globals::UniversalOrigin.y ||
-			mouse_pos.x >= globals::UniversalExtent.x ||
-			mouse_pos.y >= globals::UniversalExtent.y;
-	}
-
-	static inline void draw_window_border() noexcept {
-		renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, globals::BorderSize, colors::Black);
-		renderer.draw_outline_rect(offset_t::Zero, globals::WindowSize + globals::WindowBorder * 2, colors::White);
-		renderer.draw_outline_rect(globals::UniversalOffset, globals::WindowSize, colors::White);
-	};
-
 	struct ui_registry_t {
 		inline void update() noexcept {
 			if (window.is_closing()) {
@@ -722,11 +748,11 @@ namespace necrowarp {
 			}
 
 			fps_label.text = {
-				std::format("FPS: {:2}", static_cast<u32>(Clock::frame_time())),
+				std::format("FPS: {:4}", static_cast<u32>(Clock::frame_time())),
 				colors::Green
 			};
 
-			draw_cursor = any_hovered() || on_border();
+			draw_cursor = any_hovered();
 
 			cursor.update();
 
@@ -752,15 +778,13 @@ namespace necrowarp {
 
 			if (phase.current_phase == game_phase_t::Playing) {
 				if (!draw_cursor) {
-					grid_cursor.draw(camera, globals::CursorOffset);
+					grid_cursor.draw(camera, -globals::CursorOffset);
 				}
 
 				if (draw_warp_cursor) {
-					warp_cursor.draw(camera, globals::CursorOffset);
+					warp_cursor.draw(camera, -globals::CursorOffset);
 				}
 			}
-
-			draw_window_border();
 
 			title_label.draw(renderer);
 			fps_label.draw(renderer);

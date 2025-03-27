@@ -12,7 +12,7 @@ namespace necrowarp {
 
 		const std::string GameTitle{ std::format("{} v{} by {}", GameName, GameVersion, GameAuthor) };
 
-		constexpr sdl::window_flags WindowFlags{ static_cast<sdl::window_flags>(SDL_WINDOW_BORDERLESS | SDL_WINDOW_SHOWN) };
+		constexpr sdl::window_flags WindowFlags{ static_cast<sdl::window_flags>(SDL_WINDOW_SHOWN) };
 		constexpr sdl::renderer_flags RendererFlags{ static_cast<sdl::renderer_flags>(SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) };
 
 		constexpr u32 FrameLimit{ 60u };
@@ -21,12 +21,6 @@ namespace necrowarp {
 		constexpr bool UseFrameLimit{ true };
 
 		constexpr extent_t WindowSize{ 1280, 720 };
-		constexpr extent_t WindowBorder{ 8, 8 };
-
-		constexpr offset_t UniversalOffset{ WindowBorder };
-
-		constexpr offset_t UniversalOrigin{ UniversalOffset - 1 };
-		constexpr offset_t UniversalExtent{ UniversalOffset + WindowSize - 1 };
 
 		constexpr extent_t UIGridSize{ WindowSize / 8 };
 		constexpr extent_t GameGridSize{ WindowSize / 16 };
@@ -36,12 +30,9 @@ namespace necrowarp {
 		constexpr extent_t TilesetSize{ 16, 5 };
 		constexpr extent_t IconsetSize{ 3, 2 };
 
-		constexpr extent_t ZoneSize{ globals::GameGridSize };
-		constexpr extent_t RegionSize{ 1, 1 };
+		constexpr extent_t MapSize{ 64, 32 };
 
-		constexpr extent_t MapSize{ RegionSize * ZoneSize };
-
-		constexpr offset_t MapCenter{ GameGridSize / 2 };
+		constexpr offset_t MapCenter{ MapSize / 2 };
 
 		constexpr extent_t BorderSize{ 4, 4 };
 
@@ -60,7 +51,7 @@ namespace necrowarp {
 			return offset_t{ offset_t::scalar_cast(position.x * GlyphToCellRatio), offset_t::scalar_cast(position.y * GlyphToCellRatio) };
 		}
 
-		constexpr offset_t CursorOffset{ UniversalOffset - CellSize / 4 };
+		constexpr offset_t CursorOffset{ CellSize / 4 };
 
 		constexpr extent_t CameraExtent{ MapSize - globals::GameGridSize };
 		constexpr offset_t::scalar_t CameraSpeed{ 2 };
@@ -72,14 +63,14 @@ namespace necrowarp {
 		constexpr u32 ViewDistance{ 8 };
 		constexpr f64 ViewSpan{ 135.0 };
 
-		constexpr i16 NumberOfUpLadders{ 4 };
-		constexpr i16 NumberOfDownLadders{ 2 };
-		constexpr i16 MinimumLadderDistance{ 8 };
+		constexpr i16 NumberOfUpLadders{ 8 };
+		constexpr i16 NumberOfDownLadders{ 4 };
+		constexpr i16 MinimumLadderDistance{ 16 };
 
-		constexpr i16 StartingAdventurers{ 4 };
+		constexpr i16 StartingAdventurers{ 8 };
 
-		constexpr i16 StartingSkulls{ 8 };
-		constexpr i16 MinimumSkullDistance{ 8 };
+		constexpr i16 StartingSkulls{ 16 };
+		constexpr i16 MinimumSkullDistance{ 16 };
 
 		constexpr i16 SpawnDistributionLow{ 0 };
 		constexpr i16 SpawnDistributionHigh{ 99 };

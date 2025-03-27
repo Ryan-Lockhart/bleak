@@ -43,8 +43,14 @@ namespace necrowarp {
 		}
 
 		static inline bool camera_input() noexcept {
-			if constexpr (globals::MapSize <= globals::GameGridSize) {
-				return camera.center_on<true>(globals::MapCenter);
+			constexpr bool force_width{ globals::MapSize.w <= globals::GameGridSize.w };
+			constexpr bool force_height{ globals::MapSize.h <= globals::GameGridSize.h };
+
+			if constexpr (force_width || force_height) {
+				return camera.center_on<force_width, force_height>(
+					force_width ? globals::MapCenter.x : player.position.x,
+					force_height ? globals::MapCenter.y : player.position.y
+				);
 			}
 
 			if (Keyboard::is_key_down(bindings::CameraLock)) {
@@ -182,32 +188,26 @@ namespace necrowarp {
 
 		static inline void load() noexcept {
 			game_stats.reset();
-			
-			region_t<cell_state_t, globals::RegionSize, globals::ZoneSize, globals::BorderSize> region{};
 
 			constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored };
 			constexpr cell_state_t closed_state{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored };
 
 			constexpr binary_applicator_t<cell_state_t> cell_applicator{ closed_state, open_state };
 
-			for (extent_t::product_t i{ 0 }; i < region.region_area; ++i) {
-				region[i]
-					.set<zone_region_t::Border>(closed_state)
-					.generate<zone_region_t::Interior>(
-						random_engine,
-						globals::FillPercent,
-						globals::AutomotaIterations,
-						globals::AutomotaThreshold,
-						cell_applicator
-					)
-					.collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open)
-					.randomize<zone_region_t::All>(random_engine, 0.25, cell_trait_t::Smooth, cell_trait_t::Rough)
-					.randomize<zone_region_t::All>(random_engine, 2.0 / 3.0, cell_trait_t::Protrudes, cell_trait_t::Recedes)
-					.randomize<zone_region_t::All, rock_type_t>(random_engine)
-					.randomize<zone_region_t::All, mineral_type_t>(random_engine);
-			}
-
-			region.compile(game_map);
+			game_map
+				.set<zone_region_t::Border>(closed_state)
+				.generate<zone_region_t::Interior>(
+					random_engine,
+					globals::FillPercent,
+					globals::AutomotaIterations,
+					globals::AutomotaThreshold,
+					cell_applicator
+				)
+				.collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open)
+				.randomize<zone_region_t::All>(random_engine, 0.25, cell_trait_t::Smooth, cell_trait_t::Rough)
+				.randomize<zone_region_t::All>(random_engine, 2.0 / 3.0, cell_trait_t::Protrudes, cell_trait_t::Recedes)
+				.randomize<zone_region_t::All, rock_type_t>(random_engine)
+				.randomize<zone_region_t::All, mineral_type_t>(random_engine);
 
 			std::vector<area_t> areas{ area_t::partition(game_map, cell_trait_t::Open) };
 
@@ -269,31 +269,25 @@ namespace necrowarp {
 
 			entity_registry.reset();
 
-			region_t<cell_state_t, globals::RegionSize, globals::ZoneSize, globals::BorderSize> region{};
-
 			constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored };
 			constexpr cell_state_t closed_state{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored };
 
 			constexpr binary_applicator_t<cell_state_t> cell_applicator{ closed_state, open_state };
-
-			for (extent_t::product_t i{ 0 }; i < region.region_area; ++i) {
-				region[i]
-					.set<zone_region_t::Border>(closed_state)
-					.generate<zone_region_t::Interior>(
-						random_engine,
-						globals::FillPercent,
-						globals::AutomotaIterations,
-						globals::AutomotaThreshold,
-						cell_applicator
-					)
-					.collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open)
-					.randomize<zone_region_t::All>(random_engine, 0.25, cell_trait_t::Smooth, cell_trait_t::Rough)
-					.randomize<zone_region_t::All>(random_engine, 2.0 / 3.0, cell_trait_t::Protrudes, cell_trait_t::Recedes)
-					.randomize<zone_region_t::All, rock_type_t>(random_engine)
-					.randomize<zone_region_t::All, mineral_type_t>(random_engine);
-			}
-
-			region.compile(game_map);
+			
+			game_map
+				.set<zone_region_t::Border>(closed_state)
+				.generate<zone_region_t::Interior>(
+					random_engine,
+					globals::FillPercent,
+					globals::AutomotaIterations,
+					globals::AutomotaThreshold,
+					cell_applicator
+				)
+				.collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open)
+				.randomize<zone_region_t::All>(random_engine, 0.25, cell_trait_t::Smooth, cell_trait_t::Rough)
+				.randomize<zone_region_t::All>(random_engine, 2.0 / 3.0, cell_trait_t::Protrudes, cell_trait_t::Recedes)
+				.randomize<zone_region_t::All, rock_type_t>(random_engine)
+				.randomize<zone_region_t::All, mineral_type_t>(random_engine);
 
 			std::vector<area_t> areas{ area_t::partition(game_map, cell_trait_t::Open) };
 
@@ -364,6 +358,10 @@ namespace necrowarp {
 			}
 
 			window.poll_events();
+
+			if (Keyboard::is_key_down(bindings::ToggleFullscreen)) {
+				window.toggle_fullscreen();
+			}
 
 			if (Keyboard::is_key_down(bindings::Quit)) {
 				switch(phase.current_phase) {
@@ -552,6 +550,24 @@ namespace necrowarp {
 			renderer.clear(colors::Black);
 
 			if (phase.current_phase == game_phase_t::Playing) {
+				constexpr bool exceeds_width{ globals::MapSize.w <= globals::GameGridSize.w };
+
+				if constexpr (exceeds_width) {
+					constexpr extent_t::scalar_t excess_width{ (globals::GameGridSize.w - globals::MapSize.w + 1) * globals::GlyphSize.w };
+
+					renderer.draw_fill_rect(rect_t{ offset_t::Zero, extent_t{ excess_width, globals::WindowSize.h } }, color_t { 0xC0 });
+					renderer.draw_fill_rect(rect_t{ offset_t{ globals::WindowSize.w - excess_width, 0}, extent_t{ excess_width, globals::WindowSize.h } }, color_t { 0xC0 });
+				}
+
+				constexpr bool exceeds_height{ globals::MapSize.h <= globals::GameGridSize.h };
+
+				if constexpr (exceeds_height) {
+					constexpr extent_t::scalar_t excess_height{ (globals::GameGridSize.h - globals::MapSize.h + 1) * globals::GlyphSize.h };
+
+					renderer.draw_fill_rect(rect_t{ offset_t::Zero, extent_t{ globals::WindowSize.w, excess_height } }, color_t { 0xC0 });
+					renderer.draw_fill_rect(rect_t{ offset_t{ 0, globals::WindowSize.h - excess_height }, extent_t{ globals::WindowSize.w, excess_height } }, color_t { 0xC0 });
+				}
+
 				game_map.draw(game_atlas, camera);
 
 				entity_registry.draw(camera);

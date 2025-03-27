@@ -74,6 +74,8 @@ namespace bleak {
 		};
 
 		constexpr const sdl::key Quit{ keys::Escape };
+		
+		constexpr const sdl::key ToggleFullscreen{ keys::Function::Ten };
 		constexpr const sdl::key ToggleControls{ keys::Function::One };
 
 		constexpr const sdl::key CameraLock{ keys::Tab };
