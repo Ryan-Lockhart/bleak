@@ -9,6 +9,8 @@
 #include <bleak/sparse.hpp>
 
 namespace necrowarp {
+	constexpr distance_function_t DistanceFunction{ distance_function_t::VonNeumann };
+	
 	extern grid_cursor_t<globals::CellSize> warp_cursor;
 
 	extern bool draw_cursor;
@@ -22,10 +24,10 @@ namespace necrowarp {
 
 	static inline sparse_t<sparseling_t<bool>> newborns{};
 
-	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> good_goal_map{};
-	static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> evil_goal_map{};
+	static inline field_t<offset_t::product_t, DistanceFunction, globals::MapSize, globals::BorderSize> good_goal_map{};
+	static inline field_t<offset_t::product_t, DistanceFunction, globals::MapSize, globals::BorderSize> evil_goal_map{};
 
-	template<typename T> static inline field_t<offset_t::product_t, globals::MapSize, globals::BorderSize> entity_goal_map{};
+	template<typename T> static inline field_t<offset_t::product_t, DistanceFunction, globals::MapSize, globals::BorderSize> entity_goal_map{};
 
 	static inline bool descent_flag{ false };
 
@@ -423,7 +425,7 @@ namespace necrowarp {
 	}
 
 	template<Entity EntityType> inline void entity_registry_t::reset_goal_map() noexcept {
-		entity_goal_map<EntityType>.template reset<zone_region_t::All>();
+		entity_goal_map<EntityType>.reset();
 	}
 
 	template<Entity... EntityTypes>
@@ -433,11 +435,11 @@ namespace necrowarp {
 	}
 
 	inline void entity_registry_t::reset_good_goal_map() noexcept {
-		good_goal_map.reset<zone_region_t::All>();
+		good_goal_map.reset();
 	}
 
 	inline void entity_registry_t::reset_evil_goal_map() noexcept {
-		evil_goal_map.reset<zone_region_t::All>();
+		evil_goal_map.reset();
 	}
 
 	inline void entity_registry_t::reset_alignment_goal_maps() noexcept {

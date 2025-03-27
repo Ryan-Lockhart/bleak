@@ -14,7 +14,7 @@
 #include <bleak/zone.hpp>
 
 namespace bleak {
-	template<Numeric D, extent_t ZoneSize, extent_t ZoneBorder> struct field_t {
+	template<Numeric D, distance_function_t DistanceFunction, extent_t ZoneSize, extent_t ZoneBorder> struct field_t {
 	  private:
 		zone_t<D, ZoneSize, ZoneBorder> distances;
 		std::unordered_set<offset_t, offset_t::hasher> goals;
@@ -59,22 +59,22 @@ namespace bleak {
 			recalculate<zone_region_t::All>(zone, value);
 		}
 
-		template<zone_region_t Region> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> clear() noexcept {
+		template<zone_region_t Region> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> clear() noexcept {
 			distances.template set<Region>(obstacle_value);
 
 			return *this;
 		}
 
-		template<zone_region_t Region> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> reset() noexcept {
-			clear<Region>();
+		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> reset() noexcept {
+			clear<zone_region_t::All>();
 			goals.clear();
-			
+
 			return *this;
 		}
 
 		constexpr D at(cref<offset_t> position) const noexcept { return distances[position]; }
 
-		template<zone_region_t Region, typename T> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value) noexcept {
+		template<zone_region_t Region, typename T> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value) noexcept {
 			clear();
 
 			if (goals.empty()) {
@@ -105,7 +105,7 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (cauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
+				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 					const offset_t offset_position{ current.position + offset };
 
 					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value) {
@@ -121,7 +121,7 @@ namespace bleak {
 
 		template<zone_region_t Region, typename T, typename U>
 			requires is_equatable<T, U>::value
-		constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value) noexcept {
+		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value) noexcept {
 			clear<Region>();
 
 			if (goals.empty()) {
@@ -150,7 +150,7 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (cauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
+				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 					const offset_t offset_position{ current.position + offset };
 
 					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value) {
@@ -164,7 +164,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region, typename T, SparseBlockage Blockage> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Blockage> sparse_blockage) noexcept {
+		template<zone_region_t Region, typename T, SparseBlockage Blockage> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Blockage> sparse_blockage) noexcept {
 			clear();
 
 			if (goals.empty()) {
@@ -195,7 +195,7 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (cauto offset : neighbourhood_offsets<distance_function_t::Chebyshev>) {
+				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 					const offset_t offset_position{ current.position + offset };
 
 					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {
@@ -211,7 +211,7 @@ namespace bleak {
 
 		template<zone_region_t Region, typename T, typename U, SparseBlockage Blockage>
 			requires is_equatable<T, U>::value
-		constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value, cref<Blockage> sparse_blockage) noexcept {
+		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value, cref<Blockage> sparse_blockage) noexcept {
 			clear<Region>();
 
 			if (goals.empty()) {
@@ -240,7 +240,7 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (cauto offset : neighbourhood_creepers<distance_function_t::Chebyshev, D>) {
+				for (cauto offset : neighbourhood_creepers<DistanceFunction, D>) {
 					cauto offset_position{ current.position + offset.first };
 
 					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {
@@ -261,21 +261,14 @@ namespace bleak {
 
 			offset_t highest{ position };
 
-			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-					if (x_offs == 0 && y_offs == 0) {
-						continue;
-					}
+			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
+				const offset_t offset_position{ position + offset };
 
-					const offset_t offset{ x_offs, y_offs };
-					const offset_t offset_position{ position + offset };
-
-					if (!distances.template within<Region>(offset_position) || distances[offset_position] == obstacle_value || distances[offset_position] <= distances[highest]) {
-						continue;
-					}
-
-					highest = offset_position;
+				if (!distances.template within<Region>(offset_position) || distances[offset_position] == obstacle_value || distances[offset_position] <= distances[highest]) {
+					continue;
 				}
+
+				highest = offset_position;
 			}
 
 			if (highest == position) {
@@ -292,21 +285,14 @@ namespace bleak {
 
 			offset_t highest{ position };
 
-			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-					if (x_offs == 0 && y_offs == 0) {
-						continue;
-					}
+			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
+				const offset_t offset_position{ position + offset };
 
-					const offset_t offset{ x_offs, y_offs };
-					const offset_t offset_position{ position + offset };
-
-					if (!distances.template within<Region>(offset_position) || distances[offset_position] == obstacle_value || distances[offset_position] <= distances[highest] || sparse_blockage.contains(offset_position)) {
-						continue;
-					}
-
-					highest = offset_position;
+				if (!distances.template within<Region>(offset_position) || distances[offset_position] == obstacle_value || distances[offset_position] <= distances[highest] || sparse_blockage.contains(offset_position)) {
+					continue;
 				}
+
+				highest = offset_position;
 			}
 
 			if (highest == position) {
@@ -327,22 +313,18 @@ namespace bleak {
 
 			offset_t highest{ position };
 
-			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-					if (x_offs == 0 && y_offs == 0) {
-						continue;
-					}
+			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
+				const offset_t offset_position{ position + offset };
 
-					const offset_t offset{ x_offs, y_offs };
-					const offset_t offset_position{ position + offset };
-
-					if (!distances.template within<Region>(offset_position) || distances[offset_position] == obstacle_value || distances[offset_position] < distances[highest]
-						|| (distances[offset_position] == distances[highest] && !distribution(generator))) {
-						continue;
-					}
-
-					highest = offset_position;
+				if (!distances.template within<Region>(offset_position) ||
+					distances[offset_position] == obstacle_value ||
+					distances[offset_position] < distances[highest] ||
+					(distances[offset_position] == distances[highest] && !distribution(generator))
+				) {
+					continue;
 				}
+
+				highest = offset_position;
 			}
 
 			if (highest == position) {
@@ -363,22 +345,19 @@ namespace bleak {
 
 			offset_t highest{ position };
 
-			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-					if (x_offs == 0 && y_offs == 0) {
-						continue;
-					}
+			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
+				const offset_t offset_position{ position + offset };
 
-					const offset_t offset{ x_offs, y_offs };
-					const offset_t offset_position{ position + offset };
-
-					if (!distances.template within<Region>(offset_position) || distances[offset_position] == obstacle_value || distances[offset_position] < distances[highest] || sparse_blockage.contains(offset_position)
-						|| (distances[offset_position] == distances[highest] && !distribution(generator))) {
-						continue;
-					}
-
-					highest = offset_position;
+				if (!distances.template within<Region>(offset_position) ||
+					distances[offset_position] == obstacle_value ||
+					distances[offset_position] < distances[highest] ||
+					sparse_blockage.contains(offset_position) ||
+					(distances[offset_position] == distances[highest] && !distribution(generator))
+				) {
+					continue;
 				}
+
+				highest = offset_position;
 			}
 
 			if (highest == position) {
@@ -395,21 +374,14 @@ namespace bleak {
 
 			offset_t lowest{ position };
 
-			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-					if (x_offs == 0 && y_offs == 0) {
-						continue;
-					}
+			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
+				const offset_t offset_position{ position + offset };
 
-					const offset_t offset{ x_offs, y_offs };
-					const offset_t offset_position{ position + offset };
-
-					if (!distances.template within<Region>(offset_position) || distances[offset_position] >= distances[lowest]) {
-						continue;
-					}
-
-					lowest = offset_position;
+				if (!distances.template within<Region>(offset_position) || distances[offset_position] >= distances[lowest]) {
+					continue;
 				}
+
+				lowest = offset_position;
 			}
 
 			if (lowest == position) {
@@ -426,21 +398,14 @@ namespace bleak {
 
 			offset_t lowest{ position };
 
-			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-					if (x_offs == 0 && y_offs == 0) {
-						continue;
-					}
+			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
+				const offset_t offset_position{ position + offset };
 
-					const offset_t offset{ x_offs, y_offs };
-					const offset_t offset_position{ position + offset };
-
-					if (!distances.template within<Region>(offset_position) || distances[offset_position] >= distances[lowest] || sparse_blockage.contains(offset_position)) {
-						continue;
-					}
-
-					lowest = offset_position;
+				if (!distances.template within<Region>(offset_position) || distances[offset_position] >= distances[lowest] || sparse_blockage.contains(offset_position)) {
+					continue;
 				}
+
+				lowest = offset_position;
 			}
 
 			if (lowest == position) {
@@ -461,21 +426,17 @@ namespace bleak {
 
 			offset_t lowest{ position };
 
-			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-					if (x_offs == 0 && y_offs == 0) {
-						continue;
-					}
+			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
+				const offset_t offset_position{ position + offset };
 
-					const offset_t offset{ x_offs, y_offs };
-					const offset_t offset_position{ position + offset };
-
-					if (!distances.template within<Region>(offset_position) || distances[offset_position] > distances[lowest] || (distances[offset_position] == distances[lowest] && !distribution(generator))) {
-						continue;
-					}
-
-					lowest = offset_position;
+				if (!distances.template within<Region>(offset_position) ||
+					distances[offset_position] > distances[lowest] ||
+					(distances[offset_position] == distances[lowest] && !distribution(generator))
+				) {
+					continue;
 				}
+
+				lowest = offset_position;
 			}
 
 			if (lowest == position) {
@@ -496,22 +457,18 @@ namespace bleak {
 
 			offset_t lowest{ position };
 
-			for (offset_t::scalar_t y_offs{ -1 }; y_offs <= 1; ++y_offs) {
-				for (offset_t::scalar_t x_offs{ -1 }; x_offs <= 1; ++x_offs) {
-					if (x_offs == 0 && y_offs == 0) {
-						continue;
-					}
-
-					const offset_t offset{ x_offs, y_offs };
-					const offset_t offset_position{ position + offset };
-
-					if (!distances.template within<Region>(offset_position) || distances[offset_position] > distances[lowest] || sparse_blockage.contains(offset_position)
-						|| (distances[offset_position] == distances[lowest] && !distribution(generator))) {
-						continue;
-					}
-
-					lowest = offset_position;
+			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
+				const offset_t offset_position{ position + offset };
+				
+				if (!distances.template within<Region>(offset_position) ||
+					distances[offset_position] > distances[lowest] ||
+					sparse_blockage.contains(offset_position) ||
+					(distances[offset_position] == distances[lowest] && !distribution(generator))
+				) {
+					continue;
 				}
+
+				lowest = offset_position;
 			}
 
 			if (lowest == position) {
