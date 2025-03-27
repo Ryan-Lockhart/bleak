@@ -229,11 +229,9 @@ namespace necrowarp {
 	}
 
 	inline void entity_registry_t::reset() noexcept {
-		clear<ALL_NON_PLAYER>();
-		reset_goal_maps<ALL_NON_PLAYER>();
-
-		player = player_t{};
-		reset_goal_map<player_t>();
+		clear();
+		
+		reset_goal_maps();
 	}
 
 	template<NonPlayerEntity EntityType> inline bool entity_registry_t::spawn(usize count) noexcept {

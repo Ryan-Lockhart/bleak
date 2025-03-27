@@ -180,13 +180,7 @@ namespace necrowarp {
 			window.show();
 		}
 
-		static inline void load() noexcept {
-			game_stats.reset();
-
-			game_map.reset<zone_region_t::All>();
-
-			entity_registry.reset();
-			
+		static inline void load() noexcept {			
 			region_t<cell_state_t, globals::RegionSize, globals::ZoneSize, globals::BorderSize> region{};
 
 			constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored };
@@ -569,9 +563,11 @@ namespace necrowarp {
 		static inline void unload() noexcept {
 			terminate_process_turn();
 
+			game_stats.reset();
+
 			game_map.reset<zone_region_t::All>();
 			
-			entity_registry.clear();
+			entity_registry.reset();
 		}
 
 		static inline void unload_async() noexcept {
