@@ -493,7 +493,7 @@ namespace necrowarp {
 				return true;
 			}
 			
-			return player_statuses.is_hovered() || help_label.is_hovered();
+			return player_statuses.is_hovered() || help_label.is_hovered() || depth_label.is_hovered();
 		}
 
 		static inline void update() noexcept {
