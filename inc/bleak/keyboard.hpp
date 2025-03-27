@@ -17,7 +17,7 @@ namespace bleak {
 		static inline bool initialized;
 
 	  public:
-		static inline bool is_initialized() { return initialized; }
+		static inline bool is_initialized() noexcept { return initialized; }
 
 		static inline void initialize() {
 			if (initialized) {
@@ -30,7 +30,7 @@ namespace bleak {
 			initialized = true;
 		}
 
-		static inline void terminate() {
+		static inline void terminate() noexcept {
 			if (!initialized) {
 				return;
 			}
@@ -40,7 +40,7 @@ namespace bleak {
 			initialized = false;
 		}
 
-		static inline void update() {
+		static inline void update() noexcept {
 			cptr<u8> state = SDL_GetKeyboardState(nullptr);
 
 			for (usize i { keys::First }; i <= keys::Last; ++i) {
@@ -49,7 +49,7 @@ namespace bleak {
 			}
 		}
 
-		static inline input_state_t at(sdl::key key) {
+		static inline input_state_t at(sdl::key key) noexcept {
 			if (previous_state[key]) {
 				return current_state[key] ? input_state_t::Pressed : input_state_t::Up;
 			} else {
@@ -57,7 +57,7 @@ namespace bleak {
 			}
 		}
 
-		static inline input_state_t at(int key) {
+		static inline input_state_t at(int key) noexcept {
 			if (previous_state[key]) {
 				return current_state[key] ? input_state_t::Pressed : input_state_t::Up;
 			} else {
@@ -65,19 +65,19 @@ namespace bleak {
 			}
 		}
 
-		static inline bool is_key_pressed(sdl::key key);
-		static inline bool is_key_pressed(int key);
+		static inline bool is_key_pressed(sdl::key key) noexcept;
+		static inline bool is_key_pressed(int key) noexcept;
 
-		static inline bool is_key_released(sdl::key key);
-		static inline bool is_key_released(int key);
+		static inline bool is_key_released(sdl::key key) noexcept;
+		static inline bool is_key_released(int key) noexcept;
 
-		static inline bool is_key_down(sdl::key key);
-		static inline bool is_key_down(int key);
+		static inline bool is_key_down(sdl::key key) noexcept;
+		static inline bool is_key_down(int key) noexcept;
 
-		static inline bool is_key_up(sdl::key key);
-		static inline bool is_key_up(int key);
+		static inline bool is_key_up(sdl::key key) noexcept;
+		static inline bool is_key_up(int key) noexcept;
 
-		static inline bool any_key_pressed() {
+		static inline bool any_key_pressed() noexcept {
 			for (int i { keys::First }; i <= keys::Last; ++i) {
 				if (is_key_pressed(i)) {
 					return true;
@@ -87,7 +87,7 @@ namespace bleak {
 			return false;
 		}
 
-		static inline bool any_key_released() {
+		static inline bool any_key_released() noexcept {
 			for (int i { keys::First }; i <= keys::Last; ++i) {
 				if (is_key_released(i)) {
 					return true;
@@ -97,7 +97,7 @@ namespace bleak {
 			return false;
 		}
 
-		static inline bool any_key_down() {
+		static inline bool any_key_down() noexcept {
 			for (int i { keys::First }; i <= keys::Last; ++i) {
 				if (is_key_down(i)) {
 					return true;
@@ -107,7 +107,7 @@ namespace bleak {
 			return false;
 		}
 
-		static inline bool any_key_up() {
+		static inline bool any_key_up() noexcept {
 			for (int i { keys::First }; i <= keys::Last; ++i) {
 				if (is_key_up(i)) {
 					return true;
@@ -118,7 +118,7 @@ namespace bleak {
 		}
 
 		// returns true if all keys in the collection are pressed
-		template<typename... K, typename = sdl::key> static inline bool are_keys_pressed(K... keys) {
+		template<typename... K, typename = sdl::key> static inline bool are_keys_pressed(K... keys) noexcept {
 			for (sdl::key key : { keys... }) {
 				if (!is_key_pressed(key)) {
 					return false;
@@ -128,7 +128,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<usize Size> static inline bool are_keys_pressed(cref<std::array<sdl::key, Size>> keys) {
+		template<usize Size> static inline bool are_keys_pressed(cref<std::array<sdl::key, Size>> keys) noexcept {
 			for (sdl::key key : keys) {
 				if (!is_key_pressed(key)) {
 					return false;
@@ -139,7 +139,7 @@ namespace bleak {
 		}
 
 		// returns true if all keys in the collection are released
-		template<typename... K, typename = sdl::key> static inline bool are_keys_released(K... keys) {
+		template<typename... K, typename = sdl::key> static inline bool are_keys_released(K... keys) noexcept {
 			for (sdl::key key : { keys... }) {
 				if (!is_key_released(key)) {
 					return false;
@@ -149,7 +149,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<usize Size> static inline bool are_keys_released(cref<std::array<sdl::key, Size>> keys) {
+		template<usize Size> static inline bool are_keys_released(cref<std::array<sdl::key, Size>> keys) noexcept {
 			for (sdl::key key : keys) {
 				if (!is_key_released(key)) {
 					return false;
@@ -160,7 +160,7 @@ namespace bleak {
 		}
 
 		// returns true if all keys in the collection are down
-		template<typename... K, typename = sdl::key> static inline bool are_keys_down(K... keys) {
+		template<typename... K, typename = sdl::key> static inline bool are_keys_down(K... keys) noexcept {
 			for (sdl::key key : { keys... }) {
 				if (!is_key_down(key)) {
 					return false;
@@ -170,7 +170,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<usize Size> static inline bool are_keys_down(cref<std::array<sdl::key, Size>> keys) {
+		template<usize Size> static inline bool are_keys_down(cref<std::array<sdl::key, Size>> keys) noexcept {
 			for (sdl::key key : keys) {
 				if (!is_key_down(key)) {
 					return false;
@@ -181,7 +181,7 @@ namespace bleak {
 		}
 
 		// returns true if all keys in the collection are up
-		template<typename... K, typename = sdl::key> static inline bool are_keys_up(K... keys) {
+		template<typename... K, typename = sdl::key> static inline bool are_keys_up(K... keys) noexcept {
 			for (sdl::key key : { keys... }) {
 				if (!is_key_up(key)) {
 					return false;
@@ -191,7 +191,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<usize Size> static inline bool are_keys_up(cref<std::array<sdl::key, Size>> keys) {
+		template<usize Size> static inline bool are_keys_up(cref<std::array<sdl::key, Size>> keys) noexcept {
 			for (sdl::key key : keys) {
 				if (!is_key_up(key)) {
 					return false;
@@ -202,7 +202,7 @@ namespace bleak {
 		}
 
 		// returns true if any key in the collection is pressed
-		template<typename... K, typename = sdl::key> static inline bool any_keys_pressed(K... keys) {
+		template<typename... K, typename = sdl::key> static inline bool any_keys_pressed(K... keys) noexcept {
 			for (sdl::key key : { keys... }) {
 				if (is_key_pressed(key)) {
 					return true;
@@ -212,7 +212,7 @@ namespace bleak {
 			return false;
 		}
 
-		template<usize Size> static inline bool any_keys_pressed(cref<std::array<sdl::key, Size>> keys) {
+		template<usize Size> static inline bool any_keys_pressed(cref<std::array<sdl::key, Size>> keys) noexcept {
 			for (sdl::key key : keys) {
 				if (is_key_pressed(key)) {
 					return true;
@@ -223,7 +223,7 @@ namespace bleak {
 		}
 
 		// returns true if any key in the collection is released
-		template<typename... K, typename = sdl::key> static inline bool any_keys_released(K... keys) {
+		template<typename... K, typename = sdl::key> static inline bool any_keys_released(K... keys) noexcept {
 			for (sdl::key key : { keys... }) {
 				if (is_key_released(key)) {
 					return true;
@@ -233,7 +233,7 @@ namespace bleak {
 			return false;
 		}
 
-		template<usize Size> static inline bool any_keys_released(cref<std::array<sdl::key, Size>> keys) {
+		template<usize Size> static inline bool any_keys_released(cref<std::array<sdl::key, Size>> keys) noexcept {
 			for (sdl::key key : keys) {
 				if (is_key_released(key)) {
 					return true;
@@ -244,7 +244,7 @@ namespace bleak {
 		}
 
 		// returns true if any key in the collection is down
-		template<typename... K, typename = sdl::key> static inline bool any_keys_down(K... keys) {
+		template<typename... K, typename = sdl::key> static inline bool any_keys_down(K... keys) noexcept {
 			for (sdl::key key : { keys... }) {
 				if (is_key_down(key)) {
 					return true;
@@ -254,7 +254,7 @@ namespace bleak {
 			return false;
 		}
 
-		template<usize Size> static inline bool any_keys_down(cref<std::array<sdl::key, Size>> keys) {
+		template<usize Size> static inline bool any_keys_down(cref<std::array<sdl::key, Size>> keys) noexcept {
 			for (sdl::key key : keys) {
 				if (is_key_down(key)) {
 					return true;
@@ -265,7 +265,7 @@ namespace bleak {
 		}
 
 		// returns true if any key in the collection is up
-		template<typename... K, typename = sdl::key> static inline bool AnyKeysUp(K... keys) {
+		template<typename... K, typename = sdl::key> static inline bool AnyKeysUp(K... keys) noexcept {
 			for (sdl::key key : { keys... }) {
 				if (is_key_up(key)) {
 					return true;
@@ -275,7 +275,7 @@ namespace bleak {
 			return false;
 		}
 
-		template<usize Size> static inline bool any_keys_up(cref<std::array<sdl::key, Size>> keys) {
+		template<usize Size> static inline bool any_keys_up(cref<std::array<sdl::key, Size>> keys) noexcept {
 			for (sdl::key key : keys) {
 				if (is_key_up(key)) {
 					return true;
@@ -286,19 +286,19 @@ namespace bleak {
 		}
 	};
 
-	inline bool Keyboard::is_key_pressed(sdl::key key) { return Keyboard::at(key) == input_state_t::Pressed; }
+	inline bool Keyboard::is_key_pressed(sdl::key key) noexcept { return Keyboard::at(key) == input_state_t::Pressed; }
 
-	inline bool Keyboard::is_key_pressed(int key) { return Keyboard::at(key) == input_state_t::Pressed; }
+	inline bool Keyboard::is_key_pressed(int key) noexcept { return Keyboard::at(key) == input_state_t::Pressed; }
 
-	inline bool Keyboard::is_key_released(sdl::key key) { return Keyboard::at(key) == input_state_t::Released; }
+	inline bool Keyboard::is_key_released(sdl::key key) noexcept { return Keyboard::at(key) == input_state_t::Released; }
 
-	inline bool Keyboard::is_key_released(int key) { return Keyboard::at(key) == input_state_t::Released; }
+	inline bool Keyboard::is_key_released(int key) noexcept { return Keyboard::at(key) == input_state_t::Released; }
 
-	inline bool Keyboard::is_key_down(sdl::key key) { return Keyboard::at(key) == input_state_t::Down; }
+	inline bool Keyboard::is_key_down(sdl::key key) noexcept { return Keyboard::at(key) == input_state_t::Down; }
 
-	inline bool Keyboard::is_key_down(int key) { return Keyboard::at(key) == input_state_t::Down; }
+	inline bool Keyboard::is_key_down(int key) noexcept { return Keyboard::at(key) == input_state_t::Down; }
 
-	inline bool Keyboard::is_key_up(sdl::key key) { return Keyboard::at(key) == input_state_t::Up; }
+	inline bool Keyboard::is_key_up(sdl::key key) noexcept { return Keyboard::at(key) == input_state_t::Up; }
 
-	inline bool Keyboard::is_key_up(int key) { return Keyboard::at(key) == input_state_t::Up; }
+	inline bool Keyboard::is_key_up(int key) noexcept { return Keyboard::at(key) == input_state_t::Up; }
 } // namespace Bleakdepth
