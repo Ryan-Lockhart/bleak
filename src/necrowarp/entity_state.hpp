@@ -58,6 +58,14 @@ namespace necrowarp {
 
 		inline void clear() noexcept;
 
+		template<NonPlayerEntity EntityType> inline void reset() noexcept;
+
+		template<NonPlayerEntity... EntityTypes>
+			requires is_plurary<EntityTypes...>::value
+		inline void reset() noexcept;
+
+		inline void reset() noexcept;
+
 		template<NonPlayerEntity EntityType> inline bool spawn(usize count) noexcept;
 
 		template<NonPlayerEntity EntityType, typename... Args> inline bool spawn(usize count, Args... args) noexcept;
@@ -105,6 +113,20 @@ namespace necrowarp {
 		inline void recalculate_evil_goal_map() noexcept;
 
 		inline void recalculate_alignment_goal_maps() noexcept;
+
+		template<Entity EntityType> inline void reset_goal_map() noexcept;
+
+		template<Entity... EntityTypes>
+			requires is_plurary<EntityTypes...>::value
+		inline void reset_goal_maps() noexcept;
+
+		inline void reset_goal_maps() noexcept;
+
+		inline void reset_good_goal_map() noexcept;
+
+		inline void reset_evil_goal_map() noexcept;
+
+		inline void reset_alignment_goal_maps() noexcept;
 
 		template<NonPlayerEntity EntityType> inline void draw() const noexcept;
 

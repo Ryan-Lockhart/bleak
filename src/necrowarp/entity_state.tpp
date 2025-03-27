@@ -214,6 +214,26 @@ namespace necrowarp {
 		player = player_t{};
 	}
 
+	template<NonPlayerEntity EntityType> inline void entity_registry_t::reset() noexcept {
+		entity_storage<EntityType>.clear();
+		reset_goal_map<EntityType>();
+	}
+
+	template<NonPlayerEntity... EntityTypes>
+		requires is_plurary<EntityTypes...>::value
+	inline void entity_registry_t::reset() noexcept {
+		(clear<EntityTypes>(), ...);
+		(reset_goal_map<EntityTypes>(), ...);
+	}
+
+	inline void entity_registry_t::reset() noexcept {
+		clear<ALL_NON_PLAYER>();
+		reset_goal_maps<ALL_NON_PLAYER>();
+
+		player = player_t{};
+		reset_goal_map<player_t>();
+	}
+
 	template<NonPlayerEntity EntityType> inline bool entity_registry_t::spawn(usize count) noexcept {
 		for (usize i{ 0 }; i < count; ++i) {
 			cauto maybe_position{ game_map.find_random<zone_region_t::Interior>(random_engine, cell_trait_t::Open, entity_registry) };
@@ -400,6 +420,35 @@ namespace necrowarp {
 		recalculate_goal_maps<ALL_ENTITIES>();
 
 		recalculate_alignment_goal_maps();
+	}
+
+	template<Entity EntityType> inline void entity_registry_t::reset_goal_map() noexcept {
+		entity_goal_map<EntityType>.template reset<zone_region_t::All>();
+	}
+
+	template<Entity... EntityTypes>
+		requires is_plurary<EntityTypes...>::value
+	inline void entity_registry_t::reset_goal_maps() noexcept {
+		(reset_goal_map<EntityTypes>(), ...);
+	}
+
+	inline void entity_registry_t::reset_good_goal_map() noexcept {
+		good_goal_map.reset<zone_region_t::All>();
+	}
+
+	inline void entity_registry_t::reset_evil_goal_map() noexcept {
+		evil_goal_map.reset<zone_region_t::All>();
+	}
+
+	inline void entity_registry_t::reset_alignment_goal_maps() noexcept {
+		reset_good_goal_map();
+		reset_evil_goal_map();
+	}
+
+	inline void entity_registry_t::reset_goal_maps() noexcept {
+		reset_goal_maps<ALL_ENTITIES>();
+
+		reset_alignment_goal_maps();
 	}
 
 	inline bool entity_registry_t::is_command_valid(cref<entity_command_t> command) const noexcept {

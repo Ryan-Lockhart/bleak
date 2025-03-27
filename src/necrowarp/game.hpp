@@ -182,6 +182,10 @@ namespace necrowarp {
 
 		static inline void load() noexcept {
 			game_stats.reset();
+
+			game_map.reset<zone_region_t::All>();
+
+			entity_registry.reset();
 			
 			region_t<cell_state_t, globals::RegionSize, globals::ZoneSize, globals::BorderSize> region{};
 
@@ -267,7 +271,7 @@ namespace necrowarp {
 
 			game_map.reset<zone_region_t::All>();
 
-			entity_registry.clear<ALL_NON_PLAYER>();
+			entity_registry.reset();
 
 			region_t<cell_state_t, globals::RegionSize, globals::ZoneSize, globals::BorderSize> region{};
 

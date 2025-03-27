@@ -33,12 +33,12 @@ namespace bleak {
 
 		constexpr bool obstacle_reached(cref<offset_t> position, D threshold) const noexcept { return distances[position] >= close_to_obstacle_value - threshold; }
 
-		constexpr field_t() noexcept : distances{}, goals{} { reset<zone_region_t::All>(); }
+		constexpr field_t() noexcept : distances{}, goals{} { clear<zone_region_t::All>(); }
 
 		template<typename... Goals>
 			requires is_homogeneous<offset_t, Goals...>::value
 		constexpr field_t(cref<Goals>... goals) noexcept : distances{}, goals{ goals... } {
-			reset<zone_region_t::All>();
+			clear<zone_region_t::All>();
 		}
 
 		template<typename T, typename... Goals>
@@ -50,7 +50,7 @@ namespace bleak {
 		template<typename... Goals>
 			requires is_homogeneous<offset_t, Goals...>::value
 		constexpr field_t(rval<Goals>... goals) noexcept : distances{}, goals{ (std::move(goals), ...) } {
-			reset<zone_region_t::All>();
+			clear<zone_region_t::All>();
 		}
 
 		template<zone_region_t Region, typename T, typename... Goals>
@@ -59,15 +59,23 @@ namespace bleak {
 			recalculate<zone_region_t::All>(zone, value);
 		}
 
-		template<zone_region_t Region> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> reset() noexcept {
+		template<zone_region_t Region> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> clear() noexcept {
 			distances.template set<Region>(obstacle_value);
+
+			return *this;
+		}
+
+		template<zone_region_t Region> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> reset() noexcept {
+			clear<Region>();
+			goals.clear();
+			
 			return *this;
 		}
 
 		constexpr D at(cref<offset_t> position) const noexcept { return distances[position]; }
 
 		template<zone_region_t Region, typename T> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value) noexcept {
-			reset();
+			clear();
 
 			if (goals.empty()) {
 				return *this;
@@ -114,7 +122,7 @@ namespace bleak {
 		template<zone_region_t Region, typename T, typename U>
 			requires is_equatable<T, U>::value
 		constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value) noexcept {
-			reset<Region>();
+			clear<Region>();
 
 			if (goals.empty()) {
 				return *this;
@@ -157,7 +165,7 @@ namespace bleak {
 		}
 
 		template<zone_region_t Region, typename T, SparseBlockage Blockage> constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Blockage> sparse_blockage) noexcept {
-			reset();
+			clear();
 
 			if (goals.empty()) {
 				return *this;
@@ -204,7 +212,7 @@ namespace bleak {
 		template<zone_region_t Region, typename T, typename U, SparseBlockage Blockage>
 			requires is_equatable<T, U>::value
 		constexpr ref<field_t<D, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value, cref<Blockage> sparse_blockage) noexcept {
-			reset<Region>();
+			clear<Region>();
 
 			if (goals.empty()) {
 				return *this;
