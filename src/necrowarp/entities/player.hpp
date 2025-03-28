@@ -89,25 +89,25 @@ namespace necrowarp {
 		inline void set_energy(i8 value) noexcept {
 			if (!game_stats.cheats.is_enabled() || !game_stats.cheats.energy.is_enabled()) {
 				energy = clamp<i8>(value, 0, max_energy());
+			} else {
+				energy = max<i8>(game_stats.cheats.energy.current_minimum(), value);
 			}
-			
-			energy = max<i8>(game_stats.cheats.energy.current_minimum(), value);
 		}
 
 		inline void set_armor(i8 value) noexcept {
 			if (!game_stats.cheats.is_enabled() || !game_stats.cheats.armor.is_enabled()) {
 				armor = clamp<i8>(value, 0, max_armor());
+			} else {
+				armor = max<i8>(game_stats.cheats.armor.current_minimum(), value);
 			}
-			
-			armor = max<i8>(game_stats.cheats.armor.current_minimum(), value);
 		}
 
 		inline void set_divinity(i8 value) noexcept {
 			if (!game_stats.cheats.is_enabled() || !game_stats.cheats.divinity.is_enabled()) {
 				divinity = clamp<i8>(value, 0, max_divinity());
+			} else {
+				divinity = max<i8>(game_stats.cheats.divinity.current_minimum(), value);
 			}
-			
-			divinity = max<i8>(game_stats.cheats.divinity.current_minimum(), value);
 		}
 
 	  public:

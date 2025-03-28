@@ -18,8 +18,8 @@ namespace necrowarp {
 	static inline window_t window{ globals::GameName.c_str(), globals::WindowSize, globals::WindowFlags };
 	static inline renderer_t renderer{ window, globals::RendererFlags };
 
-	static inline atlas_t<globals::TilesetSize> game_atlas{ renderer, "res\\tiles\\tileset_16x16.png" };
 	static inline atlas_t<globals::GlyphsetSize> ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png" };
+	static inline atlas_t<globals::TilesetSize> game_atlas{ renderer, "res\\tiles\\tileset_16x16.png" };
 	static inline atlas_t<globals::IconsetSize> icon_atlas{ renderer, "res\\icons\\icons_32x32.png" };
 
 	static inline std::mt19937 random_engine{};
@@ -45,7 +45,7 @@ namespace necrowarp {
 
 	static inline timer_t input_timer{ 125.0 };
 	static inline timer_t cursor_timer{ 125.0 };
-	static inline timer_t epoch_timer{ 250.0 };
+	static inline timer_t epoch_timer{ 125.0 };
 
 	static inline wave_t sine_wave{ 1.0, 0.5, 1.0 };
 

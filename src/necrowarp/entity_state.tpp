@@ -626,6 +626,7 @@ namespace necrowarp {
 				}
 
 				random_warp(source_position);
+				
 				return;
 			} case entity_type_t::Skeleton: {
 				const i8 armor_boon = entity_registry.at<skeleton_t>(target_position)->armor_boon();
@@ -637,6 +638,7 @@ namespace necrowarp {
 				player.bolster_armor(armor_boon + player.max_armor() / 8);
 
 				draw_warp_cursor = false;
+				
 				return;
 			} case entity_type_t::Wraith: {
 				const i8 armor_boon = entity_registry.at<wraith_t>(target_position)->armor_boon();
@@ -648,6 +650,7 @@ namespace necrowarp {
 				player.bolster_armor(armor_boon + player.max_armor() / 4);
 
 				draw_warp_cursor = false;
+				
 				return;
 			} default: {
 				return;
