@@ -108,6 +108,10 @@ namespace bleak {
 
 		constexpr rect_t operator-(cref<extent_t> extent) const noexcept { return rect_t{ position, size - extent }; }
 
+		constexpr rect_t operator*(cref<extent_t> extent) const noexcept { return rect_t{ position, size * extent }; }
+
+		constexpr rect_t operator/(cref<extent_t> extent) const noexcept { return rect_t{ position, size / extent }; }
+
 		constexpr ref<rect_t> operator+=(cref<offset_t> offset) noexcept {
 			position += offset;
 
@@ -128,6 +132,18 @@ namespace bleak {
 
 		constexpr ref<rect_t> operator-=(cref<extent_t> extent) noexcept {
 			size -= extent;
+
+			return *this;
+		}
+
+		constexpr ref<rect_t> operator*=(cref<extent_t> extent) noexcept {
+			size *= extent;
+
+			return *this;
+		}
+
+		constexpr ref<rect_t> operator/=(cref<extent_t> extent) noexcept {
+			size /= extent;
 
 			return *this;
 		}

@@ -4,6 +4,7 @@
 
 #include <bleak/extent.hpp>
 #include <bleak/offset.hpp>
+#include <bleak/rect.hpp>
 #include <bleak/utility.hpp>
 
 namespace bleak {
@@ -135,7 +136,7 @@ namespace bleak {
 			return original_position != position;
 		}
 
-		template<bool ForceWidth = false, bool ForceHeight = false> constexpr bool center_on(offset_t::scalar_t target_x, offset_t::scalar_t target_y) noexcept {
+		constexpr bool center_on(bool force_width, offset_t::scalar_t target_x, bool force_height, offset_t::scalar_t target_y) noexcept {
 			const offset_t target_position{ offset_t{ target_x, target_y } - half_size() };
 			
 			if (position == target_position) {
@@ -146,14 +147,14 @@ namespace bleak {
 
 			position = target_position;
 
-			if constexpr (!ForceWidth && !ForceHeight) {
+			if (!force_width && !force_height) {
 				constrain();
 			} else {
-				if constexpr (!ForceWidth) {
+				if (!force_width) {
 					constrain_width();
 				}
 
-				if constexpr (!ForceHeight) {
+				if (!force_height) {
 					constrain_height();
 				}
 			}
@@ -174,6 +175,8 @@ namespace bleak {
 		constexpr offset_t get_center() const noexcept { return position + size / 2; }
 
 		constexpr offset_t get_extent() const noexcept { return position + size; }
+
+		constexpr rect_t get_viewport() const noexcept { return rect_t{ position, size }; }
 
 	  private:
 		offset_t position;

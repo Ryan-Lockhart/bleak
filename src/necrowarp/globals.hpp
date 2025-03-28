@@ -13,64 +13,96 @@ namespace necrowarp {
 		const std::string GameTitle{ std::format("{} v{} by {}", GameName, GameVersion, GameAuthor) };
 
 		constexpr sdl::window_flags WindowFlags{ static_cast<sdl::window_flags>(SDL_WINDOW_SHOWN) };
-		constexpr sdl::renderer_flags RendererFlags{ static_cast<sdl::renderer_flags>(SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC) };
+		constexpr sdl::renderer_flags RendererFlags{ static_cast<sdl::renderer_flags>(SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE) };
 
-		constexpr u32 FrameLimit{ 60u };
-		constexpr f32 FrameTime{ 1000.0f / FrameLimit };
+		static inline bool use_frame_limit{ true };
 
-		constexpr bool UseFrameLimit{ true };
+		static inline u32 frame_limit{ 60u };
+		static inline f32 frame_time() { return 1000.0f / frame_limit; }
+		
+		static inline extent_t window_size{ 1280, 720 };
 
-		constexpr extent_t WindowSize{ 1280, 720 };
+		static inline extent_t ui_grid_size() { return window_size / 8; }
+		static inline extent_t game_grid_size() { return window_size / 16; }
+		static inline extent_t icon_grid_size() { return window_size / 32; }
 
-		constexpr extent_t UIGridSize{ WindowSize / 8 };
-		constexpr extent_t GameGridSize{ WindowSize / 16 };
-		constexpr extent_t IconGridSize{ WindowSize / 32 };
+		static constexpr extent_t GlyphsetSize{ 16, 16 };
+		static constexpr extent_t TilesetSize{ 16, 5 };
+		static constexpr extent_t IconsetSize{ 3, 2 };
 
-		constexpr extent_t GlyphsetSize{ 16, 16 };
-		constexpr extent_t TilesetSize{ 16, 5 };
-		constexpr extent_t IconsetSize{ 3, 2 };
+		static constexpr extent_t MapSize{ 256, 256 };
 
-		constexpr extent_t MapSize{ 64, 32 };
+		static constexpr offset_t MapCenter{ MapSize / 2 };
 
-		constexpr offset_t MapCenter{ MapSize / 2 };
+		static constexpr extent_t BorderSize{ 4, 4 };
 
-		constexpr extent_t BorderSize{ 4, 4 };
+		static constexpr extent_t IconSize{ 32, 32 };
+		static constexpr extent_t CellSize{ 16, 16 };
+		static constexpr extent_t GlyphSize{ 8, 8 };
 
-		constexpr extent_t IconSize{ 32, 32 };
-		constexpr extent_t CellSize{ 16, 16 };
-		constexpr extent_t GlyphSize{ 8, 8 };
+		static constexpr f32 CellToGlyphRatio{ 2.0f };
+		static constexpr f32 GlyphToCellRatio{ 0.5f };
 
-		constexpr f32 CellToGlyphRatio{ 2.0f };
-		constexpr f32 GlyphToCellRatio{ 0.5f };
-
-		constexpr offset_t convert_cell_to_glyph(cref<offset_t> position) noexcept {
+		static inline offset_t convert_cell_to_glyph(cref<offset_t> position) noexcept {
 			return offset_t{ offset_t::scalar_cast(position.x * CellToGlyphRatio), offset_t::scalar_cast(position.y * CellToGlyphRatio) };
 		}
 
-		constexpr offset_t convert_glyph_to_cell(cref<offset_t> position) noexcept {
+		static inline offset_t convert_glyph_to_cell(cref<offset_t> position) noexcept {
 			return offset_t{ offset_t::scalar_cast(position.x * GlyphToCellRatio), offset_t::scalar_cast(position.y * GlyphToCellRatio) };
 		}
 
 		constexpr offset_t CursorOffset{ CellSize / 4 };
 
-		constexpr extent_t CameraExtent{ MapSize - globals::GameGridSize };
-		constexpr offset_t::scalar_t CameraSpeed{ 2 };
+		static inline extent_t camera_extent() { return MapSize - globals::game_grid_size(); }
+		static inline offset_t::scalar_t camera_speed{ 2 };
 
-		constexpr f64 FillPercent{ 0.425 };
-		constexpr u32 AutomotaIterations{ 128 };
-		constexpr u32 AutomotaThreshold{ 4 };
+		struct map_config_t {
+			f64 fill_percent;
+			u32 automata_iterations;
+			u32 automata_threshold;
 
-		constexpr u32 ViewDistance{ 8 };
-		constexpr f64 ViewSpan{ 135.0 };
+			u32 view_distance;
+			f64 view_span;
 
-		constexpr i16 NumberOfUpLadders{ 8 };
-		constexpr i16 NumberOfDownLadders{ 4 };
-		constexpr i16 MinimumLadderDistance{ 16 };
+			i16 number_of_up_ladders;
+			i16 number_of_down_ladders;
+			i16 minimum_ladder_distance;
 
-		constexpr i16 StartingAdventurers{ 8 };
+			i16 starting_adventurers;
 
-		constexpr i16 StartingSkulls{ 16 };
-		constexpr i16 MinimumSkullDistance{ 16 };
+			i16 starting_skulls;
+			i16 minimum_skull_distance;
+		};
+		
+		constexpr map_config_t CavernPreset{
+			0.425,
+			128,
+			4,
+			8,
+			135.0,
+			4,
+			2,
+			8,
+			4,
+			8,
+			8
+		};
+		
+		constexpr map_config_t TunnelsPreset{
+			0.525,
+			128,
+			4,
+			8,
+			135.0,
+			8,
+			4,
+			16,
+			8,
+			16,
+			16
+		};
+
+		static inline map_config_t map_config{ TunnelsPreset };
 
 		constexpr i16 SpawnDistributionLow{ 0 };
 		constexpr i16 SpawnDistributionHigh{ 99 };

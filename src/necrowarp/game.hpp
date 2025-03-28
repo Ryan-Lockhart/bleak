@@ -1,5 +1,6 @@
 #pragma once
 
+#include "necrowarp/entities/player.hpp"
 #include <bleak.hpp>
 
 #include <cstdlib>
@@ -21,9 +22,9 @@ namespace necrowarp {
 			startup();
 
 			do {
-				render();
 				input();
 				update();
+				render();
 			} while (window.is_running());
 
 			shutdown();
@@ -43,13 +44,13 @@ namespace necrowarp {
 		}
 
 		static inline bool camera_input() noexcept {
-			constexpr bool force_width{ globals::MapSize.w <= globals::GameGridSize.w };
-			constexpr bool force_height{ globals::MapSize.h <= globals::GameGridSize.h };
+			bool force_width{ globals::MapSize.w <= globals::game_grid_size().w };
+			bool force_height{ globals::MapSize.h <= globals::game_grid_size().h };
 
-			if constexpr (force_width || force_height) {
-				return camera.center_on<force_width, force_height>(
-					force_width ? globals::MapCenter.x : player.position.x,
-					force_height ? globals::MapCenter.y : player.position.y
+			if (force_width || force_height) {
+				return camera.center_on(
+					force_width, force_width ? globals::MapCenter.x : player.position.x,
+					force_height, force_height ? globals::MapCenter.y : player.position.y
 				);
 			}
 
@@ -82,7 +83,7 @@ namespace necrowarp {
 			}();
 
 			if (direction != offset_t::Zero) {
-				return camera.move(direction * globals::CameraSpeed);
+				return camera.move(direction * globals::camera_speed);
 			}
 
 			return false;
@@ -188,6 +189,14 @@ namespace necrowarp {
 
 		static inline void load() noexcept {
 			game_stats.reset();
+			reset_patrons();
+
+			player.set_patron(desired_patron);
+
+			game_stats.cheats.activate();
+
+			game_stats.cheats.no_hit = true;
+			game_stats.cheats.free_costs = true;
 
 			constexpr cell_state_t open_state{ cell_trait_t::Open, cell_trait_t::Transperant, cell_trait_t::Seen, cell_trait_t::Explored };
 			constexpr cell_state_t closed_state{ cell_trait_t::Solid, cell_trait_t::Opaque, cell_trait_t::Seen, cell_trait_t::Explored };
@@ -198,9 +207,9 @@ namespace necrowarp {
 				.set<zone_region_t::Border>(closed_state)
 				.generate<zone_region_t::Interior>(
 					random_engine,
-					globals::FillPercent,
-					globals::AutomotaIterations,
-					globals::AutomotaThreshold,
+					globals::map_config.fill_percent,
+					globals::map_config.automata_iterations,
+					globals::map_config.automata_threshold,
 					cell_applicator
 				)
 				.collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open)
@@ -232,22 +241,22 @@ namespace necrowarp {
 			good_goal_map.add(player_pos.value());
 
 			entity_registry.spawn<ladder_t>(
-				static_cast<usize>(globals::NumberOfUpLadders),
-				static_cast<u32>(globals::MinimumLadderDistance),
+				static_cast<usize>(globals::map_config.number_of_up_ladders),
+				static_cast<u32>(globals::map_config.minimum_ladder_distance),
 
 				verticality_t::Up
 			);
 
 			entity_registry.spawn<ladder_t>(
-				static_cast<usize>(globals::NumberOfDownLadders),
-				static_cast<u32>(globals::MinimumLadderDistance),
+				static_cast<usize>(globals::map_config.number_of_down_ladders),
+				static_cast<u32>(globals::map_config.minimum_ladder_distance),
 
 				verticality_t::Down, true
 			);
 
 			entity_registry.spawn<skull_t>(
-				static_cast<usize>(globals::StartingSkulls),
-				static_cast<u32>(globals::MinimumSkullDistance)
+				static_cast<usize>(globals::map_config.starting_skulls),
+				static_cast<u32>(globals::map_config.minimum_skull_distance)
 			);
 
 			entity_registry.recalculate_goal_maps();
@@ -278,9 +287,9 @@ namespace necrowarp {
 				.set<zone_region_t::Border>(closed_state)
 				.generate<zone_region_t::Interior>(
 					random_engine,
-					globals::FillPercent,
-					globals::AutomotaIterations,
-					globals::AutomotaThreshold,
+					globals::map_config.fill_percent,
+					globals::map_config.automata_iterations,
+					globals::map_config.automata_threshold,
 					cell_applicator
 				)
 				.collapse<zone_region_t::Interior>(cell_trait_t::Solid, 0x00, cell_trait_t::Open)
@@ -312,22 +321,22 @@ namespace necrowarp {
 			good_goal_map.add(player_pos.value());
 
 			entity_registry.spawn<ladder_t>(
-				static_cast<usize>(globals::NumberOfUpLadders),
-				static_cast<u32>(globals::MinimumLadderDistance),
+				static_cast<usize>(globals::map_config.number_of_up_ladders),
+				static_cast<u32>(globals::map_config.minimum_ladder_distance),
 
 				verticality_t::Up
 			);
 
 			entity_registry.spawn<ladder_t>(
-				static_cast<usize>(globals::NumberOfDownLadders),
-				static_cast<u32>(globals::MinimumLadderDistance),
+				static_cast<usize>(globals::map_config.number_of_down_ladders),
+				static_cast<u32>(globals::map_config.minimum_ladder_distance),
 
 				verticality_t::Down, true
 			);
 
 			entity_registry.spawn<skull_t>(
-				static_cast<usize>(globals::StartingSkulls),
-				static_cast<u32>(globals::MinimumSkullDistance)
+				static_cast<usize>(globals::map_config.starting_skulls),
+				static_cast<u32>(globals::map_config.minimum_skull_distance)
 			);
 
 			entity_registry.recalculate_goal_maps();
@@ -351,8 +360,8 @@ namespace necrowarp {
 				return;
 			}
 
-			if constexpr (globals::UseFrameLimit) {
-				Clock::tick(globals::FrameTime);
+			if (globals::use_frame_limit) {
+				Clock::tick(globals::frame_time());
 			} else {
 				Clock::tick();
 			}
@@ -476,7 +485,7 @@ namespace necrowarp {
 			processing_turn = true;
 
 			game_stats.wave_size = clamp(
-				static_cast<i16>(globals::StartingAdventurers + game_stats.total_kills() / globals::KillsPerPopulation),
+				static_cast<i16>(globals::map_config.starting_adventurers + game_stats.total_kills() / globals::KillsPerPopulation),
 				globals::MinimumWaveSize,
 				globals::MaximumWaveSize
 			);
@@ -550,26 +559,23 @@ namespace necrowarp {
 			renderer.clear(colors::Black);
 
 			if (phase.current_phase == game_phase_t::Playing) {
-				constexpr bool exceeds_width{ globals::MapSize.w <= globals::GameGridSize.w };
+				bool exceeds_width{ globals::MapSize.w <= globals::game_grid_size().w };
+				bool exceeds_height{ globals::MapSize.h <= globals::game_grid_size().h };
 
-				if constexpr (exceeds_width) {
-					constexpr extent_t::scalar_t excess_width{ (globals::GameGridSize.w - globals::MapSize.w + 1) * globals::GlyphSize.w };
+				const extent_t excess_size{ (globals::game_grid_size() - globals::MapSize) * globals::CellSize };
 
-					renderer.draw_fill_rect(rect_t{ offset_t::Zero, extent_t{ excess_width, globals::WindowSize.h } }, color_t { 0xC0 });
-					renderer.draw_fill_rect(rect_t{ offset_t{ globals::WindowSize.w - excess_width, 0}, extent_t{ excess_width, globals::WindowSize.h } }, color_t { 0xC0 });
+				if (exceeds_width) {
+					renderer.draw_fill_rect(rect_t{ offset_t::Zero, extent_t{ excess_size.w, globals::window_size.h } }, color_t { 0xC0 });
+					renderer.draw_fill_rect(rect_t{ offset_t{ globals::window_size.w - excess_size.w, 0}, extent_t{ excess_size.w, globals::window_size.h } }, color_t { 0xC0 });
 				}
 
-				constexpr bool exceeds_height{ globals::MapSize.h <= globals::GameGridSize.h };
-
-				if constexpr (exceeds_height) {
-					constexpr extent_t::scalar_t excess_height{ (globals::GameGridSize.h - globals::MapSize.h + 1) * globals::GlyphSize.h };
-
-					renderer.draw_fill_rect(rect_t{ offset_t::Zero, extent_t{ globals::WindowSize.w, excess_height } }, color_t { 0xC0 });
-					renderer.draw_fill_rect(rect_t{ offset_t{ 0, globals::WindowSize.h - excess_height }, extent_t{ globals::WindowSize.w, excess_height } }, color_t { 0xC0 });
+				if (exceeds_height) {
+					renderer.draw_fill_rect(rect_t{ offset_t::Zero, extent_t{ globals::window_size.w, excess_size.h } }, color_t { 0xC0 });
+					renderer.draw_fill_rect(rect_t{ offset_t{ 0, globals::window_size.h - excess_size.h }, extent_t{ globals::window_size.w, excess_size.h } }, color_t { 0xC0 });
 				}
 
 				game_map.draw(game_atlas, camera);
-
+				
 				entity_registry.draw(camera);
 			}
 

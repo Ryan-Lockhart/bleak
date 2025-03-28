@@ -16,6 +16,7 @@
 
 namespace bleak {
 	namespace sdl {
+		using texture = SDL_Texture;
 		using renderer = SDL_Renderer;
 		using renderer_flags = SDL_RendererFlags;
 
@@ -40,10 +41,14 @@ namespace bleak {
 			}
 		}
 
+		static inline void set_render_target(ptr<renderer> renderer, ptr<texture> texture) noexcept;
+
 		static inline void set_render_draw_color(ptr<renderer> renderer, u8 r, u8 g, u8 b, u8 a) noexcept { SDL_SetRenderDrawColor(renderer, r, g, b, a); }
 
 		static inline void set_render_draw_color(ptr<renderer> renderer, cref<color_t> color) noexcept { SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a); }
 	} // namespace sdl
+
+	struct target_texture_t;
 
 	class renderer_t {
 	  private:
@@ -57,6 +62,10 @@ namespace bleak {
 		constexpr ptr<sdl::renderer> handle() noexcept { return renderer; }
 
 		constexpr cptr<sdl::renderer> handle() const noexcept { return renderer; }
+
+		inline void set_target(ref<target_texture_t> target) noexcept;
+
+		inline void unset_target() noexcept;
 
 		inline void set_draw_color(u8 r, u8 g, u8 b, u8 a) noexcept { sdl::set_render_draw_color(renderer, r, g, b, a); }
 

@@ -48,6 +48,10 @@ namespace bleak {
 
 	template<Numeric N> constexpr inline bool between(N value, N min, N max) { return value >= min && value <= max; }
 
+	template<Numeric N> constexpr inline N map(N value, N from_min, N from_max, N to_min, N to_max) {
+		return static_cast<N>(to_min + (1.0 * (to_max - to_min) / (from_max - from_min)) * (value - from_min));
+	}
+
 	template<typename T> ptr<T> cast_away(cptr<T> pointer) { return const_cast<ptr<T>>(pointer); }
 
 	template<typename T> ref<T> cast_away(cref<T> reference) { return const_cast<ref<T>>(reference); }

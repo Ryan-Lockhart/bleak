@@ -15,7 +15,7 @@ namespace necrowarp {
 
 	static inline phase_t phase{};
 
-	static inline window_t window{ globals::GameName.c_str(), globals::WindowSize, globals::WindowFlags };
+	static inline window_t window{ globals::GameName.c_str(), globals::window_size, globals::WindowFlags };
 	static inline renderer_t renderer{ window, globals::RendererFlags };
 
 	static inline atlas_t<globals::GlyphsetSize> ui_atlas{ renderer, "res\\glyphs\\glyphs_8x8.png" };
@@ -40,12 +40,12 @@ namespace necrowarp {
 
 	static inline bool gamepad_active{ false };
 
-	static inline camera_t camera{ globals::GameGridSize, extent_t::Zero, globals::CameraExtent };
+	static inline camera_t camera{ globals::game_grid_size(), extent_t::Zero, globals::camera_extent() };
 	static inline bool camera_locked{ true };
 
 	static inline timer_t input_timer{ 125.0 };
 	static inline timer_t cursor_timer{ 125.0 };
-	static inline timer_t epoch_timer{ 125.0 };
+	static inline timer_t epoch_timer{ 250.0 };
 
 	static inline wave_t sine_wave{ 1.0, 0.5, 1.0 };
 
@@ -142,8 +142,8 @@ namespace necrowarp {
 
 		usize game_depth{ 0 };
 
-		usize wave_size{ globals::StartingAdventurers };
-		usize spawns_remaining{ globals::StartingAdventurers };
+		usize wave_size{ static_cast<usize>(globals::map_config.starting_adventurers) };
+		usize spawns_remaining{ static_cast<usize>(globals::map_config.starting_adventurers) };
 
 		i16	player_kills{ 0 };
 		i16	minion_kills{ 0 };
@@ -158,8 +158,8 @@ namespace necrowarp {
 			game_seed = std::random_device{}();
 			random_engine.seed(game_seed);
 
-			wave_size = globals::StartingAdventurers;
-			spawns_remaining = globals::StartingAdventurers;
+			wave_size = globals::map_config.starting_adventurers;
+			spawns_remaining = globals::map_config.starting_adventurers;
 
 			player_kills = 0;
 			minion_kills = 0;
