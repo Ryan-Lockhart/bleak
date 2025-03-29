@@ -5,7 +5,7 @@
 namespace necrowarp {
 	using namespace bleak;
 
-	enum struct game_phase_t : u8 { None, MainMenu, Credits, Loading, Playing, Paused, GameOver, Exiting };
+	enum struct game_phase_t : u8 { None, MainMenu, Credits, NewGame, Loading, Playing, Paused, GameOver, Exiting };
 
 	struct phase_t {
 		game_phase_t previous_phase{ game_phase_t::None };

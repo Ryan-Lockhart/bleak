@@ -30,10 +30,6 @@ namespace necrowarp {
 			previous_state = current_state;
 			current_state = Mouse::is_button_down(button) && is_hovered(position, size);
 		}
-
-		constexpr void draw(ref<renderer_t> renderer, offset_t position, extent_t size, color_t background, border_t border) const noexcept {
-			renderer.draw_composite_rect(position * ui_atlas.glyph_size, size * ui_atlas.glyph_size, is_active() ? background : is_hovered(position, size) ? background.dimmed(0.75f) : background.dimmed(0.5f), border.color, border.thickness);
-		}
 	};
 
 	struct button_t : public transform_t, public embedded_button_t, public embedded_box_t {

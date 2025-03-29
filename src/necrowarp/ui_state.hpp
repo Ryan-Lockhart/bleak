@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/constants/colors.hpp"
 #include <bleak.hpp>
 
 #include <necrowarp/ui.hpp>
@@ -40,10 +41,10 @@ namespace necrowarp {
 			}
 		};
 
-		static inline labeled_button_t play_button{
+		static inline labeled_button_t new_game_button{
 			anchor_t{ credits_button.position - offset_t{ credits_button.calculate_size().w / 2 + 2, 0 }, cardinal_e::East },
 			embedded_label_t{
-				runes_t{ "Play", colors::Green },
+				runes_t{ "New Game", colors::Green },
 				embedded_box_t{ colors::Grey, { colors::White, 1 } },
 				extent_t{ 1, 1 }
 			}
@@ -58,13 +59,13 @@ namespace necrowarp {
 			}
 		};
 
-		static inline bool is_hovered() noexcept {
+		static inline bool any_hovered() noexcept {
 			if (phase.current_phase != game_phase_t::MainMenu) {
 				return false;
 			}
 
 			return
-				play_button.is_hovered() ||
+				new_game_button.is_hovered() ||
 				credits_button.is_hovered() ||
 				quit_button.is_hovered();
 		}
@@ -74,12 +75,12 @@ namespace necrowarp {
 				return;
 			}
 
-			play_button.update(Mouse::button_t::Left);
+			new_game_button.update(Mouse::button_t::Left);
 			credits_button.update(Mouse::button_t::Left);
 			quit_button.update(Mouse::button_t::Left);
 
-			if (play_button.is_active()) {
-				phase.transition(game_phase_t::Loading);
+			if (new_game_button.is_active()) {
+				phase.transition(game_phase_t::NewGame);
 			} else if (credits_button.is_active()) {
 				phase.transition(game_phase_t::Credits);
 			} else if (quit_button.is_active()) {
@@ -87,16 +88,102 @@ namespace necrowarp {
 			}
 		}
 
-		static inline void draw(renderer_t& renderer) noexcept {
-			play_button.draw(renderer);
+		static inline void draw(ref<renderer_t> renderer) noexcept {
+			new_game_button.draw(renderer);
 			credits_button.draw(renderer);
 			quit_button.draw(renderer);
 		}
 	};
 
+	template<> struct phase_state_t<game_phase_t::NewGame> {
+		static inline label_t header_label{
+			anchor_t{ offset_t{ globals::ui_grid_size().w / 2, globals::ui_grid_size().h / 4 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{ "Please select your desired environ and patron...", colors::White },
+				embedded_box_t{ colors::Black, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline label_t no_patron_label{
+			anchor_t{ offset_t{ globals::ui_grid_size() / 2 }, cardinal_e::Central },
+			embedded_label_t{
+				runes_t{
+					"None",
+					colors::light::Grey
+				},
+				embedded_box_t{ colors::Charcoal, { colors::dark::Grey, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline labeled_button_t play_button{
+			anchor_t{ offset_t{ globals::ui_grid_size().w / 2 - 1, globals::ui_grid_size().h - globals::ui_grid_size().h / 4 }, cardinal_e::East },
+			embedded_label_t{
+				runes_t{ "Play", colors::White },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline labeled_button_t back_button{
+			anchor_t{ offset_t{ globals::ui_grid_size().w / 2 + 1, globals::ui_grid_size().h - globals::ui_grid_size().h / 4 }, cardinal_e::West },
+			embedded_label_t{
+				runes_t{ "Back", colors::White },
+				embedded_box_t{ colors::Grey, { colors::White, 1 } },
+				extent_t{ 1, 1 }
+			}
+		};
+
+		static inline bool any_hovered() noexcept {
+			if (phase.current_phase != game_phase_t::NewGame) {
+				return false;
+			}
+
+			return
+				header_label.is_hovered() ||
+				no_patron_label.is_hovered() ||
+				play_button.is_hovered() ||
+				back_button.is_hovered();
+		}
+
+		static inline bool any_environ_selected() noexcept {
+			return false;
+		}
+
+		static inline bool any_patron_selected() noexcept {
+			return false;
+		}
+
+		static inline void update(Mouse::button_t button) noexcept {
+			if (phase.current_phase != game_phase_t::NewGame) {
+				return;
+			}
+
+			play_button.update(Mouse::button_t::Left);
+			back_button.update(Mouse::button_t::Left);
+
+			//play_button.enabled = true; // any_environ_selected() && any_patron_selected();
+
+			if (play_button.is_active()) { // play_button.is_enabled() && 
+				phase.transition(game_phase_t::Loading);
+			} else if (back_button.is_active()) {
+				phase.transition(game_phase_t::MainMenu);
+			}
+		}
+
+		static inline void draw(ref<renderer_t> renderer) noexcept {
+			header_label.draw(renderer);
+			no_patron_label.draw(renderer);
+
+			play_button.draw(renderer);
+			back_button.draw(renderer);
+		}
+	};
+
 	template<> struct phase_state_t<game_phase_t::Loading> {
 		static inline label_t loading_label{
-			anchor_t{ { globals::ui_grid_size().w / 2, globals::ui_grid_size().h / 2 }, cardinal_e::Central },
+			anchor_t{ offset_t{ globals::ui_grid_size() / 2 }, cardinal_e::Central },
 			embedded_label_t{
 				runes_t{ "Loading...", colors::White },
 				embedded_box_t{ colors::Black, { colors::White, 1 } },
@@ -104,7 +191,7 @@ namespace necrowarp {
 			}
 		};
 
-		static inline bool is_hovered() noexcept {
+		static inline bool any_hovered() noexcept {
 			if (phase.current_phase != game_phase_t::Loading) {
 				return false;
 			}
@@ -112,13 +199,18 @@ namespace necrowarp {
 			return loading_label.is_hovered();
 		}
 
-		static inline void draw(renderer_t& renderer) noexcept {
+		static inline void update(Mouse::button_t button) noexcept {
+			if (phase.current_phase != game_phase_t::Loading) {
+				return;
+			}
+		}
+
+		static inline void draw(ref<renderer_t> renderer) noexcept {
 			loading_label.draw(renderer);
 		}
 	};
 
 	template<> struct phase_state_t<game_phase_t::Paused> {
-
 		static inline labeled_button_t resume_button{
 			anchor_t{ offset_t{ globals::ui_grid_size() / 2 - offset_t{ 0, 1 } }, cardinal_e::South },
 			embedded_label_t{
@@ -137,7 +229,7 @@ namespace necrowarp {
 			}
 		};
 
-		static inline bool is_hovered() noexcept {
+		static inline bool any_hovered() noexcept {
 			if (phase.current_phase != game_phase_t::Paused) {
 				return false;
 			}
@@ -160,7 +252,7 @@ namespace necrowarp {
 			}
 		}
 
-		static inline void draw(renderer_t& renderer) noexcept {
+		static inline void draw(ref<renderer_t> renderer) noexcept {
 			resume_button.draw(renderer);
 			quit_button.draw(renderer);
 		}
@@ -191,7 +283,7 @@ namespace necrowarp {
 			}
 		};
 
-		static inline bool is_hovered() noexcept {
+		static inline bool any_hovered() noexcept {
 			if (phase.current_phase != game_phase_t::Credits) {
 				return false;
 			}
@@ -211,7 +303,7 @@ namespace necrowarp {
 			}
 		}
 
-		static inline void draw(renderer_t& renderer) noexcept {
+		static inline void draw(ref<renderer_t> renderer) noexcept {
 			credits_label.draw(renderer);
 
 			back_button.draw(renderer);
@@ -259,7 +351,7 @@ namespace necrowarp {
 		};
 
 		static inline label_t statistics_hidden_label{
-			anchor_t{ { globals::ui_grid_size().w / 2, globals::ui_grid_size().h }, cardinal_e::South },
+			anchor_t{ offset_t{ globals::ui_grid_size().w / 2, globals::ui_grid_size().h }, cardinal_e::South },
 			embedded_label_t{
 				runes_t{ "Statistics", colors::White },
 				embedded_box_t{ colors::Black, { colors::White, 1 } },
@@ -268,7 +360,7 @@ namespace necrowarp {
 		};
 
 		static inline label_t statistics_expanded_label{
-			anchor_t{ { globals::ui_grid_size().w / 2, globals::ui_grid_size().h }, cardinal_e::South },
+			anchor_t{ offset_t{ globals::ui_grid_size().w / 2, globals::ui_grid_size().h }, cardinal_e::South },
 			embedded_label_t{
 				runes_t{
 					"Depth Reached:  000\n\n\n"
@@ -283,7 +375,7 @@ namespace necrowarp {
 			}
 		};
 
-		static inline bool is_hovered() noexcept {
+		static inline bool any_hovered() noexcept {
 			if (phase.current_phase != game_phase_t::GameOver) {
 				return false;
 			}
@@ -329,8 +421,7 @@ namespace necrowarp {
 			}
 		}
 
-		static inline void draw(renderer_t& renderer) noexcept {
-			title_label.draw(renderer);
+		static inline void draw(ref<renderer_t> renderer) noexcept {
 			game_over_label.draw(renderer);
 			retry_button.draw(renderer);
 			quit_button.draw(renderer);
@@ -369,7 +460,7 @@ namespace necrowarp {
 			}
 		};
 
-		static inline bool is_hovered() noexcept {
+		static inline bool any_hovered() noexcept {
 			if (phase.current_phase != game_phase_t::Exiting) {
 				return false;
 			}
@@ -395,9 +486,7 @@ namespace necrowarp {
 			}
 		}
 
-		static inline void draw(renderer_t& renderer) noexcept {
-			title_label.draw(renderer);
-
+		static inline void draw(ref<renderer_t> renderer) noexcept {
 			confirm_quit_label.draw(renderer, confirm_quit_label.box.background.dimmed(sine_wave.current_value()));
 
 			confirm_quit_button.draw(renderer);
@@ -445,7 +534,7 @@ namespace necrowarp {
 		};
 
 		static inline label_t depth_hidden_label{
-			anchor_t{ { globals::ui_grid_size().w / 2, globals::ui_grid_size().h }, cardinal_e::South },
+			anchor_t{ offset_t{ globals::ui_grid_size().w / 2, globals::ui_grid_size().h }, cardinal_e::South },
 			embedded_label_t{
 				runes_t{ depth_hidden_text, colors::White },
 				embedded_box_t{ colors::Black, { colors::White, 1 } },
@@ -454,7 +543,7 @@ namespace necrowarp {
 		};
 
 		static inline label_t depth_expanded_label{
-			anchor_t{ { globals::ui_grid_size().w / 2, globals::ui_grid_size().h }, cardinal_e::South },
+			anchor_t{ offset_t{ globals::ui_grid_size().w / 2, globals::ui_grid_size().h }, cardinal_e::South },
 			embedded_label_t{
 				runes_t{ depth_expanded_text, colors::White },
 				embedded_box_t{ colors::Black, { colors::White, 1 } },
@@ -463,7 +552,7 @@ namespace necrowarp {
 		};
 
 		static inline label_t help_label{
-			anchor_t{ { 1, globals::ui_grid_size().h }, cardinal_e::Southwest },
+			anchor_t{ offset_t{ 1, globals::ui_grid_size().h }, cardinal_e::Southwest },
 			embedded_label_t{
 				runes_t{ help_hidden_text, colors::White },
 				embedded_box_t{ colors::Black, { colors::White, 1 } },
@@ -472,7 +561,7 @@ namespace necrowarp {
 		};
 
 		static inline label_t tooltip_label{
-			anchor_t{ { globals::ui_grid_size().w, globals::ui_grid_size().h }, cardinal_e::Southeast },
+			anchor_t{ offset_t{ globals::ui_grid_size() }, cardinal_e::Southeast },
 			embedded_label_t{
 				runes_t{},
 				embedded_box_t{ colors::Black, { colors::White, 1 } },
@@ -481,7 +570,7 @@ namespace necrowarp {
 		};
 
 		static inline label_t command_label{
-			anchor_t{ { globals::ui_grid_size().w, globals::ui_grid_size().h }, cardinal_e::West },
+			anchor_t{ offset_t{}, cardinal_e::Northwest },
 			embedded_label_t{
 				runes_t{},
 				embedded_box_t{ colors::Black, { colors::White, 1 } },
@@ -503,7 +592,7 @@ namespace necrowarp {
 
 		static constexpr offset_t necromantic_ascendance_icon_position() { return offset_t{ 0, globals::icon_grid_size().h / 2 + 3 }; }
 
-		static inline bool is_hovered() noexcept {
+		static inline bool any_hovered() noexcept {
 			if (phase.current_phase != game_phase_t::Playing) {
 				return false;
 			}
@@ -694,11 +783,35 @@ namespace necrowarp {
 				}
 			}
 
+			switch (entity_registry.at(grid_cursor.position)) {
+				case entity_type_t::Player: {
+					grid_cursor.color = colors::Magenta;
+					break;
+				} case entity_type_t::Skeleton:
+				  case entity_type_t::Wraith:
+				  case entity_type_t::FleshGolem: {
+					grid_cursor.color = colors::Green;
+					break;
+				} case entity_type_t::Adventurer:
+				  case entity_type_t::Paladin:
+				  case entity_type_t::Priest: {
+					grid_cursor.color = colors::Red;
+					break;
+				} case entity_type_t::Skull:
+				  case entity_type_t::Ladder: {
+					grid_cursor.color = colors::Blue;
+					break;
+				} default: {
+					grid_cursor.color = colors::metals::Gold;
+					break;
+				}
+			}
+
 			grid_cursor.color.set_alpha(sine_wave.current_value());
 			warp_cursor.color.set_alpha(sine_wave.current_value());
 		}
 
-		static inline void draw(renderer_t& renderer) noexcept {
+		static inline void draw(ref<renderer_t> renderer) noexcept {
 			player_statuses.draw(renderer);
 
 			icon_atlas.draw(glyph_t{ icons::RandomWarp.index, player.can_random_warp() ? colors::White : colors::dark::Grey }, random_warp_icon_position());
@@ -733,19 +846,21 @@ namespace necrowarp {
 
 		switch (phase.current_phase) {
 		case game_phase_t::MainMenu:
-			return phase_state_t<game_phase_t::MainMenu>::is_hovered();
+			return phase_state_t<game_phase_t::MainMenu>::any_hovered();
 		case game_phase_t::Exiting:
-			return phase_state_t<game_phase_t::Exiting>::is_hovered();
+			return phase_state_t<game_phase_t::Exiting>::any_hovered();
 		case game_phase_t::Paused:
-			return phase_state_t<game_phase_t::Paused>::is_hovered();
+			return phase_state_t<game_phase_t::Paused>::any_hovered();
+		case game_phase_t::NewGame:
+			return phase_state_t<game_phase_t::NewGame>::any_hovered();
 		case game_phase_t::Loading:
-			return phase_state_t<game_phase_t::Loading>::is_hovered();
+			return phase_state_t<game_phase_t::Loading>::any_hovered();
 		case game_phase_t::Credits:
-			return phase_state_t<game_phase_t::Credits>::is_hovered();
+			return phase_state_t<game_phase_t::Credits>::any_hovered();
 		case game_phase_t::GameOver:
-			return phase_state_t<game_phase_t::GameOver>::is_hovered();
+			return phase_state_t<game_phase_t::GameOver>::any_hovered();
 		case game_phase_t::Playing:
-			return phase_state_t<game_phase_t::Playing>::is_hovered();
+			return phase_state_t<game_phase_t::Playing>::any_hovered();
 		default:
 			return false;
 		}
@@ -772,6 +887,8 @@ namespace necrowarp {
 				phase_state_t<game_phase_t::Credits>::update(Mouse::button_t::Left);
 			} else if (phase.current_phase == game_phase_t::Exiting) {
 				phase_state_t<game_phase_t::Exiting>::update(Mouse::button_t::Left);
+			} else if (phase.current_phase == game_phase_t::NewGame) {
+				phase_state_t<game_phase_t::NewGame>::update(Mouse::button_t::Left);
 			} else if (phase.current_phase == game_phase_t::Playing) {
 				phase_state_t<game_phase_t::Playing>::update();
 			} else if (phase.current_phase == game_phase_t::Paused) {
@@ -795,9 +912,6 @@ namespace necrowarp {
 					warp_cursor.draw(camera, -globals::CursorOffset);
 				}
 			}
-
-			title_label.draw(renderer);
-			fps_label.draw(renderer);
 			
 			switch (phase.current_phase) {
 			case game_phase_t::MainMenu:
@@ -808,6 +922,9 @@ namespace necrowarp {
 				break;
 			case game_phase_t::Exiting:
 				phase_state_t<game_phase_t::Exiting>::draw(renderer);
+				break;
+			case game_phase_t::NewGame:
+				phase_state_t<game_phase_t::NewGame>::draw(renderer);
 				break;
 			case game_phase_t::Playing:
 				phase_state_t<game_phase_t::Playing>::draw(renderer);
@@ -824,6 +941,9 @@ namespace necrowarp {
 			default:
 				break;
 			}
+
+			title_label.draw(renderer);
+			fps_label.draw(renderer);
 
 			if (phase.current_phase != game_phase_t::Playing || draw_cursor) {
 				cursor.draw();

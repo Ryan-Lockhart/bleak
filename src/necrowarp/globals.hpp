@@ -75,8 +75,8 @@ namespace necrowarp {
 		};
 		
 		constexpr map_config_t CavernPreset{
-			0.425,
-			128,
+			0.475,
+			256,
 			4,
 			8,
 			135.0,
@@ -89,8 +89,8 @@ namespace necrowarp {
 		};
 		
 		constexpr map_config_t TunnelsPreset{
-			0.525,
-			128,
+			0.5,
+			256,
 			4,
 			8,
 			135.0,
@@ -102,7 +102,7 @@ namespace necrowarp {
 			16
 		};
 
-		static inline map_config_t map_config{ TunnelsPreset };
+		static inline map_config_t map_config{ CavernPreset };
 
 		constexpr i16 SpawnDistributionLow{ 0 };
 		constexpr i16 SpawnDistributionHigh{ 99 };
