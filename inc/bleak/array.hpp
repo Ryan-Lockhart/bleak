@@ -31,11 +31,11 @@ namespace bleak {
 		static constexpr extent_t::scalar_t width{ Size.w };
 		static constexpr extent_t::scalar_t height{ Size.h };
 
-		static inline constexpr extent_t::product_t flatten(cref<offset_t> offset) noexcept { return extent_t::product_cast(offset.y) * Size.w + offset.x; }
+		static inline constexpr usize flatten(offset_t offset) noexcept { return static_cast<usize>(offset.y) * Size.w + offset.x; }
 
-		static inline constexpr extent_t::product_t flatten(cref<offset_t::scalar_t> i, cref<offset_t::scalar_t> j) noexcept { return extent_t::product_cast(j) * Size.w + i; }
+		static inline constexpr usize flatten(offset_t::scalar_t i, offset_t::scalar_t j) noexcept { return static_cast<usize>(j) * Size.w + i; }
 
-		static inline constexpr offset_t unflatten(cref<extent_t::product_t> index) noexcept { return offset_t{ index / Size.w, index % Size.w }; }
+		static inline constexpr offset_t unflatten(usize index) noexcept { return offset_t{ index / Size.w, index % Size.w }; }
 
 		using iterator = fwd_iter_t<T>;
 		using const_iterator = fwd_iter_t<const T>;
@@ -154,25 +154,25 @@ namespace bleak {
 			}
 		}
 
-		inline constexpr ref<T> operator[](cref<offset_t> offset) noexcept { return data[first + flatten(offset)]; }
+		inline constexpr ref<T> operator[](offset_t offset) noexcept { return data[first + flatten(offset)]; }
 
-		inline constexpr cref<T> operator[](cref<offset_t> offset) const noexcept { return data[first + flatten(offset)]; }
+		inline constexpr cref<T> operator[](offset_t offset) const noexcept { return data[first + flatten(offset)]; }
 
-		inline constexpr ref<T> operator[](cref<offset_t::product_t> index) noexcept { return data[first + index]; }
+		inline constexpr ref<T> operator[](offset_t::product_t index) noexcept { return data[first + index]; }
 
-		inline constexpr cref<T> operator[](cref<offset_t::product_t> index) const noexcept { return data[first + index]; }
+		inline constexpr cref<T> operator[](offset_t::product_t index) const noexcept { return data[first + index]; }
 
 		inline constexpr ref<T> operator[](offset_t::scalar_t i, offset_t::scalar_t j) noexcept { return data[first + flatten(i, j)]; }
 
 		inline constexpr cref<T> operator[](offset_t::scalar_t i, offset_t::scalar_t j) const noexcept { return data[first + flatten(i, j)]; }
 
-		inline constexpr bool valid(cref<offset_t> offset) const noexcept { return flatten(offset) < size; }
+		inline constexpr bool valid(offset_t offset) const noexcept { return flatten(offset) < size; }
 
-		inline constexpr bool valid(cref<offset_t::product_t> index) const noexcept { return index < size; }
+		inline constexpr bool valid(offset_t::product_t index) const noexcept { return index < size; }
 
 		inline constexpr bool valid(offset_t::scalar_t i, offset_t::scalar_t j) const noexcept { return flatten(i, j) < size; }
 
-		inline constexpr ref<T> at(cref<offset_t> offset) {
+		inline constexpr ref<T> at(offset_t offset) {
 			if (!valid(offset)) {
 				throw std::out_of_range("offset out of range!");
 			}
@@ -180,7 +180,7 @@ namespace bleak {
 			return data[first + flatten(offset)];
 		}
 
-		inline constexpr cref<T> at(cref<offset_t> offset) const {
+		inline constexpr cref<T> at(offset_t offset) const {
 			if (!valid(offset)) {
 				throw std::out_of_range("offset out of range!");
 			}
@@ -188,7 +188,7 @@ namespace bleak {
 			return data[first + flatten(offset)];
 		}
 
-		inline constexpr ref<T> at(cref<offset_t::product_t> index) {
+		inline constexpr ref<T> at(offset_t::product_t index) {
 			if (!valid(index)) {
 				throw std::out_of_range("offset out of range!");
 			}
@@ -196,7 +196,7 @@ namespace bleak {
 			return data[first + index];
 		}
 
-		inline constexpr cref<T> at(cref<offset_t::product_t> index) const {
+		inline constexpr cref<T> at(offset_t::product_t index) const {
 			if (!valid(index)) {
 				throw std::out_of_range("offset out of range!");
 			}

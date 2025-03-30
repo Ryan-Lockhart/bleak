@@ -66,51 +66,57 @@ namespace necrowarp {
 
 	static constexpr cstr to_string(entity_type_t type) noexcept {
 		switch (type) {
-			case entity_type_t::None:
+			case entity_type_t::None: {
 				return "none";
-			case entity_type_t::Player:
+			} case entity_type_t::Player: {
 				return "player";
-			case entity_type_t::Skeleton:
+			} case entity_type_t::Skeleton: {
 				return "skeleton";
-			case entity_type_t::Wraith:
+			} case entity_type_t::Wraith: {
 				return "wraith";
-			case entity_type_t::FleshGolem:
+			} case entity_type_t::FleshGolem: {
 				return "flesh golem";
-			case entity_type_t::Adventurer:
+			} case entity_type_t::Adventurer: {
 				return "adventurer";
-			case entity_type_t::Paladin:
+			} case entity_type_t::Paladin: {
 				return "paladin";
-			case entity_type_t::Priest:
+			} case entity_type_t::Priest: {
 				return "priest";
-			case entity_type_t::Skull:
+			} case entity_type_t::Skull: {
 				return "skull";
-			case entity_type_t::Ladder:
+			} case entity_type_t::Ladder: {
 				return "ladder";
+			} default: {
+				return "unknown";
+			}
 		}
 	}
 
 	static constexpr runes_t to_colored_string(entity_type_t type) noexcept {
 		switch (type) {
-			case entity_type_t::None:
+			case entity_type_t::None: {
 				return runes_t{ to_string(type), colors::Grey };
-			case entity_type_t::Player:
+			} case entity_type_t::Player: {
 				return runes_t{ to_string(type), colors::Magenta };
-			case entity_type_t::Skeleton:
+			} case entity_type_t::Skeleton: {
 				return runes_t{ to_string(type), colors::White };
-			case entity_type_t::Wraith:
+			} case entity_type_t::Wraith: {
 				return runes_t{ to_string(type), colors::light::Green };
-			case entity_type_t::FleshGolem:
+			} case entity_type_t::FleshGolem: {
 				return runes_t{ to_string(type), colors::materials::DarkBlood };
-			case entity_type_t::Adventurer:
+			} case entity_type_t::Adventurer: {
 				return runes_t{ to_string(type), colors::metals::Bronze };
-			case entity_type_t::Paladin:
+			} case entity_type_t::Paladin: {
 				return runes_t{ to_string(type), colors::metals::Steel };
-			case entity_type_t::Priest:
+			} case entity_type_t::Priest: {
 				return runes_t{ to_string(type), colors::metals::Gold };
-			case entity_type_t::Skull:
+			} case entity_type_t::Skull: {
 				return runes_t{ to_string(type), colors::White };
-			case entity_type_t::Ladder:
+			} case entity_type_t::Ladder: {
 				return runes_t{ to_string(type), colors::materials::Oak };
+			} default: {
+				return runes_t{ to_string(type), colors::White };
+			}
 		}
 	}
 

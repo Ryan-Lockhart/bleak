@@ -41,7 +41,10 @@ namespace necrowarp {
 	static inline bool gamepad_active{ false };
 
 	static inline camera_t camera{ globals::game_grid_size(), extent_t::Zero, globals::camera_extent() };
+
 	static inline bool camera_locked{ true };
+
+	static inline bool camera_forced() noexcept { return globals::MapSize.w <= globals::game_grid_size().w || globals::MapSize.h <= globals::game_grid_size().h; }
 
 	static inline timer_t input_timer{ 125.0 };
 	static inline timer_t cursor_timer{ 125.0 };

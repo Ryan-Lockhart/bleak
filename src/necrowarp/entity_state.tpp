@@ -1,5 +1,6 @@
 #pragma once
 
+#include "necrowarp/game_state.hpp"
 #include <necrowarp/entities.hpp>
 
 #include <cstddef>
@@ -19,6 +20,24 @@ namespace necrowarp {
 	using namespace bleak;
 
 	static inline player_t player{};
+
+	static inline bool update_camera() noexcept {
+		bool force_width{ globals::MapSize.w <= globals::game_grid_size().w };
+		bool force_height{ globals::MapSize.h <= globals::game_grid_size().h };
+
+		if (force_width || force_height) {
+			return camera.center_on(
+				force_width, force_width ? globals::MapCenter.x : player.position.x,
+				force_height, force_height ? globals::MapCenter.y : player.position.y
+			);
+		}
+
+		if (camera_locked) {
+			return camera.center_on(player.position);
+		}
+
+		return false;
+	}
 
 	template<NonPlayerEntity EntityType> static inline sparse_t<EntityType> entity_storage{};
 
@@ -377,6 +396,10 @@ namespace necrowarp {
 
 	inline void entity_registry_t::update() noexcept {
 		entity_registry.process_command(player.command);
+
+		if (camera_locked) {
+			update_camera();
+		}
 
 		if (descent_flag) {
 			return;

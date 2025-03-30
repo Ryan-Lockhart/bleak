@@ -43,22 +43,12 @@ namespace necrowarp {
 		}
 
 		static inline bool camera_input() noexcept {
-			bool force_width{ globals::MapSize.w <= globals::game_grid_size().w };
-			bool force_height{ globals::MapSize.h <= globals::game_grid_size().h };
-
-			if (force_width || force_height) {
-				return camera.center_on(
-					force_width, force_width ? globals::MapCenter.x : player.position.x,
-					force_height, force_height ? globals::MapCenter.y : player.position.y
-				);
+			if (update_camera()) {
+				return true;
 			}
 
 			if (Keyboard::is_key_down(bindings::CameraLock)) {
 				camera_locked = !camera_locked;
-			}
-
-			if (camera_locked) {
-				return camera.center_on(player.position);
 			}
 
 			const offset_t direction = []() -> offset_t {
@@ -500,7 +490,7 @@ namespace necrowarp {
 			}
 
 			if (game_stats.has_reinforcements()) {
-				for (usize i{ 0 }; i < game_stats.current_reinforcements(); ++i) {
+				for (i16 i{ 0 }; i < game_stats.current_reinforcements(); ++i) {
 					spawn_random();
 				}
 			}

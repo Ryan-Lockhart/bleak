@@ -68,7 +68,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
+			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -89,7 +89,7 @@ namespace bleak {
 
 						const offset_t neighbour{ current.x + x, current.y + y };
 
-						if (!zone.within<zone_region_t::All>(neighbour) || contains(neighbour)) {
+						if (!zone.template within<zone_region_t::All>(neighbour) || contains(neighbour)) {
 							continue;
 						}
 
@@ -163,7 +163,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
+			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -184,7 +184,7 @@ namespace bleak {
 
 						const offset_t neighbour{ current.position.x + x, current.position.y + y };
 
-						if (!zone.within<zone_region_t::All>(neighbour) || contains(neighbour) || current.distance > distance) {
+						if (!zone.template within<zone_region_t::All>(neighbour) || contains(neighbour) || current.distance > distance) {
 							continue;
 						}
 
@@ -257,7 +257,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
+			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -339,7 +339,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.within<zone_region_t::All>(circle.position) || zone[circle.position] != value) {
+			if (!zone.template within<zone_region_t::All>(circle.position) || zone[circle.position] != value) {
 				return *this;
 			}
 
@@ -421,7 +421,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.within<zone_region_t::All>(position) || zone[position] != value) {
+			if (!zone.template within<zone_region_t::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -519,7 +519,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.within<zone_region_t::All>(arc.position) || zone[arc.position] != value) {
+			if (!zone.template within<zone_region_t::All>(arc.position) || zone[arc.position] != value) {
 				return *this;
 			}
 
@@ -855,7 +855,7 @@ namespace bleak {
 					f64 left_slope{ (dx - 0.5) / (dy + 0.5) };
 					f64 right_slope{ (dx + 0.5) / (dy - 0.5) };
 
-					if (!zone.within<zone_region_t::All>(position) || start < right_slope) {
+					if (!zone.template within<zone_region_t::All>(position) || start < right_slope) {
 						continue;
 					}
 
@@ -963,7 +963,7 @@ namespace bleak {
 					f64 left_slope{ (dx - 0.5) / (dy + 0.5) };
 					f64 right_slope{ (dx + 0.5) / (dy - 0.5) };
 
-					if (!zone.within<zone_region_t::All>(position) || start < right_slope) {
+					if (!zone.template within<zone_region_t::All>(position) || start < right_slope) {
 						continue;
 					}
 

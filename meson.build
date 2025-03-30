@@ -22,12 +22,17 @@ else
     args = ['-DBLEAK_RELEASE', '-DNDEBUG']
 endif
 
+cxx = meson.get_compiler('cpp')
+
+
+
 sdl_dependencies = [
-    dependency('sdl2', static: true),
-    dependency('sdl2_image', static: true),
-    dependency('sdl2_mixer', static: true),
-    dependency('sdl2_net', static: true),
-    dependency('sdl2_ttf', static: true),
+    dependency('sdl2', required: true, static: true),
+    dependency('sdl2_image', required: true, static: true),
+    dependency('sdl2_mixer', required: true, static: true),
+    dependency('sdl2_net', required: true, static: true),
+    dependency('sdl2_ttf', required: true, static: true),
+
 ]
 
 sources = [
@@ -47,7 +52,12 @@ executable(
     'necrowarp',
     sources,
 
-    dependencies: [sdl_dependencies],
+    dependencies: [
+        sdl_dependencies,
+        cxx.find_library('gcc', required: true, static: true),
+        cxx.find_library('winpthread', required: true, static: true)
+    ],
+
     include_directories: includes,
 
     override_options: [
