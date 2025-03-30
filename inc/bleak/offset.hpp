@@ -108,30 +108,24 @@ namespace bleak {
 
 		constexpr product_t dot() const noexcept { return product_cast(x) * x + product_cast(y) * y; }
 
-		template<typename T = product_t>
-			requires std::is_floating_point<T>::value || std::is_same<T, product_t>::value
-		constexpr T length() const noexcept;
-
-		template<> constexpr f32 length() const noexcept { return std::sqrt(static_cast<f32>(dot())); }
-
-		template<> constexpr f64 length() const noexcept { return std::sqrt(static_cast<f64>(dot())); }
-
-		template<> constexpr product_t length() const noexcept {
+		template<FloatingPoint F> constexpr F length() const noexcept { return static_cast<F>(std::sqrt(dot())); }
+		
+		constexpr product_t length() const noexcept {
 			static_assert(sizeof(product_t) == sizeof(float_t), "length of product_t and float_t must be equal");
 			static_assert(bitdef::mantissa<float_t>() >= 6, "shift may not exceed bit length of mantissa");
-
+	
 			union {
 				float_t f;
 				product_t i;
 			} v{ .f = (float_t)dot() };
-
+	
 			constexpr auto sub_shift{ bitdef::mantissa<float_t>() };
 			constexpr auto add_shift{ sub_shift + 6 };
-
+	
 			v.i -= product_t{ 1 } << sub_shift;
 			v.i >>= 1;
 			v.i += product_t{ 1 } << add_shift;
-
+	
 			return (product_t)((float_t)v.i);
 		}
 
@@ -427,7 +421,7 @@ namespace bleak {
 		}()
 	};
 
-	template<distance_function_t Distance, Numeric D> static constexpr auto neighbourhood_creepers{
+	template<distance_function_t Distance, Numeric D> static constexpr crauto neighbourhood_creepers{
 		[]() {
 			if constexpr (Distance == distance_function_t::VonNeumann || Distance == distance_function_t::Manhattan) {
 				return std::array<std::pair<offset_t, D>, 4>{

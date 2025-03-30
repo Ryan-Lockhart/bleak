@@ -48,11 +48,11 @@ namespace bleak {
 		static inline std::bitset<button_t::Count> current_state;
 		static inline std::bitset<button_t::Count> previous_state;
 
-		static inline offset_t current_position;
-		static inline offset_t previous_position;
+		static inline offset_t current_position{};
+		static inline offset_t previous_position{};
 
-		static inline offset_t current_scroll;
-		static inline offset_t previous_scroll;
+		static inline offset_t current_scroll{};
+		static inline offset_t previous_scroll{};
 
 		static inline bool initialized;
 

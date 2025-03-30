@@ -107,7 +107,7 @@ namespace bleak {
 				return extent_t::Zero;
 			}
 
-			usize current_width{ 0 };
+			extent_t::scalar_t current_width{ 0 };
 			extent_t size{ 0, 1 };
 
 			for (auto& rune : runes) {
@@ -150,7 +150,7 @@ namespace bleak {
 				return extent_t::Zero;
 			}
 
-			usize current_width{ 0 };
+			extent_t::scalar_t current_width{ 0 };
 			extent_t size{ 0, 1 };
 
 			for (auto& ch : text) {

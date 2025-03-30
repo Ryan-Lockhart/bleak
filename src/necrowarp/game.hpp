@@ -1,6 +1,5 @@
 #pragma once
 
-#include "necrowarp/entities/player.hpp"
 #include <bleak.hpp>
 
 #include <cstdlib>
@@ -560,16 +559,16 @@ namespace necrowarp {
 				bool exceeds_width{ globals::MapSize.w <= globals::game_grid_size().w };
 				bool exceeds_height{ globals::MapSize.h <= globals::game_grid_size().h };
 
-				const extent_t excess_size{ (globals::game_grid_size() - globals::MapSize) * globals::CellSize };
+				const extent_t excess_size{ (globals::game_grid_size() - globals::MapSize + 1) * globals::CellSize / 2 };
 
 				if (exceeds_width) {
 					renderer.draw_fill_rect(rect_t{ offset_t::Zero, extent_t{ excess_size.w, globals::window_size.h } }, color_t { 0xC0 });
-					renderer.draw_fill_rect(rect_t{ offset_t{ globals::window_size.w - excess_size.w, 0}, extent_t{ excess_size.w, globals::window_size.h } }, color_t { 0xC0 });
+					renderer.draw_fill_rect(rect_t{ offset_t{ globals::window_size.w - excess_size.w - 1, 0}, extent_t{ excess_size.w, globals::window_size.h } }, color_t { 0xC0 });
 				}
 
 				if (exceeds_height) {
 					renderer.draw_fill_rect(rect_t{ offset_t::Zero, extent_t{ globals::window_size.w, excess_size.h } }, color_t { 0xC0 });
-					renderer.draw_fill_rect(rect_t{ offset_t{ 0, globals::window_size.h - excess_size.h }, extent_t{ globals::window_size.w, excess_size.h } }, color_t { 0xC0 });
+					renderer.draw_fill_rect(rect_t{ offset_t{ 0, globals::window_size.h - excess_size.h - 1 }, extent_t{ globals::window_size.w, excess_size.h } }, color_t { 0xC0 });
 				}
 
 				game_map.draw(game_atlas, camera);

@@ -22,23 +22,29 @@ namespace necrowarp {
 		
 		static inline extent_t window_size{ 1280, 720 };
 
-		static inline extent_t ui_grid_size() { return window_size / 8; }
-		static inline extent_t game_grid_size() { return window_size / 16; }
-		static inline extent_t icon_grid_size() { return window_size / 32; }
+		static constexpr extent_t GlyphSize{ 8, 8 };
+		static constexpr extent_t CellSize{ 16, 16 };
+		static constexpr extent_t IconSize{ 32, 32 };
+
+		static inline extent_t ui_grid_size() { return window_size / GlyphSize; }
+		static inline extent_t game_grid_size() { return window_size / CellSize; }
+		static inline extent_t icon_grid_size() { return window_size / IconSize; }
 
 		static constexpr extent_t GlyphsetSize{ 16, 16 };
 		static constexpr extent_t TilesetSize{ 16, 5 };
 		static constexpr extent_t IconsetSize{ 3, 2 };
 
-		static constexpr extent_t MapSize{ 256, 256 };
+		static constexpr extent_t MapSize{ 128, 128 };
+
+		static inline rect_t map_bounds() {
+			const extent_t excess{ max<offset_t::scalar_t>(game_grid_size().w - MapSize.w, 0), max<offset_t::scalar_t>(game_grid_size().h - MapSize.h, 0) };
+
+			return rect_t{ offset_t{ excess.w / 2, excess.h / 2 }, extent_t{ game_grid_size().w - excess.w - 1, game_grid_size().h - excess.h - 1 } };
+		}
 
 		static constexpr offset_t MapCenter{ MapSize / 2 };
 
 		static constexpr extent_t BorderSize{ 4, 4 };
-
-		static constexpr extent_t IconSize{ 32, 32 };
-		static constexpr extent_t CellSize{ 16, 16 };
-		static constexpr extent_t GlyphSize{ 8, 8 };
 
 		static constexpr f32 CellToGlyphRatio{ 2.0f };
 		static constexpr f32 GlyphToCellRatio{ 0.5f };
@@ -54,7 +60,7 @@ namespace necrowarp {
 		constexpr offset_t CursorOffset{ CellSize / 4 };
 
 		static inline extent_t camera_extent() { return MapSize - globals::game_grid_size(); }
-		static inline offset_t::scalar_t camera_speed{ 2 };
+		static inline offset_t::scalar_t camera_speed{ 4 };
 
 		struct map_config_t {
 			f64 fill_percent;
@@ -76,21 +82,7 @@ namespace necrowarp {
 		
 		constexpr map_config_t CavernPreset{
 			0.475,
-			256,
-			4,
-			8,
-			135.0,
-			4,
-			2,
-			8,
-			4,
-			8,
-			8
-		};
-		
-		constexpr map_config_t TunnelsPreset{
-			0.5,
-			256,
+			512,
 			4,
 			8,
 			135.0,
@@ -100,6 +92,20 @@ namespace necrowarp {
 			8,
 			16,
 			16
+		};
+		
+		constexpr map_config_t TunnelsPreset{
+			0.5,
+			512,
+			4,
+			8,
+			135.0,
+			4,
+			2,
+			8,
+			4,
+			8,
+			8
 		};
 
 		static inline map_config_t map_config{ CavernPreset };
@@ -126,6 +132,6 @@ namespace necrowarp {
 
 		constexpr i16 FloorsPerReinforcement{ 8 };
 
-		constexpr bool CheatsAllowed{ true };
+		constexpr bool CheatsAllowed{ false };
 	} // namespace globals
 } // namespace necrowarp

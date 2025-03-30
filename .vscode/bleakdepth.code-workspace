@@ -8,8 +8,8 @@
 		"mesonbuild.configureOnOpen": false,
 		"mesonbuild.buildFolder": "build",
 		"mesonbuild.configureEnvironment": {
-			"CC": "clang",
-			"CXX": "clang++"
+			"CC": "gcc",
+			"CXX": "g++"
 		},
 		"task.quickOpen.showAll": true,
 		"task.autoDetect": "on",

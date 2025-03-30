@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/constants/colors.hpp"
 #include <bleak.hpp>
 
 #include <necrowarp/ui.hpp>
@@ -877,7 +876,7 @@ namespace necrowarp {
 				colors::Green
 			};
 
-			draw_cursor = any_hovered();
+			draw_cursor = any_hovered() || !globals::map_bounds().within(cursor.get_position() / globals::CellSize);
 
 			cursor.update();
 

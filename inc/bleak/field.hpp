@@ -240,7 +240,7 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (cauto offset : neighbourhood_creepers<DistanceFunction, D>) {
+				for (crauto offset : neighbourhood_creepers<DistanceFunction, D>) {
 					cauto offset_position{ current.position + offset.first };
 
 					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {

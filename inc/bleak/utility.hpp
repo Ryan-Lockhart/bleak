@@ -82,25 +82,7 @@ namespace bleak {
 
 		constexpr bool overlapping(cref<range_t> other) const noexcept { return first <= other.last && last >= other.first; }
 	};
-
-	template<usize Length, typename... Ranges>
-		requires is_homogeneous<range_t, Ranges...>::value
-	constexpr static auto generate_discontiguous_indices(Ranges... ranges) noexcept -> std::array<usize, (ranges.length() + ...)> {
-		std::array<usize, (ranges.length() + ...)> indices{};
-
-		static_assert((ranges.overlapping(ranges...) && ...) == false, "ranges are not allowed to overlap!");
-		static_assert((ranges.length() + ...) == Length, "sum of range lengths are not equal to length!");
-
-		usize index{ 0 };
-		for (crauto range : { ranges... }) {
-			for (usize i = range.first; i <= range.last; ++i) {
-				indices[index] = i;
-			}
-		}
-
-		return indices;
-	}
-
+	
 	namespace memory {
 		// size in bytes of one byte
 		constexpr const usize Byte{ usize{ 1 } << 0 };

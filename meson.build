@@ -23,11 +23,11 @@ else
 endif
 
 sdl_dependencies = [
-    dependency('sdl2'),
-    dependency('sdl2_image'),
-    dependency('sdl2_mixer'),
-    dependency('sdl2_net'),
-    dependency('sdl2_ttf'),
+    dependency('sdl2', static: true),
+    dependency('sdl2_image', static: true),
+    dependency('sdl2_mixer', static: true),
+    dependency('sdl2_net', static: true),
+    dependency('sdl2_ttf', static: true),
 ]
 
 sources = [
@@ -52,7 +52,7 @@ executable(
 
     override_options: [
         'cpp_std=c++26',
-        'cpp_stdlib=libc++',
+        'cpp_stdlib=libstdc++',
     ],
 
     c_args: args,
