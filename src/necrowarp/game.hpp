@@ -183,8 +183,6 @@ namespace necrowarp {
 			input_timer.reset();
 			cursor_timer.reset();
 			epoch_timer.reset();
-			
-			window.show();
 		}
 
 		static inline void load() noexcept {

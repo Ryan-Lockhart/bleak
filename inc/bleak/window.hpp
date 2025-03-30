@@ -39,8 +39,6 @@ namespace bleak {
 				error_log.add("failed to create window: {}", get_error());
 			}
 
-			SDL_HideWindow(handle);
-
 			return handle;
 		}
 
@@ -51,8 +49,6 @@ namespace bleak {
 				error_log.add("failed to create window: {}", get_error());
 			}
 
-			SDL_HideWindow(handle);
-
 			return handle;
 		}
 
@@ -62,8 +58,6 @@ namespace bleak {
 			if (handle == nullptr) {
 				error_log.add("failed to create window: {}", get_error());
 			}
-
-			SDL_HideWindow(handle);
 
 			return handle;
 		}
@@ -155,7 +149,7 @@ namespace bleak {
 			fullscreen = !fullscreen;
 
 			if (fullscreen) {
-				SDL_SetWindowFullscreen(window, sdl::window_flags::SDL_WINDOW_FULLSCREEN);
+				SDL_SetWindowFullscreen(window, sdl::window_flags::SDL_WINDOW_FULLSCREEN_DESKTOP);
 			} else {
 				SDL_SetWindowFullscreen(window, 0);
 			}
