@@ -10,6 +10,7 @@
 #include <bleak/cardinal.hpp>
 #include <bleak/input.hpp>
 #include <bleak/log.hpp>
+#include <bleak/steam.hpp>
 
 extern "C" {
 	typedef enum {
@@ -44,6 +45,118 @@ extern "C" {
 	} SDL_JoystickAxis;
 }
 
+// steam input translation layer
+namespace steam {
+	namespace input {
+		using namespace bleak;
+
+		static constexpr usize max_devices{ STEAM_INPUT_MAX_COUNT };
+
+		static constexpr usize max_analog_actions{ STEAM_INPUT_MAX_ANALOG_ACTIONS };
+
+		static constexpr usize max_digital_actions{ STEAM_INPUT_MAX_DIGITAL_ACTIONS };
+
+		static constexpr usize max_origins{ STEAM_INPUT_MAX_ORIGINS };
+
+		static constexpr usize max_active_layers{ STEAM_INPUT_MAX_ACTIVE_LAYERS };
+
+		static constexpr usize handle_all_controllers{ STEAM_INPUT_HANDLE_ALL_CONTROLLERS };
+
+		static constexpr f32 min_analog_action_data{ STEAM_INPUT_MIN_ANALOG_ACTION_DATA };
+		
+		static constexpr f32 max_analog_action_data{ STEAM_INPUT_MAX_ANALOG_ACTION_DATA };
+
+		enum class source_mode : u8 {
+			None = EInputSourceMode::k_EInputSourceMode_None,
+			Dpad = EInputSourceMode::k_EInputSourceMode_Dpad,
+			Buttons = EInputSourceMode::k_EInputSourceMode_Buttons,
+			FourButtons = EInputSourceMode::k_EInputSourceMode_FourButtons,
+			AbsoluteMouse = EInputSourceMode::k_EInputSourceMode_AbsoluteMouse,
+			RelativeMouse = EInputSourceMode::k_EInputSourceMode_RelativeMouse,
+			JoystickMove = EInputSourceMode::k_EInputSourceMode_JoystickMove,
+			JoystickMouse = EInputSourceMode::k_EInputSourceMode_JoystickMouse,
+			JoystickCamera = EInputSourceMode::k_EInputSourceMode_JoystickCamera,
+			ScrollWheel = EInputSourceMode::k_EInputSourceMode_ScrollWheel,
+			Trigger = EInputSourceMode::k_EInputSourceMode_Trigger,
+			TouchMenu = EInputSourceMode::k_EInputSourceMode_TouchMenu,
+			MouseJoystick = EInputSourceMode::k_EInputSourceMode_MouseJoystick,
+			MouseRegion = EInputSourceMode::k_EInputSourceMode_MouseRegion,
+			RadialMenu = EInputSourceMode::k_EInputSourceMode_RadialMenu,
+			SingleButton = EInputSourceMode::k_EInputSourceMode_SingleButton,
+			Switches = EInputSourceMode::k_EInputSourceMode_Switches
+		};
+
+		enum class origin : u8 {
+			None,
+			SteamController,
+			SteamDeck,
+			DualShock,
+			DualSense,
+			Xbox360,
+			XboxOne,
+			Switch,
+			Horipad
+		};
+
+		template<origin Origin> struct action;
+
+		template<> struct action<origin::None>{ static constexpr u16 none{ EInputActionOrigin::k_EInputActionOrigin_None }; };
+
+		template<> struct action<origin::SteamController>{
+			static constexpr u16 a{ EInputActionOrigin::k_EInputActionOrigin_SteamController_A };
+			static constexpr u16 b{ EInputActionOrigin::k_EInputActionOrigin_SteamController_B };
+			static constexpr u16 x{ EInputActionOrigin::k_EInputActionOrigin_SteamController_X };
+			static constexpr u16 y{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Y };
+			static constexpr u16 left_bumper{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftBumper };
+			static constexpr u16 right_bumper{ EInputActionOrigin::k_EInputActionOrigin_SteamController_RightBumper };
+			static constexpr u16 left_grip{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftGrip };
+			static constexpr u16 right_grip{ EInputActionOrigin::k_EInputActionOrigin_SteamController_RightGrip };
+			static constexpr u16 start{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Start };
+			static constexpr u16 back{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Back };
+			static constexpr u16 left_pad_touch{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftPad_Touch };
+			static constexpr u16 left_pad_swipe{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftPad_Swipe };
+			static constexpr u16 left_pad_click{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftPad_Click };
+			static constexpr u16 left_pad_d_pad_north{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftPad_DPadNorth };
+			static constexpr u16 left_pad_d_pad_south{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftPad_DPadSouth };
+			static constexpr u16 left_pad_d_pad_west{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftPad_DPadWest };
+			static constexpr u16 left_pad_d_pad_east{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftPad_DPadEast };
+			static constexpr u16 right_pad_touch{ EInputActionOrigin::k_EInputActionOrigin_SteamController_RightPad_Touch };
+			static constexpr u16 right_pad_swipe{ EInputActionOrigin::k_EInputActionOrigin_SteamController_RightPad_Swipe };
+			static constexpr u16 right_pad_click{ EInputActionOrigin::k_EInputActionOrigin_SteamController_RightPad_Click };
+			static constexpr u16 right_pad_d_pad_north{ EInputActionOrigin::k_EInputActionOrigin_SteamController_RightPad_DPadNorth };
+			static constexpr u16 right_pad_d_pad_south{ EInputActionOrigin::k_EInputActionOrigin_SteamController_RightPad_DPadSouth };
+			static constexpr u16 right_pad_d_pad_west{ EInputActionOrigin::k_EInputActionOrigin_SteamController_RightPad_DPadWest };
+			static constexpr u16 right_pad_d_pad_east{ EInputActionOrigin::k_EInputActionOrigin_SteamController_RightPad_DPadEast };
+			static constexpr u16 left_trigger_pull{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftTrigger_Pull };
+			static constexpr u16 left_trigger_click{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftTrigger_Click };
+			static constexpr u16 right_trigger_pull{ EInputActionOrigin::k_EInputActionOrigin_SteamController_RightTrigger_Pull };
+			static constexpr u16 right_trigger_click{ EInputActionOrigin::k_EInputActionOrigin_SteamController_RightTrigger_Click };
+			static constexpr u16 left_stick_move{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftStick_Move };
+			static constexpr u16 left_stick_click{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftStick_Click };
+			static constexpr u16 left_stick_d_pad_north{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftStick_DPadNorth };
+			static constexpr u16 left_stick_d_pad_south{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftStick_DPadSouth };
+			static constexpr u16 left_stick_d_pad_west{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftStick_DPadWest };
+			static constexpr u16 left_stick_d_pad_east{ EInputActionOrigin::k_EInputActionOrigin_SteamController_LeftStick_DPadEast };
+			static constexpr u16 gyro_move{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Gyro_Move };
+			static constexpr u16 gyro_pitch{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Gyro_Pitch };
+			static constexpr u16 gyro_yaw{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Gyro_Yaw };
+			static constexpr u16 gyro_roll{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Gyro_Roll };
+			static constexpr u16 reserved0{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Reserved0 };
+			static constexpr u16 reserved1{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Reserved1 };
+			static constexpr u16 reserved2{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Reserved2 };
+			static constexpr u16 reserved3{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Reserved3 };
+			static constexpr u16 reserved4{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Reserved4 };
+			static constexpr u16 reserved5{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Reserved5 };
+			static constexpr u16 reserved6{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Reserved6 };
+			static constexpr u16 reserved7{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Reserved7 };
+			static constexpr u16 reserved8{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Reserved8 };
+			static constexpr u16 reserved9{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Reserved9 };
+			static constexpr u16 reserved10{ EInputActionOrigin::k_EInputActionOrigin_SteamController_Reserved10 };
+		};
+	} // namespace input
+} // namespace steam
+
+// native sdl gamepad input implementation
 namespace bleak {
 	using joystick_t = SDL_Joystick;
 

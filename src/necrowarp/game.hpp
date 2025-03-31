@@ -19,11 +19,11 @@ namespace necrowarp {
 	  public:
 		static inline int run() noexcept {
 			if (!subsystem.is_initialized()) {
-				error_log.add("[ERROR]: a subsystem failed to initialize! see error above for details...");
+				error_log.add("[ERROR]: a subsystem failed to initialize! see error(s) above for details...");
 
 				return EXIT_FAILURE;
 			}
-			
+
 			startup();
 
 			do {

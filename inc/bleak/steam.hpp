@@ -30,8 +30,8 @@ namespace bleak {
 			init_result result = static_cast<init_result>(SteamAPI_InitEx(&err));
 
 			if (result != init_result::Ok) {
-				std::memset(error_str, '\0', error_str_size);
-				std::memcpy(error_str, err, strnlen((cstr)err, error_str_size));
+				memset(error_str, '\0', error_str_size);
+				memcpy(error_str, err, strnlen((cstr)err, error_str_size));
 			}
 
 			return result;
@@ -43,8 +43,8 @@ namespace bleak {
 			if (SteamAPI_RestartAppIfNecessary(app_id)) {
 				constexpr cstr invalid_launch_err_str{ "application wasn't launched through steam" };
 
-				std::memset(error_str, '\0', error_str_size);
-				std::memcpy(error_str, invalid_launch_err_str, strnlen(invalid_launch_err_str, error_str_size));
+				memset(error_str, '\0', error_str_size);
+				memcpy(error_str, invalid_launch_err_str, strnlen(invalid_launch_err_str, error_str_size));
 
 				return init_result::InvalidLaunch;
 			}
@@ -54,8 +54,8 @@ namespace bleak {
 			init_result result = static_cast<init_result>(SteamAPI_InitEx(&err));
 
 			if (result != init_result::Ok) {
-				std::memset(error_str, '\0', error_str_size);
-				std::memcpy(error_str, err, strnlen((cstr)err, error_str_size));
+				memset(error_str, '\0', error_str_size);
+				memcpy(error_str, err, strnlen((cstr)err, error_str_size));
 			}
 
 			return result;
