@@ -11,7 +11,9 @@
 namespace necrowarp {
 	using namespace bleak;
 
-	static inline subsystem_s subsystem{};
+	static constexpr u32 SteamAppID{ 3631430 };
+
+	static inline subsystem_s subsystem{ SteamAppID };
 
 	static inline phase_t phase{};
 

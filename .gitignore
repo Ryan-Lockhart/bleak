@@ -34,5 +34,7 @@
 build/**/*
 install/**/*
 
+*.log
+
 bin/*
 test/test_runner

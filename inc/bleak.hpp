@@ -42,6 +42,7 @@
 #include <bleak/renderer.hpp>
 #include <bleak/sound.hpp>
 #include <bleak/sprite.hpp>
+#include <bleak/steam.hpp>
 #include <bleak/subsystem.hpp>
 #include <bleak/texture.hpp>
 #include <bleak/timer.hpp>
