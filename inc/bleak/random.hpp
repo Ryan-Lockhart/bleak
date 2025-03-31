@@ -41,10 +41,6 @@ namespace bleak {
 		static const bool value = true;
 	};
 
-	template<> struct is_random_engine<std::default_random_engine> {
-		static const bool value = true;
-	};
-
 	template<typename T> constexpr bool is_random_engine_v = is_random_engine<T>::value;
 
 	template<typename T> struct is_random_distribution {

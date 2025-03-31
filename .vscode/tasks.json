@@ -22,12 +22,15 @@
 				"${workspaceFolder}\\build",
 				"${workspaceFolder}",
 				"--native-file",
-				"windows.meson",
+				"${workspaceFolder}\\native\\windows.ini",
+				"--cross-file",
+				"${workspaceFolder}\\cross\\x86_64-windows.ini",
 				"--buildtype",
-				"debug"
+				"debug",
+				"--wipe"
 			],
 			"group": "build",
-			"detail": "reconfigures the project for building in debug mode"
+			"detail": "reconfigures the project for building debug binaries"
 		},
 		{
 			"label": "meson-reconfigure-release",
@@ -39,12 +42,35 @@
 				"${workspaceFolder}\\build",
 				"${workspaceFolder}",
 				"--native-file",
-				"windows.meson",
+				"${workspaceFolder}\\native\\windows.ini",
+				"--cross-file",
+				"${workspaceFolder}\\cross\\x86_64-windows.ini",
 				"--buildtype",
-				"release"
+				"release",
+				"--wipe"
 			],
 			"group": "build",
-			"detail": "reconfigures the project for building in release mode"
+			"detail": "reconfigures the project for building windows binaries"
+		},
+		{
+			"label": "meson-reconfigure-linux",
+			"type": "shell",
+			"command": "meson",
+			"args": [
+				"setup",
+				"--reconfigure",
+				"${workspaceFolder}\\build",
+				"${workspaceFolder}",
+				"--native-file",
+				"${workspaceFolder}\\native\\windows.ini",
+				"--cross-file",
+				"${workspaceFolder}\\cross\\x86_64-linux.ini",
+				"--buildtype",
+				"release",
+				"--wipe"
+			],
+			"group": "build",
+			"detail": "reconfigures the project for building linux binaries"
 		},
 	]
 }

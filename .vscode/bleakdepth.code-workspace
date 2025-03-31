@@ -7,12 +7,9 @@
 	"settings": {
 		"mesonbuild.configureOnOpen": false,
 		"mesonbuild.buildFolder": "build",
-		"mesonbuild.configureEnvironment": {
-			"CC": "gcc",
-			"CXX": "g++"
-		},
 		"task.quickOpen.showAll": true,
 		"task.autoDetect": "on",
 		"mesonbuild.modifySettings": false,
+		"clangd.path": "clangd.exe",
 	}
 }
