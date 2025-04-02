@@ -101,7 +101,7 @@ if target_machine.system() == 'windows'
 elif target_machine.system() == 'linux'
 
     std_deps = [
-        cxx.find_library('gcc_s', required: true, static: false),
+        cxx.find_library('gcc', required: true, static: true),
         cxx.find_library('stdc++', required: true, static: true),
         cxx.find_library('pthread', dirs: '/usr/lib64', required: true, static: true),
         cxx.find_library('steam_api', required: true, static: false),
@@ -117,7 +117,7 @@ elif target_machine.system() == 'linux'
 
 endif
 
-libbleak_shared = shared_library(
+libbleak = both_libraries(
     'bleak',
 
     sources,
@@ -129,25 +129,8 @@ libbleak_shared = shared_library(
 
     c_args: args,
     cpp_args: args,
-
-    install: true,
-    install_dir: install_dir,
-)
-
-libbleak_static = static_library(
-    'bleak',
-
-    sources,
-
-    dependencies: [
-        std_deps,
-        sdl_deps
-    ],
     
-    link_args: ['-Wl, --whole-archive'],
-
-    c_args: args,
-    cpp_args: args,
+    link_args: ['-Wl,--no-as-needed'],
 
     install: true,
     install_dir: install_dir,
