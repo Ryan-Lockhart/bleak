@@ -5,7 +5,6 @@
 			"label": "meson-build",
 			"type": "meson",
 			"mode": "build",
-			"target": "necrowarp:executable",
 			"problemMatcher": [
 				"$meson-gcc"
 			],
@@ -16,61 +15,75 @@
 			"label": "meson-reconfigure-debug",
 			"type": "shell",
 			"command": "meson",
-			"args": [
-				"setup",
-				"--reconfigure",
-				"${workspaceFolder}\\build",
-				"${workspaceFolder}",
-				"--native-file",
-				"${workspaceFolder}\\native\\windows.ini",
-				"--cross-file",
-				"${workspaceFolder}\\cross\\x86_64-windows.ini",
-				"--buildtype",
-				"debug",
-				"--wipe"
-			],
+			"windows": {
+				"args": [
+					"setup",
+					"--reconfigure",
+					"${workspaceFolder}/build",
+					"${workspaceFolder}",
+					"--native-file",
+					"${workspaceFolder}/native.ini",
+					"--cross-file",
+					"${workspaceFolder}/cross/x86_64-windows.ini",
+					"--buildtype",
+					"debug",
+					"--wipe"
+				]
+			},
+			"linux": {
+				"args": [
+					"setup",
+					"--reconfigure",
+					"${workspaceFolder}/build",
+					"${workspaceFolder}",
+					"--native-file",
+					"${workspaceFolder}/native.ini",
+					"--cross-file",
+					"${workspaceFolder}/cross/x86_64-linux.ini",
+					"--buildtype",
+					"debug",
+					"--wipe"
+				]
+			},
 			"group": "build",
-			"detail": "reconfigures the project for building debug binaries"
+			"detail": "reconfigures the project for building the debug library"
 		},
 		{
 			"label": "meson-reconfigure-release",
 			"type": "shell",
 			"command": "meson",
-			"args": [
-				"setup",
-				"--reconfigure",
-				"${workspaceFolder}\\build",
-				"${workspaceFolder}",
-				"--native-file",
-				"${workspaceFolder}\\native\\windows.ini",
-				"--cross-file",
-				"${workspaceFolder}\\cross\\x86_64-windows.ini",
-				"--buildtype",
-				"release",
-				"--wipe"
-			],
+			"windows": {
+				"args": [
+					"setup",
+					"--reconfigure",
+					"${workspaceFolder}/build",
+					"${workspaceFolder}",
+					"--native-file",
+					"${workspaceFolder}/native.ini",
+					"--cross-file",
+					"${workspaceFolder}/cross/x86_64-windows.ini",
+					"--buildtype",
+					"release",
+					"--wipe"
+				]
+			},
+			"linux": {
+				"args": [
+					"setup",
+					"--reconfigure",
+					"${workspaceFolder}/build",
+					"${workspaceFolder}",
+					"--native-file",
+					"${workspaceFolder}/native.ini",
+					"--cross-file",
+					"${workspaceFolder}/cross/x86_64-linux.ini",
+					"--buildtype",
+					"release",
+					"--wipe"
+				]
+			},
 			"group": "build",
-			"detail": "reconfigures the project for building windows binaries"
-		},
-		{
-			"label": "meson-reconfigure-linux",
-			"type": "shell",
-			"command": "meson",
-			"args": [
-				"setup",
-				"--reconfigure",
-				"${workspaceFolder}\\build",
-				"${workspaceFolder}",
-				"--native-file",
-				"${workspaceFolder}\\native\\windows.ini",
-				"--cross-file",
-				"${workspaceFolder}\\cross\\x86_64-linux.ini",
-				"--buildtype",
-				"release",
-				"--wipe"
-			],
-			"group": "build",
-			"detail": "reconfigures the project for building linux binaries"
+			"detail": "reconfigures the project for building the release library"
 		},
 	]
 }

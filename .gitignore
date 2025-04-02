@@ -4,12 +4,6 @@
 *.gch
 *.pch
 
-*.so
-*.dll
-
-*.a
-*.lib
-
 # Executables
 *.exe
 *.out
@@ -32,7 +26,6 @@
 .cache/*
 
 build/**/*
-install/**/*
 
 *.log
 

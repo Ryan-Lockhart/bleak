@@ -138,7 +138,7 @@ namespace bleak {
 		}
 
 		inline void flush_to_file() {
-			std::ofstream file { ".\\log\\" + name + ".log", std::ios::out | std::ios::trunc };
+			std::ofstream file { "./log/" + name + ".log", std::ios::out | std::ios::trunc };
 
 			usize idx{ 0 };
 			for (cref<std::string> message : messages) {

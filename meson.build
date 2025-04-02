@@ -1,10 +1,6 @@
-project(
-    'libbleak',
-    'cpp',
-    version: '0.0.1',
-)
+project('libbleak', 'cpp', version: '0.0.1')
 
-install_dir = '@0@\\install\\@1@\\@2@'.format(
+install_dir = '@0@/lib/@1@/@2@'.format(
 	meson.project_source_root(),
 	target_machine.system(),
 	target_machine.cpu_family()
@@ -13,75 +9,146 @@ install_dir = '@0@\\install\\@1@\\@2@'.format(
 build_type = get_option('buildtype')
 
 if build_type == 'debug'
-    subsystem = 'console'
     args = ['-DBLEAK_DEBUG']
-
-	install_data('steam_appid.txt', install_dir: install_dir)
 else
-    subsystem = 'windows'
     args = ['-DBLEAK_RELEASE', '-DNDEBUG']
 endif
 
+sources = [
+    'bleak.hpp',
+
+    'bleak/applicator.hpp',
+    'bleak/arc.hpp',
+    'bleak/area.hpp',
+    'bleak/array.hpp',
+    'bleak/camera.hpp',
+    'bleak/cardinal.hpp',
+    'bleak/cell.hpp',
+    'bleak/circle.hpp',
+    'bleak/clip_pool.hpp',
+    'bleak/clock.hpp',
+    'bleak/color.hpp',
+    'bleak/concepts.hpp',
+    'bleak/constants.hpp',
+    'bleak/creeper.hpp',
+    'bleak/cursor.hpp',
+    'bleak/extent.hpp',
+    'bleak/field.hpp',
+    'bleak/gamepad.hpp',
+    'bleak/glyph.hpp',
+    'bleak/hash.hpp',
+    'bleak/input.hpp',
+    'bleak/iter.hpp',
+    'bleak/keyboard.hpp',
+    'bleak/line.hpp',
+    'bleak/log.hpp',
+    'bleak/lut.hpp',
+    'bleak/memory.hpp',
+    'bleak/mixer.hpp',
+    'bleak/mouse.hpp',
+    'bleak/octant.hpp',
+    'bleak/offset.hpp',
+    'bleak/path.hpp',
+    'bleak/primitive.hpp',
+    'bleak/primitive_types.hpp',
+    'bleak/quadrant.hpp',
+    'bleak/random.hpp',
+    'bleak/rect.hpp',
+    'bleak/region.hpp',
+    'bleak/renderer.hpp',
+    'bleak/sound.hpp',
+    'bleak/sprite.hpp',
+    'bleak/steam.hpp',
+    'bleak/subsystem.hpp',
+    'bleak/texture.hpp',
+    'bleak/timer.hpp',
+    'bleak/tree.hpp',
+    'bleak/triangle.hpp',
+    'bleak/typedef.hpp',
+    'bleak/utility.hpp',
+    'bleak/wave.hpp',
+    'bleak/window.hpp',
+    'bleak/zone.hpp',
+
+    'bleak/constants/bindings.hpp',
+    'bleak/constants/characters.hpp',
+    'bleak/constants/colors.hpp',
+    'bleak/constants/glyphs.hpp',
+    'bleak/constants/keys.hpp',
+    'bleak/constants/numeric.hpp',
+    'bleak/constants/octants.hpp',
+]
+
 cxx = meson.get_compiler('cpp')
 
-std_dependencies = [
-	cxx.find_library('gcc', required: false, static: false),
-	cxx.find_library('gcc_s', required: false, static: false),
-	cxx.find_library('stdc++', required: false, static: false),
-	cxx.find_library('clang', required: false, static: false),
-	cxx.find_library('c++', required: false, static: false),
-	cxx.find_library('c++abi', required: false, static: false),
-	cxx.find_library('winpthread', required: false, static: false),
-	cxx.find_library('steam_api64', required: true, static: false)
-]
+if target_machine.system() == 'windows'
 
-sdl_dependencies = [
-    dependency('sdl2', required: true, static: false),
-    dependency('sdl2_image', required: true, static: false),
-    dependency('sdl2_mixer', required: true, static: false),
-    dependency('sdl2_net', required: true, static: false),
-    dependency('sdl2_ttf', required: true, static: false),
-]
+    std_deps = [
+        cxx.find_library('gcc_s', required: true, static: false),
+        cxx.find_library('c++', required: true, static: true),
+        cxx.find_library('winpthread', required: true, static: true),
+        cxx.find_library('steam_api', required: true, static: false),
+    ]
 
-sources = ['src/program.cpp']
+    sdl_deps = [
+        dependency('SDL2', required: true, static: false),
+        dependency('SDL2_image', required: true, static: false),
+        dependency('SDL2_mixer', required: true, static: false),
+        dependency('SDL2_net', required: true, static: false),
+        dependency('SDL2_ttf', required: true, static: false),
+    ]
 
-assert(sources.length() == 1, 'project is designed for a single source executable')
+elif target_machine.system() == 'linux'
 
-includes = include_directories(['inc', 'src'])
+    std_deps = [
+        cxx.find_library('gcc_s', required: true, static: false),
+        cxx.find_library('stdc++', required: true, static: true),
+        cxx.find_library('pthread', dirs: '/usr/lib64', required: true, static: true),
+        cxx.find_library('steam_api', required: true, static: false),
+    ]
 
-dyn_libs = ['zlib1', 'steam_api64', 'SDL2_ttf', 'SDL2_net', 'SDL2_mixer', 'SDL2_image', 'SDL2', 'libzstd', 'libyuv', 'libwinpthread-1', 'libwebpdemux-2', 'libwebp-7', 'libunwind', 'libtiff-6', 'libSvtAv1Enc-3', 'libsharpyuv-0', 'librav1e', 'libpng16-16', 'libpcre2-8-0', 'libopusfile-0', 'libopus-0', 'libogg-0', 'libmpg123-0', 'libmodplug-1', 'liblzma-5', 'libLerc', 'liblcms2-2', 'libjxl_cms', 'libjxl', 'libjpeg-8', 'libjbig-0', 'libintl-8', 'libiconv-2', 'libhwy', 'libharfbuzz-0', 'libgraphite2', 'libglib-2.0-0', 'libfreetype-6', 'libdeflate', 'libdav1d-7', 'libc++', 'libbz2-1', 'libbrotlienc', 'libbrotlidec', 'libbrotlicommon', 'libavif-16', 'libaom']
+    sdl_deps = [
+        cxx.find_library('SDL2', dirs: '/usr/local/lib', required: true, static: true),
+        cxx.find_library('SDL2_image', dirs: '/usr/local/lib', required: true, static: true),
+        cxx.find_library('SDL2_mixer', dirs: '/usr/local/lib', required: true, static: true),
+        cxx.find_library('SDL2_net', dirs: '/usr/local/lib', required: true, static: true),
+        cxx.find_library('SDL2_ttf', dirs: '/usr/local/lib', required: true, static: true),
+    ]
 
-dyn_lib_path = cxx.get_define('libpath')
+endif
 
-dyn_lib_ext = cxx.get_define('libext')
+libbleak_shared = shared_library(
+    'bleak',
 
-dyn_files = []
-
-foreach dyn_lib : dyn_libs
-	dyn_files += dyn_lib_path + dyn_lib + dyn_lib_ext
-endforeach
-
-executable(
-    'necrowarp',
     sources,
 
-    dependencies: [std_dependencies, sdl_dependencies],
-
-    include_directories: includes,
+    dependencies: [
+        std_deps,
+        sdl_deps
+    ],
 
     c_args: args,
     cpp_args: args,
 
     install: true,
     install_dir: install_dir,
-
-    win_subsystem: subsystem,
 )
 
-install_subdir('log', install_dir: install_dir)
-install_subdir('res', install_dir: install_dir)
+libbleak_static = static_library(
+    'bleak',
 
-install_data('log\\message.log', install_dir: install_dir + '\\log')
-install_data('log\\error.log', install_dir: install_dir + '\\log')
+    sources,
 
-install_data(dyn_files, install_dir: install_dir)
+    dependencies: [
+        std_deps,
+        sdl_deps
+    ],
+    
+    link_args: ['-Wl, --whole-archive'],
+
+    c_args: args,
+    cpp_args: args,
+
+    install: true,
+    install_dir: install_dir,
+)
