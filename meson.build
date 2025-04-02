@@ -84,10 +84,10 @@ cxx = meson.get_compiler('cpp')
 if target_machine.system() == 'windows'
 
     std_deps = [
-        cxx.find_library('gcc_s', required: true, static: false),
-        cxx.find_library('c++', required: true, static: true),
+        cxx.find_library('gcc', required: true, static: true),
+        cxx.find_library('stdc++', required: true, static: true),
         cxx.find_library('winpthread', required: true, static: true),
-        cxx.find_library('steam_api', required: true, static: false),
+        cxx.find_library('steam_api', dirs: 'c:/dev/steam/sdk/redistributable_bin/win64', required: true, static: false),
     ]
 
     sdl_deps = [
