@@ -129,8 +129,6 @@ libbleak = both_libraries(
 
     c_args: args,
     cpp_args: args,
-    
-    link_args: ['-Wl,--no-as-needed'],
 
     install: true,
     install_dir: install_dir,
@@ -138,5 +136,6 @@ libbleak = both_libraries(
 
 libbleak_dep = declare_dependency(
     include_directories: include_directories(['.']),
-    link_with: [libbleak],
+    link_with: [libbleak.get_shared_lib()],
+    link_whole: [libbleak.get_static_lib()],
 )
