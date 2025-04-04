@@ -2,4 +2,4 @@
 directory = libbleak
 
 [provide]
-libbleak = libbleak_dep
+bleak = libbleak_dep
