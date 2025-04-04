@@ -1,2 +1,5 @@
+[wrap-file]
+directory = libbleak
+
 [provide]
 libbleak = libbleak_dep
