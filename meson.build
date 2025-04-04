@@ -1,4 +1,4 @@
-project('libbleak', 'cpp', version: '0.0.1')
+project('libbleak', 'cpp', version: '0.0.1', meson_version: '>=1.3.0')
 
 install_dir = '@0@/lib/@1@/@2@'.format(
 	meson.project_source_root(),
@@ -134,4 +134,9 @@ libbleak = both_libraries(
 
     install: true,
     install_dir: install_dir,
+)
+
+libbleak_dep = declare_dependency(
+    include_directories: include_directories(['.']),
+    link_with: [libbleak],
 )
