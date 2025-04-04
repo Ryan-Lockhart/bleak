@@ -10,6 +10,5 @@
 		"task.quickOpen.showAll": true,
 		"task.autoDetect": "on",
 		"mesonbuild.modifySettings": false,
-		"clangd.path": "/usr/bin/clangd",
 	}
 }

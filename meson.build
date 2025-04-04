@@ -84,9 +84,9 @@ cxx = meson.get_compiler('cpp')
 if target_machine.system() == 'windows'
 
     std_deps = [
-        cxx.find_library('gcc', required: true, static: true),
-        cxx.find_library('stdc++', required: true, static: true),
-        cxx.find_library('winpthread', required: true, static: true),
+        cxx.find_library('gcc_s_seh-1', dirs: 'c:/dev/msys64/ucrt64/bin', required: true, static: false),
+        cxx.find_library('stdc++', required: true, static: false),
+        cxx.find_library('winpthread', required: true, static: false),
         cxx.find_library('steam_api', dirs: 'c:/dev/steam/sdk/redistributable_bin/win64', required: true, static: false),
     ]
 
@@ -101,18 +101,18 @@ if target_machine.system() == 'windows'
 elif target_machine.system() == 'linux'
 
     std_deps = [
-        cxx.find_library('gcc', required: true, static: true),
-        cxx.find_library('stdc++', required: true, static: true),
-        cxx.find_library('pthread', dirs: '/usr/lib64', required: true, static: true),
+        cxx.find_library('gcc_s', required: true, static: false),
+        cxx.find_library('stdc++', required: true, static: false),
+        cxx.find_library('pthread', dirs: '/usr/lib64', required: true, static: false),
         cxx.find_library('steam_api', required: true, static: false),
     ]
 
     sdl_deps = [
-        cxx.find_library('SDL2', dirs: '/usr/local/lib', required: true, static: true),
-        cxx.find_library('SDL2_image', dirs: '/usr/local/lib', required: true, static: true),
-        cxx.find_library('SDL2_mixer', dirs: '/usr/local/lib', required: true, static: true),
-        cxx.find_library('SDL2_net', dirs: '/usr/local/lib', required: true, static: true),
-        cxx.find_library('SDL2_ttf', dirs: '/usr/local/lib', required: true, static: true),
+        cxx.find_library('SDL2', dirs: '/usr/local/lib', required: true, static: false),
+        cxx.find_library('SDL2_image', dirs: '/usr/local/lib', required: true, static: false),
+        cxx.find_library('SDL2_mixer', dirs: '/usr/local/lib', required: true, static: false),
+        cxx.find_library('SDL2_net', dirs: '/usr/local/lib', required: true, static: false),
+        cxx.find_library('SDL2_ttf', dirs: '/usr/local/lib', required: true, static: false),
     ]
 
 endif
