@@ -27,7 +27,7 @@ namespace bleak {
 			}
 
 			steam_initialized = steam::initialize() == steam::init_result::Ok;
-			
+
 			if (!steam_initialized) {
 				error_log.add("[ERROR]: failed to initialize steam subsystem: {}", steam::get_error());
 			}
@@ -170,9 +170,9 @@ namespace bleak {
 		}
 
 	  public:
-		inline subsystem_s() noexcept {
+		static inline bool initialize() noexcept {
 			if (is_initialized()) {
-				return;
+				return true;
 			}
 
 			initialize_steam();
@@ -181,10 +181,13 @@ namespace bleak {
 			initialize_sdl_mixer();
 			initialize_sdl_net();
 			initialize_sdl_ttf();
+
+			return is_initialized();
 		}
-		inline subsystem_s(u32 app_id) noexcept {
+
+		static inline bool initialize(u32 app_id) noexcept {
 			if (is_initialized()) {
-				return;
+				return true;
 			}
 
 			initialize_steam(app_id);
@@ -193,9 +196,11 @@ namespace bleak {
 			initialize_sdl_mixer();
 			initialize_sdl_net();
 			initialize_sdl_ttf();
+
+			return is_initialized();
 		}
 
-		inline ~subsystem_s() noexcept {
+		static inline void terminate() noexcept {
 			if (!is_initialized()) {
 				return;
 			}

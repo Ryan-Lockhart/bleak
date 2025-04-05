@@ -34,7 +34,7 @@ namespace bleak {
 
 		static const extent_t Zero;
 
-		constexpr explicit extent_t() noexcept {}
+		constexpr extent_t() noexcept {}
 
 		constexpr explicit extent_t(scalar_t scalar) noexcept : c_extent_t{ scalar, scalar } {}
 

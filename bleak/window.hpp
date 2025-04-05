@@ -77,24 +77,23 @@ namespace bleak {
 		ptr<sdl::window> window;
 
 	  public:
-		const cstr title;
-		const extent_t size;
-		const u32 flags;
 
 	  private:
+	  	u32 flags;
+
 		bool closing = false;
 		bool fullscreen = false;
 
 	  public:
 		inline window_t() = delete;
 
-		inline window_t(cstr title, cref<extent_t> size, sdl::window_flags flags) noexcept : window{ sdl::create_window(title, size, flags) }, title{ title }, size{ size }, flags{ flags } {}
+		inline window_t(cstr title, cref<extent_t> size, sdl::window_flags flags) noexcept : window{ sdl::create_window(title, size, flags) }, flags{ flags } {}
 
-		inline window_t(cstr title, cref<offset_t> position, cref<extent_t> size, sdl::window_flags flags) noexcept : window{ sdl::create_window(title, size, position, flags) }, title{ title }, size{ size }, flags{ flags } {}
+		inline window_t(cstr title, cref<offset_t> position, cref<extent_t> size, sdl::window_flags flags) noexcept : window{ sdl::create_window(title, size, position, flags) }, flags{ flags } {}
 
 		inline window_t(cref<window_t> other) noexcept = delete;
 
-		inline window_t(rval<window_t> other) noexcept : window(std::move(other.window)), title(std::move(other.title)), size(std::move(other.size)), flags(std::move(other.flags)) { other.window = nullptr; }
+		inline window_t(rval<window_t> other) noexcept : window(std::move(other.window)), flags(std::move(other.flags)) { other.window = nullptr; }
 
 		inline ref<window_t> operator=(cref<window_t> other) noexcept = delete;
 
@@ -145,14 +144,52 @@ namespace bleak {
 
 		constexpr void hide() noexcept { sdl::hide_window(window); }
 
-		constexpr void toggle_fullscreen() noexcept {
-			fullscreen = !fullscreen;
+		constexpr void set_title(cstr value) noexcept { SDL_SetWindowTitle(window, value); }
 
+		constexpr cstr get_title() const noexcept { return SDL_GetWindowTitle(window); }
+
+		constexpr void set_size(extent_t value) noexcept { SDL_SetWindowSize(window, static_cast<i32>(value.w), static_cast<i32>(value.h)); }
+
+		constexpr extent_t get_size() const noexcept {
+			int w{}, h{}; SDL_GetWindowSize(window, &w, &h);
+
+			return extent_t{ extent_t::scalar_cast(w), extent_t::scalar_cast(h) };
+		}
+
+		constexpr bool is_fullscreen() const noexcept { return fullscreen; }
+
+		constexpr void update_fullscreen() noexcept {
 			if (fullscreen) {
-				SDL_SetWindowFullscreen(window, sdl::window_flags::SDL_WINDOW_FULLSCREEN_DESKTOP);
+				SDL_SetWindowFullscreen(window, sdl::window_flags::SDL_WINDOW_FULLSCREEN);
 			} else {
 				SDL_SetWindowFullscreen(window, 0);
 			}
+		}
+
+		constexpr void toggle_fullscreen() noexcept {
+			fullscreen = !fullscreen;
+
+			update_fullscreen();
+		}
+
+		constexpr void set_fullscreen() noexcept {
+			if (fullscreen) {
+				return;
+			}
+
+			fullscreen = true;
+
+			update_fullscreen();
+		}
+
+		constexpr void set_windowed() noexcept {
+			if (!fullscreen) {
+				return;
+			}
+
+			fullscreen = false;
+
+			update_fullscreen();
 		}
 
 		constexpr void close() noexcept { closing = true; }
@@ -163,10 +200,10 @@ namespace bleak {
 
 		constexpr offset_t origin() const noexcept { return offset_t::Zero; }
 
-		constexpr offset_t center() const noexcept { return origin() + size / 2; }
+		constexpr offset_t center() const noexcept { return origin() + get_size() / 2; }
 
-		constexpr offset_t extents() const noexcept { return origin() + size - 1; }
+		constexpr offset_t extents() const noexcept { return origin() + get_size() - 1; }
 
-		constexpr rect_t bounds() const noexcept { return { origin(), size }; }
+		constexpr rect_t bounds() const noexcept { return { origin(), get_size() }; }
 	};
 } // namespace bleak
