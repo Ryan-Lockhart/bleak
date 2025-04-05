@@ -1,5 +1,0 @@
-[wrap-file]
-directory = libbleak
-
-[provide]
-bleak = libbleak_dep
