@@ -5,8 +5,6 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_mixer.h>
-#include <SDL_net.h>
-#include <SDL_ttf.h>
 
 #include <bleak/log.hpp>
 #include <bleak/steam.hpp>
@@ -15,11 +13,10 @@ namespace bleak {
 	struct subsystem_s {
 	  private:
 		static inline bool steam_initialized{ false };
+
 		static inline bool sdl_initialized{ false };
 		static inline bool sdl_image_initialized{ false };
 		static inline bool sdl_mixer_initialized{ false };
-		static inline bool sdl_net_initialized{ false };
-		static inline bool sdl_ttf_initialized{ false };
 
 		static inline void initialize_steam() noexcept {
 			if (steam_initialized) {
@@ -79,34 +76,10 @@ namespace bleak {
 				return;
 			}
 
-			sdl_mixer_initialized = Mix_Init(MIX_INIT_OGG) != 0;
+			sdl_mixer_initialized = Mix_Init(MIX_INIT_OPUS) != 0;
 
 			if (!sdl_mixer_initialized) {
 				error_log.add("[ERROR]: failed to initialize sdl-mixer subsystem: {}", Mix_GetError());
-			}
-		}
-
-		static inline void initialize_sdl_net() noexcept {
-			if (sdl_net_initialized) {
-				return;
-			}
-
-			sdl_net_initialized = SDLNet_Init() == 0;
-
-			if (!sdl_net_initialized) {
-				error_log.add("[ERROR]: failed to initialize sdl-net subsystem: {}", SDLNet_GetError());
-			}
-		}
-
-		static inline void initialize_sdl_ttf() noexcept {
-			if (sdl_ttf_initialized) {
-				return;
-			}
-
-			sdl_ttf_initialized = TTF_Init() == 0;
-
-			if (!sdl_ttf_initialized) {
-				error_log.add("[ERROR]: failed to initialize sdl-ttf subsystem: {}", TTF_GetError());
 			}
 		}
 
@@ -149,26 +122,6 @@ namespace bleak {
 			sdl_mixer_initialized = false;
 		}
 
-		static inline void terminate_sdl_net() noexcept {
-			if (!sdl_net_initialized) {
-				return;
-			}
-
-			SDLNet_Quit();
-
-			sdl_net_initialized = false;
-		}
-
-		static inline void terminate_sdl_ttf() noexcept {
-			if (!sdl_ttf_initialized) {
-				return;
-			}
-
-			TTF_Quit();
-
-			sdl_ttf_initialized = false;
-		}
-
 	  public:
 		static inline bool initialize() noexcept {
 			if (is_initialized()) {
@@ -176,11 +129,10 @@ namespace bleak {
 			}
 
 			initialize_steam();
+
 			initialize_sdl();
 			initialize_sdl_image();
 			initialize_sdl_mixer();
-			initialize_sdl_net();
-			initialize_sdl_ttf();
 
 			return is_initialized();
 		}
@@ -191,11 +143,10 @@ namespace bleak {
 			}
 
 			initialize_steam(app_id);
+
 			initialize_sdl();
 			initialize_sdl_image();
 			initialize_sdl_mixer();
-			initialize_sdl_net();
-			initialize_sdl_ttf();
 
 			return is_initialized();
 		}
@@ -205,14 +156,13 @@ namespace bleak {
 				return;
 			}
 
-			terminate_sdl_ttf();
-			terminate_sdl_net();
 			terminate_sdl_mixer();
 			terminate_sdl_image();
 			terminate_sdl();
+
 			terminate_steam();
 		}
 
-		static inline bool is_initialized() noexcept { return steam_initialized && sdl_initialized && sdl_image_initialized && sdl_mixer_initialized && sdl_net_initialized && sdl_ttf_initialized; }
+		static inline bool is_initialized() noexcept { return steam_initialized && sdl_initialized && sdl_image_initialized && sdl_mixer_initialized; }
 	};
 } // namespace bleak
