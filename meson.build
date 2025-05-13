@@ -1,4 +1,4 @@
-project('libbleak', 'cpp', version: '0.0.1', meson_version: '>=1.3.0')
+project('bleak', 'cpp', version: '0.0.1', meson_version: '>=1.3.0')
 
 build_type = get_option('buildtype')
 
