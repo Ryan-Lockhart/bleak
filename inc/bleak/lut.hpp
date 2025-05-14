@@ -98,8 +98,8 @@ namespace bleak {
 					return values[i];
 				}
 			}
-
-			throw std::invalid_argument("key not found!");
+			
+			throw std::runtime_error("key not found in lookup table!");
 		}
 
 		constexpr cref<Value> operator[](cref<Key> key) const {
@@ -108,8 +108,8 @@ namespace bleak {
 					return values[i];
 				}
 			}
-
-			throw std::invalid_argument("key not found!");
+			
+			throw std::runtime_error("key not found in lookup table!");
 		}
 	};
 } // namespace bleak

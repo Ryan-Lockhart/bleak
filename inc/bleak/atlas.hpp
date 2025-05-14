@@ -2,7 +2,6 @@
 
 #include <bleak/typedef.hpp>
 
-#include <cctype>
 #include <stdexcept>
 
 #include <SDL.h>
@@ -57,26 +56,32 @@ namespace bleak {
 		// The size of each glyph in pixels.
 		const extent_t glyph_size;
 
-		offset_t universal_offset{};
+		// The size of the rendered glyph in pixels
+		const extent_t override_size;
 
-		inline atlas_t() = delete;
+		inline atlas_t() noexcept = delete;
 
 		inline atlas_t(ref<renderer_t> renderer, cstr path) :
 			rects{},
 			texture{ renderer, path },
 
 			image_size{ this->texture.info.size },
-			glyph_size{ image_size / size } {
+			glyph_size{ image_size / size },
+			override_size{ glyph_size } {
 			if (image_size.w <= 0 || image_size.h <= 0) {
-				throw std::runtime_error("image size must be greater than zero!");
+				throw std::runtime_error("[ERROR]: failed to initialize atlas! (image size must be greater than zero!)");
 			}
 
 			if (glyph_size.w <= 0 || glyph_size.h <= 0) {
-				throw std::runtime_error("glyph size must be greater than zero!");
+				throw std::runtime_error("[ERROR]: failed to initialize atlas! (glyph size must be greater than zero!)");
+			}
+
+			if (override_size.w <= 0 || override_size.h <= 0) {
+				throw std::runtime_error("[ERROR]: failed to initialize atlas! (override size must be greater than zero!)");
 			}
 
 			if (image_size.w % size.w != 0 || image_size.h % size.h != 0) {
-				throw std::runtime_error("image size must be divisible by the atlas size!");
+				throw std::runtime_error("[ERROR]: failed to initialize atlas! (image size must be divisible by the atlas size!)");
 			}
 
 			extent_t::product_t index{ 0 };
@@ -87,23 +92,27 @@ namespace bleak {
 			}
 		}
 
-		inline atlas_t(ref<renderer_t> renderer, cstr path, offset_t offset) :
+		inline atlas_t(ref<renderer_t> renderer, cstr path, extent_t override_size) :
 			rects{},
 			texture{ renderer, path },
 
 			image_size{ this->texture.info.size },
 			glyph_size{ image_size / size },
-			universal_offset{ offset } {
+			override_size{ override_size } {
 			if (image_size.w <= 0 || image_size.h <= 0) {
-				throw std::runtime_error("image size must be greater than zero!");
+				throw std::runtime_error("[ERROR]: failed to initialize atlas! (image size must be greater than zero!)");
 			}
 
 			if (glyph_size.w <= 0 || glyph_size.h <= 0) {
-				throw std::runtime_error("glyph size must be greater than zero!");
+				throw std::runtime_error("[ERROR]: failed to initialize atlas! (glyph size must be greater than zero!)");
+			}
+
+			if (override_size.w <= 0 || override_size.h <= 0) {
+				throw std::runtime_error("[ERROR]: failed to initialize atlas! (override size must be greater than zero!)");
 			}
 
 			if (image_size.w % size.w != 0 || image_size.h % size.h != 0) {
-				throw std::runtime_error("image size must be divisible by the atlas size!");
+				throw std::runtime_error("[ERROR]: failed to initialize atlas! (image size must be divisible by the atlas size!)");
 			}
 
 			extent_t::product_t index{ 0 };
@@ -120,24 +129,36 @@ namespace bleak {
 		inline ref<atlas_t> operator=(cref<atlas_t> other) = delete;
 		inline ref<atlas_t> operator=(rval<atlas_t> other) = delete;
 
-		inline ~atlas_t() = default;
+		inline ~atlas_t() noexcept = default;
 
-		inline void draw(glyph_t glyph, offset_t position) const noexcept {
+		inline bool has_override() const noexcept { return glyph_size != override_size; }
+
+		inline extent_t get_glyph_size() const noexcept { return has_override() ? override_size : glyph_size; }
+
+		template<bool UseOverride = true> inline void draw(glyph_t glyph, offset_t position) const noexcept {
 			if (glyph.index < 0 || glyph.index >= rects.size) {
 				error_log.add("glyph index {} is out of range!", glyph.index);
 				return;
 			}
 
-			texture.draw(rects[glyph.index], rect_t{ position * glyph_size, glyph_size } + universal_offset, glyph.color);
+			if constexpr (UseOverride) {
+				texture.draw(rects[glyph.index], rect_t{ position * override_size, override_size }, glyph.color);
+			} else {
+				texture.draw(rects[glyph.index], rect_t{ position * glyph_size, glyph_size }, glyph.color);
+			}
 		}
 
-		inline void draw(glyph_t glyph, offset_t position, offset_t offset) const noexcept {
+		template<bool UseOverride = true> inline void draw(glyph_t glyph, offset_t position, offset_t offset) const noexcept {
 			if (glyph.index < 0 || glyph.index >= rects.size) {
 				error_log.add("glyph index {} is out of range!", glyph.index);
 				return;
 			}
 
-			texture.draw(rects[glyph.index], rect_t{ position * glyph_size + offset, glyph_size } + universal_offset, glyph.color);
+			if constexpr (UseOverride) {
+				texture.draw(rects[glyph.index], rect_t{ position * override_size + offset, override_size }, glyph.color);
+			} else {
+				texture.draw(rects[glyph.index], rect_t{ position * glyph_size + offset, glyph_size }, glyph.color);
+			}
 		}
 
 		inline void draw(cref<runes_t> runes, offset_t position) const {

@@ -43,6 +43,8 @@ namespace bleak {
 
 	template<typename T> constexpr bool is_random_engine_v = is_random_engine<T>::value;
 
+	template<typename T> concept RandomEngine = is_random_engine<T>::value;
+
 	template<typename T> struct is_random_distribution {
 		static const bool value = false;
 	};
@@ -88,4 +90,6 @@ namespace bleak {
 	};
 
 	template<typename T> constexpr bool is_random_distribution_v = is_random_distribution<T>::value;
+
+	template<typename T> concept RandomDistribution = is_random_distribution<T>::value;
 } // namespace bleak

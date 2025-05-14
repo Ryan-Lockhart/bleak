@@ -175,7 +175,7 @@ namespace bleak {
 	};
 	
 	struct target_texture_t {
-		inline target_texture_t() = delete;
+		constexpr target_texture_t() noexcept = delete;
 
 		constexpr target_texture_t(cref<target_texture_t> other) noexcept = delete;
 

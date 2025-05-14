@@ -581,9 +581,7 @@ namespace bleak {
 			static constexpr usize operator()(cref<cell_state_t> cell_state) noexcept { return hash_combine(std::bit_cast<u16>(cell_state)); }
 		};
 
-		template<typename Generator>
-			requires is_random_engine<Generator>::value
-		struct randomizer {
+		template<RandomEngine Generator> struct randomizer {
 			template<typename T> static constexpr T operator()(ref<Generator> generator) noexcept {
 				if constexpr (std::is_same<T, rock_type_t>::value) {
 					static std::uniform_int_distribution<i32> dis{ static_cast<i32>(rock_type_t::Limestone), static_cast<i32>(rock_type_t::Marble) };

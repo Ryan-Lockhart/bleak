@@ -33,15 +33,11 @@ namespace bleak {
 
 		constexpr value_t operator()(bool condition) const noexcept { return condition ? true_value : false_value; }
 
-		template<typename Randomizer>
-			requires is_random_engine<Randomizer>::value
-		constexpr value_t operator()(ref<Randomizer> generator, f64 probability) const noexcept {
+		template<RandomEngine Randomizer> constexpr value_t operator()(ref<Randomizer> generator, f64 probability) const noexcept {
 			return std::bernoulli_distribution{ probability }(generator) ? true_value : false_value;
 		}
 
-		template<typename Randomizer, typename Distribution>
-			requires is_random_engine<Randomizer>::value && is_random_distribution<Distribution>::value && is_numeric<typename Distribution::result_type>::value
-		constexpr value_t operator()(ref<Randomizer> generator, ref<Distribution> distribution) const noexcept {
+		template<RandomEngine Randomizer, RandomDistribution Distribution> constexpr value_t operator()(ref<Randomizer> generator, ref<Distribution> distribution) const noexcept {
 			return distribution(generator) ? true_value : false_value;
 		}
 	};
@@ -81,9 +77,7 @@ namespace bleak {
 			}
 		}
 
-		template<typename Randomizer>
-			requires is_random_engine<Randomizer>::value
-		constexpr value_t operator()(ref<Randomizer> generator) const noexcept {
+		template<RandomEngine Randomizer> constexpr value_t operator()(ref<Randomizer> generator) const noexcept {
 			const i32 value{ std::uniform_int_distribution<i32>{ -1, 1 }(generator) };
 
 			if (value > 0) {
@@ -95,9 +89,7 @@ namespace bleak {
 			}
 		}
 
-		template<typename Randomizer, typename Distribution>
-			requires is_random_engine<Randomizer>::value && is_random_distribution<Distribution>::value && is_numeric<typename Distribution::result_type>::value
-		constexpr value_t operator()(ref<Randomizer> generator, ref<Distribution> distribution, typename Distribution::result_type target) const noexcept {
+		template<RandomEngine Randomizer, RandomDistribution Distribution> constexpr value_t operator()(ref<Randomizer> generator, ref<Distribution> distribution, typename Distribution::result_type target) const noexcept {
 			const auto value{ distribution(generator) };
 
 			if (value > target) {
@@ -134,9 +126,7 @@ namespace bleak {
 
 		constexpr ~numeric_applicator_t() noexcept = default;
 
-		template<typename Randomizer>
-			requires is_random_engine<Randomizer>::value
-		constexpr value_t operator()(ref<Randomizer> generator) const noexcept {
+		template<RandomEngine Randomizer> constexpr value_t operator()(ref<Randomizer> generator) const noexcept {
 			const N value{ std::uniform_int_distribution<N>{ static_cast<N>(minimum_value), static_cast<N>(maximum_value) }(generator) };
 
 			return static_cast<value_t>(value);

@@ -12,7 +12,7 @@
 
 #if defined(STEAMLESS)
 	#if defined(BLEAK_RELEASE)
-		#error [ERROR]: "steamless" mode cannot be used for release builds.
+		//#error [ERROR]: "steamless" mode cannot be used for release builds.
 	#else
 		#warning [WARNING]: "steamless" mode is enabled. the steam api will not be used at runtime...
 	#endif

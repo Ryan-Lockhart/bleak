@@ -45,9 +45,7 @@ namespace bleak {
 			sounds[index].play();
 		}
 
-		template<typename Generator>
-			requires is_random_engine<Generator>::value
-		constexpr void play(ref<Generator> generator) noexcept {
+		template<RandomEngine Generator> constexpr void play(ref<Generator> generator) noexcept {
 			sounds[distribution(generator)].play();
 		}
 
@@ -59,9 +57,7 @@ namespace bleak {
 			sounds[index].delay(interval);
 		}
 
-		template<typename Generator>
-			requires is_random_engine<Generator>::value
-		constexpr void delay(usize interval, ref<Generator> generator) noexcept {
+		template<RandomEngine Generator> constexpr void delay(usize interval, ref<Generator> generator) noexcept {
 			sounds[distribution(generator)].delay(interval);
 		}
 	};
