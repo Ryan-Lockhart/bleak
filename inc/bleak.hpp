@@ -10,7 +10,6 @@
 #include <bleak/bitdef.hpp>
 #include <bleak/camera.hpp>
 #include <bleak/cardinal.hpp>
-#include <bleak/cell.hpp>
 #include <bleak/circle.hpp>
 #include <bleak/clip_pool.hpp>
 #include <bleak/clock.hpp>
