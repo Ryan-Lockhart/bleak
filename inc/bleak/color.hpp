@@ -5,6 +5,7 @@
 #include <format>
 #include <string>
 
+#include <bleak/concepts.hpp>
 #include <bleak/hash.hpp>
 
 extern "C" {
@@ -30,6 +31,12 @@ extern "C" {
 }
 
 namespace bleak {
+	template<typename... Values>
+		requires is_plurary<Values...>::value && is_homogeneous<u8, Values...>::value
+	static constexpr u8 mix(Values... values) noexcept {
+		return static_cast<u8>((static_cast<u16>(values) + ...) / sizeof...(Values));
+	}
+
 	struct color_t : public c_color_t {
 	  private:
 		static constexpr u8 wrap_cast(f32 value) noexcept { return static_cast<u8>(static_cast<uhalf>(value * 255.0f) % 256); }
@@ -44,10 +51,12 @@ namespace bleak {
 		constexpr color_t(u8 rgb, u8 a = u8{ 0xFF }) noexcept : c_color_t{ .r = rgb, .g = rgb, .b = rgb, .a = a } {}
 
 		constexpr color_t(f32 r, f32 g, f32 b, f32 a = 1.0f) noexcept :
-			c_color_t{ .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) } {}
+			c_color_t{ .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) }
+		{}
 
 		constexpr color_t(f64 r, f64 g, f64 b, f64 a = 1.0) noexcept :
-			c_color_t{ .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) } {}
+			c_color_t{ .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) }
+		{}
 
 		constexpr bool operator==(color_t other) const noexcept { return packed == other.packed; }
 
@@ -95,6 +104,30 @@ namespace bleak {
 			return *this;
 		}
 
+		constexpr ref<color_t> mix(color_t other) noexcept {
+			if (*this == other) {
+				return *this;
+			}
+
+			r = bleak::mix(r, other.r);
+			g = bleak::mix(g, other.g);
+			b = bleak::mix(b, other.b);
+			a = bleak::mix(a, other.a);
+
+			return *this;
+		}
+
+		template<typename... Colors>
+			requires is_plurary<Colors...>::value && is_homogeneous<color_t, Colors...>::value
+		constexpr ref<color_t> mix(Colors... others) noexcept {
+			r = bleak::mix(r, others.r...);
+			g = bleak::mix(g, others.g...);
+			b = bleak::mix(b, others.b...);
+			a = bleak::mix(a, others.a...);
+
+			return *this;
+		}
+
 		constexpr explicit operator u32() const noexcept { return packed; }
 
 		inline operator std::string() const noexcept { return std::format("[{}, {}, {}, {}]", r, g, b, a); }
@@ -103,4 +136,10 @@ namespace bleak {
 			static constexpr usize operator()(color_t color) noexcept { return hash_combine(color.r, color.g, color.b, color.a); }
 		};
 	};
+
+	template<typename... Colors>
+		requires is_plurary<Colors...>::value && is_homogeneous<color_t, Colors...>::value
+	static constexpr color_t mix(Colors... colors) noexcept {
+		return color_t{ bleak::mix(colors.r...), bleak::mix(colors.g...), bleak::mix(colors.b...), bleak::mix(colors.a...) };
+	}
 } // namespace bleak

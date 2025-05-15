@@ -63,6 +63,14 @@ namespace bleak {
 			static constexpr color_t LightBlood{ u8{ 177 }, u8{ 34 }, u8{ 53 } };
 			static constexpr color_t DarkBlood{ u8{ 137 }, u8{ 14 }, u8{ 33 } };
 
+			static constexpr color_t Ichor{ u8{ 8 }, u8{ 32 }, u8{ 8 } };
+			static constexpr color_t LightIchor{ u8{ 16 }, u8{ 64 }, u8{ 16 } };
+			static constexpr color_t DarkIchor{ u8{ 4 }, u8{ 16 }, u8{ 4 } };
+
+			static constexpr color_t BloodyIchor{ mix(Blood, Ichor) };
+			static constexpr color_t LightBloodyIchor{ mix(LightBlood, LightIchor) };
+			static constexpr color_t DarkBloodyIchor{ mix(DarkBlood, DarkIchor) };
+
 			static constexpr color_t Ebony{ u8{ 40 }, u8{ 44 }, u8{ 52 } };
 			static constexpr color_t Ivory{ u8{ 255 }, u8{ 255 }, u8{ 240 } };
 
