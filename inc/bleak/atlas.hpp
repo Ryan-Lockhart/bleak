@@ -239,7 +239,7 @@ namespace bleak {
 
 			offset_t carriage_pos{ 0 };
 
-			for (cauto rune : runes) {
+			for (crauto rune : runes) {
 				switch (rune.index) {
 				case '\0':
 					return;

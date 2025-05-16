@@ -14,6 +14,8 @@
 
 #include <bleak/constants/colors.hpp>
 
+#include <necrowarp/globals.hpp>
+
 namespace bleak {
 	struct cursor_t {
 	  private:
@@ -99,10 +101,10 @@ namespace bleak {
 		}
 
 		inline void update(cref<camera_t> camera) {
-			const offset_t grid_pos{ Mouse::get_position() / size + camera.get_position() };
+			const offset_t grid_pos{ (Mouse::get_position() - necrowarp::globals::grid_origin<necrowarp::grid_type_e::Game>()) / size + camera.get_position() };
 
 			if (use_bounds) {
-				current_position = offset_t::clamp(grid_pos, min, max);
+				current_position = offset_t::clamp(grid_pos, bleak::max(camera.get_position(), static_cast<offset_t>(min)), bleak::min(camera.get_extent() - 1, static_cast<offset_t>(max)));
 			} else {
 				current_position = grid_pos;
 			}

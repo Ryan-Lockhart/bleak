@@ -46,6 +46,12 @@ namespace bleak {
 	  public:
 		constexpr color_t() noexcept {}
 
+		constexpr color_t(cref<color_t> other) noexcept : c_color_t{ .r = other.r, .g = other.g, .b = other.b, .a = other.a } {}
+		constexpr color_t(cref<color_t> rgb, u8 a) noexcept : c_color_t{ .r = rgb.r, .g = rgb.g, .b = rgb.b, .a = a } {}
+
+		constexpr color_t(rval<color_t> other) noexcept : c_color_t{ .r = std::move(other.r), .g = std::move(other.g), .b = std::move(other.b), .a = std::move(other.a) } {}
+		constexpr color_t(rval<color_t> rgb, u8 a) noexcept : c_color_t{ .r = std::move(rgb.r), .g = std::move(rgb.g), .b = std::move(rgb.b), .a = a } {}
+
 		constexpr color_t(u8 r, u8 g, u8 b, u8 a = u8{ 0xFF }) noexcept : c_color_t{ .r = r, .g = g, .b = b, .a = a } {}
 
 		constexpr color_t(u8 rgb, u8 a = u8{ 0xFF }) noexcept : c_color_t{ .r = rgb, .g = rgb, .b = rgb, .a = a } {}
@@ -57,6 +63,32 @@ namespace bleak {
 		constexpr color_t(f64 r, f64 g, f64 b, f64 a = 1.0) noexcept :
 			c_color_t{ .r = wrap_cast(r), .g = wrap_cast(g), .b = wrap_cast(b), .a = wrap_cast(a) }
 		{}
+
+		constexpr ref<color_t> operator=(cref<color_t> other) noexcept {
+			if (*this == other) {
+				return *this;
+			}
+
+			r = other.r;
+			g = other.g;
+			b = other.b;
+			a = other.a;
+
+			return *this;
+		}
+
+		constexpr ref<color_t> operator=(rval<color_t> other) noexcept {
+			if (*this == other) {
+				return *this;
+			}
+
+			r = std::move(other.r);
+			g = std::move(other.g);
+			b = std::move(other.b);
+			a = std::move(other.a);
+
+			return *this;
+		}
 
 		constexpr bool operator==(color_t other) const noexcept { return packed == other.packed; }
 
