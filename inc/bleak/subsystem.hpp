@@ -1,6 +1,5 @@
 #pragma once
 
-#include "bleak/constants.hpp"
 #include <bleak/typedef.hpp>
 
 #include <SDL.h>
