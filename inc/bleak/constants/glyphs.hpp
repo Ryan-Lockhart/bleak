@@ -35,6 +35,7 @@ namespace bleak {
 		constexpr const glyph_t FleshGolem{ characters::FleshGolem, colors::White };
 
 		constexpr const glyph_t Adventurer{ characters::Adventurer, colors::White };
+		constexpr const glyph_t Mercenary{ characters::Mercenary, colors::White };
 		constexpr const glyph_t Paladin{ characters::Paladin, colors::White };
 		constexpr const glyph_t Priest{ characters::Priest, colors::White };
 
