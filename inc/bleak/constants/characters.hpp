@@ -20,8 +20,8 @@ namespace bleak {
 		constexpr const u8 FleshGolem{ 0x19 };
 
 		constexpr const u8 Adventurer{ 0x1A };
-		constexpr const u8 Paladin{ 0x1B };
-		constexpr const u8 Mercenary{ 0x1C };
+		constexpr const u8 Mercenary{ 0x1B };
+		constexpr const u8 Paladin{ 0x1C };
 		constexpr const u8 Priest{ 0x1D };
 
 		constexpr const u8 FreshSkull{ 0x1E };

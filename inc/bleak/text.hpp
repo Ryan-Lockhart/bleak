@@ -46,14 +46,16 @@ namespace bleak {
 
 			if (empty()) {
 				assign(runes.cbegin(), runes.cend());
+
 				return *this;
 			}
+
 			insert(cend(), runes.cbegin(), runes.cend());
 
 			return *this;
 		}
 
-		constexpr ref<runes_t> operator+=(glyph_t glyph) {
+		constexpr ref<runes_t> operator+=(cref<glyph_t> glyph) {
 			push_back(glyph);
 
 			return *this;
