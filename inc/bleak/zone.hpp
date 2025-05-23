@@ -3,7 +3,6 @@
 #include <bleak/typedef.hpp>
 
 #include <cstring>
-#include <exception>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -66,23 +65,19 @@ namespace bleak {
 		constexpr zone_t(cref<std::string> path) : cells{} {
 			std::ifstream file{};
 
-			try {
-				file.open(path, std::ios::in | std::ios::binary);
+			file.open(path, std::ios::in | std::ios::binary);
 
-				file.seekg(0, std::ios::end);
+			file.seekg(0, std::ios::end);
 
-				if (file.tellg() != byte_size) {
-					throw std::runtime_error{ "byte size mismatch between file and map!" };
-				}
-
-				file.seekg(0, std::ios::beg);
-
-				file.read(reinterpret_cast<str>(cells.data_ptr()), cells.byte_size);
-
-				file.close();
-			} catch (cref<std::exception> e) {
-				error_log.add(e.what(), __TIME_FILE_LINE__);
+			if (file.tellg() != byte_size) {
+				error_log.add("byte size mismatch between file and map!");
 			}
+
+			file.seekg(0, std::ios::beg);
+
+			file.read(reinterpret_cast<str>(cells.data_ptr()), cells.byte_size);
+
+			file.close();
 		}
 
 		constexpr zone_t(cref<zone_t<T, Size, BorderSize>> other) : cells{ other.cells } {};
@@ -2301,16 +2296,11 @@ namespace bleak {
 		constexpr bool serialize(cref<std::string> path) const noexcept {
 			std::ofstream file{};
 
-			try {
-				file.open(path, std::ios::out | std::ios::binary);
+			file.open(path, std::ios::out | std::ios::binary);
 
-				file.write(reinterpret_cast<cstr>(cells.data_ptr()), cells.byte_size);
+			file.write(reinterpret_cast<cstr>(cells.data_ptr()), cells.byte_size);
 
-				file.close();
-			} catch (cref<std::exception> e) {
-				error_log.add(e.what(), __TIME_FILE_LINE__);
-				return false;
-			}
+			file.close();
 
 			return true;
 		}

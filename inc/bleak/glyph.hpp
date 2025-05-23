@@ -102,7 +102,7 @@ namespace bleak {
 
 		constexpr u32 at(index_t index) const {
 			if (index >= length) {
-				throw std::out_of_range{ "index out of range!" };
+				error_log.add("ERROR: index out of range!");
 			}
 
 			return indices[index];

@@ -112,6 +112,8 @@ namespace bleak {
 	using buffer = ptr<ubyte>;
 	using cbuffer = cptr<ubyte>;
 
+	template<typename T> static constexpr ptr<T> null{ static_cast<ptr<T>>(nullptr) };
+
 	template<typename Return, typename... Args> using fn_ptr = Return (*)(Args...);
 	template<typename T, typename Return, typename... Args> using mfn_ptr = Return (T::*)(Args...);
 } // namespace bleak

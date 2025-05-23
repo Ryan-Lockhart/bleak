@@ -2,7 +2,6 @@
 
 #include <bleak/typedef.hpp>
 
-#include <cstring>
 #include <fstream>
 #include <utility>
 
@@ -184,17 +183,13 @@ namespace bleak {
 		constexpr bool serialize(cref<std::string> path) const noexcept {
 			std::ofstream file{};
 
-			try {
-				file.open(path, std::ios::in | std::ios::binary);
+			file.open(path, std::ios::in | std::ios::binary);
 
-				for (extent_t::product_t i{ 0 }; i < region_area; ++i) {
-					file.write(zones[i].serialize(), zone_type::byte_size);
-				}
-
-				file.close();
-			} catch (std::exception e) {
-				error_log.add(e.what(), __TIME_FILE_LINE__);
+			for (extent_t::product_t i{ 0 }; i < region_area; ++i) {
+				file.write(zones[i].serialize(), zone_type::byte_size);
 			}
+
+			file.close();
 
 			return true;
 		}

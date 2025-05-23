@@ -10,6 +10,7 @@
 #include <bleak/extent.hpp>
 #include <bleak/hash.hpp>
 #include <bleak/iter.hpp>
+#include <bleak/log.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/utility.hpp>
 
@@ -66,7 +67,7 @@ namespace bleak {
 
 		inline constexpr binarray_t(std::initializer_list<bool> elements) : data{} {
 			if (elements.size() != size) {
-				throw std::invalid_argument("initializer list size mismatch!");
+				error_log.add("ERROR: initializer list size mismatch!");
 			}
 
 			usize i{ 0 };
@@ -135,7 +136,7 @@ namespace bleak {
 
 		inline constexpr bit_ref at(offset_t offset) {
 			if (!valid(offset)) {
-				throw std::out_of_range("offset out of range!");
+				error_log.add("ERROR: offset out of range!");
 			}
 
 			return data[first + flatten(offset)];
@@ -143,7 +144,7 @@ namespace bleak {
 
 		inline constexpr bool at(offset_t offset) const {
 			if (!valid(offset)) {
-				throw std::out_of_range("offset out of range!");
+				error_log.add("ERROR: offset out of range!");
 			}
 
 			return data[first + flatten(offset)];
@@ -151,7 +152,7 @@ namespace bleak {
 
 		inline constexpr bit_ref at(cref<offset_t::product_t> index) {
 			if (!valid(index)) {
-				throw std::out_of_range("offset out of range!");
+				error_log.add("ERROR: offset out of range!");
 			}
 
 			return data[first + index];
@@ -159,7 +160,7 @@ namespace bleak {
 
 		inline constexpr bool at(cref<offset_t::product_t> index) const {
 			if (!valid(index)) {
-				throw std::out_of_range("offset out of range!");
+				error_log.add("ERROR: offset out of range!");
 			}
 
 			return data[first + index];
@@ -167,7 +168,7 @@ namespace bleak {
 
 		inline constexpr bit_ref at(offset_t::scalar_t i, offset_t::scalar_t j) {
 			if (!valid(i, j)) {
-				throw std::out_of_range("indices out of range!");
+				error_log.add("ERROR: indices out of range!");
 			}
 
 			return data[first + flatten(i, j)];
@@ -175,7 +176,7 @@ namespace bleak {
 
 		inline constexpr bool at(offset_t::scalar_t i, offset_t::scalar_t j) const {
 			if (!valid(i, j)) {
-				throw std::out_of_range("indices out of range!");
+				error_log.add("ERROR: indices out of range!");
 			}
 
 			return data[first + flatten(i, j)];

@@ -61,7 +61,7 @@ namespace bleak {
 
 		inline ref<std::string> at(usize index) {
 			if (index >= messages.size()) {
-				throw(std::out_of_range("Index out of range"));
+				std::cout << "ERROR: index out of range in logging!\n";
 			}
 
 			return *std::next(messages.begin(), index);
@@ -69,7 +69,7 @@ namespace bleak {
 
 		inline cref<std::string> at(usize index) const {
 			if (index >= messages.size()) {
-				throw(std::out_of_range("Index out of range"));
+				std::cout << "ERROR: index out of range in logging!\n";
 			}
 
 			return *std::next(messages.begin(), index);

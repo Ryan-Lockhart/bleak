@@ -2,10 +2,10 @@
 
 #include <bleak/typedef.hpp>
 
-#include <stdexcept>
 #include <utility>
 
 #include <bleak/concepts.hpp>
+#include <bleak/log.hpp>
 
 namespace bleak {
 	template<typename Key, typename Value> struct pair_t {
@@ -98,8 +98,10 @@ namespace bleak {
 					return values[i];
 				}
 			}
+
+			error_log.add("ERROR: key not found in lookup table!");
 			
-			throw std::runtime_error("key not found in lookup table!");
+			return *static_cast<ptr<Value>>(nullptr);
 		}
 
 		constexpr cref<Value> operator[](cref<Key> key) const {
@@ -108,8 +110,10 @@ namespace bleak {
 					return values[i];
 				}
 			}
+
+			error_log.add("ERROR: key not found in lookup table!");
 			
-			throw std::runtime_error("key not found in lookup table!");
+			return *null<Value>;
 		}
 	};
 } // namespace bleak

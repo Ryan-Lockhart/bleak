@@ -3,7 +3,6 @@
 #include <bleak/typedef.hpp>
 
 #include <format>
-#include <stdexcept>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -36,7 +35,15 @@ namespace bleak {
 			i32 access;
 
 			if (SDL_QueryTexture(texture, &channels, &access, &width, &height) < 0) {
-				error_log.add("could not get texture info: {}", sdl::get_error());
+				error_log.add("ERROR: could not get texture info: {}", sdl::get_error());
+			}
+
+			if (width <= 0 || height <= 0) {
+				error_log.add("WARNING: texture width or height is less than or equal to zero!");
+			}
+
+			if (channels == SDL_PIXELFORMAT_UNKNOWN) {
+				error_log.add("WARNING: texture pixel format is unknown!");
 			}
 
 			return sdl::texture_info{
@@ -50,7 +57,7 @@ namespace bleak {
 			ptr<sdl::texture> texture = SDL_CreateTexture(renderer, format, access, size.w, size.h);
 
 			if (texture == nullptr) {
-				error_log.add("could not create texture: {}", sdl::get_error());
+				error_log.add("ERROR: could not create texture: {}", sdl::get_error());
 			}
 
 			return texture;
@@ -68,7 +75,7 @@ namespace bleak {
 				ptr<texture> texture{ IMG_LoadTexture(renderer, path) };
 
 				if (texture == nullptr) {
-					error_log.add("could not load texture: {}", sdl::get_error());
+					error_log.add("ERROR: could not load texture: {}", sdl::get_error());
 				}
 
 				return texture;
@@ -93,18 +100,6 @@ namespace bleak {
 		constexpr ref<texture_t> operator=(rval<texture_t> other) noexcept = delete;
 
 		inline texture_t(ref<renderer_t> renderer, cstr path) : renderer{ renderer }, texture{ sdl::img::load_texture(renderer.handle(), path) }, info{ sdl::get_texture_info(texture) } {
-			if (texture == nullptr) {
-				throw std::runtime_error(std::format("failed to load texture!"));
-			}
-
-			if (info.size <= extent_t::Zero) {
-				throw std::runtime_error("texture size must be greater than zero!");
-			}
-
-			if (info.channels == SDL_PIXELFORMAT_UNKNOWN) {
-				throw std::runtime_error("texture channels must be known!");
-			}
-
 			set_blend_mode(SDL_BLENDMODE_BLEND);
 			set_color(colors::White);
 		}
@@ -189,18 +184,6 @@ namespace bleak {
 		constexpr ref<target_texture_t> operator=(rval<target_texture_t> other) noexcept = delete;
 
 		inline target_texture_t(ref<renderer_t> renderer, extent_t size, sdl::pixel_format format, sdl::texture_access access) : renderer{ renderer }, texture{ sdl::create_texture(renderer.handle(), size, format, access) }, info{ sdl::get_texture_info(texture) } {
-			if (texture == nullptr) {
-				throw std::runtime_error(std::format("failed to create texture!"));
-			}
-
-			if (info.size <= extent_t::Zero) {
-				throw std::runtime_error("texture size must be greater than zero!");
-			}
-
-			if (info.channels == SDL_PIXELFORMAT_UNKNOWN) {
-				throw std::runtime_error("texture channels must be known!");
-			}
-
 			set_blend_mode(SDL_BLENDMODE_BLEND);
 			set_color(colors::White);
 		}

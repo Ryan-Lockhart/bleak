@@ -2,8 +2,6 @@
 
 #include <bleak/typedef.hpp>
 
-#include <stdexcept>
-
 #include <SDL.h>
 #include <SDL_image.h>
 
@@ -69,19 +67,19 @@ namespace bleak {
 			glyph_size{ image_size / size },
 			override_size{ glyph_size } {
 			if (image_size.w <= 0 || image_size.h <= 0) {
-				throw std::runtime_error("[ERROR]: failed to initialize atlas! (image size must be greater than zero!)");
+				error_log.add("[ERROR]: failed to initialize atlas! (image size must be greater than zero!)");
 			}
 
 			if (glyph_size.w <= 0 || glyph_size.h <= 0) {
-				throw std::runtime_error("[ERROR]: failed to initialize atlas! (glyph size must be greater than zero!)");
+				error_log.add("[ERROR]: failed to initialize atlas! (glyph size must be greater than zero!)");
 			}
 
 			if (override_size.w <= 0 || override_size.h <= 0) {
-				throw std::runtime_error("[ERROR]: failed to initialize atlas! (override size must be greater than zero!)");
+				error_log.add("[ERROR]: failed to initialize atlas! (override size must be greater than zero!)");
 			}
 
 			if (image_size.w % size.w != 0 || image_size.h % size.h != 0) {
-				throw std::runtime_error("[ERROR]: failed to initialize atlas! (image size must be divisible by the atlas size!)");
+				error_log.add("[ERROR]: failed to initialize atlas! (image size must be divisible by the atlas size!)");
 			}
 
 			extent_t::product_t index{ 0 };
@@ -100,19 +98,19 @@ namespace bleak {
 			glyph_size{ image_size / size },
 			override_size{ override_size } {
 			if (image_size.w <= 0 || image_size.h <= 0) {
-				throw std::runtime_error("[ERROR]: failed to initialize atlas! (image size must be greater than zero!)");
+				error_log.add("[ERROR]: failed to initialize atlas! (image size must be greater than zero!)");
 			}
 
 			if (glyph_size.w <= 0 || glyph_size.h <= 0) {
-				throw std::runtime_error("[ERROR]: failed to initialize atlas! (glyph size must be greater than zero!)");
+				error_log.add("[ERROR]: failed to initialize atlas! (glyph size must be greater than zero!)");
 			}
 
 			if (override_size.w <= 0 || override_size.h <= 0) {
-				throw std::runtime_error("[ERROR]: failed to initialize atlas! (override size must be greater than zero!)");
+				error_log.add("[ERROR]: failed to initialize atlas! (override size must be greater than zero!)");
 			}
 
 			if (image_size.w % size.w != 0 || image_size.h % size.h != 0) {
-				throw std::runtime_error("[ERROR]: failed to initialize atlas! (image size must be divisible by the atlas size!)");
+				error_log.add("[ERROR]: failed to initialize atlas! (image size must be divisible by the atlas size!)");
 			}
 
 			extent_t::product_t index{ 0 };

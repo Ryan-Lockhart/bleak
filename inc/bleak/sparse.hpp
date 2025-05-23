@@ -2,10 +2,10 @@
 
 #include <bleak/typedef.hpp>
 
-#include <stdexcept>
 #include <unordered_set>
 
 #include <bleak/concepts.hpp>
+#include <bleak/log.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/utility.hpp>
 
@@ -105,21 +105,21 @@ namespace bleak {
 			return &(*iter);
 		}
 
-		constexpr ref<T> at(offset_t position) {
+		constexpr ref<T> at(offset_t position) noexcept {
 			auto iter{ values.find(position) };
 
 			if (iter == values.end()) {
-				throw std::out_of_range{ std::format("cannot get value at {}; it is not within the sparse set!", (std::string)position) };
+				error_log.add(std::format("cannot get value at {}; it is not within the sparse set! (get ready for fireworks)", (std::string)position));
 			}
 
-			return *iter;
+			return cast_way(*iter);
 		}
 
-		constexpr cref<T> at(offset_t position) const {
+		constexpr cref<T> at(offset_t position) const noexcept {
 			cauto iter{ values.find(position) };
 
 			if (iter == values.end()) {
-				throw std::out_of_range{ std::format("cannot get value at {}; it is not within the sparse set!", (std::string)position) };
+				error_log.add(std::format("cannot get value at {}; it is not within the sparse set! (get ready for fireworks)", (std::string)position));
 			}
 
 			return *iter;
@@ -148,9 +148,9 @@ namespace bleak {
 				return false;
 			}
 
-			values.insert(value);
+			cauto [_, inserted] = values.insert(value);
 
-			return true;
+			return inserted;
 		}
 
 		constexpr bool add(rval<T> value) noexcept {
@@ -158,9 +158,9 @@ namespace bleak {
 				return false;
 			}
 
-			values.emplace(std::move(value));
+			cauto [_, inserted] = values.emplace(std::move(value));
 
-			return true;
+			return inserted;
 		}
 
 		constexpr bool remove(offset_t position) noexcept {
@@ -179,7 +179,7 @@ namespace bleak {
 			cauto iter{ values.find(position) };
 
 			if (iter == values.end()) {
-				throw std::out_of_range{ std::format("cannot extract value at {}; it is not within the sparse set!", (std::string)position) };
+				error_log.add("ERROR: cannot extract value at {}; it is not within the sparse set!", (std::string)position);
 			}
 
 			return std::move(values.extract(iter));
