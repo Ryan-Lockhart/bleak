@@ -93,7 +93,7 @@ namespace bleak {
 		}
 
 		constexpr ref<cardinal_t> operator+=(cardinal_t other) noexcept {
-			if (*this == other) {
+			if (this == &other) {
 				return *this;
 			}
 
@@ -105,7 +105,7 @@ namespace bleak {
 		}
 
 		constexpr ref<cardinal_t> operator-=(cardinal_t other) noexcept {
-			if (*this == other) {
+			if (this == &other) {
 				return *this;
 			}
 

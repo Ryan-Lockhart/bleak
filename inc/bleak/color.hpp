@@ -65,7 +65,7 @@ namespace bleak {
 		{}
 
 		constexpr ref<color_t> operator=(cref<color_t> other) noexcept {
-			if (*this == other) {
+			if (this == &other) {
 				return *this;
 			}
 
@@ -78,7 +78,7 @@ namespace bleak {
 		}
 
 		constexpr ref<color_t> operator=(rval<color_t> other) noexcept {
-			if (*this == other) {
+			if (this == &other) {
 				return *this;
 			}
 
@@ -137,7 +137,7 @@ namespace bleak {
 		}
 
 		constexpr ref<color_t> mix(color_t other) noexcept {
-			if (*this == other) {
+			if (this == &other) {
 				return *this;
 			}
 

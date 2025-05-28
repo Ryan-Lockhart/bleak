@@ -8,6 +8,16 @@
 
 #include <bleak/primitive.hpp>
 
+namespace std {
+	template<> struct is_floating_point<bleak::f16> {
+		static constexpr bool value = true;
+	};
+
+	template<> struct is_floating_point<bleak::f128> {
+		static constexpr bool value = true;
+	};
+}
+
 namespace bleak {
 	template<typename T> concept Integer = std::numeric_limits<T>::is_integer;
 
@@ -17,6 +27,22 @@ namespace bleak {
 
 	template<typename T> constexpr bool is_integer_v = is_integer<T>::value;
 
+	template<typename T> concept SignedInteger = Integer<T> && std::numeric_limits<T>::is_signed;
+
+	template<typename T> struct is_signed_integer {
+		static constexpr bool value = SignedInteger<T>;
+	};
+
+	template<typename T> constexpr bool is_signed_integer_v = is_signed_integer<T>::value;
+
+	template<typename T> concept UnsignedInteger = Integer<T> && !std::numeric_limits<T>::is_signed;
+
+	template<typename T> struct is_unsigned_integer {
+		static constexpr bool value = UnsignedInteger<T>;
+	};
+
+	template<typename T> constexpr bool is_unsigned_integer_v = is_unsigned_integer<T>::value;
+
 	template<typename T> concept FloatingPoint = std::is_floating_point<T>::value;
 
 	template<typename T> struct is_floating_point {
@@ -25,7 +51,7 @@ namespace bleak {
 
 	template<typename T> constexpr bool is_floating_point_v = is_floating_point<T>::value;
 
-	template<typename T> concept Numeric = std::numeric_limits<T>::is_integer || std::is_floating_point<T>::value;
+	template<typename T> concept Numeric = Integer<T> || FloatingPoint<T>;
 
 	template<typename T> struct is_numeric {
 		static bool constexpr value = Numeric<T>;

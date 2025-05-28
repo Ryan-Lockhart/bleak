@@ -1,10 +1,9 @@
 #pragma once
 
-namespace bleak {
-#if defined(__x86_64__) || defined(_M_X64) || defined(__aarch64__) || defined(_M_ARM64)
-#define BLEAK_64
-#elif defined(__i386__) || defined(_M_IX86) || defined(__arm__) || defined(_M_ARM)
-#define BLEAK_32
+#if defined(__x86_64__)
+	#define BLEAK_64
+#else
+	#define BLEAK_32
 #endif
 
 #define __TIME_FILE_LINE__ __TIME__, __FILE__, __LINE__
@@ -19,6 +18,7 @@ namespace bleak {
 
 #define forever for (;;)
 
+namespace bleak {
 	using u8 = unsigned char;
 	using i8 = signed char;
 

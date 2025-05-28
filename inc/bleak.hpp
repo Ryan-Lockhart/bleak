@@ -25,6 +25,7 @@
 #include <bleak/input.hpp>
 #include <bleak/iter.hpp>
 #include <bleak/keyboard.hpp>
+#include <bleak/leaf.hpp>
 #include <bleak/line.hpp>
 #include <bleak/log.hpp>
 #include <bleak/lut.hpp>
@@ -42,6 +43,7 @@
 #include <bleak/rect.hpp>
 #include <bleak/region.hpp>
 #include <bleak/renderer.hpp>
+#include <bleak/saturate.hpp>
 #include <bleak/sound.hpp>
 #include <bleak/sparse.hpp>
 #include <bleak/sprite.hpp>
@@ -54,6 +56,7 @@
 #include <bleak/triangle.hpp>
 #include <bleak/typedef.hpp>
 #include <bleak/utility.hpp>
+#include <bleak/vector.hpp>
 #include <bleak/wave.hpp>
 #include <bleak/window.hpp>
 #include <bleak/zone.hpp>

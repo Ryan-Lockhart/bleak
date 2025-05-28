@@ -662,26 +662,19 @@ namespace bleak {
 			if constexpr (Safe) {
 				if (cells[position + offset_t::Northwest] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::North] == value) {
+				} if (cells[position + offset_t::North] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::Northeast] == value) {
+				} if (cells[position + offset_t::Northeast] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::West] == value) {
+				} if (cells[position + offset_t::West] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::East] == value) {
+				} if (cells[position + offset_t::East] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::Southwest] == value) {
+				} if (cells[position + offset_t::Southwest] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::South] == value) {
+				} if (cells[position + offset_t::South] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::Southeast] == value) {
+				} if (cells[position + offset_t::Southeast] == value) {
 					++count;
 				}
 			} else {
@@ -689,33 +682,19 @@ namespace bleak {
 
 				if (edge.north || edge.west || cells[position + offset_t::Northwest] == value) {
 					++count;
-				}
-
-				if (edge.north || cells[position + offset_t::North] == value) {
+				} if (edge.north || cells[position + offset_t::North] == value) {
 					++count;
-				}
-
-				if (edge.north || edge.east || cells[position + offset_t::Northeast] == value) {
+				} if (edge.north || edge.east || cells[position + offset_t::Northeast] == value) {
 					++count;
-				}
-
-				if (edge.west || cells[position + offset_t::West] == value) {
+				} if (edge.west || cells[position + offset_t::West] == value) {
 					++count;
-				}
-
-				if (edge.east || cells[position + offset_t::East] == value) {
+				} if (edge.east || cells[position + offset_t::East] == value) {
 					++count;
-				}
-
-				if (edge.south || edge.west || cells[position + offset_t::Southwest] == value) {
+				} if (edge.south || edge.west || cells[position + offset_t::Southwest] == value) {
 					++count;
-				}
-
-				if (edge.south || cells[position + offset_t::South] == value) {
+				} if (edge.south || cells[position + offset_t::South] == value) {
 					++count;
-				}
-
-				if (edge.south || edge.east || cells[position + offset_t::Southeast] == value) {
+				} if (edge.south || edge.east || cells[position + offset_t::Southeast] == value) {
 					++count;
 				}
 			}
@@ -731,26 +710,19 @@ namespace bleak {
 			if constexpr (Safe) {
 				if (cells[position + offset_t::Northwest] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::North] == value) {
+				} if (cells[position + offset_t::North] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::Northeast] == value) {
+				} if (cells[position + offset_t::Northeast] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::West] == value) {
+				} if (cells[position + offset_t::West] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::East] == value) {
+				} if (cells[position + offset_t::East] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::Southwest] == value) {
+				} if (cells[position + offset_t::Southwest] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::South] == value) {
+				} if (cells[position + offset_t::South] == value) {
 					++count;
-				}
-				if (cells[position + offset_t::Southeast] == value) {
+				} if (cells[position + offset_t::Southeast] == value) {
 					++count;
 				}
 			} else {
@@ -758,33 +730,19 @@ namespace bleak {
 
 				if (edge.north || edge.west || cells[position + offset_t::Northwest] == value) {
 					++count;
-				}
-
-				if (edge.north || cells[position + offset_t::North] == value) {
+				} if (edge.north || cells[position + offset_t::North] == value) {
 					++count;
-				}
-
-				if (edge.north || edge.east || cells[position + offset_t::Northeast] == value) {
+				} if (edge.north || edge.east || cells[position + offset_t::Northeast] == value) {
 					++count;
-				}
-
-				if (edge.west || cells[position + offset_t::West] == value) {
+				} if (edge.west || cells[position + offset_t::West] == value) {
 					++count;
-				}
-
-				if (edge.east || cells[position + offset_t::East] == value) {
+				} if (edge.east || cells[position + offset_t::East] == value) {
 					++count;
-				}
-
-				if (edge.south || edge.west || cells[position + offset_t::Southwest] == value) {
+				} if (edge.south || edge.west || cells[position + offset_t::Southwest] == value) {
 					++count;
-				}
-
-				if (edge.south || cells[position + offset_t::South] == value) {
+				} if (edge.south || cells[position + offset_t::South] == value) {
 					++count;
-				}
-
-				if (edge.south || edge.east || cells[position + offset_t::Southeast] == value) {
+				} if (edge.south || edge.east || cells[position + offset_t::Southeast] == value) {
 					++count;
 				}
 			}
@@ -810,17 +768,11 @@ namespace bleak {
 
 					if (nw && n && w) {
 						index += 1 << 3;
-					}
-
-					if (n && ne && e) {
+					} if (n && ne && e) {
 						index += 1 << 2;
-					}
-
-					if (e && se && s) {
+					} if (e && se && s) {
 						index += 1 << 1;
-					}
-
-					if (w && sw && s) {
+					} if (w && sw && s) {
 						index += 1 << 0;
 					}
 				} else {
@@ -843,17 +795,11 @@ namespace bleak {
 
 					if (nw && n && w) {
 						index += 1 << 3;
-					}
-
-					if (n && ne && e) {
+					} if (n && ne && e) {
 						index += 1 << 2;
-					}
-
-					if (e && se && s) {
+					} if (e && se && s) {
 						index += 1 << 1;
-					}
-
-					if (w && sw && s) {
+					} if (w && sw && s) {
 						index += 1 << 0;
 					}
 				}
@@ -861,14 +807,11 @@ namespace bleak {
 				if constexpr (Safe) {
 					if (cells[position] == value) {
 						index += 1 << 3;
-					}
-					if (cells[position + offset_t::East] == value) {
+					} if (cells[position + offset_t::East] == value) {
 						index += 1 << 2;
-					}
-					if (cells[position + offset_t::Southeast] == value) {
+					} if (cells[position + offset_t::Southeast] == value) {
 						index += 1 << 1;
-					}
-					if (cells[position + offset_t::South] == value) {
+					} if (cells[position + offset_t::South] == value) {
 						index += 1 << 0;
 					}
 				} else {
@@ -880,17 +823,11 @@ namespace bleak {
 
 					if (cells[position] == value) {
 						index += 1 << 3;
-					}
-
-					if (edge == cardinal_e::East || cells[position + offset_t::East] == value) {
+					} if (edge == cardinal_e::East || cells[position + offset_t::East] == value) {
 						index += 1 << 2;
-					}
-
-					if (edge == cardinal_e::Southeast || cells[position + offset_t::Southeast] == value) {
+					} if (edge == cardinal_e::Southeast || cells[position + offset_t::Southeast] == value) {
 						index += 1 << 1;
-					}
-
-					if (edge == cardinal_e::South || cells[position + offset_t::South] == value) {
+					} if (edge == cardinal_e::South || cells[position + offset_t::South] == value) {
 						index += 1 << 0;
 					}
 				}
@@ -919,17 +856,11 @@ namespace bleak {
 
 					if (nw && n && w) {
 						index += 1 << 3;
-					}
-
-					if (n && ne && e) {
+					} if (n && ne && e) {
 						index += 1 << 2;
-					}
-
-					if (e && se && s) {
+					} if (e && se && s) {
 						index += 1 << 1;
-					}
-
-					if (w && sw && s) {
+					} if (w && sw && s) {
 						index += 1 << 0;
 					}
 				} else {
@@ -952,17 +883,11 @@ namespace bleak {
 
 					if (nw && n && w) {
 						index += 1 << 3;
-					}
-
-					if (n && ne && e) {
+					} if (n && ne && e) {
 						index += 1 << 2;
-					}
-
-					if (e && se && s) {
+					} if (e && se && s) {
 						index += 1 << 1;
-					}
-
-					if (w && sw && s) {
+					} if (w && sw && s) {
 						index += 1 << 0;
 					}
 				}
@@ -970,14 +895,11 @@ namespace bleak {
 				if constexpr (Safe) {
 					if (cells[position] == value) {
 						index += 1 << 3;
-					}
-					if (cells[position + offset_t::East] == value) {
+					} if (cells[position + offset_t::East] == value) {
 						index += 1 << 2;
-					}
-					if (cells[position + offset_t::Southeast] == value) {
+					} if (cells[position + offset_t::Southeast] == value) {
 						index += 1 << 1;
-					}
-					if (cells[position + offset_t::South] == value) {
+					} if (cells[position + offset_t::South] == value) {
 						index += 1 << 0;
 					}
 				} else {
@@ -989,17 +911,11 @@ namespace bleak {
 
 					if (cells[position] == value) {
 						index += 1 << 3;
-					}
-
-					if (edge == cardinal_e::East || cells[position + offset_t::East] == value) {
+					} if (edge == cardinal_e::East || cells[position + offset_t::East] == value) {
 						index += 1 << 2;
-					}
-
-					if (edge == cardinal_e::Southeast || cells[position + offset_t::Southeast] == value) {
+					} if (edge == cardinal_e::Southeast || cells[position + offset_t::Southeast] == value) {
 						index += 1 << 1;
-					}
-
-					if (edge == cardinal_e::South || cells[position + offset_t::South] == value) {
+					} if (edge == cardinal_e::South || cells[position + offset_t::South] == value) {
 						index += 1 << 0;
 					}
 				}
