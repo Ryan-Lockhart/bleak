@@ -17,7 +17,7 @@ namespace bleak {
 	template<Numeric D, distance_function_t DistanceFunction, extent_t ZoneSize, extent_t ZoneBorder> struct field_t {
 	  private:
 		zone_t<D, ZoneSize, ZoneBorder> distances;
-		std::unordered_set<offset_t, offset_t::hasher> goals;
+		std::unordered_set<offset_t, offset_t::std_hasher> goals;
 
 	  public:
 		static constexpr D goal_value{ 0 };
@@ -82,7 +82,7 @@ namespace bleak {
 			}
 
 			std::queue<creeper_t<T>> frontier{};
-			std::unordered_set<offset_t, offset_t::hasher> visited{};
+			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
 			for (crauto goal : goals) {
 				if (!zone.template within<Region>(goal) || zone[goal] != value) {
@@ -129,7 +129,7 @@ namespace bleak {
 			}
 
 			std::queue<creeper_t<D>> frontier{};
-			std::unordered_set<offset_t, offset_t::hasher> visited{};
+			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
 			for (crauto goal : goals) {
 				if (!zone.template within<Region>(goal) || zone[goal] != value) {
@@ -172,7 +172,7 @@ namespace bleak {
 			}
 
 			std::queue<creeper_t<T>> frontier{};
-			std::unordered_set<offset_t, offset_t::hasher> visited{};
+			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
 			for (crauto goal : goals) {
 				if (!zone.template within<Region>(goal) || zone[goal] != value) {
@@ -219,7 +219,7 @@ namespace bleak {
 			}
 
 			std::queue<creeper_t<D>> frontier{};
-			std::unordered_set<offset_t, offset_t::hasher> visited{};
+			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
 			for (crauto goal : goals) {
 				if (!zone.template within<Region>(goal) || zone[goal] != value) {

@@ -20,8 +20,8 @@
 #include <bleak/constants/octants.hpp>
 
 namespace bleak {
-	struct area_t : public std::unordered_set<offset_t, offset_t::hasher> {
-		using underlying_t = std::unordered_set<offset_t, offset_t::hasher>;
+	struct area_t : public std::unordered_set<offset_t, offset_t::std_hasher> {
+		using underlying_t = std::unordered_set<offset_t, offset_t::std_hasher>;
 
 		inline area_t() noexcept {}
 

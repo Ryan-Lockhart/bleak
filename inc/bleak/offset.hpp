@@ -14,6 +14,7 @@
 #include <bleak/cardinal.hpp>
 #include <bleak/concepts.hpp>
 #include <bleak/hash.hpp>
+#include <bleak/leaf.hpp>
 
 extern "C" {
 	typedef struct c_offset_t {
@@ -333,6 +334,12 @@ namespace bleak {
 		struct hasher {
 			static constexpr usize operator()(offset_t offset) noexcept { return hash_combine(offset.x, offset.y); }
 		};
+
+		struct mortonater {
+			static constexpr usize operator()(offset_t offset) noexcept { return std::bit_cast<usize>(interleave<isize, ihalf>(offset.x, offset.y)); }
+		};
+
+		using std_hasher = mortonater;
 	};
 } // namespace bleak
 

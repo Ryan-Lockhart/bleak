@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bleak/typedef.hpp"
 #include <bleak/primitive.hpp> // IWYU pragma: export
 
 #include <format>
@@ -9,6 +10,7 @@
 #include <SDL.h>
 
 #include <bleak/hash.hpp>
+#include <bleak/leaf.hpp>
 
 extern "C" {
 	typedef struct c_extent_t {
@@ -236,6 +238,12 @@ namespace bleak {
 		struct hasher {
 			static constexpr usize operator()(extent_t extent) noexcept { return hash_combine(extent.w, extent.h); }
 		};
+
+		struct mortonater {
+			static constexpr usize operator()(extent_t extent) noexcept { return std::bit_cast<usize>(interleave<isize, ihalf>(extent.w, extent.h)); }
+		};
+
+		using std_hasher = mortonater;
 	};
 } // namespace bleak
 

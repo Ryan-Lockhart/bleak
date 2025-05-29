@@ -24,8 +24,8 @@ namespace bleak {
 		using creep_t = memory_creeper_t<offset_t::product_t>;
 
 		using frontier_t = std::priority_queue<creep_t, std::vector<creep_t>, creep_t::less>;
-		using sparse_t = std::unordered_set<offset_t, offset_t::hasher>;
-		using trail_t = std::unordered_map<offset_t, rememberance_t<offset_t>, offset_t::hasher>;
+		using sparse_t = std::unordered_set<offset_t, offset_t::std_hasher>;
+		using trail_t = std::unordered_map<offset_t, rememberance_t<offset_t>, offset_t::std_hasher>;
 
 		#define dense_t zone_t<T, Size, BorderSize>
 		#define dense_args typename T, extent_t Size, extent_t BorderSize

@@ -42,9 +42,9 @@ namespace bleak {
 			struct offset {
 				using is_transparent = void;
 
-				static constexpr size_t operator()(cref<sparseling_t> sparseling) noexcept { return offset_t::hasher::operator()(sparseling.position); }
+				static constexpr size_t operator()(cref<sparseling_t> sparseling) noexcept { return offset_t::std_hasher::operator()(sparseling.position); }
 
-				static constexpr size_t operator()(offset_t position) noexcept { return offset_t::hasher::operator()(position); }
+				static constexpr size_t operator()(offset_t position) noexcept { return offset_t::std_hasher::operator()(position); }
 			};
 		};
 
@@ -52,11 +52,11 @@ namespace bleak {
 			struct offset {
 				using is_transparent = void;
 
-				static constexpr bool operator()(cref<sparseling_t> lhs, cref<sparseling_t> rhs) noexcept { return offset_t::hasher::operator()(lhs.position) == offset_t::hasher::operator()(rhs.position); }
+				static constexpr bool operator()(cref<sparseling_t> lhs, cref<sparseling_t> rhs) noexcept { return offset_t::std_hasher::operator()(lhs.position) == offset_t::std_hasher::operator()(rhs.position); }
 
-				static constexpr bool operator()(cref<sparseling_t> lhs, offset_t rhs) noexcept { return offset_t::hasher::operator()(lhs.position) == offset_t::hasher::operator()(rhs); }
+				static constexpr bool operator()(cref<sparseling_t> lhs, offset_t rhs) noexcept { return offset_t::std_hasher::operator()(lhs.position) == offset_t::std_hasher::operator()(rhs); }
 
-				static constexpr bool operator()(offset_t lhs, cref<sparseling_t> rhs) noexcept { return offset_t::hasher::operator()(lhs) == offset_t::hasher::operator()(rhs.position); }
+				static constexpr bool operator()(offset_t lhs, cref<sparseling_t> rhs) noexcept { return offset_t::std_hasher::operator()(lhs) == offset_t::std_hasher::operator()(rhs.position); }
 			};
 		};
 	};
