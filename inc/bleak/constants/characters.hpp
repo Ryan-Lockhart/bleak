@@ -6,9 +6,6 @@ namespace bleak {
 	namespace characters {
 		constexpr const u8 Floor{ 0x00 };
 
-		constexpr const u8 RightPatch{ 0x00 }; // unused
-		constexpr const u8 LeftPatch{ 0x00 }; // unused
-
 		constexpr const u8 UnarmoredPlayer{ 0x10 };
 		constexpr const u8 ArmoredPlayer{ 0x11 };
 
@@ -51,5 +48,11 @@ namespace bleak {
 		constexpr const u8 DownLadder{ 0x2E };
 		
 		constexpr const u8 Shackle{ 0x2F };
+
+		constexpr const u8 RightPatch{ 0x30 };
+		constexpr const u8 LeftPatch{ 0x31 };
+
+		constexpr const u8 AltRightPatch{ 0x32 };
+		constexpr const u8 AltLeftPatch{ 0x33 };
 	} // namespace characters
 } // namespace bleak

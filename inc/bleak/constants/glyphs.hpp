@@ -23,9 +23,6 @@ namespace bleak {
 	namespace glyphs {
 		constexpr const glyph_t Floor{ characters::Floor, colors::Transparent };
 
-		constexpr const glyph_t RightPatch{ characters::RightPatch, colors::White };
-		constexpr const glyph_t LeftPatch{ characters::LeftPatch, colors::White };
-
 		constexpr const glyph_t UnarmoredPlayer{ characters::UnarmoredPlayer, colors::White };
 		constexpr const glyph_t ArmoredPlayer{ characters::ArmoredPlayer, colors::White };
 
@@ -67,5 +64,11 @@ namespace bleak {
 		constexpr const glyph_t DownLadder{ characters::DownLadder, colors::White };
 		
 		constexpr const glyph_t Shackle{ characters::Shackle, colors::White };
+
+		constexpr const glyph_t RightPatch{ characters::RightPatch, colors::White };
+		constexpr const glyph_t LeftPatch{ characters::LeftPatch, colors::White };
+
+		constexpr const glyph_t AltRightPatch{ characters::AltRightPatch, colors::White };
+		constexpr const glyph_t AltLeftPatch{ characters::AltLeftPatch, colors::White };
 	} // namespace glyphs
 } // namespace bleak
