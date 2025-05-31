@@ -165,7 +165,7 @@ namespace bleak {
 
 		constexpr extent_t::product_t area() const noexcept { return size.area(); }
 
-		constexpr bool within(offset_t point) const noexcept { return point.x >= position.x && point.x <= position.x + size.w && point.y >= position.y && point.y <= position.y + size.h; }
+		constexpr bool within(offset_t point) const noexcept { return point.x >= position.x && point.x < position.x + size.w && point.y >= position.y && point.y < position.y + size.h; }
 
 		constexpr operator sdl::rect() const noexcept {
 			return sdl::rect{ static_cast<i32>(position.x), static_cast<i32>(position.y), static_cast<i32>(size.w), static_cast<i32>(size.h) };

@@ -74,19 +74,23 @@ namespace bleak {
 		};
 
 		constexpr const sdl::key Quit{ keys::Escape };
-		
+
 		constexpr const sdl::key ToggleFullscreen{ keys::Function::Ten };
 		constexpr const sdl::key ToggleControls{ keys::Function::One };
 
 		constexpr const sdl::key CameraLock{ keys::Tab };
 		constexpr const sdl::key RevealMap{ keys::Grave };
 
+		constexpr const sdl::key InspectObjects{ keys::Modifier::Left::Alt };
+
 		constexpr const sdl::key RandomWarp{ keys::Alpha::Q };
 		constexpr const sdl::key TargetWarp{ keys::Alpha::E };
-		
+
+		constexpr const sdl::key NecromanticAscendance{ keys::Alpha::R };
+
 		constexpr const sdl::key CalciticInvocation{ keys::Numeric::One };
 		constexpr const sdl::key SpectralInvocation{ keys::Numeric::Two };
 		constexpr const sdl::key SanguineInvocation{ keys::Numeric::Three };
-		constexpr const sdl::key NecromanticAscendance{ keys::Numeric::Four };
+		constexpr const sdl::key GalvanicInvocation{ keys::Numeric::Four };
 	} // namespace Bindings
 } // namespace bleak

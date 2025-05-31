@@ -1806,6 +1806,120 @@ namespace bleak {
 			return std::nullopt;
 		}
 
+		template<zone_region_t Region, typename Randomizer, SparseBlockage EntityBlockage, SparseBlockage ObjectBlockage>
+			requires is_random_engine<Randomizer>::value
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<EntityBlockage> entity_blockage, cref<ObjectBlockage> object_blockage) const noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			if constexpr (Region == zone_region_t::All) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (cells[pos] != value || entity_blockage.contains(pos) || object_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < interior_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (cells[pos] != value || entity_blockage.contains(pos) || object_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
+
+				for (extent_t::product_t i{ 0 }; i < border_area; ++i) {
+					auto x{ x_dis(generator) };
+					auto y{ y_dis(generator) };
+
+					x = x < border_size.w ? x : zone_extent.x - x;
+					y = y < border_size.h ? y : zone_extent.y - y;
+
+					const offset_t pos{ x, y };
+
+					if (cells[pos] != value || entity_blockage.contains(pos) || object_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			}
+
+			return std::nullopt;
+		}
+
+		template<zone_region_t Region, typename Randomizer, typename U, SparseBlockage EntityBlockage, SparseBlockage ObjectBlockage>
+			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<EntityBlockage> entity_blockage, cref<ObjectBlockage> object_blockage) const noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			if constexpr (Region == zone_region_t::All) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (cells[pos] != value || entity_blockage.contains(pos) || object_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
+
+				for (extent_t::product_t i{ 0 }; i < interior_area; ++i) {
+					const offset_t pos{ x_dis(generator), y_dis(generator) };
+
+					if (cells[pos] != value || entity_blockage.contains(pos) || object_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
+				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
+
+				for (extent_t::product_t i{ 0 }; i < border_area; ++i) {
+					auto x{ x_dis(generator) };
+					auto y{ y_dis(generator) };
+
+					x = x < border_size.w ? x : zone_extent.x - x;
+					y = y < border_size.h ? y : zone_extent.y - y;
+
+					const offset_t pos{ x, y };
+
+					if (cells[pos] != value || entity_blockage.contains(pos) || object_blockage.contains(pos)) {
+						continue;
+					}
+
+					return pos;
+				}
+			}
+
+			return std::nullopt;
+		}
+
 		constexpr bool linear_blockage(offset_t origin, offset_t target, cref<T> value) const noexcept {
 			if (cells[origin] == value || cells[target] == value) {
 				return true;

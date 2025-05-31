@@ -38,6 +38,7 @@ namespace bleak {
 		constexpr const glyph_t Cultist{ characters::Cultist, colors::White };
 		constexpr const glyph_t Bloodhound{ characters::Bloodhound, colors::White };
 
+		constexpr const glyph_t Bonespur{ characters::Bonespur, colors::White };
 		constexpr const glyph_t Wraith{ characters::Wraith, colors::White };
 		constexpr const glyph_t FleshGolem{ characters::FleshGolem, colors::White };
 
