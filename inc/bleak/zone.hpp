@@ -46,6 +46,7 @@ namespace bleak {
 		static constexpr extent_t border_size{ BorderSize };
 
 		static constexpr offset_t zone_origin{ 0 };
+		static constexpr offset_t zone_center{ zone_size / 2 };
 		static constexpr offset_t zone_extent{ zone_size - 1 };
 
 		static constexpr offset_t interior_origin{ zone_origin + border_size };
@@ -656,6 +657,84 @@ namespace bleak {
 			return *this;
 		}
 
+		template<zone_region_t Region, typename Randomizer>
+			requires is_random_engine<Randomizer>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<T>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			auto dis{ std::bernoulli_distribution{ fill_percent } };
+
+			if constexpr (Region == zone_region_t::All) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					cells[i] = applicator(generator, dis);
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						cells[x, y] = applicator(generator, dis);
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							cells[x, y] = applicator(generator, dis);
+						}
+					} else {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							cells[i, y] = applicator(generator, dis);
+							cells[zone_extent.x - i, y] = applicator(generator, dis);
+						}
+					}
+				}
+			}
+
+			spoke<Region>(applicator.false_value, spokes);
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer, typename U>
+			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<U>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			auto dis{ std::bernoulli_distribution{ fill_percent } };
+
+			if constexpr (Region == zone_region_t::All) {
+				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
+					cells[i] = applicator(generator, dis);
+				}
+			} else if constexpr (Region == zone_region_t::Interior) {
+				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
+					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
+						cells[x, y] = applicator(generator, dis);
+					}
+				}
+			} else if constexpr (Region == zone_region_t::Border) {
+				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
+					if (y < interior_origin.y || y > interior_extent.y) {
+						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
+							cells[x, y] = applicator(generator, dis);
+						}
+					} else {
+						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
+							cells[i, y] = applicator(generator, dis);
+							cells[zone_extent.x - i, y] = applicator(generator, dis);
+						}
+					}
+				}
+			}
+
+			spoke<Region>(applicator.false_value, spokes);
+
+			return *this;
+		}
+
 		template<bool Safe = false> constexpr u8 neighbour_count(offset_t position, cref<T> value) const noexcept {
 			u8 count{ 0 };
 
@@ -922,6 +1001,76 @@ namespace bleak {
 			}
 
 			return index;
+		}
+
+		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> spoke(cref<T> value, cref<std::vector<offset_t>> spokes) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			for (cauto spoke_position : spokes) {
+				if (!within<Region>(spoke_position)) {
+					continue;
+				}
+
+				linear_apply<Region>(zone_center, spoke_position, value);
+			}
+
+			return *this;
+		}
+
+
+		template<zone_region_t Region, typename U>
+			requires is_equatable<T, U>::value && std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> spoke(cref<U> value, cref<std::vector<offset_t>> spokes) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			for (cauto spoke_position : spokes) {
+				if (!within<Region>(spoke_position)) {
+					continue;
+				}
+
+				linear_apply<Region>(zone_center, spoke_position, value);
+			}
+
+			return *this;
+		}
+
+		template<zone_region_t Region> constexpr cref<zone_t<T, Size, BorderSize>> spoke(ref<array_t<T, Size>> buffer, cref<T> value, cref<std::vector<offset_t>> spokes) const noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			for (cauto spoke_position : spokes) {
+				if (!within<Region>(spoke_position)) {
+					continue;
+				}
+
+				linear_apply<Region>(buffer, zone_center, spoke_position, value);
+			}
+
+			return *this;
+		}
+
+
+		template<zone_region_t Region, typename U>
+			requires is_equatable<T, U>::value && std::is_assignable<T, U>::value
+		constexpr cref<zone_t<T, Size, BorderSize>> spoke(ref<array_t<T, Size>> buffer, cref<U> value, cref<std::vector<offset_t>> spokes) const noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			for (cauto spoke_position : spokes) {
+				if (!within<Region>(spoke_position)) {
+					continue;
+				}
+
+				linear_apply<Region>(buffer, zone_center, spoke_position, value);
+			}
+
+			return *this;
 		}
 
 		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> collapse(cref<T> value, usize index, cref<T> collapse_to) noexcept {
@@ -1456,6 +1605,36 @@ namespace bleak {
 			return *this;
 		}
 
+		template<zone_region_t Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			for (u32 i{ 0 }; i < iterations; ++i) {
+				spoke<Region>(buffer, applicator.false_value, spokes);
+				automatize<Region>(buffer, threshold, applicator);
+				swap(buffer);
+			}
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename U>
+			requires std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			for (u32 i{ 0 }; i < iterations; ++i) {
+				spoke<Region>(buffer, applicator.false_value, spokes);
+				automatize<Region>(buffer, threshold, applicator);
+				swap(buffer);
+			}
+
+			return *this;
+		}
+
 		template<zone_region_t Region, typename Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
@@ -1519,6 +1698,40 @@ namespace bleak {
 			array_t<T, Size> buffer{ cells };
 
 			automatize<Region>(buffer, iterations, threshold, applicator);
+			swap(buffer);
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer>
+			requires is_random_engine<Randomizer>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			randomize<Region>(generator, fill_percent, applicator, spokes);
+
+			array_t<T, Size> buffer{ cells };
+
+			automatize<Region>(buffer, iterations, threshold, applicator, spokes);
+			swap(buffer);
+
+			return *this;
+		}
+
+		template<zone_region_t Region, typename Randomizer, typename U>
+			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
+			if constexpr (Region == zone_region_t::None) {
+				return *this;
+			}
+
+			randomize<Region>(generator, fill_percent, applicator, spokes);
+
+			array_t<T, Size> buffer{ cells };
+
+			automatize<Region>(buffer, iterations, threshold, applicator, spokes);
 			swap(buffer);
 
 			return *this;
@@ -1918,6 +2131,186 @@ namespace bleak {
 			}
 
 			return std::nullopt;
+		}
+
+		template<zone_region_t Region> constexpr void linear_apply(offset_t origin, offset_t target, cref<T> value) noexcept {
+			if (!within<Region>(origin) || !within<Region>(target)) {
+				return;
+			}
+
+			if (origin == target) {
+				cells[origin] = value;
+
+				return;
+			}
+
+			offset_t delta{ std::abs(target.x - origin.x), std::abs(target.y - origin.y) };
+
+			offset_t step{ origin.x < target.x ? 1 : -1, origin.y < target.y ? 1 : -1 };
+
+			i32 err = delta.x - delta.y;
+
+			offset_t current_position{ origin };
+
+			for (;;) {
+				i32 e2 = 2 * err;
+
+				if (e2 > -delta.y) {
+					err -= delta.y;
+					current_position.x += step.x;
+				}
+
+				if (e2 < delta.x) {
+					err += delta.x;
+					current_position.y += step.y;
+				}
+
+				if (!within<Region>(current_position)) {
+					return;
+				}
+
+				cells[current_position] = value;
+
+				if (current_position == target) {
+					return;
+				}
+			}
+		}
+
+		template<zone_region_t Region, typename U>
+			requires std::is_assignable<T, U>::value
+		constexpr void linear_apply(offset_t origin, offset_t target, cref<U> value) noexcept {
+			if (!within<Region>(origin) || !within<Region>(target)) {
+				return;
+			}
+
+			if (origin == target) {
+				cells[origin] = value;
+
+				return;
+			}
+
+			offset_t delta{ std::abs(target.x - origin.x), std::abs(target.y - origin.y) };
+
+			offset_t step{ origin.x < target.x ? 1 : -1, origin.y < target.y ? 1 : -1 };
+
+			i32 err = delta.x - delta.y;
+
+			offset_t current_position{ origin };
+
+			for (;;) {
+				i32 e2 = 2 * err;
+
+				if (e2 > -delta.y) {
+					err -= delta.y;
+					current_position.x += step.x;
+				}
+
+				if (e2 < delta.x) {
+					err += delta.x;
+					current_position.y += step.y;
+				}
+
+				if (!within<Region>(current_position)) {
+					return;
+				}
+
+				cells[current_position] = value;
+
+				if (current_position == target) {
+					return;
+				}
+			}
+		}
+
+		template<zone_region_t Region> constexpr void linear_apply(ref<array_t<T, Size>> buffer, offset_t origin, offset_t target, cref<T> value) const noexcept {
+			if (!within<Region>(origin) || !within<Region>(target)) {
+				return;
+			}
+
+			if (origin == target) {
+				buffer[origin] = value;
+
+				return;
+			}
+
+			offset_t delta{ std::abs(target.x - origin.x), std::abs(target.y - origin.y) };
+
+			offset_t step{ origin.x < target.x ? 1 : -1, origin.y < target.y ? 1 : -1 };
+
+			i32 err = delta.x - delta.y;
+
+			offset_t current_position{ origin };
+
+			for (;;) {
+				i32 e2 = 2 * err;
+
+				if (e2 > -delta.y) {
+					err -= delta.y;
+					current_position.x += step.x;
+				}
+
+				if (e2 < delta.x) {
+					err += delta.x;
+					current_position.y += step.y;
+				}
+
+				if (!within<Region>(current_position)) {
+					return;
+				}
+
+				buffer[current_position] = value;
+
+				if (current_position == target) {
+					return;
+				}
+			}
+		}
+
+		template<zone_region_t Region, typename U>
+			requires std::is_assignable<T, U>::value
+		constexpr void linear_apply(ref<array_t<T, Size>> buffer, offset_t origin, offset_t target, cref<U> value) const noexcept {
+			if (!within<Region>(origin) || !within<Region>(target)) {
+				return;
+			}
+
+			if (origin == target) {
+				buffer[origin] = value;
+
+				return;
+			}
+
+			offset_t delta{ std::abs(target.x - origin.x), std::abs(target.y - origin.y) };
+
+			offset_t step{ origin.x < target.x ? 1 : -1, origin.y < target.y ? 1 : -1 };
+
+			i32 err = delta.x - delta.y;
+
+			offset_t current_position{ origin };
+
+			for (;;) {
+				i32 e2 = 2 * err;
+
+				if (e2 > -delta.y) {
+					err -= delta.y;
+					current_position.x += step.x;
+				}
+
+				if (e2 < delta.x) {
+					err += delta.x;
+					current_position.y += step.y;
+				}
+
+				if (!within<Region>(current_position)) {
+					return;
+				}
+
+				buffer[current_position] = value;
+
+				if (current_position == target) {
+					return;
+				}
+			}
 		}
 
 		constexpr bool linear_blockage(offset_t origin, offset_t target, cref<T> value) const noexcept {

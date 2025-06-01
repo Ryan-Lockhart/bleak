@@ -79,9 +79,8 @@ namespace bleak {
 		constexpr const sdl::key ToggleControls{ keys::Function::One };
 
 		constexpr const sdl::key CameraLock{ keys::Tab };
-		constexpr const sdl::key RevealMap{ keys::Grave };
 
-		constexpr const sdl::key InspectObjects{ keys::Modifier::Left::Alt };
+		constexpr const sdl::key IgnoreObjects{ keys::Modifier::Left::Alt };
 
 		constexpr const sdl::key RandomWarp{ keys::Alpha::Q };
 		constexpr const sdl::key TargetWarp{ keys::Alpha::E };
