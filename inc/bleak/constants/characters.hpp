@@ -29,7 +29,7 @@ namespace bleak {
 		constexpr const u8 WrithingKnight{ 0x11 };
 
 		constexpr const u8 Adventurer{ 0x12 };
-		constexpr const u8 Mercenary{ 0x23 };
+		constexpr const u8 Mercenary{ 0x13 };
 		constexpr const u8 Paladin{ 0x14 };
 		constexpr const u8 Priest{ 0x15 };
 

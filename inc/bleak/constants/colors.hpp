@@ -63,9 +63,9 @@ namespace bleak {
 			static constexpr color_t LightBlood{ u8{ 177 }, u8{ 34 }, u8{ 53 } };
 			static constexpr color_t DarkBlood{ u8{ 137 }, u8{ 14 }, u8{ 33 } };
 
-			static constexpr color_t Ichor{ u8{ 8 }, u8{ 32 }, u8{ 8 } };
-			static constexpr color_t LightIchor{ u8{ 16 }, u8{ 64 }, u8{ 16 } };
-			static constexpr color_t DarkIchor{ u8{ 4 }, u8{ 16 }, u8{ 4 } };
+			static constexpr color_t Ichor{ u8{ 32 }, u8{ 8 }, u8{ 32 } };
+			static constexpr color_t LightIchor{ u8{ 64 }, u8{ 16 }, u8{ 64 } };
+			static constexpr color_t DarkIchor{ u8{ 16 }, u8{ 4 }, u8{ 16 } };
 
 			static constexpr color_t BloodyIchor{ mix(Blood, Ichor) };
 			static constexpr color_t LightBloodyIchor{ mix(LightBlood, LightIchor) };
@@ -97,6 +97,7 @@ namespace bleak {
 				static constexpr color_t Calcitic{ u8{ 255 }, u8{ 255 }, u8{ 240 } };
 				static constexpr color_t Spectral{ u8{ 72 }, u8{ 100 }, u8{ 83 } };
 				static constexpr color_t Sanguine{ u8{ 157 }, u8{ 34 }, u8{ 53 } };
+				static constexpr color_t Galvanic{ u8{ 192 }, u8{ 224 }, u8{ 192 } };
 			} // namespace shackles
 		} // namespace metals
 	} // namespace colors
