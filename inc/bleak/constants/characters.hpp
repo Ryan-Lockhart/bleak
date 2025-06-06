@@ -47,6 +47,10 @@ namespace bleak {
 		
 		constexpr const u8 Shackle{ 0x1F };
 
+		constexpr const u8 CalmPortal{ 0x00 };
+		constexpr const u8 VocalPortal{ 0x00 };
+		constexpr const u8 TurbulentPortal{ 0x00 };
+
 		constexpr const u8 Floor{ 0x00 };
 
 		constexpr const u8 RightPatch{ 0x10 };
