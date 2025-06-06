@@ -80,58 +80,58 @@ namespace bleak {
 
 		inline void present() noexcept { SDL_RenderPresent(renderer); }
 
-		template<primitive_type_t Primitive, fill_type_t Fill> inline void draw(cref<primitive_t<Primitive, Fill>> primitive) noexcept {
+		template<primitive_e Primitive, fill_e Fill> inline void draw(cref<primitive_t<Primitive, Fill>> primitive) noexcept {
 			error_log.add("draw not implemented for primitive: {} {}", (std::string)Primitive, (std::string)Fill);
 			return;
 
-			if constexpr (Primitive == primitive_type_t::Point) {
-				if constexpr (Fill == fill_type_t::Outline) {
+			if constexpr (Primitive == primitive_e::Point) {
+				if constexpr (Fill == fill_e::Outline) {
 
-				} else if constexpr (Fill == fill_type_t::Fill) {
+				} else if constexpr (Fill == fill_e::Fill) {
 
-				} else if constexpr (Fill == fill_type_t::Composite) {
+				} else if constexpr (Fill == fill_e::Composite) {
 				}
-			} else if constexpr (Primitive == primitive_type_t::Line) {
-				if constexpr (Fill == fill_type_t::Outline) {
+			} else if constexpr (Primitive == primitive_e::Line) {
+				if constexpr (Fill == fill_e::Outline) {
 
-				} else if constexpr (Fill == fill_type_t::Fill) {
+				} else if constexpr (Fill == fill_e::Fill) {
 
-				} else if constexpr (Fill == fill_type_t::Composite) {
+				} else if constexpr (Fill == fill_e::Composite) {
 				}
-			} else if constexpr (Primitive == primitive_type_t::Triangle) {
-				if constexpr (Fill == fill_type_t::Outline) {
+			} else if constexpr (Primitive == primitive_e::Triangle) {
+				if constexpr (Fill == fill_e::Outline) {
 
-				} else if constexpr (Fill == fill_type_t::Fill) {
+				} else if constexpr (Fill == fill_e::Fill) {
 
-				} else if constexpr (Fill == fill_type_t::Composite) {
+				} else if constexpr (Fill == fill_e::Composite) {
 				}
-			} else if constexpr (Primitive == primitive_type_t::Rectangle) {
-				if constexpr (Fill == fill_type_t::Outline) {
+			} else if constexpr (Primitive == primitive_e::Rectangle) {
+				if constexpr (Fill == fill_e::Outline) {
 
-				} else if constexpr (Fill == fill_type_t::Fill) {
+				} else if constexpr (Fill == fill_e::Fill) {
 
-				} else if constexpr (Fill == fill_type_t::Composite) {
+				} else if constexpr (Fill == fill_e::Composite) {
 				}
-			} else if constexpr (Primitive == primitive_type_t::Circle) {
-				if constexpr (Fill == fill_type_t::Outline) {
+			} else if constexpr (Primitive == primitive_e::Circle) {
+				if constexpr (Fill == fill_e::Outline) {
 
-				} else if constexpr (Fill == fill_type_t::Fill) {
+				} else if constexpr (Fill == fill_e::Fill) {
 
-				} else if constexpr (Fill == fill_type_t::Composite) {
+				} else if constexpr (Fill == fill_e::Composite) {
 				}
-			} else if constexpr (Primitive == primitive_type_t::Ellipse) {
-				if constexpr (Fill == fill_type_t::Outline) {
+			} else if constexpr (Primitive == primitive_e::Ellipse) {
+				if constexpr (Fill == fill_e::Outline) {
 
-				} else if constexpr (Fill == fill_type_t::Fill) {
+				} else if constexpr (Fill == fill_e::Fill) {
 
-				} else if constexpr (Fill == fill_type_t::Composite) {
+				} else if constexpr (Fill == fill_e::Composite) {
 				}
-			} else if constexpr (Primitive == primitive_type_t::Capsule) {
-				if constexpr (Fill == fill_type_t::Outline) {
+			} else if constexpr (Primitive == primitive_e::Capsule) {
+				if constexpr (Fill == fill_e::Outline) {
 
-				} else if constexpr (Fill == fill_type_t::Fill) {
+				} else if constexpr (Fill == fill_e::Fill) {
 
-				} else if constexpr (Fill == fill_type_t::Composite) {
+				} else if constexpr (Fill == fill_e::Composite) {
 				}
 			}
 		}
@@ -158,7 +158,7 @@ namespace bleak {
 		}
 
 		inline void draw_line(offset_t start, offset_t end, extent_t::scalar_t thickness) noexcept {
-			offset_t::product_t dst{ offset_t::distance<distance_function_t::Chebyshev>(start, end) };
+			offset_t::product_t dst{ offset_t::distance<distance_function_e::Chebyshev>(start, end) };
 			offset_t dir{ offset_t::direction(start, end) };
 
 			offset_t origin{ start + dir * thickness / 2 };

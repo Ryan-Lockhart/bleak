@@ -227,26 +227,26 @@ namespace bleak {
 		}
 	};
 
-	enum class search_type_t { BreadthFirst, DepthFirst };
+	enum struct search_e { BreadthFirst, DepthFirst };
 
-	template<typename T, usize Branches, search_type_t Search> struct tree_iter_t;
+	template<typename T, usize Branches, search_e Search> struct tree_iter_t;
 
-	template<typename T, search_type_t Search> using bintree_iter_t = tree_iter_t<T, 2, Search>;
+	template<typename T, search_e Search> using bintree_iter_t = tree_iter_t<T, 2, Search>;
 
-	template<typename T> using bintree_bfs_t = bintree_iter_t<T, search_type_t::BreadthFirst>;
-	template<typename T> using bintree_dfs_t = bintree_iter_t<T, search_type_t::DepthFirst>;
+	template<typename T> using bintree_bfs_t = bintree_iter_t<T, search_e::BreadthFirst>;
+	template<typename T> using bintree_dfs_t = bintree_iter_t<T, search_e::DepthFirst>;
 
-	template<typename T, search_type_t Search> using quadtree_iter_t = tree_iter_t<T, 4, Search>;
+	template<typename T, search_e Search> using quadtree_iter_t = tree_iter_t<T, 4, Search>;
 
-	template<typename T> using quadtree_bfs_t = tree_iter_t<T, 4, search_type_t::BreadthFirst>;
-	template<typename T> using quadtree_dfs_t = tree_iter_t<T, 4, search_type_t::DepthFirst>;
+	template<typename T> using quadtree_bfs_t = tree_iter_t<T, 4, search_e::BreadthFirst>;
+	template<typename T> using quadtree_dfs_t = tree_iter_t<T, 4, search_e::DepthFirst>;
 
-	template<typename T, search_type_t Search> using octree_iter_t = tree_iter_t<T, 8, Search>;
+	template<typename T, search_e Search> using octree_iter_t = tree_iter_t<T, 8, Search>;
 
-	template<typename T> using octree_bfs_t = tree_iter_t<T, 8, search_type_t::BreadthFirst>;
-	template<typename T> using octree_dfs_t = tree_iter_t<T, 8, search_type_t::DepthFirst>;
+	template<typename T> using octree_bfs_t = tree_iter_t<T, 8, search_e::BreadthFirst>;
+	template<typename T> using octree_dfs_t = tree_iter_t<T, 8, search_e::DepthFirst>;
 
-	template<typename T, usize Branches> struct tree_iter_t<T, Branches, search_type_t::BreadthFirst> {
+	template<typename T, usize Branches> struct tree_iter_t<T, Branches, search_e::BreadthFirst> {
 	  public:
 		using iterator_category = std::forward_iterator_tag;
 		using difference_type = std::ptrdiff_t;
@@ -333,7 +333,7 @@ namespace bleak {
 		constexpr bool operator!=(cref<tree_iter_t> other) noexcept { return peek() != other.peek(); }
 	};
 
-	template<typename T, usize Branches> struct tree_iter_t<T, Branches, search_type_t::DepthFirst> {
+	template<typename T, usize Branches> struct tree_iter_t<T, Branches, search_e::DepthFirst> {
 	  public:
 		using iterator_category = std::forward_iterator_tag;
 		using difference_type = std::ptrdiff_t;

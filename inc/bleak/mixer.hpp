@@ -89,7 +89,7 @@ namespace bleak {
 		} // namespace mixer
 	} // namespace sdl
 
-	enum class channel_e : u8 { Mono, Stereo };
+	enum struct channel_e : u8 { Mono, Stereo };
 
 	struct mixer_s {
 		public:

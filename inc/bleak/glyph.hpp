@@ -29,7 +29,7 @@ namespace bleak {
 	  private:
 		static constexpr extent_t size{ Length, 1 };
 
-		array_t<u32, size> indices;
+		array_ct_t<u32, size> indices;
 		extent_t::product_t frame;
 
 		constexpr inline void wrap() noexcept { frame %= length; }
@@ -64,9 +64,9 @@ namespace bleak {
 
 		constexpr animated_glyph_t(std::initializer_list<u32> indices, color_t color) noexcept : indices{ indices }, frame{ 0 }, color{ color } {}
 
-		constexpr animated_glyph_t(rval<array_t<u32, size>> indices) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{} {}
+		constexpr animated_glyph_t(rval<array_ct_t<u32, size>> indices) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{} {}
 
-		constexpr animated_glyph_t(rval<array_t<u32, size>> indices, color_t color) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{ color } {}
+		constexpr animated_glyph_t(rval<array_ct_t<u32, size>> indices, color_t color) noexcept : indices{ std::move(indices) }, frame{ 0 }, color{ color } {}
 
 		constexpr animated_glyph_t(cref<animated_glyph_t> other) noexcept : indices{ other.indices }, frame{ other.frame }, color{ other.color } {}
 

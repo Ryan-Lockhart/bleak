@@ -22,9 +22,9 @@ namespace bleak {
 
 		constexpr offset_t::product_t perimeter() const noexcept {
 			return
-				offset_t::distance<distance_function_t::Chebyshev>(vertices[0], vertices[1]) +
-				offset_t::distance<distance_function_t::Chebyshev>(vertices[1], vertices[2]) +
-				offset_t::distance<distance_function_t::Chebyshev>(vertices[2], vertices[0]);
+				offset_t::distance<distance_function_e::Chebyshev>(vertices[0], vertices[1]) +
+				offset_t::distance<distance_function_e::Chebyshev>(vertices[1], vertices[2]) +
+				offset_t::distance<distance_function_e::Chebyshev>(vertices[2], vertices[0]);
 		}
 
 		constexpr offset_t::product_t area() const noexcept { return std::abs(vertices[0].x * (vertices[1].y - vertices[2].y) + vertices[1].x * (vertices[2].y - vertices[0].y) + vertices[2].x * (vertices[0].y - vertices[1].y)) / 2; }
@@ -35,35 +35,35 @@ namespace bleak {
 
 		constexpr line_t c() const noexcept { return line_t{ vertices[2], vertices[0] }; }
 
-		template<fill_type_t Fill> inline void draw(ref<renderer_t> renderer, color_t) const noexcept;
+		template<fill_e Fill> inline void draw(ref<renderer_t> renderer, color_t) const noexcept;
 
-		template<fill_type_t Fill> inline void draw(ref<renderer_t> renderer, thickness_t thickness, color_t) const noexcept;
+		template<fill_e Fill> inline void draw(ref<renderer_t> renderer, thickness_t thickness, color_t) const noexcept;
 
-		template<fill_type_t Fill> inline void draw(ref<renderer_t> renderer, thickness_t thickness, color_t, color_t) const noexcept;
+		template<fill_e Fill> inline void draw(ref<renderer_t> renderer, thickness_t thickness, color_t, color_t) const noexcept;
 
-		template<fill_type_t Fill> inline void draw(ref<renderer_t> renderer, color_t, extent_t::scalar_t) const noexcept;
+		template<fill_e Fill> inline void draw(ref<renderer_t> renderer, color_t, extent_t::scalar_t) const noexcept;
 
-		template<fill_type_t Fill> inline void draw(ref<renderer_t> renderer, color_t, color_t) const noexcept;
-		template<fill_type_t Fill> inline void draw(ref<renderer_t> renderer, color_t, color_t, extent_t::scalar_t) const noexcept;
+		template<fill_e Fill> inline void draw(ref<renderer_t> renderer, color_t, color_t) const noexcept;
+		template<fill_e Fill> inline void draw(ref<renderer_t> renderer, color_t, color_t, extent_t::scalar_t) const noexcept;
 	};
 
-	template<> inline void triangle_2d_t::draw<fill_type_t::Outline>(ref<renderer_t> renderer, color_t outline) const noexcept {
+	template<> inline void triangle_2d_t::draw<fill_e::Outline>(ref<renderer_t> renderer, color_t outline) const noexcept {
 		renderer.draw_line(vertices[0], vertices[1], outline);
 		renderer.draw_line(vertices[1], vertices[2], outline);
 		renderer.draw_line(vertices[2], vertices[0], outline);
 	}
 
-	template<> inline void triangle_2d_t::draw<fill_type_t::Outline>(ref<renderer_t> renderer, thickness_t thickness, color_t outline) const noexcept {
+	template<> inline void triangle_2d_t::draw<fill_e::Outline>(ref<renderer_t> renderer, thickness_t thickness, color_t outline) const noexcept {
 		renderer.draw_line(vertices[0], vertices[1], outline, thickness);
 		renderer.draw_line(vertices[1], vertices[2], outline, thickness);
 		renderer.draw_line(vertices[2], vertices[0], outline, thickness);
 	}
 
-	template<> inline void triangle_2d_t::draw<fill_type_t::Outline>(ref<renderer_t> renderer, thickness_t thickness, color_t fill, color_t outline) const noexcept = delete;
+	template<> inline void triangle_2d_t::draw<fill_e::Outline>(ref<renderer_t> renderer, thickness_t thickness, color_t fill, color_t outline) const noexcept = delete;
 
-	template<> inline void triangle_2d_t::draw<fill_type_t::Fill>(ref<renderer_t> renderer, color_t fill) const noexcept {}
+	template<> inline void triangle_2d_t::draw<fill_e::Fill>(ref<renderer_t> renderer, color_t fill) const noexcept {}
 
-	template<> inline void triangle_2d_t::draw<fill_type_t::Fill>(ref<renderer_t> renderer, thickness_t thickness, color_t fill) const noexcept = delete;
+	template<> inline void triangle_2d_t::draw<fill_e::Fill>(ref<renderer_t> renderer, thickness_t thickness, color_t fill) const noexcept = delete;
 
-	template<> inline void triangle_2d_t::draw<fill_type_t::Fill>(ref<renderer_t> renderer, thickness_t thickness, color_t fill, color_t outline) const noexcept = delete;
+	template<> inline void triangle_2d_t::draw<fill_e::Fill>(ref<renderer_t> renderer, thickness_t thickness, color_t fill, color_t outline) const noexcept = delete;
 } // namespace bleak

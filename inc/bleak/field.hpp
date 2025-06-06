@@ -14,9 +14,9 @@
 #include <bleak/zone.hpp>
 
 namespace bleak {
-	template<Numeric D, distance_function_t DistanceFunction, extent_t ZoneSize, extent_t ZoneBorder> struct field_t {
+	template<Numeric D, distance_function_e DistanceFunction, extent_t ZoneSize, extent_t ZoneBorder> struct field_t {
 	  private:
-		zone_t<D, ZoneSize, ZoneBorder> distances;
+		 zone_ct_t<D, ZoneSize, ZoneBorder> distances;
 		std::unordered_set<offset_t, offset_t::std_hasher> goals;
 
 	  public:
@@ -33,40 +33,40 @@ namespace bleak {
 
 		constexpr bool obstacle_reached(offset_t position, D threshold) const noexcept { return distances[position] >= close_to_obstacle_value - threshold; }
 
-		constexpr field_t() noexcept : distances{}, goals{} { clear<zone_region_t::All>(); }
+		constexpr field_t() noexcept : distances{}, goals{} { clear<zone_region_e::All>(); }
 
 		template<typename... Goals>
 			requires is_homogeneous<offset_t, Goals...>::value
 		constexpr field_t(cref<Goals>... goals) noexcept : distances{}, goals{ goals... } {
-			clear<zone_region_t::All>();
+			clear<zone_region_e::All>();
 		}
 
 		template<typename T, typename... Goals>
 			requires is_homogeneous<offset_t, Goals...>::value
-		constexpr field_t(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Goals>... goals) noexcept : distances{}, goals{ goals... } {
-			recalculate<zone_region_t::All>(zone, value);
+		constexpr field_t(cref< zone_ct_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Goals>... goals) noexcept : distances{}, goals{ goals... } {
+			recalculate<zone_region_e::All>(zone, value);
 		}
 
 		template<typename... Goals>
 			requires is_homogeneous<offset_t, Goals...>::value
 		constexpr field_t(rval<Goals>... goals) noexcept : distances{}, goals{ (std::move(goals), ...) } {
-			clear<zone_region_t::All>();
+			clear<zone_region_e::All>();
 		}
 
-		template<zone_region_t Region, typename T, typename... Goals>
+		template<zone_region_e Region, typename T, typename... Goals>
 			requires is_homogeneous<offset_t, Goals...>::value
-		constexpr field_t(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, rval<Goals>... goals) noexcept : distances{}, goals{ (std::move(goals), ...) } {
-			recalculate<zone_region_t::All>(zone, value);
+		constexpr field_t(cref< zone_ct_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, rval<Goals>... goals) noexcept : distances{}, goals{ (std::move(goals), ...) } {
+			recalculate<zone_region_e::All>(zone, value);
 		}
 
-		template<zone_region_t Region> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> clear() noexcept {
+		template<zone_region_e Region> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> clear() noexcept {
 			distances.template set<Region>(obstacle_value);
 
 			return *this;
 		}
 
 		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> reset() noexcept {
-			clear<zone_region_t::All>();
+			clear<zone_region_e::All>();
 			goals.clear();
 
 			return *this;
@@ -74,7 +74,7 @@ namespace bleak {
 
 		constexpr D at(offset_t position) const noexcept { return distances[position]; }
 
-		template<zone_region_t Region, typename T> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value) noexcept {
+		template<zone_region_e Region, typename T> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref< zone_ct_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value) noexcept {
 			clear();
 
 			if (goals.empty()) {
@@ -119,9 +119,9 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region, typename T, typename U>
+		template<zone_region_e Region, typename T, typename U>
 			requires is_equatable<T, U>::value
-		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value) noexcept {
+		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref< zone_ct_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value) noexcept {
 			clear<Region>();
 
 			if (goals.empty()) {
@@ -164,7 +164,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region, typename T, SparseBlockage Blockage> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Blockage> sparse_blockage) noexcept {
+		template<zone_region_e Region, typename T, SparseBlockage Blockage> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref< zone_ct_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Blockage> sparse_blockage) noexcept {
 			clear();
 
 			if (goals.empty()) {
@@ -209,9 +209,9 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region, typename T, typename U, SparseBlockage Blockage>
+		template<zone_region_e Region, typename T, typename U, SparseBlockage Blockage>
 			requires is_equatable<T, U>::value
-		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value, cref<Blockage> sparse_blockage) noexcept {
+		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref< zone_ct_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value, cref<Blockage> sparse_blockage) noexcept {
 			clear<Region>();
 
 			if (goals.empty()) {
@@ -254,7 +254,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_t Region> constexpr std::optional<offset_t> ascend(offset_t position) const noexcept {
+		template<zone_region_e Region> constexpr std::optional<offset_t> ascend(offset_t position) const noexcept {
 			if (!distances.template within<Region>(position)) {
 				return std::nullopt;
 			}
@@ -278,7 +278,7 @@ namespace bleak {
 			return highest;
 		}
 
-		template<zone_region_t Region, SparseBlockage Blockage> constexpr std::optional<offset_t> ascend(offset_t position, cref<Blockage> sparse_blockage) const noexcept {
+		template<zone_region_e Region, SparseBlockage Blockage> constexpr std::optional<offset_t> ascend(offset_t position, cref<Blockage> sparse_blockage) const noexcept {
 			if (!distances.template within<Region>(position)) {
 				return std::nullopt;
 			}
@@ -302,7 +302,7 @@ namespace bleak {
 			return highest;
 		}
 
-		template<zone_region_t Region, typename Generator>
+		template<zone_region_e Region, typename Generator>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> ascend(offset_t position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
 			if (!distances.template within<Region>(position)) {
@@ -334,7 +334,7 @@ namespace bleak {
 			return highest;
 		}
 
-		template<zone_region_t Region, typename Generator, SparseBlockage Blockage>
+		template<zone_region_e Region, typename Generator, SparseBlockage Blockage>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> ascend(offset_t position, cref<Blockage> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
 			if (!distances.template within<Region>(position)) {
@@ -367,7 +367,7 @@ namespace bleak {
 			return highest;
 		}
 
-		template<zone_region_t Region> constexpr std::optional<offset_t> descend(offset_t position) const noexcept {
+		template<zone_region_e Region> constexpr std::optional<offset_t> descend(offset_t position) const noexcept {
 			if (!distances.template within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}
@@ -391,7 +391,7 @@ namespace bleak {
 			return lowest;
 		}
 
-		template<zone_region_t Region, SparseBlockage Blockage> constexpr std::optional<offset_t> descend(offset_t position, cref<Blockage> sparse_blockage) const noexcept {
+		template<zone_region_e Region, SparseBlockage Blockage> constexpr std::optional<offset_t> descend(offset_t position, cref<Blockage> sparse_blockage) const noexcept {
 			if (!distances.template within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}
@@ -415,7 +415,7 @@ namespace bleak {
 			return lowest;
 		}
 
-		template<zone_region_t Region, typename Generator>
+		template<zone_region_e Region, typename Generator>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> descend(offset_t position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
 			if (!distances.template within<Region>(position) || goal_reached(position)) {
@@ -446,7 +446,7 @@ namespace bleak {
 			return lowest;
 		}
 
-		template<zone_region_t Region, typename Generator, SparseBlockage Blockage>
+		template<zone_region_e Region, typename Generator, SparseBlockage Blockage>
 			requires is_random_engine<Generator>::value
 		constexpr std::optional<offset_t> descend(offset_t position, cref<Blockage> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
 			if (!distances.template within<Region>(position) || goal_reached(position)) {
@@ -478,13 +478,13 @@ namespace bleak {
 			return lowest;
 		}
 
-		template<zone_region_t Region, typename Randomizer, typename T, SparseBlockage Blockage>
-		constexpr std::optional<offset_t> find_random(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, ref<Randomizer> generator, cref<T> value, cref<Blockage> sparse_blockage, cref<D> minimum_distance) const noexcept {
-			if constexpr (Region == zone_region_t::None) {
+		template<zone_region_e Region, typename Randomizer, typename T, SparseBlockage Blockage>
+		constexpr std::optional<offset_t> find_random(cref< zone_ct_t<T, ZoneSize, ZoneBorder>> zone, ref<Randomizer> generator, cref<T> value, cref<Blockage> sparse_blockage, cref<D> minimum_distance) const noexcept {
+			if constexpr (Region == zone_region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_t::All) {
+			if constexpr (Region == zone_region_e::All) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.zone_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.zone_extent.y };
 
@@ -497,7 +497,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_t::Interior) {
+			} else if constexpr (Region == zone_region_e::Interior) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ zone.interior_origin.x, zone.interior_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ zone.interior_origin.y, zone.interior_extent.y };
 
@@ -510,7 +510,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_t::Border) {
+			} else if constexpr (Region == zone_region_e::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.border_size.h * 2 - 1 };
 
@@ -534,14 +534,14 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_t Region, typename Randomizer, typename T, typename U, SparseBlockage Blockage>
+		template<zone_region_e Region, typename Randomizer, typename T, typename U, SparseBlockage Blockage>
 			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
-		constexpr std::optional<offset_t> find_random(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, ref<Randomizer> generator, cref<U> value, cref<Blockage> sparse_blockage, cref<D> minimum_distance) const noexcept {
-			if constexpr (Region == zone_region_t::None) {
+		constexpr std::optional<offset_t> find_random(cref< zone_ct_t<T, ZoneSize, ZoneBorder>> zone, ref<Randomizer> generator, cref<U> value, cref<Blockage> sparse_blockage, cref<D> minimum_distance) const noexcept {
+			if constexpr (Region == zone_region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_t::All) {
+			if constexpr (Region == zone_region_e::All) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.zone_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.zone_extent.y };
 
@@ -554,7 +554,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_t::Interior) {
+			} else if constexpr (Region == zone_region_e::Interior) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ zone.interior_origin.x, zone.interior_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ zone.interior_origin.y, zone.interior_extent.y };
 
@@ -567,7 +567,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_t::Border) {
+			} else if constexpr (Region == zone_region_e::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.border_size.h * 2 - 1 };
 
@@ -591,13 +591,13 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_t Region, typename Randomizer, typename T, SparseBlockage EntityBlockage, SparseBlockage ObjectBlockage>
-		constexpr std::optional<offset_t> find_random(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, ref<Randomizer> generator, cref<T> value, cref<EntityBlockage> entity_blockage, cref<ObjectBlockage> object_blockage, cref<D> minimum_distance) const noexcept {
-			if constexpr (Region == zone_region_t::None) {
+		template<zone_region_e Region, typename Randomizer, typename T, SparseBlockage EntityBlockage, SparseBlockage ObjectBlockage>
+		constexpr std::optional<offset_t> find_random(cref< zone_ct_t<T, ZoneSize, ZoneBorder>> zone, ref<Randomizer> generator, cref<T> value, cref<EntityBlockage> entity_blockage, cref<ObjectBlockage> object_blockage, cref<D> minimum_distance) const noexcept {
+			if constexpr (Region == zone_region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_t::All) {
+			if constexpr (Region == zone_region_e::All) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.zone_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.zone_extent.y };
 
@@ -610,7 +610,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_t::Interior) {
+			} else if constexpr (Region == zone_region_e::Interior) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ zone.interior_origin.x, zone.interior_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ zone.interior_origin.y, zone.interior_extent.y };
 
@@ -623,7 +623,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_t::Border) {
+			} else if constexpr (Region == zone_region_e::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.border_size.h * 2 - 1 };
 
@@ -647,14 +647,14 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_t Region, typename Randomizer, typename T, typename U, SparseBlockage EntityBlockage, SparseBlockage ObjectBlockage>
+		template<zone_region_e Region, typename Randomizer, typename T, typename U, SparseBlockage EntityBlockage, SparseBlockage ObjectBlockage>
 			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
-		constexpr std::optional<offset_t> find_random(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, ref<Randomizer> generator, cref<U> value, cref<EntityBlockage> entity_blockage, cref<ObjectBlockage> object_blockage, cref<D> minimum_distance) const noexcept {
-			if constexpr (Region == zone_region_t::None) {
+		constexpr std::optional<offset_t> find_random(cref< zone_ct_t<T, ZoneSize, ZoneBorder>> zone, ref<Randomizer> generator, cref<U> value, cref<EntityBlockage> entity_blockage, cref<ObjectBlockage> object_blockage, cref<D> minimum_distance) const noexcept {
+			if constexpr (Region == zone_region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_t::All) {
+			if constexpr (Region == zone_region_e::All) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.zone_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.zone_extent.y };
 
@@ -667,7 +667,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_t::Interior) {
+			} else if constexpr (Region == zone_region_e::Interior) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ zone.interior_origin.x, zone.interior_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ zone.interior_origin.y, zone.interior_extent.y };
 
@@ -680,7 +680,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_t::Border) {
+			} else if constexpr (Region == zone_region_e::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone.border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone.border_size.h * 2 - 1 };
 
@@ -705,14 +705,14 @@ namespace bleak {
 		}
 
 		constexpr bool add(offset_t goal) noexcept {
-			if (!distances.template within<zone_region_t::All>(goal)) {
+			if (!distances.template within<zone_region_e::All>(goal)) {
 				return false;
 			}
 
 			return goals.insert(goal).second;
 		}
 
-		template<zone_region_t Region> constexpr bool add(offset_t goal) noexcept {
+		template<zone_region_e Region> constexpr bool add(offset_t goal) noexcept {
 			if (!distances.template within<Region>(goal)) {
 				return false;
 			}
@@ -721,14 +721,14 @@ namespace bleak {
 		}
 
 		constexpr bool remove(offset_t goal) noexcept {
-			if (!distances.template within<zone_region_t::All>(goal)) {
+			if (!distances.template within<zone_region_e::All>(goal)) {
 				return false;
 			}
 
 			return goals.erase(goal);
 		}
 
-		template<zone_region_t Region> constexpr bool remove(offset_t goal) noexcept {
+		template<zone_region_e Region> constexpr bool remove(offset_t goal) noexcept {
 			if (!distances.template within<Region>(goal)) {
 				return false;
 			}
@@ -737,7 +737,7 @@ namespace bleak {
 		}
 
 		constexpr bool update(offset_t from, offset_t to) noexcept {
-			if (!distances.template within<zone_region_t::All>(from) || !distances.template within<zone_region_t::All>(to)) {
+			if (!distances.template within<zone_region_e::All>(from) || !distances.template within<zone_region_e::All>(to)) {
 				return false;
 			}
 			
@@ -754,7 +754,7 @@ namespace bleak {
 			return goals.insert(std::move(node)).inserted;
 		}
 
-		template<zone_region_t Region> constexpr bool update(offset_t from, offset_t to) noexcept {
+		template<zone_region_e Region> constexpr bool update(offset_t from, offset_t to) noexcept {
 			if (!distances.template within<Region>(from) || !distances.template within<Region>(to)) {
 				return false;
 			}

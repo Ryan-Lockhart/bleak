@@ -59,7 +59,7 @@ namespace bleak {
 
 	template<typename T> constexpr bool is_numeric_v = is_numeric<T>::value;
 
-	enum class operator_t { Addition, Subtraction, Multiplication, Division, Modulus };
+	enum struct operator_e { Addition, Subtraction, Multiplication, Division, Modulus };
 
 	template<typename T, typename U>
 	concept Addable = requires(T a, U b) {
@@ -87,35 +87,35 @@ namespace bleak {
 		{ a %= b } -> std::convertible_to<ref<T>>;
 	};
 
-	template<typename T, typename U, operator_t Operator> struct is_operable;
+	template<typename T, typename U, operator_e Operator> struct is_operable;
 
-	template<typename T, typename U> struct is_operable<T, U, operator_t::Addition> {
+	template<typename T, typename U> struct is_operable<T, U, operator_e::Addition> {
 		static bool constexpr value = Addable<T, U>;
 	};
 
-	template<typename T, typename U> struct is_operable<T, U, operator_t::Subtraction> {
+	template<typename T, typename U> struct is_operable<T, U, operator_e::Subtraction> {
 		static bool constexpr value = Subtractable<T, U>;
 	};
 
-	template<typename T, typename U> struct is_operable<T, U, operator_t::Multiplication> {
+	template<typename T, typename U> struct is_operable<T, U, operator_e::Multiplication> {
 		static bool constexpr value = Multipliable<T, U>;
 	};
 
-	template<typename T, typename U> struct is_operable<T, U, operator_t::Division> {
+	template<typename T, typename U> struct is_operable<T, U, operator_e::Division> {
 		static bool constexpr value = Divisible<T, U>;
 	};
 
-	template<typename T, typename U> struct is_operable<T, U, operator_t::Modulus> {
+	template<typename T, typename U> struct is_operable<T, U, operator_e::Modulus> {
 		static bool constexpr value = Modulable<T, U>;
 	};
 
-	template<typename T, typename U, operator_t Operator> constexpr bool is_operable_v = is_operable<T, U, Operator>::value;
+	template<typename T, typename U, operator_e Operator> constexpr bool is_operable_v = is_operable<T, U, Operator>::value;
 
-	template<typename T, operator_t Operator> using is_operable_unary = is_operable<T, T, Operator>;
+	template<typename T, operator_e Operator> using is_operable_unary = is_operable<T, T, Operator>;
 
-	template<typename T, operator_t Operator> constexpr bool is_operable_unary_v = is_operable_unary<T, Operator>::value;
+	template<typename T, operator_e Operator> constexpr bool is_operable_unary_v = is_operable_unary<T, Operator>::value;
 
-	enum class comparator_t { Less, Greater, LessEq, GreaterEq, Equatable, Ordered, Comparable };
+	enum struct comparator_e { Less, Greater, LessEq, GreaterEq, Equatable, Ordered, Comparable };
 
 	template<typename T, typename U> concept Less = requires(T a, U b) {
 		{ a < b } -> std::convertible_to<bool>;
@@ -148,37 +148,37 @@ namespace bleak {
 
 	template<typename T, typename U> constexpr bool is_equatable_v = is_equatable<T, U>::value;
 
-	template<typename T, typename U, comparator_t Comparator> struct is_comparable;
+	template<typename T, typename U, comparator_e Comparator> struct is_comparable;
 
-	template<typename T, typename U> struct is_comparable<T, U, comparator_t::Less> {
+	template<typename T, typename U> struct is_comparable<T, U, comparator_e::Less> {
 		static bool constexpr value = Less<T, U>;
 	};
 
-	template<typename T, typename U> struct is_comparable<T, U, comparator_t::Greater> {
+	template<typename T, typename U> struct is_comparable<T, U, comparator_e::Greater> {
 		static bool constexpr value = Greater<T, U>;
 	};
 
-	template<typename T, typename U> struct is_comparable<T, U, comparator_t::LessEq> {
+	template<typename T, typename U> struct is_comparable<T, U, comparator_e::LessEq> {
 		static bool constexpr value = LessEq<T, U>;
 	};
 
-	template<typename T, typename U> struct is_comparable<T, U, comparator_t::GreaterEq> {
+	template<typename T, typename U> struct is_comparable<T, U, comparator_e::GreaterEq> {
 		static bool constexpr value = GreaterEq<T, U>;
 	};
 
-	template<typename T, typename U> struct is_comparable<T, U, comparator_t::Equatable> {
+	template<typename T, typename U> struct is_comparable<T, U, comparator_e::Equatable> {
 		static bool constexpr value = Equatable<T, U>;
 	};
 
-	template<typename T, typename U> struct is_comparable<T, U, comparator_t::Ordered> {
+	template<typename T, typename U> struct is_comparable<T, U, comparator_e::Ordered> {
 		static bool constexpr value = Ordered<T, U>;
 	};
 
-	template<typename T, typename U> struct is_comparable<T, U, comparator_t::Comparable> {
+	template<typename T, typename U> struct is_comparable<T, U, comparator_e::Comparable> {
 		static bool constexpr value = Comparable<T, U>;
 	};
 
-	template<typename T, typename U, comparator_t Comparator> constexpr bool is_comparable_v = is_comparable<T, U, Comparator>::value;
+	template<typename T, typename U, comparator_e Comparator> constexpr bool is_comparable_v = is_comparable<T, U, Comparator>::value;
 
 	template<typename T, typename... Params> struct is_homogeneous {
 		static bool constexpr value = (std::is_same<T, Params>::value && ...);

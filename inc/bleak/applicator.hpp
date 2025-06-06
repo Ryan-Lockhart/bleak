@@ -43,7 +43,7 @@ namespace bleak {
 	};
 
 	template<typename T>
-		requires is_comparable<T, T, comparator_t::Ordered>::value
+		requires is_comparable<T, T, comparator_e::Ordered>::value
 	struct ternary_applicator_t {
 		DEFINE_GENERIC_USING(ternary_applicator_t, T);
 

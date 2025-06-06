@@ -1,0 +1,252 @@
+#pragma once
+
+#include <bleak/typedef.hpp>
+
+#include <initializer_list>
+#include <type_traits>
+
+#include <bleak/concepts.hpp>
+#include <bleak/extent.hpp>
+#include <bleak/hash.hpp>
+#include <bleak/iter.hpp>
+#include <bleak/log.hpp>
+#include <bleak/offset.hpp>
+#include <bleak/utility.hpp>
+
+namespace bleak {
+	template<typename T> class array_rt_t {
+	  public:
+		const extent_t size;
+
+	  private:
+		ptr<T> data;
+
+	  public:
+		inline usize area() const noexcept { return size.size(); }
+
+		inline usize byte_size() const noexcept { return area() * sizeof(T); }
+
+		inline usize first() const noexcept { return 0; }
+		inline usize last() const noexcept { return area() - 1; }
+
+		inline extent_t::scalar_t width() const noexcept { return size.w; }
+		inline extent_t::scalar_t height() const noexcept { return size.h; }
+
+		inline usize flatten(offset_t offset) const noexcept { return static_cast<usize>(offset.y) * size.w + offset.x; }
+
+		inline usize flatten(offset_t::scalar_t i, offset_t::scalar_t j) const noexcept { return static_cast<usize>(j) * size.w + i; }
+
+		inline offset_t unflatten(usize index) const noexcept { return offset_t{ index / size.w, index % size.w }; }
+
+		using iterator = fwd_iter_t<T>;
+		using const_iterator = fwd_iter_t<const T>;
+
+		using reverse_iterator = rev_iter_t<T>;
+		using const_reverse_iterator = rev_iter_t<const T>;
+
+		inline constexpr iterator begin() noexcept { return iterator{ data }; }
+
+		inline constexpr iterator end() noexcept { return iterator{ data + area() }; }
+
+		inline constexpr const_iterator begin() const noexcept { return const_iterator{ data() }; }
+
+		inline constexpr const_iterator end() const noexcept { return const_iterator{ data + area() }; }
+
+		inline constexpr const_iterator cbegin() const noexcept { return const_iterator{ data }; }
+
+		inline constexpr const_iterator cend() const noexcept { return const_iterator{ data + area() }; }
+
+		inline constexpr reverse_iterator rbegin() noexcept { return reverse_iterator{ data + last() }; }
+
+		inline constexpr reverse_iterator rend() noexcept { return reverse_iterator{ data - 1 }; }
+
+		inline constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator{ data + last() }; }
+
+		inline constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator{ data - 1 }; }
+
+		inline constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator{ data + last() }; }
+
+		inline constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator{ data - 1 }; }
+
+		inline constexpr ref<T> front() noexcept { return data[first()]; }
+
+		inline constexpr cref<T> front() const noexcept { return data[first()]; }
+
+		inline constexpr ref<T> back() noexcept { return data[last()]; }
+
+		inline constexpr cref<T> back() const noexcept { return data[last()]; }
+
+		inline constexpr array_rt_t(extent_t size) : size{ size }, data{ new T[area()] } {}
+
+		inline constexpr array_rt_t(extent_t size, std::vector<T> elements) : size{ size }, data{ new T[area()] } {
+			for (usize i{ 0 }; i < area(); ++i) {
+				data[i] = elements[i];
+			}
+		}
+
+		template<typename U>
+			requires std::is_convertible<U, T>::value
+		inline constexpr explicit array_rt_t(extent_t size, std::vector<U> elements) : size{ size }, data{ new T[area()] } {
+			for (usize i{ 0 }; i < area(); ++i) {
+				data[i] = elements[i];
+			}
+		}
+
+		inline constexpr array_rt_t(extent_t size, std::initializer_list<T> elements) : size{ size }, data{ new T[area()] } {
+			if (elements.size() != area()) {
+				error_log.add("ERROR: initializer list size mismatch!");
+			}
+
+			usize i{ 0 };
+			for (auto element : elements) {
+				data[i++] = element;
+			}
+		}
+
+		template<typename... Params>
+			requires is_homogeneous<T, Params...>::value && is_plurary<Params...>::value && (sizeof...(Params) <= size.size())
+		inline constexpr array_rt_t(extent_t size, cref<Params>... elements) : size{ size }, data{ new T[area()] } {
+			usize i{ 0 };
+			((data[i++] = elements), ...);
+		}
+
+		template<typename... Params>
+			requires is_homogeneous<T, Params...>::value && is_plurary<Params...>::value && (sizeof...(Params) <= size.size())
+		inline constexpr array_rt_t(extent_t size, rval<Params>... elements) : size{ size }, data{ new T[area()] } {
+			usize i{ 0 };
+			((data[i++] = std::move(elements)), ...);
+		}
+
+		inline constexpr array_rt_t(cref<array_rt_t> other) : size{ other.size }, data{ new T[area()] } {
+			for (usize i{ 0 }; i < area(); ++i) {
+				data[i] = other.data[i];
+			}
+		}
+
+		inline constexpr array_rt_t(rval<array_rt_t> other) noexcept : data{ std::move(other.data) } { other.data = nullptr; }
+
+		inline constexpr ref<array_rt_t> operator=(cref<array_rt_t> other) noexcept {
+			if (this == &other) {
+				return *this;
+			}
+
+			for (usize i{ 0 }; i < area(); ++i) {
+				data[i] = other.data[i];
+			}
+
+			return *this;
+		}
+
+		inline constexpr ref<array_rt_t> operator=(rval<array_rt_t> other) noexcept {
+			if (this == &other) {
+				return *this;
+			}
+
+			data = std::move(other.data);
+			other.data = nullptr;
+
+			return *this;
+		}
+
+		inline constexpr ~array_rt_t() noexcept {
+			if (data != nullptr) {
+				delete[] data;
+				data = nullptr;
+			}
+		}
+
+		inline constexpr ref<T> operator[](offset_t offset) noexcept { return data[first() + flatten(offset)]; }
+
+		inline constexpr cref<T> operator[](offset_t offset) const noexcept { return data[first() + flatten(offset)]; }
+
+		inline constexpr ref<T> operator[](offset_t::product_t index) noexcept { return data[first() + index]; }
+
+		inline constexpr cref<T> operator[](offset_t::product_t index) const noexcept { return data[first() + index]; }
+
+		inline constexpr ref<T> operator[](offset_t::scalar_t i, offset_t::scalar_t j) noexcept { return data[first() + flatten(i, j)]; }
+
+		inline constexpr cref<T> operator[](offset_t::scalar_t i, offset_t::scalar_t j) const noexcept { return data[first() + flatten(i, j)]; }
+
+		inline constexpr bool valid(offset_t offset) const noexcept { return flatten(offset) < area(); }
+
+		inline constexpr bool valid(offset_t::product_t index) const noexcept { return index < area(); }
+
+		inline constexpr bool valid(offset_t::scalar_t i, offset_t::scalar_t j) const noexcept { return flatten(i, j) < area(); }
+
+		inline constexpr ref<T> at(offset_t offset) {
+			if (!valid(offset)) {
+				error_log.add("ERROR: offset out of range!");
+			}
+
+			return data[first() + flatten(offset)];
+		}
+
+		inline constexpr cref<T> at(offset_t offset) const {
+			if (!valid(offset)) {
+				error_log.add("ERROR: offset out of range!");
+			}
+
+			return data[first() + flatten(offset)];
+		}
+
+		inline constexpr ref<T> at(offset_t::product_t index) {
+			if (!valid(index)) {
+				error_log.add("ERROR: offset out of range!");
+			}
+
+			return data[first() + index];
+		}
+
+		inline constexpr cref<T> at(offset_t::product_t index) const {
+			if (!valid(index)) {
+				error_log.add("ERROR: offset out of range!");
+			}
+
+			return data[first() + index];
+		}
+
+		inline constexpr ref<T> at(offset_t::scalar_t i, offset_t::scalar_t j) {
+			if (!valid(i, j)) {
+				error_log.add("ERROR: indices out of range!");
+			}
+
+			return data[first() + flatten(i, j)];
+		}
+
+		inline constexpr cref<T> at(offset_t::scalar_t i, offset_t::scalar_t j) const {
+			if (!valid(i, j)) {
+				error_log.add("ERROR: indices out of range!");
+			}
+
+			return data[first() + flatten(i, j)];
+		}
+
+		constexpr ptr<T> data_ptr() noexcept { return data; }
+
+		constexpr cptr<T> data_ptr() const noexcept { return data; }
+
+		constexpr bool operator==(cref<array_rt_t> other) const noexcept {
+			for (usize i{0}; i < area(); ++i) {
+				if (data[i] != other.data[i]) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		constexpr bool operator!=(cref<array_rt_t> other) const noexcept {
+			for (usize i{0}; i < area(); ++i) {
+				if (data[i] != other.data[i]) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		struct hasher {
+			static constexpr usize operator()(cref<array_rt_t<T>> array) { return hash_array(array.begin(), array.end()); }
+		};
+	};
+} // namespace bleak

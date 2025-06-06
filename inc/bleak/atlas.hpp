@@ -41,7 +41,7 @@ namespace bleak {
 
 	template<extent_t Size> class atlas_t {
 	  private:
-		array_t<rect_t, Size> rects;
+		array_ct_t<rect_t, Size> rects;
 
 		texture_t texture;
 
@@ -134,7 +134,7 @@ namespace bleak {
 		inline extent_t get_glyph_size() const noexcept { return has_override() ? override_size : glyph_size; }
 
 		template<bool UseOverride = true> inline void draw(glyph_t glyph, offset_t position) const noexcept {
-			if (glyph.index < 0 || glyph.index >= rects.size) {
+			if (glyph.index < 0 || glyph.index >= rects.area) {
 				error_log.add("glyph index {} is out of range!", glyph.index);
 				return;
 			}
@@ -147,7 +147,7 @@ namespace bleak {
 		}
 
 		template<bool UseOverride = true> inline void draw(glyph_t glyph, offset_t position, offset_t offset) const noexcept {
-			if (glyph.index < 0 || glyph.index >= rects.size) {
+			if (glyph.index < 0 || glyph.index >= rects.area) {
 				error_log.add("glyph index {} is out of range!", glyph.index);
 				return;
 			}

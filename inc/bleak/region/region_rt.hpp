@@ -1,0 +1,202 @@
+#pragma once
+
+#include <bleak/typedef.hpp>
+
+#include <fstream>
+#include <utility>
+
+#include <bleak/extent.hpp>
+#include <bleak/log.hpp>
+#include <bleak/offset.hpp>
+#include <bleak/renderer.hpp>
+#include <bleak/zone.hpp>
+
+#include <bleak/region/common.hpp>
+
+namespace bleak {
+	template<typename T> struct region_t {
+	  public:
+		const extent_t region_size;
+
+		const extent_t zone_size;
+		const extent_t border_size;
+
+	  private:
+		array_rt_t<zone_rt_t<T>> zones;
+
+	  public:
+		using zone_type = zone_rt_t<T>;
+
+		inline offset_t region_origin() const noexcept { return offset_t::Zero; }
+		inline offset_t region_extent() const noexcept { return offset_t{ region_size - 1 }; }
+
+		inline extent_t::product_t region_area() const noexcept { return region_size.area(); }
+
+		inline offset_t zone_origin(offset_t position) noexcept { return position * zone_size; }
+
+		inline offset_t zone_extent(offset_t position) noexcept { return zone_origin(position) + zone_size - 1; }
+
+		inline extent_t::product_t zone_area() const noexcept { return zone_size.area(); }
+
+		inline extent_t size() const noexcept { return region_size * zone_size; }
+
+		inline extent_t::product_t area() const noexcept { return size().area(); }
+
+		inline offset_t origin() const noexcept { return offset_t::Zero; }
+		inline offset_t extent() const noexcept { return offset_t{ size() - 1 }; }
+
+		inline usize byte_size() const noexcept { return region_area() * zone_type::byte_size; };
+
+		constexpr region_t() : zones{} {};
+
+		constexpr region_t(cref<std::string> path) noexcept : zones{} {
+			str buffer = static_cast<str>(std::malloc( zone_type::byte_size));
+
+			if (buffer == nullptr) {
+				error_log.add("failed to allocate buffer for reading region file.", __TIME_FILE_LINE__);
+				return;
+			}
+
+			std::ifstream file{};
+
+			file.open(path, std::ios::in | std::ios::binary);
+
+			for (extent_t::product_t i{ 0 }; i < region_area(); ++i) {
+				file.read(buffer,  zone_type::byte_size);
+				zones[i].deserialize(buffer);
+			}
+
+			file.close();
+
+			std::free(buffer);
+			buffer = nullptr;
+		}
+
+		constexpr region_t(cref<region_t> other) : zones{ other.zones } {}
+
+		constexpr region_t(rval<region_t> other) noexcept : zones{ std::move(other.zones) } {}
+
+		constexpr ref<region_t> operator=(cref<region_t> other) noexcept {
+			if (this != &other) {
+				zones = other.zones;
+			}
+
+			return *this;
+		}
+
+		constexpr ref<region_t> operator=(rval<region_t> other) noexcept {
+			if (this != &other) {
+				zones = std::move(other.zones);
+			}
+
+			return *this;
+		}
+
+		constexpr ~region_t() noexcept {};
+
+		constexpr ref<zone_rt_t<T>> operator[](offset_t::product_t position) noexcept { return zones[position]; }
+
+		constexpr cref<zone_rt_t<T>> operator[](offset_t::product_t position) const noexcept { return zones[position]; }
+
+		constexpr ref<zone_rt_t<T>> operator[](offset_t position) noexcept { return zones[position]; }
+
+		constexpr cref<zone_rt_t<T>> operator[](offset_t position) const noexcept { return zones[position]; }
+
+		constexpr ref<zone_rt_t<T>> operator[](offset_t::product_t zone_position, offset_t::product_t cell_position) noexcept { return zones[zone_position][cell_position]; }
+
+		constexpr cref<zone_rt_t<T>> operator[](offset_t::product_t zone_position, offset_t::product_t cell_position) const noexcept { return zones[zone_position][cell_position]; }
+
+		constexpr ref<T> operator[](offset_t zone_position, offset_t cell_position) noexcept { return zones[zone_position][cell_position]; }
+
+		constexpr cref<T> operator[](offset_t zone_position, offset_t cell_position) const noexcept { return zones[zone_position][cell_position]; }
+
+		constexpr ref<T> operator[](cref<region_offset_t> position) noexcept { return zones[position.zone][position.cell]; }
+
+		constexpr cref<T> operator[](cref<region_offset_t> position) const noexcept { return zones[position.zone][position.cell]; }
+
+		constexpr zone_rt_t<T> compile() const noexcept {
+			zone_rt_t<T> zone{};
+
+			for (extent_t::scalar_t region_y{ 0 }; region_y < region_size.h; ++region_y) {
+				for (extent_t::scalar_t region_x{ 0 }; region_x < region_size.w; ++region_x) {
+					const offset_t region_pos{ region_x, region_y };
+					for (extent_t::scalar_t zone_y{ 0 }; zone_y < zone_size.h; ++zone_y) {
+						for (extent_t::scalar_t zone_x{ 0 }; zone_x < zone_size.w; ++zone_x) {
+							const offset_t zone_pos{ zone_x, zone_y };
+							zone[region_pos * zone_size + zone_pos] = zones[region_pos][zone_pos];
+						}
+					}
+				}
+			}
+
+			return zone;
+		}
+
+		constexpr void compile(ref<zone_rt_t<T>> zone) const noexcept {
+			for (extent_t::scalar_t region_y{ 0 }; region_y < region_size.h; ++region_y) {
+				for (extent_t::scalar_t region_x{ 0 }; region_x < region_size.w; ++region_x) {
+					const offset_t region_pos{ region_x, region_y };
+					for (extent_t::scalar_t zone_y{ 0 }; zone_y < zone_size.h; ++zone_y) {
+						for (extent_t::scalar_t zone_x{ 0 }; zone_x < zone_size.w; ++zone_x) {
+							const offset_t zone_pos{ zone_x, zone_y };
+							zone[region_pos * zone_size + zone_pos] = zones[region_pos][zone_pos];
+						}
+					}
+				}
+			}
+		}
+
+		template<extent_t AtlasSize>
+			requires is_drawable<T>::value
+		constexpr void draw(ref<renderer_t> renderer, cref<atlas_t<AtlasSize>> atlas) const noexcept {
+			for (extent_t::scalar_t y{ 0 }; y < region_size.h; ++y) {
+				for (extent_t::scalar_t x{ 0 }; x < region_size.w; ++x) {
+					const offset_t pos{ x, y };
+					(*this)[pos].draw(renderer, atlas, pos * region_size);
+				}
+			}
+		}
+
+		template<extent_t AtlasSize>
+			requires is_drawable<T>::value
+		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, offset_t offset) const noexcept {
+			for (extent_t::scalar_t y{ 0 }; y < region_size.h; ++y) {
+				for (extent_t::scalar_t x{ 0 }; x < region_size.w; ++x) {
+					const offset_t pos{ x, y };
+					(*this)[pos].draw(atlas, pos * zone_size + offset);
+				}
+			}
+		}
+
+		template<extent_t AtlasSize>
+			requires is_drawable<T>::value
+		constexpr void draw(cref<atlas_t<AtlasSize>> atlas, offset_t offset, extent_t scale) const noexcept {
+			for (extent_t::scalar_t y{ 0 }; y < region_size.h; ++y) {
+				for (extent_t::scalar_t x{ 0 }; x < region_size.w; ++x) {
+					const offset_t pos{ x, y };
+					(*this)[pos].draw(atlas, pos * zone_size + offset, scale);
+				}
+			}
+		}
+
+		constexpr bool serialize(cref<std::string> path) const noexcept {
+			std::ofstream file{};
+
+			file.open(path, std::ios::in | std::ios::binary);
+
+			for (extent_t::product_t i{ 0 }; i < region_area(); ++i) {
+				file.write(zones[i].serialize(),  zone_type::byte_size);
+			}
+
+			file.close();
+
+			return true;
+		}
+
+		constexpr void deserialize(cstr buffer) noexcept {
+			for (extent_t::product_t i{ 0 }; i < region_area(); ++i) {
+				zones[i].deserialize(buffer + i *  zone_type::byte_size);
+			}
+		}
+	};
+} // namespace bleak

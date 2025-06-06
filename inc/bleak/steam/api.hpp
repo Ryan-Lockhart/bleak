@@ -11,7 +11,7 @@
 #include <steam/steam_api_flat.h>
 
 namespace bleak::steam {
-    enum class init_result : u8 {
+    enum struct init_result : u8 {
         Ok = ESteamAPIInitResult::k_ESteamAPIInitResult_OK,
         FailedGeneric = ESteamAPIInitResult::k_ESteamAPIInitResult_FailedGeneric,
         NoSteamClient = ESteamAPIInitResult::k_ESteamAPIInitResult_NoSteamClient,

@@ -30,7 +30,7 @@ extern "C" {
 }
 
 namespace bleak {
-	enum class distance_function_t { VonNeumann, Manhattan, Chebyshev, Euclidean, Octile };
+	enum struct distance_function_e { VonNeumann, Manhattan, Chebyshev, Euclidean, Octile };
 
 	struct offset_t : c_offset_t {
 		using underlying_t = c_offset_t;
@@ -132,14 +132,14 @@ namespace bleak {
 
 		template<FloatingPoint T> static constexpr T distance(offset_t start, offset_t end) noexcept { return (end - start).length<T>(); }
 
-		template<distance_function_t Distance> static constexpr product_t distance(offset_t start, offset_t end) noexcept {
-			if constexpr (Distance == distance_function_t::Manhattan) {
+		template<distance_function_e Distance> static constexpr product_t distance(offset_t start, offset_t end) noexcept {
+			if constexpr (Distance == distance_function_e::Manhattan) {
 				return std::abs(end.x - start.x) + std::abs(end.y - start.y);
-			} else if constexpr (Distance == distance_function_t::Chebyshev) {
+			} else if constexpr (Distance == distance_function_e::Chebyshev) {
 				return std::max(std::abs(end.x - start.x), std::abs(end.y - start.y));
-			} else if constexpr (Distance == distance_function_t::Euclidean) {
+			} else if constexpr (Distance == distance_function_e::Euclidean) {
 				return product_cast((end - start).length<f64>());
-			} else if constexpr (Distance == distance_function_t::Octile) {
+			} else if constexpr (Distance == distance_function_e::Octile) {
 				cauto delta{ (end - start).abs() };
 				
 				return product_cast(1.0 * (delta.x + delta.y) + (1.414 - 2.0 * 1.0) * std::min(delta.x, delta.y));
@@ -418,9 +418,9 @@ namespace bleak {
 
 	constexpr offset_t::operator extent_t() const noexcept { return extent_t{ extent_t::scalar_cast(x), extent_t::scalar_cast(y) }; }
 
-	template<distance_function_t Distance> static constexpr auto neighbourhood_offsets {
+	template<distance_function_e Distance> static constexpr auto neighbourhood_offsets {
 		[]() {
-			if constexpr (Distance == distance_function_t::VonNeumann || Distance == distance_function_t::Manhattan) {
+			if constexpr (Distance == distance_function_e::VonNeumann || Distance == distance_function_e::Manhattan) {
 				return std::array<offset_t, 4>{ offset_t::North, offset_t::South, offset_t::West, offset_t::East };
 			} else {
 				return std::array<offset_t, 8>{ offset_t::North, offset_t::South, offset_t::West, offset_t::East, offset_t::Northwest, offset_t::Northeast, offset_t::Southwest, offset_t::Southeast };
@@ -428,16 +428,16 @@ namespace bleak {
 		}()
 	};
 
-	template<distance_function_t Distance, Numeric D> static constexpr crauto neighbourhood_creepers{
+	template<distance_function_e Distance, Numeric D> static constexpr crauto neighbourhood_creepers{
 		[]() {
-			if constexpr (Distance == distance_function_t::VonNeumann || Distance == distance_function_t::Manhattan) {
+			if constexpr (Distance == distance_function_e::VonNeumann || Distance == distance_function_e::Manhattan) {
 				return std::array<std::pair<offset_t, D>, 4>{
 					std::pair{ offset_t::North, 1 },
 					std::pair{ offset_t::South, 1 },
 					std::pair{ offset_t::West, 1 },
 					std::pair{ offset_t::East, 1 }
 				};
-			} else if constexpr (Distance == distance_function_t::Chebyshev) {
+			} else if constexpr (Distance == distance_function_e::Chebyshev) {
 				return std::array<std::pair<offset_t, D>, 8>{
 					std::pair{ offset_t::North, 1 },
 					std::pair{ offset_t::South, 1 },
