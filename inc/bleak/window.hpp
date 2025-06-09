@@ -115,7 +115,7 @@ namespace bleak {
 
 				case SDL_MOUSEMOTION:
 				case SDL_MOUSEWHEEL:
-					Mouse::process_event(event);
+					mouse_s::process_event(event);
 					break;
 
 				default:
@@ -123,8 +123,8 @@ namespace bleak {
 				}
 			}
 
-			Keyboard::update();
-			Mouse::update();
+			keyboard_s::update();
+			mouse_s::update();
 		}
 
 		constexpr bool is_valid() const noexcept { return window != nullptr; }

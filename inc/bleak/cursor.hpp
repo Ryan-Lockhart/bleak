@@ -33,7 +33,7 @@ namespace bleak {
 
 		inline cursor_t(ref<renderer_t> renderer, cstr path, color_t color) : texture{ renderer, path }, current_position{ 0, 0 }, color{ color } {}
 
-		inline void update() { current_position = Mouse::get_position(); }
+		inline void update() { current_position = mouse_s::get_position(); }
 
 		inline void update(offset_t pos) { current_position = pos; };
 
@@ -71,7 +71,7 @@ namespace bleak {
 		inline grid_cursor_t(ref<renderer_t> renderer, cstr path, color_t color, offset_t min, offset_t max) : texture{ renderer, path }, current_position{}, min{ min }, max{ max }, use_bounds{ true }, color{ color } {}
 
 		inline void update() noexcept {
-			const offset_t grid_pos{ Mouse::get_position() / size };
+			const offset_t grid_pos{ mouse_s::get_position() / size };
 
 			if (use_bounds) {
 				current_position = offset_t::clamp(grid_pos, min, max);
@@ -81,7 +81,7 @@ namespace bleak {
 		}
 
 		inline void update(rect_t bounds) noexcept {
-			const offset_t grid_pos{ Mouse::get_position() / size };
+			const offset_t grid_pos{ mouse_s::get_position() / size };
 
 			if (use_bounds) {
 				current_position = offset_t::clamp(grid_pos, bounds.origin(), bounds.extent());
@@ -91,7 +91,7 @@ namespace bleak {
 		}
 
 		inline void update(offset_t offset) {
-			const offset_t grid_pos{ Mouse::get_position() / size + offset };
+			const offset_t grid_pos{ mouse_s::get_position() / size + offset };
 
 			if (use_bounds) {
 				current_position = offset_t::clamp(grid_pos, min, max);
@@ -101,7 +101,7 @@ namespace bleak {
 		}
 
 		inline void update(cref<camera_t> camera) {
-			const offset_t grid_pos{ (Mouse::get_position() - necrowarp::globals::grid_origin<necrowarp::grid_type_e::Game>()) / size + camera.get_position() };
+			const offset_t grid_pos{ (mouse_s::get_position() - necrowarp::globals::grid_origin<necrowarp::grid_type_e::Game>()) / size + camera.get_position() };
 
 			if (use_bounds) {
 				current_position = offset_t::clamp(grid_pos, bleak::max(camera.get_position(), static_cast<offset_t>(min)), bleak::min(camera.get_extent() - 1, static_cast<offset_t>(max)));

@@ -14,6 +14,7 @@
 namespace bleak {
 	namespace bindings {
 		constexpr sdl::key nullkey = SDL_SCANCODE_UNKNOWN;
+
 		template<usize Count> using key_collection_t = std::array<sdl::key, Count>;
 
 		constexpr const lut_t<cardinal_t, key_collection_t<4>, 4> CharacterMovement { 

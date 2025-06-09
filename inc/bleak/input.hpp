@@ -2,46 +2,31 @@
 
 #include <bleak/typedef.hpp>
 
-#include <string>
-
 namespace bleak {
-	struct input_state_t {
-	  private:
-		u8 value { 0 };
-
-	  public:
-		constexpr input_state_t() {}
-
-		constexpr input_state_t(u8 value) : value { value } {}
-
-		static constexpr u8 Pressed { 0 };
-		static constexpr u8 Released { 1 };
-		static constexpr u8 Down { 2 };
-		static constexpr u8 Up { 3 };
-
-		constexpr operator u8() const { return value; }
-
-		constexpr bool operator==(input_state_t other) const { return value == other.value; }
-
-		constexpr bool operator==(u8 other) const { return value == other; }
-
-		constexpr bool operator!=(input_state_t other) const { return value != other.value; }
-
-		constexpr bool operator!=(u8 other) const { return value != other; }
-
-		constexpr operator std::string() const {
-			switch (value) {
-			case 0:
-				return "Pressed";
-			case 1:
-				return "Released";
-			case 2:
-				return "Down";
-			case 3:
-				return "Up";
-			default:
-				return "Unknown";
+	enum struct input_e : u8 {
+		Pressed = 0 << 1,
+		Released = 1 << Pressed,
+		Down = 1 << Released,
+		Up = 1 << Down
+	};
+	
+	constexpr cstr to_string(input_e input) noexcept {
+		switch (input) {
+			case input_e::Pressed: {
+				return "pressed";
+			} case input_e::Released: {
+				return "released";
+			} case input_e::Down: {
+				return "down";
+			} case input_e::Up: {
+				return "up";
 			}
 		}
+	}
+	
+	template<typename T> struct is_button {
+		static constexpr bool value = false;
 	};
+
+	template<typename T> concept Button = is_button<T>::value;
 } // namespace Bleakdepth

@@ -9,6 +9,16 @@ namespace bleak {
 		using key = SDL_Scancode;
 	}
 
+	template<typename T> struct is_key {
+		static constexpr bool value = false;
+	};
+
+	template<> struct is_key<sdl::key> {
+		static constexpr bool value = true;
+	};
+
+	template<typename T> concept Key = is_key<T>::value;
+
 	namespace keys {
 		static constexpr sdl::key First = SDL_SCANCODE_UNKNOWN;
 		static constexpr sdl::key Last = SDL_SCANCODE_ENDCALL;
