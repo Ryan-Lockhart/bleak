@@ -64,11 +64,17 @@ namespace bleak {
 		constexpr const glyph_t UpLadder{ characters::UpLadder, colors::White };
 		constexpr const glyph_t DownLadder{ characters::DownLadder, colors::White };
 		
-		constexpr const glyph_t Shackle{ characters::Shackle, colors::White };
+		constexpr const glyph_t Unshackled{ characters::Unshackled, colors::White };
+		constexpr const glyph_t CalciticShackle{ characters::CalciticShackle, colors::White };
+		constexpr const glyph_t SpectralShackle{ characters::SpectralShackle, colors::White };
+		constexpr const glyph_t SanguineShackle{ characters::SanguineShackle, colors::White };
+		constexpr const glyph_t GalvanicShackle{ characters::GalvanicShackle, colors::White };
 
 		constexpr const glyph_t CalmPortal{ characters::CalmPortal, colors::White };
 		constexpr const glyph_t VocalPortal{ characters::VocalPortal, colors::White };
 		constexpr const glyph_t TurbulentPortal{ characters::TurbulentPortal, colors::White };
+		constexpr const glyph_t InsightfulPortal{ characters::InsightfulPortal, colors::White };
+		constexpr const glyph_t YawningPortal{ characters::YawningPortal, colors::White };
 
 		constexpr const glyph_t RightPatch{ characters::RightPatch, colors::White };
 		constexpr const glyph_t LeftPatch{ characters::LeftPatch, colors::White };

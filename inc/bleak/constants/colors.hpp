@@ -95,9 +95,9 @@ namespace bleak {
 
 			namespace shackles {
 				static constexpr color_t Calcitic{ u8{ 255 }, u8{ 255 }, u8{ 240 } };
-				static constexpr color_t Spectral{ u8{ 72 }, u8{ 100 }, u8{ 83 } };
-				static constexpr color_t Sanguine{ u8{ 157 }, u8{ 34 }, u8{ 53 } };
-				static constexpr color_t Galvanic{ u8{ 192 }, u8{ 224 }, u8{ 192 } };
+				static constexpr color_t Spectral{ u8{  72 }, u8{ 100 }, u8{  83 } };
+				static constexpr color_t Sanguine{ u8{ 157 }, u8{  34 }, u8{  53 } };
+				static constexpr color_t Galvanic{ u8{  42 }, u8{  74 }, u8{ 110 } };
 			} // namespace shackles
 		} // namespace metals
 	} // namespace colors

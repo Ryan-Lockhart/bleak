@@ -31,25 +31,35 @@ namespace bleak {
 		constexpr const u8 Adventurer{ 0x12 };
 		constexpr const u8 Mercenary{ 0x13 };
 		constexpr const u8 Paladin{ 0x14 };
-		constexpr const u8 Priest{ 0x15 };
+		constexpr const u8 ReservedOffensiveGood{ 0x15 };
 
-		constexpr const u8 FreshSkull{ 0x16 };
-		constexpr const u8 AnimateSkull{ 0x17 };
-		constexpr const u8 RottedSkull{ 0x18 };
+		constexpr const u8 Priest{ 0x16 };
+		constexpr const u8 ReservedSupportiveGoodOne{ 0x17 };
+		constexpr const u8 ReservedSupportiveGoodTwo{ 0x18 };
 
-		constexpr const u8 TwistedMetal{ 0x19 };
-		constexpr const u8 ShimmeringMetal{ 0x1A };
-		constexpr const u8 WrigglingMetal{ 0x1B };
-		constexpr const u8 WrithingMetal{ 0x1C };
+		constexpr const u8 FreshSkull{ 0x19 };
+		constexpr const u8 AnimateSkull{ 0x1A };
+		constexpr const u8 RottedSkull{ 0x1B };
 
-		constexpr const u8 UpLadder{ 0x1D };
-		constexpr const u8 DownLadder{ 0x1E };
+		constexpr const u8 TwistedMetal{ 0x1C };
+		constexpr const u8 ShimmeringMetal{ 0x1D };
+		constexpr const u8 WrigglingMetal{ 0x1E };
+		constexpr const u8 WrithingMetal{ 0x1F };
+
+		constexpr const u8 UpLadder{ 0x20 };
+		constexpr const u8 DownLadder{ 0x21 };
 		
-		constexpr const u8 Shackle{ 0x1F };
+		constexpr const u8 Unshackled{ 0x22 };
+		constexpr const u8 CalciticShackle{ 0x23 };
+		constexpr const u8 SpectralShackle{ 0x24 };
+		constexpr const u8 SanguineShackle{ 0x25 };
+		constexpr const u8 GalvanicShackle{ 0x26 };
 
-		constexpr const u8 CalmPortal{ 0x00 };
-		constexpr const u8 VocalPortal{ 0x00 };
-		constexpr const u8 TurbulentPortal{ 0x00 };
+		constexpr const u8 CalmPortal{ 0x27 };
+		constexpr const u8 VocalPortal{ 0x28 };
+		constexpr const u8 TurbulentPortal{ 0x29 };
+		constexpr const u8 InsightfulPortal{ 0x2A };
+		constexpr const u8 YawningPortal{ 0x2B };
 
 		constexpr const u8 Floor{ 0x00 };
 
