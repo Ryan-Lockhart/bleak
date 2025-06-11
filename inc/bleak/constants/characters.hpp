@@ -59,7 +59,8 @@ namespace bleak {
 		constexpr const u8 VocalPortal{ 0x28 };
 		constexpr const u8 TurbulentPortal{ 0x29 };
 		constexpr const u8 InsightfulPortal{ 0x2A };
-		constexpr const u8 YawningPortal{ 0x2B };
+		constexpr const u8 CollapsingPortal{ 0x2B };
+		constexpr const u8 YawningPortal{ 0x2C };
 
 		constexpr const u8 Floor{ 0x00 };
 

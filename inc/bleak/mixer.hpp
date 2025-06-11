@@ -123,7 +123,7 @@ namespace bleak {
 			if (!sdl::mixer::allocate_channels(num_channels)) {
 				error_log.add("failed to allocate channels: {}", Mix_GetError());
 			}
-		} 
+		}
 
 		inline mixer_s() noexcept { initialize(); }
 

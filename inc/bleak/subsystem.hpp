@@ -151,7 +151,6 @@ namespace bleak {
 			sdl_net_initialized = false;
 		}
 
-	  public:
 		static inline bool initialize() noexcept {
 			if (is_initialized()) {
 				return true;
@@ -195,6 +194,14 @@ namespace bleak {
 			terminate_steam();
 		}
 
+	  public:
+
+		inline subsystem_s() noexcept { initialize(); }
+
+		inline subsystem_s(u32 app_id) noexcept { initialize(app_id); }
+
+		inline ~subsystem_s() noexcept { terminate(); }
+		
 		static inline bool is_initialized() noexcept {
 			if constexpr (IsSteamless) {
 				return sdl_initialized && sdl_image_initialized && sdl_mixer_initialized && sdl_net_initialized;

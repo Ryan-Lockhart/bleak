@@ -74,6 +74,7 @@ namespace bleak {
 		constexpr const glyph_t VocalPortal{ characters::VocalPortal, colors::White };
 		constexpr const glyph_t TurbulentPortal{ characters::TurbulentPortal, colors::White };
 		constexpr const glyph_t InsightfulPortal{ characters::InsightfulPortal, colors::White };
+		constexpr const glyph_t CollapsingPortal{ characters::CollapsingPortal, colors::White };
 		constexpr const glyph_t YawningPortal{ characters::YawningPortal, colors::White };
 
 		constexpr const glyph_t RightPatch{ characters::RightPatch, colors::White };
