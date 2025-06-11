@@ -132,9 +132,9 @@ namespace bleak {
 
 		inline offset_t get_position() const { return current_position; }
 
-		template<typename T, extent_t ZoneSize, extent_t BorderSize> inline ref<T> hovered(ref< zone_ct_t<T, ZoneSize, BorderSize>> zone) { return zone[current_position]; };
+		template<typename T, extent_t ZoneSize, extent_t BorderSize> inline ref<T> hovered(ref< zone_t<T, ZoneSize, BorderSize>> zone) { return zone[current_position]; };
 
-		template<typename T, extent_t ZoneSize, extent_t BorderSize> inline cref<T> hovered(cref< zone_ct_t<T, ZoneSize, BorderSize>> zone) const { return zone[current_position]; };
+		template<typename T, extent_t ZoneSize, extent_t BorderSize> inline cref<T> hovered(cref< zone_t<T, ZoneSize, BorderSize>> zone) const { return zone[current_position]; };
 
 		inline quadrant_t get_quadrant() const {
 			const auto mid{ midpoint() };

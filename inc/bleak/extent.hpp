@@ -37,7 +37,7 @@ namespace bleak {
 
 		constexpr explicit extent_t(scalar_t scalar) noexcept : underlying_t{ scalar, scalar } {}
 
-		constexpr explicit extent_t(scalar_t width, scalar_t height) noexcept : underlying_t{ width, height } {}
+		constexpr extent_t(scalar_t width, scalar_t height) noexcept : underlying_t{ width, height } {}
 
 		template<Numeric D> constexpr explicit extent_t(D width, D height) noexcept : underlying_t{ scalar_cast(width), scalar_cast(height) } {}
 

@@ -41,7 +41,7 @@ namespace bleak {
 
 	template<extent_t Size> class atlas_t {
 	  private:
-		array_ct_t<rect_t, Size> rects;
+		array_t<rect_t, Size> rects;
 
 		texture_t texture;
 

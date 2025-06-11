@@ -69,7 +69,7 @@ namespace bleak {
 		static const offset_t Southwest;
 		static const offset_t Southeast;
 
-		constexpr explicit offset_t() noexcept {}
+		constexpr offset_t() noexcept {}
 
 		constexpr explicit offset_t(scalar_t scalar) noexcept : underlying_t{ scalar, scalar } {}
 
@@ -428,7 +428,7 @@ namespace bleak {
 		}()
 	};
 
-	template<distance_function_e Distance, Numeric D> static constexpr crauto neighbourhood_creepers{
+	template<distance_function_e Distance, Numeric D> static constexpr auto neighbourhood_creepers{
 		[]() {
 			if constexpr (Distance == distance_function_e::VonNeumann || Distance == distance_function_e::Manhattan) {
 				return std::array<std::pair<offset_t, D>, 4>{

@@ -27,7 +27,7 @@ namespace bleak {
 		using sparse_t = std::unordered_set<offset_t, offset_t::std_hasher>;
 		using trail_t = std::unordered_map<offset_t, rememberance_t<offset_t>, offset_t::std_hasher>;
 
-		#define dense_t zone_ct_t<T, Size, BorderSize>
+		#define dense_t zone_t<T, Size, BorderSize>
 		#define dense_args typename T, extent_t Size, extent_t BorderSize
 
 		inline path_t() noexcept : points{} {}
