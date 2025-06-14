@@ -37,32 +37,35 @@ namespace bleak {
 		constexpr const u8 IchorousBerserker{ 0x17 };
 		constexpr const u8 BloodyIchorousBerserker{ 0x18 };
 
-		constexpr const u8 Priest{ 0x19 };
+		constexpr const u8 Skulker{ 0x19 };
+		constexpr const u8 BattleMonk{ 0x1A };
+		constexpr const u8 Ranger{ 0x1B };
 
-		constexpr const u8 FreshSkull{ 0x1A };
-		constexpr const u8 AnimateSkull{ 0x1B };
-		constexpr const u8 RottedSkull{ 0x1C };
+		constexpr const u8 Arrow{ 0x1C };
 
-		constexpr const u8 TwistedMetal{ 0x1D };
-		constexpr const u8 ShimmeringMetal{ 0x1E };
-		constexpr const u8 WrigglingMetal{ 0x1F };
-		constexpr const u8 WrithingMetal{ 0x20 };
+		constexpr const u8 FreshSkull{ 0x1D };
+		constexpr const u8 AnimateSkull{ 0x1E };
+		constexpr const u8 RottedSkull{ 0x1F };
 
-		constexpr const u8 UpLadder{ 0x21 };
-		constexpr const u8 DownLadder{ 0x22 };
-		
-		constexpr const u8 Unshackled{ 0x23 };
-		constexpr const u8 CalciticShackle{ 0x24 };
-		constexpr const u8 SpectralShackle{ 0x25 };
-		constexpr const u8 SanguineShackle{ 0x26 };
-		constexpr const u8 GalvanicShackle{ 0x27 };
+		constexpr const u8 TwistedMetal{ 0x20 };
+		constexpr const u8 ShimmeringMetal{ 0x21 };
+		constexpr const u8 WrigglingMetal{ 0x22 };
+		constexpr const u8 WrithingMetal{ 0x23 };
 
-		constexpr const u8 CalmPortal{ 0x28 };
-		constexpr const u8 VocalPortal{ 0x29 };
-		constexpr const u8 TurbulentPortal{ 0x2A };
-		constexpr const u8 InsightfulPortal{ 0x2B };
-		constexpr const u8 CollapsingPortal{ 0x2C };
-		constexpr const u8 YawningPortal{ 0x2D };
+		constexpr const u8 UpLadder{ 0x24 };
+		constexpr const u8 DownLadder{ 0x25 };
+
+		constexpr const u8 CalciticShackle{ 0x26 };
+		constexpr const u8 SpectralShackle{ 0x27 };
+		constexpr const u8 SanguineShackle{ 0x28 };
+		constexpr const u8 GalvanicShackle{ 0x29 };
+
+		constexpr const u8 CalmPortal{ 0x2A };
+		constexpr const u8 VocalPortal{ 0x2B };
+		constexpr const u8 TurbulentPortal{ 0x2C };
+		constexpr const u8 InsightfulPortal{ 0x2D };
+		constexpr const u8 CollapsingPortal{ 0x2E };
+		constexpr const u8 YawningPortal{ 0x2F };
 
 		constexpr const u8 Floor{ 0x00 };
 

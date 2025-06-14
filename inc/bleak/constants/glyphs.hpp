@@ -50,11 +50,17 @@ namespace bleak {
 		constexpr const glyph_t Adventurer{ characters::Adventurer, colors::White };
 		constexpr const glyph_t Mercenary{ characters::Mercenary, colors::White };
 		constexpr const glyph_t Paladin{ characters::Paladin, colors::White };
+
 		constexpr const glyph_t Berserker{ characters::Berserker, colors::White };
 		constexpr const glyph_t BloodyBerserker{ characters::BloodyBerserker, colors::White };
 		constexpr const glyph_t IchorousBerserker{ characters::IchorousBerserker, colors::White };
 		constexpr const glyph_t BloodyIchorousBerserker{ characters::BloodyIchorousBerserker, colors::White };
-		constexpr const glyph_t Priest{ characters::Priest, colors::White };
+
+		constexpr const glyph_t Skulker{ characters::Skulker, colors::White };
+		constexpr const glyph_t BattleMonk{ characters::BattleMonk, colors::White };
+		constexpr const glyph_t Ranger{ characters::Ranger, colors::White };
+
+		constexpr const glyph_t Arrow{ characters::Arrow, colors::White };
 
 		constexpr const glyph_t FreshSkull{ characters::FreshSkull, colors::White };
 		constexpr const glyph_t AnimateSkull{ characters::AnimateSkull, colors::White };
@@ -67,8 +73,7 @@ namespace bleak {
 
 		constexpr const glyph_t UpLadder{ characters::UpLadder, colors::White };
 		constexpr const glyph_t DownLadder{ characters::DownLadder, colors::White };
-		
-		constexpr const glyph_t Unshackled{ characters::Unshackled, colors::White };
+
 		constexpr const glyph_t CalciticShackle{ characters::CalciticShackle, colors::White };
 		constexpr const glyph_t SpectralShackle{ characters::SpectralShackle, colors::White };
 		constexpr const glyph_t SanguineShackle{ characters::SanguineShackle, colors::White };

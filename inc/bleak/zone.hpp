@@ -486,7 +486,7 @@ namespace bleak {
 			}
 		}
 
-		template<zone_region_e Region, typename U, typename Randomizer>
+		template<zone_region_e Region, typename U, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -521,7 +521,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer>
+		template<zone_region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<T> true_value, cref<T> false_value) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -558,7 +558,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer, typename U>
+		template<zone_region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<U> true_value, cref<U> false_value) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -595,7 +595,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer>
+		template<zone_region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<T>> applicator) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -632,7 +632,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer, typename U>
+		template<zone_region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<U>> applicator) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -669,7 +669,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer>
+		template<zone_region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<T>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -708,7 +708,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer, typename U>
+		template<zone_region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<U>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1647,7 +1647,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer>
+		template<zone_region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1664,7 +1664,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer, typename U>
+		template<zone_region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<U> true_value, cref<U> false_state) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1681,7 +1681,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer>
+		template<zone_region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1698,7 +1698,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer, typename U>
+		template<zone_region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1715,7 +1715,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer>
+		template<zone_region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1732,7 +1732,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer, typename U>
+		template<zone_region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1749,7 +1749,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer>
+		template<zone_region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1766,7 +1766,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer, typename U>
+		template<zone_region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<U> true_value, cref<U> false_state) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1783,7 +1783,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer>
+		template<zone_region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1800,7 +1800,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer, typename U>
+		template<zone_region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator) noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1817,7 +1817,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename Randomizer>
+		template<zone_region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value) const noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1868,7 +1868,7 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_e Region, typename Randomizer, typename U>
+		template<zone_region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value) const noexcept {
 			if constexpr (Region == zone_region_e::All) {
@@ -1917,7 +1917,7 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_e Region, typename Randomizer, SparseBlockage Blockage>
+		template<zone_region_e Region, RandomEngine Randomizer, SparseBlockage Blockage>
 			requires is_random_engine<Randomizer>::value
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<Blockage> sparse_blockage) const noexcept {
 			if constexpr (Region == zone_region_e::None) {
@@ -1974,8 +1974,8 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_e Region, typename Randomizer, typename U, SparseBlockage Blockage>
-			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
+		template<zone_region_e Region, RandomEngine Randomizer, typename U, SparseBlockage Blockage>
+			requires is_equatable<T, U>::value
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<Blockage> sparse_blockage) const noexcept {
 			if constexpr (Region == zone_region_e::None) {
 				return *this;
@@ -2031,8 +2031,7 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_e Region, typename Randomizer, SparseBlockage EntityBlockage, SparseBlockage ObjectBlockage>
-			requires is_random_engine<Randomizer>::value
+		template<zone_region_e Region, RandomEngine Randomizer, SparseBlockage EntityBlockage, SparseBlockage ObjectBlockage>
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<EntityBlockage> entity_blockage, cref<ObjectBlockage> object_blockage) const noexcept {
 			if constexpr (Region == zone_region_e::None) {
 				return *this;
@@ -2088,9 +2087,9 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_e Region, typename Randomizer, typename U, SparseBlockage EntityBlockage, SparseBlockage ObjectBlockage>
+		template<zone_region_e Region, RandomEngine Randomizer, typename U, SparseBlockage... Blockages>
 			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
-		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<EntityBlockage> entity_blockage, cref<ObjectBlockage> object_blockage) const noexcept {
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<Blockages>... blockages) const noexcept {
 			if constexpr (Region == zone_region_e::None) {
 				return *this;
 			}
@@ -2102,7 +2101,7 @@ namespace bleak {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					const offset_t pos{ x_dis(generator), y_dis(generator) };
 
-					if (cells[pos] != value || entity_blockage.contains(pos) || object_blockage.contains(pos)) {
+					if (cells[pos] != value || (blockages.contains(pos) || ...)) {
 						continue;
 					}
 
@@ -2115,7 +2114,7 @@ namespace bleak {
 				for (extent_t::product_t i{ 0 }; i < interior_area; ++i) {
 					const offset_t pos{ x_dis(generator), y_dis(generator) };
 
-					if (cells[pos] != value || entity_blockage.contains(pos) || object_blockage.contains(pos)) {
+					if (cells[pos] != value || (blockages.contains(pos) || ...)) {
 						continue;
 					}
 
@@ -2134,7 +2133,7 @@ namespace bleak {
 
 					const offset_t pos{ x, y };
 
-					if (cells[pos] != value || entity_blockage.contains(pos) || object_blockage.contains(pos)) {
+					if (cells[pos] != value || (blockages.contains(pos) || ...)) {
 						continue;
 					}
 
