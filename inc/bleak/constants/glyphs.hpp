@@ -66,6 +66,8 @@ namespace bleak {
 		constexpr const glyph_t AnimateSkull{ characters::AnimateSkull, colors::White };
 		constexpr const glyph_t RottedSkull{ characters::RottedSkull, colors::White };
 
+		constexpr const glyph_t Flesh{ characters::Flesh, colors::White };
+
 		constexpr const glyph_t TwistedMetal{ characters::TwistedMetal, colors::White };
 		constexpr const glyph_t ShimmeringMetal{ characters::ShimmeringMetal, colors::White };
 		constexpr const glyph_t WrigglingMetal{ characters::WrigglingMetal, colors::White };

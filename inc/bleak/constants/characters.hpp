@@ -47,6 +47,8 @@ namespace bleak {
 		constexpr const u8 AnimateSkull{ 0x1E };
 		constexpr const u8 RottedSkull{ 0x1F };
 
+		constexpr const u8 Flesh{ 0x00 };
+
 		constexpr const u8 TwistedMetal{ 0x20 };
 		constexpr const u8 ShimmeringMetal{ 0x21 };
 		constexpr const u8 WrigglingMetal{ 0x22 };
