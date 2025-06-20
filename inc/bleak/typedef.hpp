@@ -8,6 +8,12 @@
 
 #define __TIME_FILE_LINE__ __TIME__, __FILE__, __LINE__
 
+#define cexpr constexpr
+#define ceval consteval
+#define cinit constinit
+
+#define stinl static inline
+
 #define cauto const auto
 
 #define rauto auto&
