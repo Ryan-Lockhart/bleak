@@ -25,6 +25,7 @@
 #include <bleak/input.hpp>
 #include <bleak/iter.hpp>
 #include <bleak/keyboard.hpp>
+#include <bleak/keyframe.hpp>
 #include <bleak/leaf.hpp>
 #include <bleak/line.hpp>
 #include <bleak/log.hpp>

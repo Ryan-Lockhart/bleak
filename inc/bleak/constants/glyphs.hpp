@@ -30,22 +30,12 @@ namespace bleak {
 		constexpr const glyph_t AnimateSkeleton{ characters::AnimateSkeleton, colors::White };
 		constexpr const glyph_t RottedSkeleton{ characters::RottedSkeleton, colors::White };
 
-		constexpr const glyph_t TwistedSuit{ characters::TwistedSuit, colors::White };
-		constexpr const glyph_t ShimmeringSuit{ characters::ShimmeringSuit, colors::White };
-		constexpr const glyph_t WrigglingSuit{ characters::WrigglingSuit, colors::White };
-		constexpr const glyph_t WrithingSuit{ characters::WrithingSuit, colors::White };
-
 		constexpr const glyph_t Cultist{ characters::Cultist, colors::White };
 		constexpr const glyph_t Bloodhound{ characters::Bloodhound, colors::White };
 
 		constexpr const glyph_t Bonespur{ characters::Bonespur, colors::White };
 		constexpr const glyph_t Wraith{ characters::Wraith, colors::White };
 		constexpr const glyph_t FleshGolem{ characters::FleshGolem, colors::White };
-
-		constexpr const glyph_t TwistedKnight{ characters::TwistedKnight, colors::White };
-		constexpr const glyph_t ShimmeringKnight{ characters::ShimmeringKnight, colors::White };
-		constexpr const glyph_t WrigglingKnight{ characters::WrigglingKnight, colors::White };
-		constexpr const glyph_t WrithingKnight{ characters::WrithingKnight, colors::White };
 
 		constexpr const glyph_t Adventurer{ characters::Adventurer, colors::White };
 		constexpr const glyph_t Mercenary{ characters::Mercenary, colors::White };
@@ -68,25 +58,8 @@ namespace bleak {
 
 		constexpr const glyph_t Flesh{ characters::Flesh, colors::White };
 
-		constexpr const glyph_t TwistedMetal{ characters::TwistedMetal, colors::White };
-		constexpr const glyph_t ShimmeringMetal{ characters::ShimmeringMetal, colors::White };
-		constexpr const glyph_t WrigglingMetal{ characters::WrigglingMetal, colors::White };
-		constexpr const glyph_t WrithingMetal{ characters::WrithingMetal, colors::White };
-
 		constexpr const glyph_t UpLadder{ characters::UpLadder, colors::White };
 		constexpr const glyph_t DownLadder{ characters::DownLadder, colors::White };
-
-		constexpr const glyph_t CalciticShackle{ characters::CalciticShackle, colors::White };
-		constexpr const glyph_t SpectralShackle{ characters::SpectralShackle, colors::White };
-		constexpr const glyph_t SanguineShackle{ characters::SanguineShackle, colors::White };
-		constexpr const glyph_t GalvanicShackle{ characters::GalvanicShackle, colors::White };
-
-		constexpr const glyph_t CalmPortal{ characters::CalmPortal, colors::White };
-		constexpr const glyph_t VocalPortal{ characters::VocalPortal, colors::White };
-		constexpr const glyph_t TurbulentPortal{ characters::TurbulentPortal, colors::White };
-		constexpr const glyph_t InsightfulPortal{ characters::InsightfulPortal, colors::White };
-		constexpr const glyph_t CollapsingPortal{ characters::CollapsingPortal, colors::White };
-		constexpr const glyph_t YawningPortal{ characters::YawningPortal, colors::White };
 
 		constexpr const glyph_t RightPatch{ characters::RightPatch, colors::White };
 		constexpr const glyph_t LeftPatch{ characters::LeftPatch, colors::White };

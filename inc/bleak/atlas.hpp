@@ -9,6 +9,7 @@
 #include <bleak/color.hpp>
 #include <bleak/extent.hpp>
 #include <bleak/glyph.hpp>
+#include <bleak/keyframe.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/renderer.hpp>
 #include <bleak/text.hpp>
@@ -159,6 +160,36 @@ namespace bleak {
 			}
 		}
 
+		template<bool UseOverride = true> inline void draw(keyframe_t keyframe, color_t color, offset_t position) const noexcept {
+			const usize index{ keyframe.index * keyframe_t::length + keyframe.current_frame() };
+
+			if (index < 0 || index >= rects.area) {
+				error_log.add("keyframe index {} is out of range!", index);
+				return;
+			}
+
+			if constexpr (UseOverride) {
+				texture.draw(rects[index], rect_t{ position * override_size, override_size }, color);
+			} else {
+				texture.draw(rects[index], rect_t{ position * glyph_size, glyph_size }, color);
+			}
+		}
+
+		template<bool UseOverride = true> inline void draw(keyframe_t keyframe, color_t color, offset_t position, offset_t offset) const noexcept {
+			const usize index{ keyframe.index * keyframe_t::length + keyframe.current_frame() };
+
+			if (index < 0 || index >= rects.area) {
+				error_log.add("glyph index {} is out of range!", index);
+				return;
+			}
+
+			if constexpr (UseOverride) {
+				texture.draw(rects[index], rect_t{ position * override_size + offset, override_size }, color);
+			} else {
+				texture.draw(rects[index], rect_t{ position * glyph_size + offset, glyph_size }, color);
+			}
+		}
+
 		inline void draw(cref<runes_t> runes, offset_t position) const {
 			if (runes.empty()) {
 				return;
@@ -289,7 +320,7 @@ namespace bleak {
 					++carriage_pos.x;
 					continue;
 				default:
-					draw(glyph_t{ static_cast<u32>(ch), color }, position + carriage_pos);
+					draw(glyph_t{ static_cast<glyph_t::index_t>(ch), color }, position + carriage_pos);
 					++carriage_pos.x;
 					continue;
 				}
@@ -326,7 +357,7 @@ namespace bleak {
 					++carriage_pos.x;
 					continue;
 				default:
-					draw(glyph_t{ static_cast<u32>(ch), color }, origin + carriage_pos + alignment_offs);
+					draw(glyph_t{ static_cast<glyph_t::index_t>(ch), color }, origin + carriage_pos + alignment_offs);
 					++carriage_pos.x;
 					continue;
 				}
@@ -363,7 +394,7 @@ namespace bleak {
 					++carriage_pos.x;
 					continue;
 				default:
-					draw(glyph_t{ static_cast<u32>(ch), color }, origin + carriage_pos + alignment_offs, offset);
+					draw(glyph_t{ static_cast<glyph_t::index_t>(ch), color }, origin + carriage_pos + alignment_offs, offset);
 					++carriage_pos.x;
 					continue;
 				}
