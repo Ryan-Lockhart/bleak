@@ -57,7 +57,7 @@ namespace bleak {
 	constexpr const usize LUT_SIZE_CAP{ 2048 };
 #endif
 
-	template<typename Key, typename Value, usize Size, typename Index = usize> class lut_t {
+	template<typename Key, typename Value, usize Size, typename Index = usize> struct lut_t {
 	  public:
 		static constexpr usize size{ Size };
 

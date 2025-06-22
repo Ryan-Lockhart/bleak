@@ -15,7 +15,7 @@
 #include <bleak/utility.hpp>
 
 namespace bleak {
-	template<extent_t Size> class binarray_t {
+	template<extent_t Size> struct binarray_t {
 	  private:
 		std::bitset<Size.size()> data;
 

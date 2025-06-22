@@ -5,7 +5,7 @@
 #include <bleak/clock.hpp>
 
 namespace bleak {
-	class timer_t {
+	struct timer_t {
 	  private:
 		const usize interval;
 		usize total;

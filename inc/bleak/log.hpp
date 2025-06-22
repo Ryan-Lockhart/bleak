@@ -15,7 +15,7 @@ namespace bleak {
 		static inline cstr get_error() { return SDL_GetError(); }
 	}
 
-	class log_t {
+	struct log_t {
 	  private:
 		std::string name;
 		std::list<std::string> messages;

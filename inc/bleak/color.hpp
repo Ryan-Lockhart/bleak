@@ -119,6 +119,24 @@ namespace bleak {
 			return *this;
 		}
 
+		constexpr color_t faded(f32 factor) const noexcept {
+			if (factor < 0.0f) {
+				return *this;
+			}
+			
+			return color_t{ r, g, b, static_cast<u8>(a * factor) };
+		}
+
+		constexpr ref<color_t> fade(f32 factor) noexcept {
+			if (factor < 0.0f) {
+				return *this;
+			}
+
+			a = static_cast<u8>(a * factor);
+
+			return *this;
+		}
+
 		constexpr ref<color_t> mix(color_t other) noexcept {
 			if (this == &other) {
 				return *this;

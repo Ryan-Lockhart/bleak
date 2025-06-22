@@ -20,16 +20,22 @@ namespace bleak {
 
 		constexpr const u8 Adventurer{ 0x1A };
 		constexpr const u8 Mercenary{ 0x1B };
-		constexpr const u8 Paladin{ 0x1C };
 
-		constexpr const u8 Berserker{ 0x1D };
-		constexpr const u8 BloodyBerserker{ 0x1E };
-		constexpr const u8 IchorousBerserker{ 0x1F };
-		constexpr const u8 BloodyIchorousBerserker{ 0x20 };
+		//constexpr const u8 YoungThetwo{ 0x1C };
+		//constexpr const u8 AdultThetwo{ 0x1D };
+		//constexpr const u8 MatureThetwo{ 0x1E };
+		//constexpr const u8 GreatThetwo{ 0x1F };
 
-		constexpr const u8 Skulker{ 0x21 };
-		constexpr const u8 BattleMonk{ 0x22 };
-		constexpr const u8 Ranger{ 0x23 };
+		constexpr const u8 Ranger{ 0x1C };
+		constexpr const u8 Skulker{ 0x1D };
+		constexpr const u8 BattleMonk{ 0x1E };
+
+		constexpr const u8 Berserker{ 0x1F };
+		constexpr const u8 BloodyBerserker{ 0x20 };
+		constexpr const u8 IchorousBerserker{ 0x21 };
+		constexpr const u8 BloodyIchorousBerserker{ 0x22 };
+
+		constexpr const u8 Paladin{ 0x23 };
 
 		constexpr const u8 Arrow{ 0x24 };
 

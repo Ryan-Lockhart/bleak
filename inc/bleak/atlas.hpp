@@ -40,7 +40,7 @@ namespace bleak {
 		return offset_t{ size_offs - size_offs / 2 };
 	}
 
-	template<extent_t Size> class atlas_t {
+	template<extent_t Size> struct atlas_t {
 	  private:
 		array_t<rect_t, Size> rects;
 

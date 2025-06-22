@@ -13,7 +13,7 @@
 #include <bleak/constants/colors.hpp>
 
 namespace bleak {
-	class runes_t : public std::vector<glyph_t> {
+	struct runes_t : public std::vector<glyph_t> {
 	  public:
 		static constexpr color_t DEFAULT_COLOR{ colors::White };
 

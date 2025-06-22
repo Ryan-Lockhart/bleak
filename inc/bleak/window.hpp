@@ -71,7 +71,7 @@ namespace bleak {
 		}
 	} // namespace sdl
 
-	class window_t {
+	struct window_t {
 	  private:
 		ptr<sdl::window> window;
 

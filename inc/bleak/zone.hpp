@@ -45,7 +45,7 @@ namespace bleak {
 
 	template<typename T, extent_t RegionSize, extent_t ZoneSize, extent_t ZoneBorder = extent_t::Zero> struct region_t;
 
-	template<typename T, extent_t Size, extent_t BorderSize = extent_t::Zero> class zone_t {
+	template<typename T, extent_t Size, extent_t BorderSize = extent_t::Zero> struct zone_t {
 		static_assert(Size > extent_t::Zero, "Map size must be greater than zero.");
 		static_assert(Size >= BorderSize, "Map size must be greater than or equal to border size.");
 

@@ -8,8 +8,7 @@
 #include <bleak/utility.hpp>
 
 namespace bleak {
-	class camera_t {
-	  public:
+	struct camera_t {
 		constexpr camera_t() noexcept = delete;
 
 		constexpr camera_t(extent_t size) noexcept : position{}, size{ size }, min{}, max{} {}

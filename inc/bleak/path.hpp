@@ -19,7 +19,7 @@
 #include <bleak/zone.hpp>
 
 namespace bleak {
-	class path_t {
+	struct path_t {
 	  public:
 		using creep_t = memory_creeper_t<offset_t::product_t>;
 

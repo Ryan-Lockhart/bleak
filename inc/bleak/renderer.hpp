@@ -50,7 +50,7 @@ namespace bleak {
 
 	struct target_texture_t;
 
-	class renderer_t {
+	struct renderer_t {
 	  private:
 		ptr<sdl::renderer> renderer;
 

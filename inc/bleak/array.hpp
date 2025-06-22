@@ -15,7 +15,7 @@
 #include <bleak/utility.hpp>
 
 namespace bleak {
-	template<typename T, extent_t Size> class array_t {
+	template<typename T, extent_t Size> struct array_t {
 	  private:
 		std::array<T, Size.area()> data;
 
