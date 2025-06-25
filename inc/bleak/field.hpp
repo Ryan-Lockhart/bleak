@@ -164,7 +164,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename T, SparseBlockage Blockage> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Blockage> sparse_blockage) noexcept {
+		template<zone_region_e Region, typename T, SparseBlockage Blockage> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Blockage> blockage) noexcept {
 			clear();
 
 			if (goals.empty()) {
@@ -198,7 +198,7 @@ namespace bleak {
 				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 					const offset_t offset_position{ current.position + offset };
 
-					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {
+					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || blockage.contains(offset_position)) {
 						continue;
 					}
 
@@ -244,6 +244,98 @@ namespace bleak {
 					cauto offset_position{ current.position + offset.first };
 
 					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {
+						continue;
+					}
+
+					frontier.emplace(offset_position, D{ current.distance + offset.second });
+				}
+			}
+
+			return *this;
+		}
+
+		template<zone_region_e Region, typename T, SparseBlockage... Blockages>
+			requires is_plurary<Blockages...>::value
+		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Blockages>... blockages) noexcept {
+			clear();
+
+			if (goals.empty()) {
+				return *this;
+			}
+
+			std::queue<creeper_t<T>> frontier{};
+			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
+
+			for (crauto goal : goals) {
+				if (!zone.template within<Region>(goal) || zone[goal] != value) {
+					continue;
+				}
+
+				frontier.emplace(goal, goal_value);
+				visited.insert(goal);
+			}
+
+			if (frontier.empty()) {
+				return *this;
+			}
+
+			while (!frontier.empty()) {
+				const creeper_t<D> current{ frontier.front() };
+				frontier.pop();
+
+				visited.insert(current.position);
+
+				distances[current.position] = current.distance;
+
+				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
+					const offset_t offset_position{ current.position + offset };
+
+					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || (blockages.contains(offset_position) || ...)) {
+						continue;
+					}
+
+					frontier.emplace(offset_position, D{ current.distance + 1 });
+				}
+			}
+
+			return *this;
+		}
+
+		template<zone_region_e Region, typename T, typename U, SparseBlockage... Blockages>
+			requires is_plurary<Blockages...>::value && is_equatable<T, U>::value
+		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value, cref<Blockages>... blockages) noexcept {
+			clear<Region>();
+
+			if (goals.empty()) {
+				return *this;
+			}
+
+			std::queue<creeper_t<D>> frontier{};
+			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
+
+			for (crauto goal : goals) {
+				if (!zone.template within<Region>(goal) || zone[goal] != value) {
+					continue;
+				}
+
+				frontier.emplace(goal, goal_value);
+				visited.insert(goal);
+			}
+
+			if (frontier.empty()) {
+				return *this;
+			}
+
+			while (!frontier.empty()) {
+				const creeper_t<D> current{ frontier.front() };
+				frontier.pop();
+
+				distances[current.position] = current.distance;
+
+				for (crauto offset : neighbourhood_creepers<DistanceFunction, D>) {
+					cauto offset_position{ current.position + offset.first };
+
+					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || (blockages.contains(offset_position) || ...)) {
 						continue;
 					}
 
@@ -302,9 +394,7 @@ namespace bleak {
 			return highest;
 		}
 
-		template<zone_region_e Region, typename Generator>
-			requires is_random_engine<Generator>::value
-		constexpr std::optional<offset_t> ascend(offset_t position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
+		template<zone_region_e Region, RandomEngine Generator> constexpr std::optional<offset_t> ascend(offset_t position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
 			if (!distances.template within<Region>(position)) {
 				return std::nullopt;
 			}
@@ -334,9 +424,7 @@ namespace bleak {
 			return highest;
 		}
 
-		template<zone_region_e Region, typename Generator, SparseBlockage Blockage>
-			requires is_random_engine<Generator>::value
-		constexpr std::optional<offset_t> ascend(offset_t position, cref<Blockage> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
+		template<zone_region_e Region, RandomEngine Generator, SparseBlockage Blockage> constexpr std::optional<offset_t> ascend(offset_t position, cref<Blockage> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
 			if (!distances.template within<Region>(position)) {
 				return std::nullopt;
 			}
@@ -415,9 +503,7 @@ namespace bleak {
 			return lowest;
 		}
 
-		template<zone_region_e Region, typename Generator>
-			requires is_random_engine<Generator>::value
-		constexpr std::optional<offset_t> descend(offset_t position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
+		template<zone_region_e Region, RandomEngine Generator> constexpr std::optional<offset_t> descend(offset_t position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
 			if (!distances.template within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}
@@ -446,9 +532,7 @@ namespace bleak {
 			return lowest;
 		}
 
-		template<zone_region_e Region, typename Generator, SparseBlockage Blockage>
-			requires is_random_engine<Generator>::value
-		constexpr std::optional<offset_t> descend(offset_t position, cref<Blockage> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
+		template<zone_region_e Region, RandomEngine Generator, SparseBlockage Blockage> constexpr std::optional<offset_t> descend(offset_t position, cref<Blockage> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
 			if (!distances.template within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}

@@ -19,14 +19,14 @@ namespace bleak {
 
 		static inline std::uniform_int_distribution<u16> frame_dis{ 0, length - 1 };
 
-		template<RandomEngine Engine> static inline u8 random_frame(ref<Engine> engine) noexcept { return static_cast<u8>(frame_dis(engine)); }
+		template<RandomEngine Generator> static inline u8 random_frame(ref<Generator> generator) noexcept { return static_cast<u8>(frame_dis(generator)); }
 
 	  public:
 		inline keyframe_t(u8 index) noexcept : index{ index }, frame{ 0 }, running{ false } {}
 
 		inline keyframe_t(u8 index, u8 frame, bool start = false) noexcept : index{ index }, frame{ frame }, running{ start } {}
 
-		template<RandomEngine Engine> inline keyframe_t(u8 index, ref<Engine> engine, bool start = false) noexcept : index{ index }, frame{ random_frame<Engine>(engine) }, running{ start } {}
+		template<RandomEngine Generator> inline keyframe_t(u8 index, ref<Generator> generator, bool start = false) noexcept : index{ index }, frame{ random_frame<Generator>(generator) }, running{ start } {}
 
 		inline bool is_running() const noexcept { return running; }
 

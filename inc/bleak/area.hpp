@@ -754,10 +754,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize, typename Generator>
-		inline cref<area_t> randomize(ref< zone_t<T, Size, BorderSize>> zone, ref<Generator> generator, f64 probability, cref<binary_applicator_t<T>> applicator) const noexcept
-			requires is_random_engine<Generator>::value
-		{
+		template<typename T, extent_t Size, extent_t BorderSize, RandomEngine Generator> inline cref<area_t> randomize(ref< zone_t<T, Size, BorderSize>> zone, ref<Generator> generator, f64 probability, cref<binary_applicator_t<T>> applicator) const noexcept {
 			std::bernoulli_distribution dis{ probability };
 
 			for (offset_t position : *this) {
@@ -767,10 +764,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<typename T, extent_t Size, extent_t BorderSize, typename Generator>
-		inline cref<area_t> randomize(ref< zone_t<T, Size, BorderSize>> zone, ref<Generator> generator, f64 probability, cref<T> true_value, cref<T> false_value) const noexcept
-			requires is_random_engine<Generator>::value
-		{
+		template<typename T, extent_t Size, extent_t BorderSize, RandomEngine Generator> inline cref<area_t> randomize(ref< zone_t<T, Size, BorderSize>> zone, ref<Generator> generator, f64 probability, cref<T> true_value, cref<T> false_value) const noexcept {
 			std::bernoulli_distribution dis{ probability };
 
 			for (offset_t position : *this) {
