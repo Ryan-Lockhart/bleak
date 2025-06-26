@@ -161,6 +161,30 @@ namespace bleak {
 
 		constexpr cref<T> operator[](offset_t position) const noexcept { return cells[position]; }
 
+		constexpr array_t<T, Size>::iterator begin() noexcept { return cells.begin(); }
+
+		constexpr array_t<T, Size>::const_iterator begin() const noexcept { return cells.begin(); }
+
+		constexpr array_t<T, Size>::iterator end() noexcept { return cells.end(); }
+
+		constexpr array_t<T, Size>::const_iterator end() const noexcept { return cells.end(); }
+
+		constexpr array_t<T, Size>::const_iterator cbegin() const noexcept { return cells.cbegin(); }
+
+		constexpr array_t<T, Size>::const_iterator cend() const noexcept { return cells.cend(); }
+
+		constexpr array_t<T, Size>::reverse_iterator rbegin() noexcept { return cells.rbegin(); }
+
+		constexpr array_t<T, Size>::reverse_iterator rend() noexcept { return cells.rend(); }
+
+		constexpr array_t<T, Size>::const_reverse_iterator rbegin() const noexcept { return cells.rbegin(); }
+
+		constexpr array_t<T, Size>::const_reverse_iterator rend() const noexcept { return cells.rend(); }
+
+		constexpr array_t<T, Size>::const_reverse_iterator crbegin() const noexcept { return cells.crbegin(); }
+
+		constexpr array_t<T, Size>::const_reverse_iterator crend() const noexcept { return cells.crend(); }
+
 		constexpr bool on_x_edge(offset_t position) const noexcept { return position.x == zone_origin.x || position.x == zone_extent.x; }
 
 		constexpr bool on_y_edge(offset_t position) const noexcept { return position.y == zone_origin.y || position.y == zone_extent.y; }
@@ -2343,7 +2367,49 @@ namespace bleak {
 
 			for (;;) {
 				if (current_position == target) {
+					return false;
+				}
+
+				if (cells[current_position] == value) {
 					return true;
+				}
+
+				i32 e2 = 2 * err;
+
+				if (e2 > -delta.y) {
+					err -= delta.y;
+					current_position.x += step.x;
+				}
+
+				if (e2 < delta.x) {
+					err += delta.x;
+					current_position.y += step.y;
+				}
+			}
+		}
+
+		template<typename U>
+			requires is_equatable<T, U>::value
+		constexpr bool linear_blockage(offset_t origin, offset_t target, cref<U> value) const noexcept {
+			if (cells[origin] == value || cells[target] == value) {
+				return true;
+			}
+
+			if (origin == target) {
+				return false;
+			}
+
+			offset_t delta{ std::abs(target.x - origin.x), std::abs(target.y - origin.y) };
+
+			offset_t step{ origin.x < target.x ? 1 : -1, origin.y < target.y ? 1 : -1 };
+
+			i32 err = delta.x - delta.y;
+
+			offset_t current_position{ origin };
+
+			for (;;) {
+				if (current_position == target) {
+					return false;
 				}
 
 				if (cells[current_position] == value) {
@@ -2567,7 +2633,57 @@ namespace bleak {
 
 			for (;;) {
 				if (creeper.position == target) {
+					return false;
+				}
+
+				if (cells[creeper.position] == value) {
 					return true;
+				}
+
+				i32 e2 = 2 * err;
+
+				if (e2 > -delta.y || e2 < delta.x) {
+					if (creeper.distance >= distance) {
+						return false;
+					}
+
+					if (e2 > -delta.y) {
+						err -= delta.y;
+						creeper.position.x += step.x;
+					}
+
+					if (e2 < delta.x) {
+						err += delta.x;
+						creeper.position.y += step.y;
+					}
+
+					++creeper.distance;
+				}
+			}
+		}
+
+		template<typename U>
+			requires is_equatable<T, U>::value
+		constexpr bool linear_blockage(offset_t origin, offset_t target, cref<U> value, u32 distance) const noexcept {
+			if (cells[origin] == value || cells[target] == value) {
+				return true;
+			}
+
+			if (origin == target) {
+				return false;
+			}
+
+			offset_t delta{ std::abs(target.x - origin.x), std::abs(target.y - origin.y) };
+
+			offset_t step{ origin.x < target.x ? 1 : -1, origin.y < target.y ? 1 : -1 };
+
+			i32 err = delta.x - delta.y;
+
+			creeper_t<u32> creeper{ origin, 0 };
+
+			for (;;) {
+				if (creeper.position == target) {
+					return false;
 				}
 
 				if (cells[creeper.position] == value) {

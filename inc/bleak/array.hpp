@@ -47,29 +47,29 @@ namespace bleak {
 		using reverse_iterator = rev_iter_t<T>;
 		using const_reverse_iterator = rev_iter_t<const T>;
 
-		inline constexpr iterator begin() noexcept { return iterator{ data }; }
+		inline constexpr iterator begin() noexcept { return data.begin(); }
 
-		inline constexpr iterator end() noexcept { return iterator{ data + size }; }
+		inline constexpr iterator end() noexcept { return data.end(); }
 
-		inline constexpr const_iterator begin() const noexcept { return const_iterator{ data }; }
+		inline constexpr const_iterator begin() const noexcept { return data.begin(); }
 
-		inline constexpr const_iterator end() const noexcept { return const_iterator{ data + size }; }
+		inline constexpr const_iterator end() const noexcept { return data.end(); }
 
-		inline constexpr const_iterator cbegin() const noexcept { return const_iterator{ data }; }
+		inline constexpr const_iterator cbegin() const noexcept { return data.cbegin(); }
 
-		inline constexpr const_iterator cend() const noexcept { return const_iterator{ data + size }; }
+		inline constexpr const_iterator cend() const noexcept { return data.cend(); }
 
-		inline constexpr reverse_iterator rbegin() noexcept { return reverse_iterator{ data + size - 1 }; }
+		inline constexpr reverse_iterator rbegin() noexcept { return data.rbegin(); }
 
-		inline constexpr reverse_iterator rend() noexcept { return reverse_iterator{ data - 1 }; }
+		inline constexpr reverse_iterator rend() noexcept { return data.rend(); }
 
-		inline constexpr const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator{ data + size - 1 }; }
+		inline constexpr const_reverse_iterator rbegin() const noexcept { return data.rbegin(); }
 
-		inline constexpr const_reverse_iterator rend() const noexcept { return const_reverse_iterator{ data - 1 }; }
+		inline constexpr const_reverse_iterator rend() const noexcept { return data.rend(); }
 
-		inline constexpr const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator{ data + size - 1 }; }
+		inline constexpr const_reverse_iterator crbegin() const noexcept { return data.crbegin(); }
 
-		inline constexpr const_reverse_iterator crend() const noexcept { return const_reverse_iterator{ data - 1 }; }
+		inline constexpr const_reverse_iterator crend() const noexcept { return data.crend(); }
 
 		inline constexpr ref<T> front() noexcept { return data[first]; }
 

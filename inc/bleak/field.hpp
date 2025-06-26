@@ -10,14 +10,17 @@
 #include <bleak/extent.hpp>
 #include <bleak/octant.hpp>
 #include <bleak/offset.hpp>
+#include <bleak/sparse.hpp>
 #include <bleak/random.hpp>
 #include <bleak/zone.hpp>
 
 namespace bleak {
+	template<Numeric D> using goal_t = sparseling_t<D>;
+
 	template<Numeric D, distance_function_e DistanceFunction, extent_t ZoneSize, extent_t ZoneBorder> struct field_t {
 	  private:
 		zone_t<D, ZoneSize, ZoneBorder> distances;
-		std::unordered_set<offset_t, offset_t::std_hasher> goals;
+		sparse_t<goal_t<D>> goals;
 
 	  public:
 		static constexpr D goal_value{ 0 };
@@ -36,25 +39,25 @@ namespace bleak {
 		constexpr field_t() noexcept : distances{}, goals{} { clear<zone_region_e::All>(); }
 
 		template<typename... Goals>
-			requires is_homogeneous<offset_t, Goals...>::value
+			requires is_homogeneous<goal_t<D>, Goals...>::value
 		constexpr field_t(cref<Goals>... goals) noexcept : distances{}, goals{ goals... } {
 			clear<zone_region_e::All>();
 		}
 
 		template<typename T, typename... Goals>
-			requires is_homogeneous<offset_t, Goals...>::value
+			requires is_homogeneous<goal_t<D>, Goals...>::value
 		constexpr field_t(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Goals>... goals) noexcept : distances{}, goals{ goals... } {
 			recalculate<zone_region_e::All>(zone, value);
 		}
 
 		template<typename... Goals>
-			requires is_homogeneous<offset_t, Goals...>::value
+			requires is_homogeneous<goal_t<D>, Goals...>::value
 		constexpr field_t(rval<Goals>... goals) noexcept : distances{}, goals{ (std::move(goals), ...) } {
 			clear<zone_region_e::All>();
 		}
 
 		template<zone_region_e Region, typename T, typename... Goals>
-			requires is_homogeneous<offset_t, Goals...>::value
+			requires is_homogeneous<goal_t<D>, Goals...>::value
 		constexpr field_t(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, rval<Goals>... goals) noexcept : distances{}, goals{ (std::move(goals), ...) } {
 			recalculate<zone_region_e::All>(zone, value);
 		}
@@ -74,6 +77,18 @@ namespace bleak {
 
 		constexpr D at(offset_t position) const noexcept { return distances[position]; }
 
+		constexpr void homogenize() noexcept {
+			for (usize i{ 0 }; i < ZoneSize.area(); ++i) {
+				const D distance{ distances[i] };
+
+				if (distance >= 1) {
+					continue;
+				}
+
+				distances[i] = (distance < 1 && distance > -1) ? 0 : std::abs(distance);
+			}
+		}
+
 		template<zone_region_e Region, typename T> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value) noexcept {
 			clear();
 
@@ -81,16 +96,22 @@ namespace bleak {
 				return *this;
 			}
 
-			std::queue<creeper_t<T>> frontier{};
+			std::queue<creeper_t<D>> frontier{};
 			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
+			bool negative_goal{ false };
+
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal) || zone[goal] != value) {
+				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
-				frontier.emplace(goal, goal_value);
-				visited.insert(goal);
+				frontier.emplace(goal.position, goal.value);
+				visited.insert(goal.position);
+
+				if (goal.value < 0) {
+					negative_goal = true;
+				}
 			}
 
 			if (frontier.empty()) {
@@ -116,6 +137,10 @@ namespace bleak {
 				}
 			}
 
+			if (negative_goal) {
+				homogenize();
+			}
+
 			return *this;
 		}
 
@@ -131,13 +156,19 @@ namespace bleak {
 			std::queue<creeper_t<D>> frontier{};
 			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
+			bool negative_goal{ false };
+
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal) || zone[goal] != value) {
+				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
-				frontier.emplace(goal, goal_value);
-				visited.insert(goal);
+				frontier.emplace(goal.position, goal.value);
+				visited.insert(goal.position);
+
+				if (goal.value < 0) {
+					negative_goal = true;
+				}
 			}
 
 			if (frontier.empty()) {
@@ -161,6 +192,10 @@ namespace bleak {
 				}
 			}
 
+			if (negative_goal) {
+				homogenize();
+			}
+
 			return *this;
 		}
 
@@ -171,16 +206,22 @@ namespace bleak {
 				return *this;
 			}
 
-			std::queue<creeper_t<T>> frontier{};
+			std::queue<creeper_t<D>> frontier{};
 			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
+			bool negative_goal{ false };
+
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal) || zone[goal] != value) {
+				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
-				frontier.emplace(goal, goal_value);
-				visited.insert(goal);
+				frontier.emplace(goal.position, goal.value);
+				visited.insert(goal.position);
+
+				if (goal.value < 0) {
+					negative_goal = true;
+				}
 			}
 
 			if (frontier.empty()) {
@@ -206,6 +247,10 @@ namespace bleak {
 				}
 			}
 
+			if (negative_goal) {
+				homogenize();
+			}
+
 			return *this;
 		}
 
@@ -221,13 +266,19 @@ namespace bleak {
 			std::queue<creeper_t<D>> frontier{};
 			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
+			bool negative_goal{ false };
+
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal) || zone[goal] != value) {
+				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
-				frontier.emplace(goal, goal_value);
-				visited.insert(goal);
+				frontier.emplace(goal.position, goal.value);
+				visited.insert(goal.position);
+
+				if (goal.value < 0) {
+					negative_goal = true;
+				}
 			}
 
 			if (frontier.empty()) {
@@ -251,6 +302,10 @@ namespace bleak {
 				}
 			}
 
+			if (negative_goal) {
+				homogenize();
+			}
+
 			return *this;
 		}
 
@@ -263,16 +318,22 @@ namespace bleak {
 				return *this;
 			}
 
-			std::queue<creeper_t<T>> frontier{};
+			std::queue<creeper_t<D>> frontier{};
 			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
+			bool negative_goal{ false };
+
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal) || zone[goal] != value) {
+				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
-				frontier.emplace(goal, goal_value);
-				visited.insert(goal);
+				frontier.emplace(goal.position, goal.value);
+				visited.insert(goal.position);
+
+				if (goal.value < 0) {
+					negative_goal = true;
+				}
 			}
 
 			if (frontier.empty()) {
@@ -298,6 +359,10 @@ namespace bleak {
 				}
 			}
 
+			if (negative_goal) {
+				homogenize();
+			}
+
 			return *this;
 		}
 
@@ -313,13 +378,19 @@ namespace bleak {
 			std::queue<creeper_t<D>> frontier{};
 			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
+			bool negative_goal{ false };
+
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal) || zone[goal] != value) {
+				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
-				frontier.emplace(goal, goal_value);
-				visited.insert(goal);
+				frontier.emplace(goal.position, goal.value);
+				visited.insert(goal.position);
+
+				if (goal.value < 0) {
+					negative_goal = true;
+				}
 			}
 
 			if (frontier.empty()) {
@@ -341,6 +412,10 @@ namespace bleak {
 
 					frontier.emplace(offset_position, D{ current.distance + offset.second });
 				}
+			}
+
+			if (negative_goal) {
+				homogenize();
 			}
 
 			return *this;
@@ -376,15 +451,18 @@ namespace bleak {
 			}
 
 			offset_t highest{ position };
+			D highest_distance{ goal_value };
 
 			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 				const offset_t offset_position{ position + offset };
+				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || distances[offset_position] == obstacle_value || distances[offset_position] <= distances[highest] || sparse_blockage.contains(offset_position)) {
+				if (!distances.template within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance <= highest_distance || sparse_blockage.contains(offset_position)) {
 					continue;
 				}
 
 				highest = offset_position;
+				highest_distance = offset_distance;
 			}
 
 			if (highest == position) {
@@ -485,15 +563,18 @@ namespace bleak {
 			}
 
 			offset_t lowest{ position };
+			D lowest_distance{ distances[lowest] };
 
 			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 				const offset_t offset_position{ position + offset };
+				const D distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || distances[offset_position] >= distances[lowest] || sparse_blockage.contains(offset_position)) {
+				if (!distances.template within<Region>(offset_position) || distance >= distances[lowest] || sparse_blockage.contains(offset_position)) {
 					continue;
 				}
 
 				lowest = offset_position;
+				lowest_distance = distance;
 			}
 
 			if (lowest == position) {
@@ -793,7 +874,7 @@ namespace bleak {
 				return false;
 			}
 
-			return goals.insert(goal).second;
+			return goals.add(goal_t<D>{ goal_value, goal });
 		}
 
 		template<zone_region_e Region> constexpr bool add(offset_t goal) noexcept {
@@ -801,7 +882,23 @@ namespace bleak {
 				return false;
 			}
 
-			return goals.insert(goal).second;
+			return goals.add(goal_t<D>{ goal, goal_value });
+		}
+
+		constexpr bool add(offset_t goal, D value) noexcept {
+			if (!distances.template within<zone_region_e::All>(goal) || value > goal_value) {
+				return false;
+			}
+
+			return goals.add(goal_t<D>{ value, goal });
+		}
+
+		template<zone_region_e Region> constexpr bool add(offset_t goal, D value) noexcept {
+			if (!distances.template within<Region>(goal) || value > goal_value) {
+				return false;
+			}
+
+			return goals.add(goal_t<D>{ goal, value });
 		}
 
 		constexpr bool remove(offset_t goal) noexcept {
@@ -809,7 +906,7 @@ namespace bleak {
 				return false;
 			}
 
-			return goals.erase(goal);
+			return goals.remove(goal);
 		}
 
 		template<zone_region_e Region> constexpr bool remove(offset_t goal) noexcept {
@@ -817,43 +914,23 @@ namespace bleak {
 				return false;
 			}
 
-			return goals.erase(goal);
+			return goals.remove(goal);
 		}
 
 		constexpr bool update(offset_t from, offset_t to) noexcept {
 			if (!distances.template within<zone_region_e::All>(from) || !distances.template within<zone_region_e::All>(to)) {
 				return false;
 			}
-			
-			cauto iter{ goals.find(from) };
 
-			if (iter == goals.end()) {
-				return false;
-			}
-
-			auto node{ goals.extract(iter) };
-
-			node.value() = to;
-
-			return goals.insert(std::move(node)).inserted;
+			return goals.move(from, to);
 		}
 
 		template<zone_region_e Region> constexpr bool update(offset_t from, offset_t to) noexcept {
 			if (!distances.template within<Region>(from) || !distances.template within<Region>(to)) {
 				return false;
 			}
-			
-			cauto iter{ goals.find(from) };
 
-			if (iter == goals.end()) {
-				return false;
-			}
-
-			auto node{ goals.extract(iter) };
-
-			node.value() = to;
-
-			return goals.insert(std::move(node)).inserted;
+			return goals.move(from, to);
 		}
 	};
 } // namespace bleak
