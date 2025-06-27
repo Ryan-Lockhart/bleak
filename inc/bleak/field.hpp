@@ -263,7 +263,7 @@ namespace bleak {
 				return *this;
 			}
 
-			std::queue<creeper_t<D>> frontier{};
+			std::priority_queue<creeper_t<D>, std::vector<creeper_t<D>>, typename creeper_t<D>::less> frontier{};
 			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
 			bool negative_goal{ false };
@@ -286,19 +286,19 @@ namespace bleak {
 			}
 
 			while (!frontier.empty()) {
-				const creeper_t<D> current{ frontier.front() };
+				const creeper_t<D> current{ frontier.top() };
 				frontier.pop();
 
 				distances[current.position] = current.distance;
 
-				for (crauto offset : neighbourhood_creepers<DistanceFunction, D>) {
-					cauto offset_position{ current.position + offset.first };
+				for (crauto creeper : neighbourhood_creepers<DistanceFunction, D>) {
+					cauto offset_position{ current.position + creeper.position };
 
 					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {
 						continue;
 					}
 
-					frontier.emplace(offset_position, D{ current.distance + offset.second });
+					frontier.emplace(offset_position, D{ current.distance + creeper.distance });
 				}
 			}
 
@@ -375,7 +375,7 @@ namespace bleak {
 				return *this;
 			}
 
-			std::queue<creeper_t<D>> frontier{};
+			std::priority_queue<creeper_t<D>, std::vector<creeper_t<D>>, typename creeper_t<D>::less> frontier{};
 			std::unordered_set<offset_t, offset_t::std_hasher> visited{};
 
 			bool negative_goal{ false };
@@ -398,19 +398,19 @@ namespace bleak {
 			}
 
 			while (!frontier.empty()) {
-				const creeper_t<D> current{ frontier.front() };
+				const creeper_t<D> current{ frontier.top() };
 				frontier.pop();
 
 				distances[current.position] = current.distance;
 
-				for (crauto offset : neighbourhood_creepers<DistanceFunction, D>) {
-					cauto offset_position{ current.position + offset.first };
+				for (crauto creeper : neighbourhood_creepers<DistanceFunction, D>) {
+					cauto offset_position{ current.position + creeper.position };
 
 					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || (blockages.contains(offset_position) || ...)) {
 						continue;
 					}
 
-					frontier.emplace(offset_position, D{ current.distance + offset.second });
+					frontier.emplace(offset_position, D{ current.distance + creeper.distance });
 				}
 			}
 
@@ -427,15 +427,18 @@ namespace bleak {
 			}
 
 			offset_t highest{ position };
+			D highest_distance{ goal_value };
 
 			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 				const offset_t offset_position{ position + offset };
+				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || distances[offset_position] == obstacle_value || distances[offset_position] <= distances[highest]) {
+				if (!distances.template within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance <= highest_distance) {
 					continue;
 				}
 
 				highest = offset_position;
+				highest_distance = offset_distance;
 			}
 
 			if (highest == position) {
@@ -480,19 +483,18 @@ namespace bleak {
 			std::bernoulli_distribution distribution{ unseat_probability };
 
 			offset_t highest{ position };
+			D highest_distance{ goal_value };
 
 			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 				const offset_t offset_position{ position + offset };
+				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) ||
-					distances[offset_position] == obstacle_value ||
-					distances[offset_position] < distances[highest] ||
-					(distances[offset_position] == distances[highest] && !distribution(generator))
-				) {
+				if (!distances.template within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance < highest_distance || (offset_distance == highest_distance && !distribution(generator))) {
 					continue;
 				}
 
 				highest = offset_position;
+				highest_distance = offset_distance;
 			}
 
 			if (highest == position) {
@@ -510,20 +512,18 @@ namespace bleak {
 			std::bernoulli_distribution distribution{ unseat_probability };
 
 			offset_t highest{ position };
+			D highest_distance{ goal_value };
 
 			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 				const offset_t offset_position{ position + offset };
+				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) ||
-					distances[offset_position] == obstacle_value ||
-					distances[offset_position] < distances[highest] ||
-					sparse_blockage.contains(offset_position) ||
-					(distances[offset_position] == distances[highest] && !distribution(generator))
-				) {
+				if (!distances.template within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance < highest_distance || sparse_blockage.contains(offset_position) || (offset_distance == highest_distance && !distribution(generator))) {
 					continue;
 				}
 
 				highest = offset_position;
+				highest_distance = offset_distance;
 			}
 
 			if (highest == position) {
@@ -539,15 +539,18 @@ namespace bleak {
 			}
 
 			offset_t lowest{ position };
+			D lowest_distance{ obstacle_value };
 
 			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 				const offset_t offset_position{ position + offset };
+				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || distances[offset_position] >= distances[lowest]) {
+				if (!distances.template within<Region>(offset_position) || offset_distance >= lowest_distance) {
 					continue;
 				}
 
 				lowest = offset_position;
+				lowest_distance = offset_distance;
 			}
 
 			if (lowest == position) {
@@ -563,18 +566,18 @@ namespace bleak {
 			}
 
 			offset_t lowest{ position };
-			D lowest_distance{ distances[lowest] };
+			D lowest_distance{ obstacle_value };
 
 			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 				const offset_t offset_position{ position + offset };
-				const D distance{ distances[offset_position] };
+				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || distance >= distances[lowest] || sparse_blockage.contains(offset_position)) {
+				if (!distances.template within<Region>(offset_position) || offset_distance >= lowest_distance || sparse_blockage.contains(offset_position)) {
 					continue;
 				}
 
 				lowest = offset_position;
-				lowest_distance = distance;
+				lowest_distance = offset_distance;
 			}
 
 			if (lowest == position) {
@@ -592,18 +595,18 @@ namespace bleak {
 			std::bernoulli_distribution distribution{ unseat_probability };
 
 			offset_t lowest{ position };
+			D lowest_distance{ obstacle_value };
 
 			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 				const offset_t offset_position{ position + offset };
+				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) ||
-					distances[offset_position] > distances[lowest] ||
-					(distances[offset_position] == distances[lowest] && !distribution(generator))
-				) {
+				if (!distances.template within<Region>(offset_position) || offset_distance > lowest_distance || (offset_distance == lowest_distance && !distribution(generator))) {
 					continue;
 				}
 
 				lowest = offset_position;
+				lowest_distance = offset_distance;
 			}
 
 			if (lowest == position) {
@@ -621,19 +624,18 @@ namespace bleak {
 			std::bernoulli_distribution distribution{ unseat_probability };
 
 			offset_t lowest{ position };
+			D lowest_distance{ obstacle_value };
 
 			for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 				const offset_t offset_position{ position + offset };
+				const D offset_distance{ distances[offset_position] };
 				
-				if (!distances.template within<Region>(offset_position) ||
-					distances[offset_position] > distances[lowest] ||
-					sparse_blockage.contains(offset_position) ||
-					(distances[offset_position] == distances[lowest] && !distribution(generator))
-				) {
+				if (!distances.template within<Region>(offset_position) || offset_distance > lowest_distance || sparse_blockage.contains(offset_position) || (offset_distance == lowest_distance && !distribution(generator))) {
 					continue;
 				}
 
 				lowest = offset_position;
+				lowest_distance = offset_distance;
 			}
 
 			if (lowest == position) {

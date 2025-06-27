@@ -427,39 +427,4 @@ namespace bleak {
 			}
 		}()
 	};
-
-	template<distance_function_e Distance, Numeric D> static constexpr auto neighbourhood_creepers{
-		[]() {
-			if constexpr (Distance == distance_function_e::VonNeumann || Distance == distance_function_e::Manhattan) {
-				return std::array<std::pair<offset_t, D>, 4>{
-					std::pair{ offset_t::North, 1 },
-					std::pair{ offset_t::South, 1 },
-					std::pair{ offset_t::West, 1 },
-					std::pair{ offset_t::East, 1 }
-				};
-			} else if constexpr (Distance == distance_function_e::Chebyshev) {
-				return std::array<std::pair<offset_t, D>, 8>{
-					std::pair{ offset_t::North, 1 },
-					std::pair{ offset_t::South, 1 },
-					std::pair{ offset_t::West, 1 },
-					std::pair{ offset_t::East, 1 },
-					std::pair{ offset_t::Northwest, 1 },
-					std::pair{ offset_t::Northeast, 1 },
-					std::pair{ offset_t::Southwest, 1 },
-					std::pair{ offset_t::Southeast, 1 }
-				};
-			} else {
-				return std::array<std::pair<offset_t, D>, 8>{
-					std::pair{ offset_t::North, 1.0 },
-					std::pair{ offset_t::South, 1.0 },
-					std::pair{ offset_t::West, 1.0 },
-					std::pair{ offset_t::East, 1.0 },
-					std::pair{ offset_t::Northwest, 1.414 },
-					std::pair{ offset_t::Northeast, 1.414 },
-					std::pair{ offset_t::Southwest, 1.414 },
-					std::pair{ offset_t::Southeast, 1.414 }
-				};
-			}
-		}()
-	};
 } // namespace bleak
