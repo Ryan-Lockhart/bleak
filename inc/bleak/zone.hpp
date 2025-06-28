@@ -519,24 +519,24 @@ namespace bleak {
 
 			if constexpr (Region == zone_region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
-					cells[i] = T::template randomizer<Randomizer>::template operator()<U>(generator);
+					cells[i] = T::dependent randomizer<Randomizer>::dependent operator()<U>(generator);
 				}
 			} else if constexpr (Region == zone_region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
-						cells[x, y] = T::template randomizer<Randomizer>::template operator()<U>(generator);
+						cells[x, y] = T::dependent randomizer<Randomizer>::dependent operator()<U>(generator);
 					}
 				}
 			} else if constexpr (Region == zone_region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
-							cells[x, y] = T::template randomizer<Randomizer>::template operator()<U>(generator);
+							cells[x, y] = T::dependent randomizer<Randomizer>::dependent operator()<U>(generator);
 						}
 					} else {
 						for (extent_t::scalar_t i{ 0 }; i < border_size.w; ++i) {
-							cells[i, y] = T::template randomizer<Randomizer>::template operator()<U>(generator);
-							cells[zone_extent.x - i, y] = T::template randomizer<Randomizer>::template operator()<U>(generator);
+							cells[i, y] = T::dependent randomizer<Randomizer>::dependent operator()<U>(generator);
+							cells[zone_extent.x - i, y] = T::dependent randomizer<Randomizer>::dependent operator()<U>(generator);
 						}
 					}
 				}

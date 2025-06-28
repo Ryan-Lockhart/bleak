@@ -8,14 +8,34 @@
 
 #include <bleak/primitive.hpp>
 
-namespace std {
-	template<> struct is_floating_point<bleak::f16> {
-		static constexpr bool value = true;
-	};
+// macro for explicit instantiation of value type traits
+#define TYPE_TRAIT_VALUE(trait, T, val)		\
+	template<> struct trait<T> {			\
+		static constexpr decltype(val) value = val;	\
+	}
 
-	template<> struct is_floating_point<bleak::f128> {
-		static constexpr bool value = true;
-	};
+// macro to enable type trait for type
+#define ENABLE_TYPE_TRAIT(trait, T) \
+	TYPE_TRAIT_VALUE(trait, T, true)
+
+#define DISABLE_TYPE_TRAIT(trait, T) \
+	TYPE_TRAIT_VALUE(trait, T, false)
+
+// macro for explicit instantiation of using type traits
+#define TYPE_TRAIT_USING(trait, T, val) \
+	template<> struct trait<T> {		\
+		using type = val;				\
+	}
+
+// macro for explicit instantiation of type trait comparators
+#define TYPE_TRAIT_COMPARATOR(trait, T, U, val) \
+	template<> struct trait<T, U> {		\
+		static constexpr decltype(val) value = val;	\
+	}
+
+namespace std {
+	TYPE_TRAIT_VALUE(is_floating_point, bleak::f16, true);
+	TYPE_TRAIT_VALUE(is_floating_point, bleak::f128, true);
 }
 
 namespace bleak {
@@ -232,9 +252,7 @@ namespace bleak {
 
 	template<typename T> constexpr bool is_hashable_v = is_hashable<T>::value;
 
-	template<typename T> struct is_drawable {
-		static bool constexpr value = false;
-	};
+	template<typename T> struct is_drawable { static bool constexpr value = false; };
 
 	template<typename T> constexpr bool is_drawable_v = is_drawable<T>::value;
 

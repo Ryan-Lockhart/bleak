@@ -63,7 +63,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> clear() noexcept {
-			distances.template set<Region>(obstacle_value);
+			distances.dependent set<Region>(obstacle_value);
 
 			return *this;
 		}
@@ -102,7 +102,7 @@ namespace bleak {
 			bool negative_goal{ false };
 
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
+				if (!zone.dependent within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
@@ -129,7 +129,7 @@ namespace bleak {
 				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 					const offset_t offset_position{ current.position + offset };
 
-					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value) {
+					if (!visited.insert(offset_position).second || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value) {
 						continue;
 					}
 
@@ -159,7 +159,7 @@ namespace bleak {
 			bool negative_goal{ false };
 
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
+				if (!zone.dependent within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
@@ -184,7 +184,7 @@ namespace bleak {
 				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 					const offset_t offset_position{ current.position + offset };
 
-					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value) {
+					if (!visited.insert(offset_position).second || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value) {
 						continue;
 					}
 
@@ -212,7 +212,7 @@ namespace bleak {
 			bool negative_goal{ false };
 
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
+				if (!zone.dependent within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
@@ -239,7 +239,7 @@ namespace bleak {
 				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 					const offset_t offset_position{ current.position + offset };
 
-					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || blockage.contains(offset_position)) {
+					if (!visited.insert(offset_position).second || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value || blockage.contains(offset_position)) {
 						continue;
 					}
 
@@ -269,7 +269,7 @@ namespace bleak {
 			bool negative_goal{ false };
 
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
+				if (!zone.dependent within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
@@ -294,7 +294,7 @@ namespace bleak {
 				for (crauto creeper : neighbourhood_creepers<DistanceFunction, D>) {
 					cauto offset_position{ current.position + creeper.position };
 
-					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {
+					if (!visited.insert(offset_position).second || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value || sparse_blockage.contains(offset_position)) {
 						continue;
 					}
 
@@ -324,7 +324,7 @@ namespace bleak {
 			bool negative_goal{ false };
 
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
+				if (!zone.dependent within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
@@ -351,7 +351,7 @@ namespace bleak {
 				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
 					const offset_t offset_position{ current.position + offset };
 
-					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || (blockages.contains(offset_position) || ...)) {
+					if (!visited.insert(offset_position).second || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value || (blockages.contains(offset_position) || ...)) {
 						continue;
 					}
 
@@ -381,7 +381,7 @@ namespace bleak {
 			bool negative_goal{ false };
 
 			for (crauto goal : goals) {
-				if (!zone.template within<Region>(goal.position) || zone[goal.position] != value) {
+				if (!zone.dependent within<Region>(goal.position) || zone[goal.position] != value) {
 					continue;
 				}
 
@@ -406,7 +406,7 @@ namespace bleak {
 				for (crauto creeper : neighbourhood_creepers<DistanceFunction, D>) {
 					cauto offset_position{ current.position + creeper.position };
 
-					if (!visited.insert(offset_position).second || !zone.template within<Region>(offset_position) || zone[offset_position] != value || (blockages.contains(offset_position) || ...)) {
+					if (!visited.insert(offset_position).second || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value || (blockages.contains(offset_position) || ...)) {
 						continue;
 					}
 
@@ -422,7 +422,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region> constexpr std::optional<offset_t> ascend(offset_t position) const noexcept {
-			if (!distances.template within<Region>(position)) {
+			if (!distances.dependent within<Region>(position)) {
 				return std::nullopt;
 			}
 
@@ -433,7 +433,7 @@ namespace bleak {
 				const offset_t offset_position{ position + offset };
 				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance <= highest_distance) {
+				if (!distances.dependent within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance <= highest_distance) {
 					continue;
 				}
 
@@ -449,7 +449,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region, SparseBlockage Blockage> constexpr std::optional<offset_t> ascend(offset_t position, cref<Blockage> sparse_blockage) const noexcept {
-			if (!distances.template within<Region>(position)) {
+			if (!distances.dependent within<Region>(position)) {
 				return std::nullopt;
 			}
 
@@ -460,7 +460,7 @@ namespace bleak {
 				const offset_t offset_position{ position + offset };
 				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance <= highest_distance || sparse_blockage.contains(offset_position)) {
+				if (!distances.dependent within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance <= highest_distance || sparse_blockage.contains(offset_position)) {
 					continue;
 				}
 
@@ -476,7 +476,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region, RandomEngine Generator> constexpr std::optional<offset_t> ascend(offset_t position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
-			if (!distances.template within<Region>(position)) {
+			if (!distances.dependent within<Region>(position)) {
 				return std::nullopt;
 			}
 
@@ -489,7 +489,7 @@ namespace bleak {
 				const offset_t offset_position{ position + offset };
 				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance < highest_distance || (offset_distance == highest_distance && !distribution(generator))) {
+				if (!distances.dependent within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance < highest_distance || (offset_distance == highest_distance && !distribution(generator))) {
 					continue;
 				}
 
@@ -505,7 +505,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region, RandomEngine Generator, SparseBlockage Blockage> constexpr std::optional<offset_t> ascend(offset_t position, cref<Blockage> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
-			if (!distances.template within<Region>(position)) {
+			if (!distances.dependent within<Region>(position)) {
 				return std::nullopt;
 			}
 
@@ -518,7 +518,7 @@ namespace bleak {
 				const offset_t offset_position{ position + offset };
 				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance < highest_distance || sparse_blockage.contains(offset_position) || (offset_distance == highest_distance && !distribution(generator))) {
+				if (!distances.dependent within<Region>(offset_position) || offset_distance == obstacle_value || offset_distance < highest_distance || sparse_blockage.contains(offset_position) || (offset_distance == highest_distance && !distribution(generator))) {
 					continue;
 				}
 
@@ -534,7 +534,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region> constexpr std::optional<offset_t> descend(offset_t position) const noexcept {
-			if (!distances.template within<Region>(position) || goal_reached(position)) {
+			if (!distances.dependent within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}
 
@@ -545,7 +545,7 @@ namespace bleak {
 				const offset_t offset_position{ position + offset };
 				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || offset_distance >= lowest_distance) {
+				if (!distances.dependent within<Region>(offset_position) || offset_distance >= lowest_distance) {
 					continue;
 				}
 
@@ -561,7 +561,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region, SparseBlockage Blockage> constexpr std::optional<offset_t> descend(offset_t position, cref<Blockage> sparse_blockage) const noexcept {
-			if (!distances.template within<Region>(position) || goal_reached(position)) {
+			if (!distances.dependent within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}
 
@@ -572,7 +572,7 @@ namespace bleak {
 				const offset_t offset_position{ position + offset };
 				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || offset_distance >= lowest_distance || sparse_blockage.contains(offset_position)) {
+				if (!distances.dependent within<Region>(offset_position) || offset_distance >= lowest_distance || sparse_blockage.contains(offset_position)) {
 					continue;
 				}
 
@@ -588,7 +588,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region, RandomEngine Generator> constexpr std::optional<offset_t> descend(offset_t position, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
-			if (!distances.template within<Region>(position) || goal_reached(position)) {
+			if (!distances.dependent within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}
 
@@ -601,7 +601,7 @@ namespace bleak {
 				const offset_t offset_position{ position + offset };
 				const D offset_distance{ distances[offset_position] };
 
-				if (!distances.template within<Region>(offset_position) || offset_distance > lowest_distance || (offset_distance == lowest_distance && !distribution(generator))) {
+				if (!distances.dependent within<Region>(offset_position) || offset_distance > lowest_distance || (offset_distance == lowest_distance && !distribution(generator))) {
 					continue;
 				}
 
@@ -617,7 +617,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region, RandomEngine Generator, SparseBlockage Blockage> constexpr std::optional<offset_t> descend(offset_t position, cref<Blockage> sparse_blockage, ref<Generator> generator, f64 unseat_probability = 0.5) const noexcept {
-			if (!distances.template within<Region>(position) || goal_reached(position)) {
+			if (!distances.dependent within<Region>(position) || goal_reached(position)) {
 				return std::nullopt;
 			}
 
@@ -630,7 +630,7 @@ namespace bleak {
 				const offset_t offset_position{ position + offset };
 				const D offset_distance{ distances[offset_position] };
 				
-				if (!distances.template within<Region>(offset_position) || offset_distance > lowest_distance || sparse_blockage.contains(offset_position) || (offset_distance == lowest_distance && !distribution(generator))) {
+				if (!distances.dependent within<Region>(offset_position) || offset_distance > lowest_distance || sparse_blockage.contains(offset_position) || (offset_distance == lowest_distance && !distribution(generator))) {
 					continue;
 				}
 
@@ -872,7 +872,7 @@ namespace bleak {
 		}
 
 		constexpr bool add(offset_t goal) noexcept {
-			if (!distances.template within<zone_region_e::All>(goal)) {
+			if (!distances.dependent within<zone_region_e::All>(goal)) {
 				return false;
 			}
 
@@ -880,7 +880,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region> constexpr bool add(offset_t goal) noexcept {
-			if (!distances.template within<Region>(goal)) {
+			if (!distances.dependent within<Region>(goal)) {
 				return false;
 			}
 
@@ -888,7 +888,7 @@ namespace bleak {
 		}
 
 		constexpr bool add(offset_t goal, D value) noexcept {
-			if (!distances.template within<zone_region_e::All>(goal) || value > goal_value) {
+			if (!distances.dependent within<zone_region_e::All>(goal) || value > goal_value) {
 				return false;
 			}
 
@@ -896,7 +896,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region> constexpr bool add(offset_t goal, D value) noexcept {
-			if (!distances.template within<Region>(goal) || value > goal_value) {
+			if (!distances.dependent within<Region>(goal) || value > goal_value) {
 				return false;
 			}
 
@@ -904,7 +904,7 @@ namespace bleak {
 		}
 
 		constexpr bool remove(offset_t goal) noexcept {
-			if (!distances.template within<zone_region_e::All>(goal)) {
+			if (!distances.dependent within<zone_region_e::All>(goal)) {
 				return false;
 			}
 
@@ -912,7 +912,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region> constexpr bool remove(offset_t goal) noexcept {
-			if (!distances.template within<Region>(goal)) {
+			if (!distances.dependent within<Region>(goal)) {
 				return false;
 			}
 
@@ -920,7 +920,7 @@ namespace bleak {
 		}
 
 		constexpr bool update(offset_t from, offset_t to) noexcept {
-			if (!distances.template within<zone_region_e::All>(from) || !distances.template within<zone_region_e::All>(to)) {
+			if (!distances.dependent within<zone_region_e::All>(from) || !distances.dependent within<zone_region_e::All>(to)) {
 				return false;
 			}
 
@@ -928,7 +928,7 @@ namespace bleak {
 		}
 
 		template<zone_region_e Region> constexpr bool update(offset_t from, offset_t to) noexcept {
-			if (!distances.template within<Region>(from) || !distances.template within<Region>(to)) {
+			if (!distances.dependent within<Region>(from) || !distances.dependent within<Region>(to)) {
 				return false;
 			}
 

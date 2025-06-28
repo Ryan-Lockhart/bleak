@@ -68,7 +68,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(position) || zone[position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -89,7 +89,7 @@ namespace bleak {
 
 						const offset_t neighbour{ current.x + x, current.y + y };
 
-						if (!zone.template within<zone_region_e::All>(neighbour) || contains(neighbour)) {
+						if (!zone.dependent within<zone_region_e::All>(neighbour) || contains(neighbour)) {
 							continue;
 						}
 
@@ -116,7 +116,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(position) || zone[position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -137,7 +137,7 @@ namespace bleak {
 
 						const offset_t neighbour{ current.x + x, current.y + y };
 
-						if (!zone.template within<zone_region_e::All>(neighbour) || contains(neighbour)) {
+						if (!zone.dependent within<zone_region_e::All>(neighbour) || contains(neighbour)) {
 							continue;
 						}
 
@@ -163,7 +163,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(position) || zone[position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -184,7 +184,7 @@ namespace bleak {
 
 						const offset_t neighbour{ current.position.x + x, current.position.y + y };
 
-						if (!zone.template within<zone_region_e::All>(neighbour) || contains(neighbour) || current.distance > distance) {
+						if (!zone.dependent within<zone_region_e::All>(neighbour) || contains(neighbour) || current.distance > distance) {
 							continue;
 						}
 
@@ -211,7 +211,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(position) || zone[position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -232,7 +232,7 @@ namespace bleak {
 
 						const offset_t neighbour{ current.position.x + x, current.position.y + y };
 
-						if (!zone.template within<zone_region_e::All>(neighbour) || contains(neighbour) || current.distance > distance) {
+						if (!zone.dependent within<zone_region_e::All>(neighbour) || contains(neighbour) || current.distance > distance) {
 							continue;
 						}
 
@@ -257,7 +257,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(position) || zone[position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -272,7 +272,7 @@ namespace bleak {
 						const offset_t offset{ offs_x, offs_y };
 						const offset_t neighbour{ position + offset };
 
-						if (zone.template within<zone_region_e::All>(neighbour)) {
+						if (zone.dependent within<zone_region_e::All>(neighbour)) {
 							insert(neighbour);
 						}
 					}
@@ -299,7 +299,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(position) || zone[position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -314,7 +314,7 @@ namespace bleak {
 						const offset_t offset{ offs_x, offs_y };
 						const offset_t neighbour{ position + offset };
 
-						if (zone.template within<zone_region_e::All>(neighbour)) {
+						if (zone.dependent within<zone_region_e::All>(neighbour)) {
 							insert(neighbour);
 						}
 					}
@@ -339,7 +339,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(circle.position) || zone[circle.position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(circle.position) || zone[circle.position] != value) {
 				return *this;
 			}
 
@@ -354,7 +354,7 @@ namespace bleak {
 						const offset_t offset{ offs_x, offs_y };
 						const offset_t neighbour{ circle.position + offset };
 
-						if (zone.template within<zone_region_e::All>(neighbour)) {
+						if (zone.dependent within<zone_region_e::All>(neighbour)) {
 							insert(neighbour);
 						}
 					}
@@ -381,7 +381,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(circle.position) || zone[circle.position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(circle.position) || zone[circle.position] != value) {
 				return *this;
 			}
 
@@ -396,7 +396,7 @@ namespace bleak {
 						const offset_t offset{ offs_x, offs_y };
 						const offset_t neighbour{ circle.position + offset };
 
-						if (zone.template within<zone_region_e::All>(neighbour)) {
+						if (zone.dependent within<zone_region_e::All>(neighbour)) {
 							insert(neighbour);
 						}
 					}
@@ -421,7 +421,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(position) || zone[position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -444,7 +444,7 @@ namespace bleak {
 						const offset_t offset{ offs_x, offs_y };
 						const offset_t neighbour{ position + offset };
 
-						if (zone.template within<zone_region_e::All>(neighbour)) {
+						if (zone.dependent within<zone_region_e::All>(neighbour)) {
 							insert(neighbour);
 						}
 					}
@@ -471,7 +471,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(position) || zone[position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(position) || zone[position] != value) {
 				return *this;
 			}
 
@@ -494,7 +494,7 @@ namespace bleak {
 						const offset_t offset{ offs_x, offs_y };
 						const offset_t neighbour{ position + offset };
 
-						if (zone.template within<zone_region_e::All>(neighbour)) {
+						if (zone.dependent within<zone_region_e::All>(neighbour)) {
 							insert(neighbour);
 						}
 					}
@@ -519,7 +519,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(arc.position) || zone[arc.position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(arc.position) || zone[arc.position] != value) {
 				return *this;
 			}
 
@@ -545,7 +545,7 @@ namespace bleak {
 						const offset_t offset{ offs_x, offs_y };
 						const offset_t neighbour{ arc.position + offset };
 
-						if (zone.template within<zone_region_e::All>(neighbour)) {
+						if (zone.dependent within<zone_region_e::All>(neighbour)) {
 							insert(neighbour);
 						}
 					}
@@ -572,7 +572,7 @@ namespace bleak {
 				clear();
 			}
 
-			if (!zone.template within<zone_region_e::All>(arc.position) || zone[arc.position] != value) {
+			if (!zone.dependent within<zone_region_e::All>(arc.position) || zone[arc.position] != value) {
 				return *this;
 			}
 
@@ -598,7 +598,7 @@ namespace bleak {
 						const offset_t offset{ offs_x, offs_y };
 						const offset_t neighbour{ arc.position + offset };
 
-						if (zone.template within<zone_region_e::All>(neighbour)) {
+						if (zone.dependent within<zone_region_e::All>(neighbour)) {
 							insert(neighbour);
 						}
 					}
@@ -849,7 +849,7 @@ namespace bleak {
 					f64 left_slope{ (dx - 0.5) / (dy + 0.5) };
 					f64 right_slope{ (dx + 0.5) / (dy - 0.5) };
 
-					if (!zone.template within<zone_region_e::All>(position) || start < right_slope) {
+					if (!zone.dependent within<zone_region_e::All>(position) || start < right_slope) {
 						continue;
 					}
 
@@ -903,7 +903,7 @@ namespace bleak {
 					f64 left_slope{ (dx - 0.5) / (dy + 0.5) };
 					f64 right_slope{ (dx + 0.5) / (dy - 0.5) };
 
-					if (!zone.template within<zone_region_e::All>(position) || start < right_slope) {
+					if (!zone.dependent within<zone_region_e::All>(position) || start < right_slope) {
 						continue;
 					}
 
@@ -957,7 +957,7 @@ namespace bleak {
 					f64 left_slope{ (dx - 0.5) / (dy + 0.5) };
 					f64 right_slope{ (dx + 0.5) / (dy - 0.5) };
 
-					if (!zone.template within<zone_region_e::All>(position) || start < right_slope) {
+					if (!zone.dependent within<zone_region_e::All>(position) || start < right_slope) {
 						continue;
 					}
 
@@ -1013,7 +1013,7 @@ namespace bleak {
 					f64 left_slope{ (dx - 0.5) / (dy + 0.5) };
 					f64 right_slope{ (dx + 0.5) / (dy - 0.5) };
 
-					if (!zone.template within<zone_region_e::All>(position) || start < right_slope) {
+					if (!zone.dependent within<zone_region_e::All>(position) || start < right_slope) {
 						continue;
 					}
 

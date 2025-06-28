@@ -24,6 +24,9 @@
 
 #define forever for (;;)
 
+#define dependent \
+	template
+
 namespace bleak {
 	using u8 = unsigned char;
 	using i8 = signed char;

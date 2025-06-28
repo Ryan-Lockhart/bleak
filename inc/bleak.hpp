@@ -39,6 +39,7 @@
 #include <bleak/path.hpp>
 #include <bleak/primitive_types.hpp>
 #include <bleak/primitive.hpp>
+#include <bleak/priority_mutex.hpp>
 #include <bleak/quadrant.hpp>
 #include <bleak/random.hpp>
 #include <bleak/rect.hpp>
