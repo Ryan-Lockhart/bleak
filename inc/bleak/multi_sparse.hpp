@@ -150,5 +150,101 @@ namespace bleak {
 
 			return std::move(sparse_t<T>::extract(iter));
 		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr cptr<T> begin() const noexcept {
+			return sparse_t<T>::begin();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr ptr<T> begin() noexcept {
+			return sparse_t<T>::begin();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr cptr<T> end() const noexcept {
+			return sparse_t<T>::end();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr ptr<T> end() noexcept {
+			return sparse_t<T>::end();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr cptr<T> cbegin() const noexcept {
+			return sparse_t<T>::cbegin();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr ptr<T> cbegin() noexcept {
+			return sparse_t<T>::cbegin();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr cptr<T> cend() const noexcept {
+			return sparse_t<T>::cend();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr ptr<T> cend() noexcept {
+			return sparse_t<T>::cend();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr cptr<T> rbegin() const noexcept {
+			return sparse_t<T>::rbegin();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr ptr<T> rbegin() noexcept {
+			return sparse_t<T>::rbegin();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr cptr<T> rend() const noexcept {
+			return sparse_t<T>::rend();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr ptr<T> rend() noexcept {
+			return sparse_t<T>::rend();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr cptr<T> crbegin() const noexcept {
+			return sparse_t<T>::crbegin();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr ptr<T> crbegin() noexcept {
+			return sparse_t<T>::crbegin();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr cptr<T> crend() const noexcept {
+			return sparse_t<T>::crend();
+		}
+
+		template<HashableByPosition T>
+			requires is_one_of<T, Ts...>::value
+		constexpr ptr<T> crend() noexcept {
+			return sparse_t<T>::crend();
+		}
 	};
 } // namespace bleak
