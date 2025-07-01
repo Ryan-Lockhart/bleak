@@ -6,8 +6,8 @@
 #include <bleak/utility.hpp>
 
 namespace bleak {
-	template<Numeric T, usize Size> using gcc_vec = T __attribute__((__vector_size__(n_of<T>(Size))));
-	template<Numeric T, usize Size> using cl_vec = T __attribute__((__ext_vector_type__(Size)));
+	template<Numeric T, usize Size> using gcc_vec __attribute__((__vector_size__(n_of<T>(Size)))) = T;
+	template<Numeric T, usize Size> using cl_vec __attribute__((__ext_vector_type__(Size))) = T;
 
 	template<Numeric T, usize Size> using vec = gcc_vec<T, Size>;
 

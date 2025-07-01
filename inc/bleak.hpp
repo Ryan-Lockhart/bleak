@@ -33,7 +33,6 @@
 #include <bleak/memory.hpp>
 #include <bleak/mixer.hpp>
 #include <bleak/mouse.hpp>
-#include <bleak/multi_sparse.hpp>
 #include <bleak/music.hpp>
 #include <bleak/octant.hpp>
 #include <bleak/offset.hpp>

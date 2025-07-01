@@ -91,4 +91,4 @@ namespace bleak {
 			std::bit_cast<i32>(static_cast<u32>(_pext_u64(u_ab, 0xAAAA'AAAA'AAAA'AAAA)))
 		};
 	}
-}
+} // namespace bleak
