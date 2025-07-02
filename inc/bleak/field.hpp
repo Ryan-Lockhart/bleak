@@ -107,7 +107,6 @@ namespace bleak {
 				}
 
 				frontier.emplace(goal.position, goal.value);
-				visited.insert(goal.position);
 
 				if (goal.value < 0) {
 					negative_goal = true;
@@ -126,14 +125,18 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
-					const offset_t offset_position{ current.position + offset };
+				for (cauto creeper : neighbourhood_creepers<DistanceFunction, D>) {
+					const offset_t offset_position{ current.position + creeper.posititon };
 
-					if (!visited.insert(offset_position).second || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value) {
+					if (visited.contains(offset_position) || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value) {
+						if (!visited.contains(offset_position)) {
+							visited.insert(offset_position);
+						}
+
 						continue;
 					}
 
-					frontier.emplace(offset_position, D{ current.distance + 1 });					
+					frontier.emplace(offset_position, D{ current.distance + creeper.distance });
 				}
 			}
 
@@ -164,7 +167,6 @@ namespace bleak {
 				}
 
 				frontier.emplace(goal.position, goal.value);
-				visited.insert(goal.position);
 
 				if (goal.value < 0) {
 					negative_goal = true;
@@ -179,16 +181,18 @@ namespace bleak {
 				const creeper_t<D> current{ frontier.front() };
 				frontier.pop();
 
+				visited.insert(current.position);
+
 				distances[current.position] = current.distance;
 
-				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
-					const offset_t offset_position{ current.position + offset };
+				for (crauto creeper : neighbourhood_creepers<DistanceFunction, D>) {
+					cauto offset_position{ current.position + creeper.position };
 
 					if (!visited.insert(offset_position).second || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value) {
 						continue;
 					}
 
-					frontier.emplace(offset_position, D{ current.distance + 1 });
+					frontier.emplace(offset_position, D{ current.distance + creeper.distance });
 				}
 			}
 
@@ -217,7 +221,6 @@ namespace bleak {
 				}
 
 				frontier.emplace(goal.position, goal.value);
-				visited.insert(goal.position);
 
 				if (goal.value < 0) {
 					negative_goal = true;
@@ -236,14 +239,14 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
-					const offset_t offset_position{ current.position + offset };
+				for (crauto creeper : neighbourhood_creepers<DistanceFunction, D>) {
+					cauto offset_position{ current.position + creeper.position };
 
 					if (!visited.insert(offset_position).second || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value || blockage.contains(offset_position)) {
 						continue;
 					}
 
-					frontier.emplace(offset_position, D{ current.distance + 1 });
+					frontier.emplace(offset_position, D{ current.distance + creeper.distance });
 				}
 			}
 
@@ -274,7 +277,6 @@ namespace bleak {
 				}
 
 				frontier.emplace(goal.position, goal.value);
-				visited.insert(goal.position);
 
 				if (goal.value < 0) {
 					negative_goal = true;
@@ -288,6 +290,8 @@ namespace bleak {
 			while (!frontier.empty()) {
 				const creeper_t<D> current{ frontier.top() };
 				frontier.pop();
+
+				visited.insert(current.position);
 
 				distances[current.position] = current.distance;
 
@@ -329,7 +333,6 @@ namespace bleak {
 				}
 
 				frontier.emplace(goal.position, goal.value);
-				visited.insert(goal.position);
 
 				if (goal.value < 0) {
 					negative_goal = true;
@@ -348,14 +351,14 @@ namespace bleak {
 
 				distances[current.position] = current.distance;
 
-				for (cauto offset : neighbourhood_offsets<DistanceFunction>) {
-					const offset_t offset_position{ current.position + offset };
+				for (crauto creeper : neighbourhood_creepers<DistanceFunction, D>) {
+					cauto offset_position{ current.position + creeper.position };
 
 					if (!visited.insert(offset_position).second || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value || (blockages.contains(offset_position) || ...)) {
 						continue;
 					}
 
-					frontier.emplace(offset_position, D{ current.distance + 1 });
+					frontier.emplace(offset_position, D{ current.distance + creeper.distance });
 				}
 			}
 
@@ -386,7 +389,6 @@ namespace bleak {
 				}
 
 				frontier.emplace(goal.position, goal.value);
-				visited.insert(goal.position);
 
 				if (goal.value < 0) {
 					negative_goal = true;
@@ -400,6 +402,8 @@ namespace bleak {
 			while (!frontier.empty()) {
 				const creeper_t<D> current{ frontier.top() };
 				frontier.pop();
+
+				visited.insert(current.position);
 
 				distances[current.position] = current.distance;
 
