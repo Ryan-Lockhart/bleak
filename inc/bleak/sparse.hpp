@@ -112,7 +112,7 @@ namespace bleak {
 				error_log.add(std::format("cannot get value at {}; it is not within the sparse set! (get ready for fireworks)", (std::string)position));
 			}
 
-			return cast_way(*iter);
+			return cast_away(*iter);
 		}
 
 		constexpr cref<T> at(offset_t position) const noexcept {
