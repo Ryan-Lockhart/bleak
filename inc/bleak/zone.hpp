@@ -22,27 +22,14 @@
 #include <bleak/octant.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/primitive.hpp>
+#include <bleak/sparse.hpp>
 #include <bleak/random.hpp>
 #include <bleak/renderer.hpp>
 
+#include <bleak/constants/enums.hpp>
 #include <bleak/constants/numeric.hpp>
 
 namespace bleak {
-	enum struct zone_region_e : u8 {
-		None = 0,
-		Interior = 1 << 0,
-		Border = 1 << 1,
-		All = Interior | Border
-	};
-
-	enum struct solver_e : u8 {
-		Moore,
-		VonNeumann,
-		Extended,
-		MarchingSquares,
-		Melded
-	};
-
 	template<typename T, extent_t RegionSize, extent_t ZoneSize, extent_t ZoneBorder = extent_t::Zero> struct region_t;
 
 	template<typename T, extent_t Size, extent_t BorderSize = extent_t::Zero> struct zone_t {
@@ -213,30 +200,30 @@ namespace bleak {
 			return state;
 		}
 
-		template<zone_region_e Region> constexpr bool within(offset_t position) const noexcept {
-			if constexpr (Region == zone_region_e::All) {
+		template<region_e Region> constexpr bool within(offset_t position) const noexcept {
+			if constexpr (Region == region_e::All) {
 				return cells.valid(position);
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				return position.x >= interior_origin.x && position.x <= interior_extent.x && position.y >= interior_origin.y && position.y <= interior_extent.y;
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				return position.x < interior_origin.x || position.x > interior_extent.x || position.y < interior_origin.y || position.y > interior_extent.y;
 			}
 
 			return false;
 		}
 
-		template<zone_region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> set(cref<T> value) noexcept {
-			if constexpr (Region == zone_region_e::All) {
+		template<region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> set(cref<T> value) noexcept {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = value;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = value;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -254,20 +241,20 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> set(cref<U> value) noexcept {
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = value;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = value;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -285,26 +272,26 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> reset() noexcept {
+		template<region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> reset() noexcept {
 			set<Region>(T{});
 
 			return *this;
 		}
 
-		template<zone_region_e Region>
+		template<region_e Region>
 			requires is_operable_unary<T, operator_e::Addition>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> apply(cref<T> value) noexcept {
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] += value;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] += value;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -322,21 +309,21 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires is_operable<T, U, operator_e::Addition>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> apply(cref<U> value) noexcept {
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					assert(i < zone_area);
 					cells[i] += value;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] += value;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -354,16 +341,16 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename... Params>
+		template<region_e Region, typename... Params>
 			requires(is_operable<T, Params, operator_e::Addition>::value, ...) && is_plurary<Params...>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> apply(cref<Params>... values) noexcept {
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					for (auto value : { values... }) {
 						cells[i] += value;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						for (auto value : { values... }) {
@@ -371,7 +358,7 @@ namespace bleak {
 						}
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -393,20 +380,20 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region>
+		template<region_e Region>
 			requires is_operable_unary<T, operator_e::Subtraction>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> repeal(cref<T> value) noexcept {
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] -= value;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] -= value;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -424,20 +411,20 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires is_operable<T, U, operator_e::Subtraction>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> repeal(cref<U> value) noexcept {
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] -= value;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] -= value;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -455,16 +442,16 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename... Params>
+		template<region_e Region, typename... Params>
 			requires(is_operable<T, Params, operator_e::Subtraction>::value, ...) && is_plurary<Params...>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> repeal(cref<Params>... values) noexcept {
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					for (auto value : { values... }) {
 						cells[i] -= value;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						for (auto value : { values... }) {
@@ -472,7 +459,7 @@ namespace bleak {
 						}
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -510,24 +497,24 @@ namespace bleak {
 			}
 		}
 
-		template<zone_region_e Region, typename U, RandomEngine Randomizer>
+		template<region_e Region, typename U, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = T::dependent randomizer<Randomizer>::dependent operator()<U>(generator);
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = T::dependent randomizer<Randomizer>::dependent operator()<U>(generator);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -545,26 +532,26 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer>
+		template<region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<T> true_value, cref<T> false_value) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
 			auto dis{ std::bernoulli_distribution{ fill_percent } };
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = dis(generator) ? true_value : false_value;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = dis(generator) ? true_value : false_value;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -582,26 +569,26 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, typename U>
+		template<region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<U> true_value, cref<U> false_value) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
 			auto dis{ std::bernoulli_distribution{ fill_percent } };
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = dis(generator) ? true_value : false_value;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = dis(generator) ? true_value : false_value;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -619,26 +606,26 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer>
+		template<region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<T>> applicator) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
 			auto dis{ std::bernoulli_distribution{ fill_percent } };
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = applicator(generator, dis);
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = applicator(generator, dis);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -656,26 +643,26 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, typename U>
+		template<region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<U>> applicator) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
 			auto dis{ std::bernoulli_distribution{ fill_percent } };
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = applicator(generator, dis);
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = applicator(generator, dis);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -693,26 +680,26 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer>
+		template<region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
-		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<T>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<T>> applicator, cref<sparse_t<bool>> spokes) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
 			auto dis{ std::bernoulli_distribution{ fill_percent } };
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = applicator(generator, dis);
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = applicator(generator, dis);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -732,26 +719,26 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, typename U>
+		template<region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
-		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<U>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		constexpr ref<zone_t<T, Size, BorderSize>> randomize(ref<Randomizer> generator, f64 fill_percent, cref<binary_applicator_t<U>> applicator, cref<sparse_t<bool>> spokes) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
 			auto dis{ std::bernoulli_distribution{ fill_percent } };
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					cells[i] = applicator(generator, dis);
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						cells[x, y] = applicator(generator, dis);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -891,7 +878,7 @@ namespace bleak {
 						index += 1 << 0;
 					}
 				} else {
-					if (!within<zone_region_e::All>(position)) {
+					if (!within<region_e::All>(position)) {
 						return (1 << 4) - 1;
 					}
 
@@ -930,7 +917,7 @@ namespace bleak {
 						index += 1 << 0;
 					}
 				} else {
-					if (!within<zone_region_e::All>(position)) {
+					if (!within<region_e::All>(position)) {
 						return (1 << 4) - 1;
 					}
 
@@ -979,7 +966,7 @@ namespace bleak {
 						index += 1 << 0;
 					}
 				} else {
-					if (!within<zone_region_e::All>(position)) {
+					if (!within<region_e::All>(position)) {
 						return (1 << 4) - 1;
 					}
 
@@ -1018,7 +1005,7 @@ namespace bleak {
 						index += 1 << 0;
 					}
 				} else {
-					if (!within<zone_region_e::All>(position)) {
+					if (!within<region_e::All>(position)) {
 						return (1 << 4) - 1;
 					}
 
@@ -1039,84 +1026,84 @@ namespace bleak {
 			return index;
 		}
 
-		template<zone_region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> spoke(cref<T> value, cref<std::vector<offset_t>> spokes) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		template<region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> spoke(cref<T> value, cref<sparse_t<bool>> spokes) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			for (cauto spoke_position : spokes) {
-				if (!within<Region>(spoke_position)) {
+			for (cauto [position, _] : spokes) {
+				if (!within<Region>(position)) {
 					continue;
 				}
 
-				linear_apply<Region>(zone_center, spoke_position, value);
+				linear_apply<Region>(zone_center, position, value);
 			}
 
 			return *this;
 		}
 
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires is_equatable<T, U>::value && std::is_assignable<T, U>::value
-		constexpr ref<zone_t<T, Size, BorderSize>> spoke(cref<U> value, cref<std::vector<offset_t>> spokes) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		constexpr ref<zone_t<T, Size, BorderSize>> spoke(cref<U> value, cref<sparse_t<bool>> spokes) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			for (cauto spoke_position : spokes) {
-				if (!within<Region>(spoke_position)) {
+			for (cauto [position, _] : spokes) {
+				if (!within<Region>(position)) {
 					continue;
 				}
 
-				linear_apply<Region>(zone_center, spoke_position, value);
+				linear_apply<Region>(zone_center, position, value);
 			}
 
 			return *this;
 		}
 
-		template<zone_region_e Region> constexpr cref<zone_t<T, Size, BorderSize>> spoke(ref<array_t<T, Size>> buffer, cref<T> value, cref<std::vector<offset_t>> spokes) const noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		template<region_e Region> constexpr cref<zone_t<T, Size, BorderSize>> spoke(ref<array_t<T, Size>> buffer, cref<T> value, cref<sparse_t<bool>> spokes) const noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			for (cauto spoke_position : spokes) {
-				if (!within<Region>(spoke_position)) {
+			for (cauto [position, _] : spokes) {
+				if (!within<Region>(position)) {
 					continue;
 				}
 
-				linear_apply<Region>(buffer, zone_center, spoke_position, value);
+				linear_apply<Region>(buffer, zone_center, position, value);
 			}
 
 			return *this;
 		}
 
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires is_equatable<T, U>::value && std::is_assignable<T, U>::value
-		constexpr cref<zone_t<T, Size, BorderSize>> spoke(ref<array_t<T, Size>> buffer, cref<U> value, cref<std::vector<offset_t>> spokes) const noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		constexpr cref<zone_t<T, Size, BorderSize>> spoke(ref<array_t<T, Size>> buffer, cref<U> value, cref<sparse_t<bool>> spokes) const noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			for (cauto spoke_position : spokes) {
-				if (!within<Region>(spoke_position)) {
+			for (cauto [position, _] : spokes) {
+				if (!within<Region>(position)) {
 					continue;
 				}
 
-				linear_apply<Region>(buffer, zone_center, spoke_position, value);
+				linear_apply<Region>(buffer, zone_center, position, value);
 			}
 
 			return *this;
 		}
 
-		template<zone_region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> collapse(cref<T> value, usize index, cref<T> collapse_to) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		template<region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> collapse(cref<T> value, usize index, cref<T> collapse_to) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
 			array_t<T, Size> buffer{ cells };
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t y{ 0 }; y < zone_area; ++y) {
 					for (extent_t::product_t x{ 0 }; x < zone_area; ++x) {
 						const offset_t position{ x, y };
@@ -1128,7 +1115,7 @@ namespace bleak {
 						buffer[position] = collapse_to;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						const offset_t position{ x, y };
@@ -1140,7 +1127,7 @@ namespace bleak {
 						buffer[position] = collapse_to;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -1180,16 +1167,16 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires is_equatable<T, U>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> collapse(cref<U> value, usize index, cref<U> collapse_to) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
 			array_t<T, Size> buffer{ cells };
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t y{ 0 }; y < zone_area; ++y) {
 					for (extent_t::product_t x{ 0 }; x < zone_area; ++x) {
 						const offset_t position{ x, y };
@@ -1201,7 +1188,7 @@ namespace bleak {
 						buffer[position] = collapse_to;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						const offset_t position{ x, y };
@@ -1213,7 +1200,7 @@ namespace bleak {
 						buffer[position] = collapse_to;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -1253,14 +1240,14 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> collapse(ref<array_t<T, Size>> buffer, cref<T> value, usize index, cref<T> collapse_to) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		template<region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> collapse(ref<array_t<T, Size>> buffer, cref<T> value, usize index, cref<T> collapse_to) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
 			buffer = cells;
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t y{ 0 }; y < zone_area; ++y) {
 					for (extent_t::product_t x{ 0 }; x < zone_area; ++x) {
 						const offset_t position{ x, y };
@@ -1272,7 +1259,7 @@ namespace bleak {
 						buffer[position] = collapse_to;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						const offset_t position{ x, y };
@@ -1284,7 +1271,7 @@ namespace bleak {
 						buffer[position] = collapse_to;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -1324,16 +1311,16 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires is_equatable<T, U>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> collapse(ref<array_t<T, Size>> buffer, cref<U> value, usize index, cref<U> collapse_to) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
 			buffer = cells;
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t y{ 0 }; y < zone_area; ++y) {
 					for (extent_t::product_t x{ 0 }; x < zone_area; ++x) {
 						const offset_t position{ x, y };
@@ -1345,7 +1332,7 @@ namespace bleak {
 						buffer[position] = collapse_to;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						const offset_t position{ x, y };
@@ -1357,7 +1344,7 @@ namespace bleak {
 						buffer[position] = collapse_to;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -1441,24 +1428,24 @@ namespace bleak {
 			}
 		}
 
-		template<zone_region_e Region> constexpr cref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<T> true_value, cref<T> false_state) const noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		template<region_e Region> constexpr cref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<T> true_value, cref<T> false_state) const noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
 					for (extent_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
 						modulate(buffer, offset_t{ x, y }, threshold, true_value, false_state);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						modulate<interior_safe>(buffer, offset_t{ x, y }, threshold, true_value, false_state);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -1476,26 +1463,26 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires std::is_assignable<T, U>::value
 		constexpr cref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<U> true_value, cref<U> false_state) const noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
 					for (extent_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
 						modulate(buffer, offset_t{ x, y }, threshold, true_value, false_state);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						modulate<interior_safe>(buffer, offset_t{ x, y }, threshold, true_value, false_state);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -1513,24 +1500,24 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region> constexpr cref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<binary_applicator_t<T>> applicator) const noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		template<region_e Region> constexpr cref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<binary_applicator_t<T>> applicator) const noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
 					for (extent_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
 						modulate(buffer, offset_t{ x, y }, threshold, applicator);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						modulate<interior_safe>(buffer, offset_t{ x, y }, threshold, applicator);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -1548,26 +1535,26 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires std::is_assignable<T, U>::value
 		constexpr cref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u8 threshold, cref<binary_applicator_t<U>> applicator) const noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::scalar_t y{ zone_origin.y }; y <= zone_extent.y; ++y) {
 					for (extent_t::scalar_t x{ zone_origin.x }; x <= zone_extent.x; ++x) {
 						modulate(buffer, offset_t{ x, y }, threshold, applicator);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						modulate<interior_safe>(buffer, offset_t{ x, y }, threshold, applicator);
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -1585,8 +1572,8 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		template<region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1598,10 +1585,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<U> true_value, cref<U> false_state) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1613,8 +1600,8 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		template<region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1626,10 +1613,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1641,8 +1628,8 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		template<region_e Region> constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator, cref<sparse_t<bool>> spokes) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1655,10 +1642,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires std::is_assignable<T, U>::value
-		constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		constexpr ref<zone_t<T, Size, BorderSize>> automatize(ref<array_t<T, Size>> buffer, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator, cref<sparse_t<bool>> spokes) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1671,10 +1658,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer>
+		template<region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1688,10 +1675,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, typename U>
+		template<region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<U> true_value, cref<U> false_state) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1705,10 +1692,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer>
+		template<region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1722,10 +1709,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, typename U>
+		template<region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1739,10 +1726,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer>
+		template<region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
-		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator, cref<sparse_t<bool>> spokes) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1756,10 +1743,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, typename U>
+		template<region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
-		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator, cref<std::vector<offset_t>> spokes) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator, cref<sparse_t<bool>> spokes) noexcept {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1773,10 +1760,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer>
+		template<region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<T> true_value, cref<T> false_state) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1790,10 +1777,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, typename U>
+		template<region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<U> true_value, cref<U> false_state) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1807,10 +1794,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer>
+		template<region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<T>> applicator) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1824,10 +1811,10 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, typename U>
+		template<region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && std::is_assignable<T, U>::value
 		constexpr ref<zone_t<T, Size, BorderSize>> generate(ref<array_t<T, Size>> buffer, ref<Randomizer> generator, f64 fill_percent, u32 iterations, u8 threshold, cref<binary_applicator_t<U>> applicator) noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
@@ -1841,14 +1828,14 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer>
+		template<region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value) const noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
 
@@ -1859,7 +1846,7 @@ namespace bleak {
 						return pos;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
 
@@ -1870,7 +1857,7 @@ namespace bleak {
 						return pos;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
 
@@ -1892,10 +1879,10 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, typename U>
+		template<region_e Region, RandomEngine Randomizer, typename U>
 			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value) const noexcept {
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
 
@@ -1908,7 +1895,7 @@ namespace bleak {
 				}
 
 				return std::nullopt;
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
 
@@ -1919,7 +1906,7 @@ namespace bleak {
 						return pos;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
 
@@ -1941,14 +1928,14 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, SparseBlockage Blockage>
+		template<region_e Region, RandomEngine Randomizer, SparseBlockage Blockage>
 			requires is_random_engine<Randomizer>::value
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<Blockage> sparse_blockage) const noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
 
@@ -1961,7 +1948,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
 
@@ -1974,7 +1961,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
 
@@ -1998,14 +1985,14 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, typename U, SparseBlockage Blockage>
+		template<region_e Region, RandomEngine Randomizer, typename U, SparseBlockage Blockage>
 			requires is_equatable<T, U>::value
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<Blockage> sparse_blockage) const noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
 
@@ -2018,7 +2005,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
 
@@ -2031,7 +2018,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
 
@@ -2055,13 +2042,13 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, SparseBlockage EntityBlockage, SparseBlockage ObjectBlockage>
+		template<region_e Region, RandomEngine Randomizer, SparseBlockage EntityBlockage, SparseBlockage ObjectBlockage>
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<EntityBlockage> entity_blockage, cref<ObjectBlockage> object_blockage) const noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
 
@@ -2074,7 +2061,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
 
@@ -2087,7 +2074,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
 
@@ -2111,14 +2098,14 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_e Region, RandomEngine Randomizer, typename U, SparseBlockage... Blockages>
+		template<region_e Region, RandomEngine Randomizer, typename U, SparseBlockage... Blockages>
 			requires is_random_engine<Randomizer>::value && is_equatable<T, U>::value
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<Blockages>... blockages) const noexcept {
-			if constexpr (Region == zone_region_e::None) {
+			if constexpr (Region == region_e::None) {
 				return *this;
 			}
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, zone_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, zone_extent.y };
 
@@ -2131,7 +2118,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ interior_origin.x, interior_extent.x };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ interior_origin.y, interior_extent.y };
 
@@ -2144,7 +2131,7 @@ namespace bleak {
 
 					return pos;
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				std::uniform_int_distribution<offset_t::scalar_t> x_dis{ 0, border_size.w * 2 - 1 };
 				std::uniform_int_distribution<offset_t::scalar_t> y_dis{ 0, border_size.h * 2 - 1 };
 
@@ -2168,7 +2155,7 @@ namespace bleak {
 			return std::nullopt;
 		}
 
-		template<zone_region_e Region> constexpr void linear_apply(offset_t origin, offset_t target, cref<T> value) noexcept {
+		template<region_e Region> constexpr void linear_apply(offset_t origin, offset_t target, cref<T> value) noexcept {
 			if (!within<Region>(origin) || !within<Region>(target)) {
 				return;
 			}
@@ -2212,7 +2199,7 @@ namespace bleak {
 			}
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires std::is_assignable<T, U>::value
 		constexpr void linear_apply(offset_t origin, offset_t target, cref<U> value) noexcept {
 			if (!within<Region>(origin) || !within<Region>(target)) {
@@ -2258,7 +2245,7 @@ namespace bleak {
 			}
 		}
 
-		template<zone_region_e Region> constexpr void linear_apply(ref<array_t<T, Size>> buffer, offset_t origin, offset_t target, cref<T> value) const noexcept {
+		template<region_e Region> constexpr void linear_apply(ref<array_t<T, Size>> buffer, offset_t origin, offset_t target, cref<T> value) const noexcept {
 			if (!within<Region>(origin) || !within<Region>(target)) {
 				return;
 			}
@@ -2302,7 +2289,7 @@ namespace bleak {
 			}
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires std::is_assignable<T, U>::value
 		constexpr void linear_apply(ref<array_t<T, Size>> buffer, offset_t origin, offset_t target, cref<U> value) const noexcept {
 			if (!within<Region>(origin) || !within<Region>(target)) {
@@ -2430,16 +2417,16 @@ namespace bleak {
 			}
 		}
 
-		template<zone_region_e Region> constexpr u32 count(cref<T> value) const noexcept {
+		template<region_e Region> constexpr u32 count(cref<T> value) const noexcept {
 			u32 total{ 0 };
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					if (cells[i] == value) {
 						++total;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						if (cells[x, y] == value) {
@@ -2447,7 +2434,7 @@ namespace bleak {
 						}
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -2466,25 +2453,25 @@ namespace bleak {
 						}
 					}
 				}
-			} else if constexpr (Region == zone_region_e::None) {
+			} else if constexpr (Region == region_e::None) {
 				return 0;
 			}
 
 			return total;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires is_equatable<T, U>::value
 		constexpr u32 count(cref<U> value) const noexcept {
 			u32 total{ 0 };
 
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					if (cells[i] == value) {
 						++total;
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						if (cells[x, y] == value) {
@@ -2492,7 +2479,7 @@ namespace bleak {
 						}
 					}
 				}
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -2511,15 +2498,15 @@ namespace bleak {
 						}
 					}
 				}
-			} else if constexpr (Region == zone_region_e::None) {
+			} else if constexpr (Region == region_e::None) {
 				return 0;
 			}
 
 			return total;
 		}
 
-		template<zone_region_e Region> constexpr u32 contains(cref<T> value) const noexcept {
-			if constexpr (Region == zone_region_e::All) {
+		template<region_e Region> constexpr u32 contains(cref<T> value) const noexcept {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					if (cells[i] == value) {
 						return true;
@@ -2527,7 +2514,7 @@ namespace bleak {
 				}
 
 				return false;
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						if (cells[x, y] == value) {
@@ -2537,7 +2524,7 @@ namespace bleak {
 				}
 
 				return false;
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -2558,17 +2545,17 @@ namespace bleak {
 				}
 
 				return false;
-			} else if constexpr (Region == zone_region_e::None) {
+			} else if constexpr (Region == region_e::None) {
 				return false;
 			}
 
 			return false;
 		}
 
-		template<zone_region_e Region, typename U>
+		template<region_e Region, typename U>
 			requires is_equatable<T, U>::value
 		constexpr u32 contains(cref<U> value) const noexcept {
-			if constexpr (Region == zone_region_e::All) {
+			if constexpr (Region == region_e::All) {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					if (cells[i] == value) {
 						return true;
@@ -2576,7 +2563,7 @@ namespace bleak {
 				}
 
 				return false;
-			} else if constexpr (Region == zone_region_e::Interior) {
+			} else if constexpr (Region == region_e::Interior) {
 				for (extent_t::scalar_t y{ interior_origin.y }; y <= interior_extent.y; ++y) {
 					for (extent_t::scalar_t x{ interior_origin.x }; x <= interior_extent.x; ++x) {
 						if (cells[x, y] == value) {
@@ -2586,7 +2573,7 @@ namespace bleak {
 				}
 
 				return false;
-			} else if constexpr (Region == zone_region_e::Border) {
+			} else if constexpr (Region == region_e::Border) {
 				for (extent_t::scalar_t y{ 0 }; y < zone_size.h; ++y) {
 					if (y < interior_origin.y || y > interior_extent.y) {
 						for (extent_t::scalar_t x{ 0 }; x < zone_size.w; ++x) {
@@ -2607,7 +2594,7 @@ namespace bleak {
 				}
 
 				return false;
-			} else if constexpr (Region == zone_region_e::None) {
+			} else if constexpr (Region == region_e::None) {
 				return false;
 			}
 

@@ -22,9 +22,13 @@ namespace bleak {
 		template<RandomEngine Generator> static inline u8 random_frame(ref<Generator> generator) noexcept { return static_cast<u8>(frame_dis(generator)); }
 
 	  public:
+		inline keyframe_t() noexcept : index{ 0 }, frame{ 0 }, running{ false } {}
+
 		inline keyframe_t(u8 index) noexcept : index{ index }, frame{ 0 }, running{ false } {}
 
 		inline keyframe_t(u8 index, u8 frame, bool start = false) noexcept : index{ index }, frame{ frame }, running{ start } {}
+
+		template<RandomEngine Generator> inline keyframe_t(ref<Generator> generator, bool start = false) noexcept : index{ 0 }, frame{ random_frame<Generator>(generator) }, running{ start } {}
 
 		template<RandomEngine Generator> inline keyframe_t(u8 index, ref<Generator> generator, bool start = false) noexcept : index{ index }, frame{ random_frame<Generator>(generator) }, running{ start } {}
 

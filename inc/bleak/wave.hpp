@@ -5,9 +5,9 @@
 #include <cmath>
 #include <numbers>
 
-namespace bleak {
-	enum struct wave_e { Sine, Square, Triangle, Sawtooth, Cycloid };
+#include <bleak/constants/enums.hpp>
 
+namespace bleak {
 	struct wave_t {
 	  private:
 		f64 value{ 0.0 };

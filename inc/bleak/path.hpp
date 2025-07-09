@@ -75,7 +75,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, dense_args>
+		template<region_e Region, dense_args>
 		inline ref<path_t> generate(cref<line_t> line, cref<dense_t> zone, cref<T> value) {
 			if (!empty()) {
 				clear();
@@ -124,7 +124,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, dense_args, typename U>
+		template<region_e Region, dense_args, typename U>
 			requires is_equatable<T, U>::value
 		inline ref<path_t> generate(cref<line_t> line, cref<dense_t> zone, cref<U> value) {
 			if (!empty()) {
@@ -174,7 +174,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, bool Inclusive = false, dense_args>
+		template<region_e Region, bool Inclusive = false, dense_args>
 		inline ref<path_t> generate(cref<line_t> line, cref<dense_t> zone, cref<T> value, cref<sparse_t> sparse_blockage) {
 			if (!empty()) {
 				clear();
@@ -229,7 +229,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, bool Inclusive = false, dense_args, typename U>
+		template<region_e Region, bool Inclusive = false, dense_args, typename U>
 			requires is_equatable<T, U>::value
 		inline ref<path_t> generate(cref<line_t> line, cref<dense_t> zone, cref<U> value, cref<sparse_t> sparse_blockage) {
 			if (!empty()) {
@@ -285,7 +285,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, distance_function_e Distance, dense_args>
+		template<region_e Region, distance_function_e Distance, dense_args>
 		inline ref<path_t> generate(offset_t origin, offset_t destination, cref<dense_t> zone, cref<T> value) {
 			if (!empty()) {
 				clear();
@@ -334,7 +334,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, distance_function_e Distance, dense_args, typename U>
+		template<region_e Region, distance_function_e Distance, dense_args, typename U>
 			requires is_equatable<T, U>::value
 		inline ref<path_t> generate(offset_t origin, offset_t destination, cref<dense_t> zone, cref<U> value) {
 			if (!empty()) {
@@ -384,7 +384,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, distance_function_e Distance, bool Inclusive = false, dense_args>
+		template<region_e Region, distance_function_e Distance, bool Inclusive = false, dense_args>
 		inline ref<path_t> generate(offset_t origin, offset_t destination, cref<dense_t> zone, cref<T> value, cref<sparse_t> sparse_blockage) {
 			if (!empty()) {
 				clear();
@@ -439,7 +439,7 @@ namespace bleak {
 			return *this;
 		}
 
-		template<zone_region_e Region, distance_function_e Distance, bool Inclusive = false, dense_args, typename U>
+		template<region_e Region, distance_function_e Distance, bool Inclusive = false, dense_args, typename U>
 			requires is_equatable<T, U>::value
 		inline ref<path_t> generate(offset_t origin, offset_t destination, cref<dense_t> zone, cref<U> value, cref<sparse_t> sparse_blockage) {
 			if (!empty()) {
@@ -551,7 +551,7 @@ namespace bleak {
 	  private:
 		std::stack<offset_t> points;
 
-		template<zone_region_e Region, dense_args>
+		template<region_e Region, dense_args>
 		inline bool is_valid(offset_t origin, offset_t destination, cref<dense_t> zone, cref<T> value) const {
 			if (!zone.dependent within<Region>(origin) || !zone.dependent within<Region>(destination)) {
 				return false;
@@ -564,7 +564,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<zone_region_e Region, typename T, typename U, extent_t Size, extent_t BorderSize>
+		template<region_e Region, typename T, typename U, extent_t Size, extent_t BorderSize>
 			requires is_equatable<T, U>::value
 		inline bool is_valid(offset_t origin, offset_t destination, cref<dense_t> zone, cref<U> value) const {
 			if (!zone.dependent within<Region>(origin) || !zone.dependent within<Region>(destination)) {
@@ -578,7 +578,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<zone_region_e Region, dense_args>
+		template<region_e Region, dense_args>
 		inline bool is_valid(offset_t origin, offset_t destination, cref<dense_t> zone, cref<T> value, cref<sparse_t> blockage) const {
 			if (!zone.dependent within<Region>(origin) || !zone.dependent within<Region>(destination)) {
 				return false;
@@ -595,7 +595,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<zone_region_e Region, typename T, typename U, extent_t Size, extent_t BorderSize>
+		template<region_e Region, typename T, typename U, extent_t Size, extent_t BorderSize>
 			requires is_equatable<T, U>::value
 		inline bool is_valid(offset_t origin, offset_t destination, cref<dense_t> zone, cref<U> value, cref<sparse_t> blockage) const {
 			if (!zone.dependent within<Region>(origin) || !zone.dependent within<Region>(destination)) {
@@ -613,7 +613,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<zone_region_e Region, dense_args>
+		template<region_e Region, dense_args>
 		inline bool is_valid(offset_t position, cref<dense_t> zone, cref<T> value) const {
 			if (!zone.dependent within<Region>(position)) {
 				return false;
@@ -626,7 +626,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<zone_region_e Region, dense_args, typename U>
+		template<region_e Region, dense_args, typename U>
 			requires is_equatable<T, U>::value
 		inline bool is_valid(offset_t position, cref<dense_t> zone, cref<U> value) const {
 			if (!zone.dependent within<Region>(position)) {
@@ -640,7 +640,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<zone_region_e Region, dense_args>
+		template<region_e Region, dense_args>
 		inline bool is_valid(offset_t position, cref<dense_t> zone, cref<T> value, cref<sparse_t> visited) const {
 			if (!zone.dependent within<Region>(position)) {
 				return false;
@@ -657,7 +657,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<zone_region_e Region, dense_args, typename U>
+		template<region_e Region, dense_args, typename U>
 			requires is_equatable<T, U>::value
 		inline bool is_valid(offset_t position, cref<dense_t> zone, cref<U> value, cref<sparse_t> visited) const {
 			if (!zone.dependent within<Region>(position)) {
@@ -675,7 +675,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<zone_region_e Region, dense_args>
+		template<region_e Region, dense_args>
 		inline bool is_valid(offset_t position, cref<dense_t> zone, cref<T> value, cref<sparse_t> visited, cref<sparse_t> blockage) const {
 			if (!zone.dependent within<Region>(position)) {
 				return false;
@@ -696,7 +696,7 @@ namespace bleak {
 			return true;
 		}
 
-		template<zone_region_e Region, dense_args, typename U>
+		template<region_e Region, dense_args, typename U>
 			requires is_equatable<T, U>::value
 		inline bool is_valid(offset_t position, cref<dense_t> zone, cref<U> value, cref<sparse_t> visited, cref<sparse_t> blockage) const {
 			if (!zone.dependent within<Region>(position)) {

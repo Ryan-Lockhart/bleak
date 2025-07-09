@@ -2,192 +2,120 @@
 
 #include <bleak/typedef.hpp>
 
-#include <unordered_set>
+#include <optional>
 
 #include <bleak/concepts.hpp>
 #include <bleak/log.hpp>
 #include <bleak/offset.hpp>
 #include <bleak/utility.hpp>
 
+#include <gtl/phmap.hpp>
+
 namespace bleak {
-	template<typename T> struct sparseling_t {
-		T value;
-		offset_t position;
+	template<typename T> struct sparse_t {
+		using backend_t = gtl::flat_hash_map<offset_t, T, offset_t::std_hasher>;
 
-		constexpr sparseling_t(offset_t position) : value{}, position{ position } {}
+		using node_t = typename backend_t::node_type;
 
-		constexpr sparseling_t(cref<T> value, offset_t position) : value{ value }, position{ position } {}
-
-		constexpr sparseling_t(rval<T> value, offset_t position) : value{ std::move(value) }, position{ position } {}
-
-		constexpr sparseling_t(cref<sparseling_t> other) : value{ other.value }, position{ other.position } {}
-
-		constexpr sparseling_t(rval<sparseling_t> other) : value{ std::move(other.value) }, position{ std::move(other.position) } {}
-		
-		constexpr ref<sparseling_t<T>> operator=(cref<sparseling_t> other) {
-			value = other.value;
-			position = other.position;
-
-			return *this;
-		}
-
-		constexpr ref<sparseling_t<T>> operator=(rval<sparseling_t> other) {
-			value = std::move(other.value);
-			position = std::move(other.position);
-
-			return *this;
-		}
-
-		struct hasher {
-			struct offset {
-				using is_transparent = void;
-
-				static constexpr size_t operator()(cref<sparseling_t> sparseling) noexcept { return offset_t::std_hasher::operator()(sparseling.position); }
-
-				static constexpr size_t operator()(offset_t position) noexcept { return offset_t::std_hasher::operator()(position); }
-			};
-		};
-
-		struct comparator {
-			struct offset {
-				using is_transparent = void;
-
-				static constexpr bool operator()(cref<sparseling_t> lhs, cref<sparseling_t> rhs) noexcept { return offset_t::std_hasher::operator()(lhs.position) == offset_t::std_hasher::operator()(rhs.position); }
-
-				static constexpr bool operator()(cref<sparseling_t> lhs, offset_t rhs) noexcept { return offset_t::std_hasher::operator()(lhs.position) == offset_t::std_hasher::operator()(rhs); }
-
-				static constexpr bool operator()(offset_t lhs, cref<sparseling_t> rhs) noexcept { return offset_t::std_hasher::operator()(lhs) == offset_t::std_hasher::operator()(rhs.position); }
-			};
-		};
-	};
-
-	template<typename T>
-		requires is_hashable_by_position<T>::value
-	struct sparse_t {
-		using hash_fn = T::hasher::offset;
-		using comp_fn = T::comparator::offset;
-
-		using backend_t = std::unordered_set<T, hash_fn, comp_fn>;
-
-		constexpr sparse_t() : values{} {}
+		constexpr sparse_t() : data{} {}
 
 		constexpr bool contains(offset_t position) const noexcept {
-			if (values.empty()) {
+			if (data.empty()) {
 				return false;
 			}
 			
-			return values.contains(position);
+			return data.contains(position);
 		}
 
-		constexpr bool empty() const noexcept { return values.empty(); }
+		constexpr bool empty() const noexcept { return data.empty(); }
 
-		constexpr size_t size() const noexcept { return values.size(); }
+		constexpr size_t size() const noexcept { return data.size(); }
 
-		constexpr void clear() noexcept { values.clear(); }
+		constexpr void clear() noexcept { data.clear(); }
 
 		constexpr ptr<T> operator[](offset_t position) noexcept {
-			auto iter{ values.find(position) };
+			auto iter{ data.find(position) };
 
-			if (iter == values.end()) {
+			if (iter == data.end()) {
 				return nullptr;
 			}
 
-			return &cast_away(*iter);
+			return &iter->second;
 		}
 
 		constexpr cptr<T> operator[](offset_t position) const noexcept {
-			cauto iter{ values.find(position) };
+			cauto iter{ data.find(position) };
 
-			if (iter == values.end()) {
+			if (iter == data.end()) {
 				return nullptr;
 			}
 
-			return &(*iter);
+			return &iter->second;
 		}
 
-		constexpr ref<T> at(offset_t position) noexcept {
-			auto iter{ values.find(position) };
-
-			if (iter == values.end()) {
-				error_log.add(std::format("cannot get value at {}; it is not within the sparse set! (get ready for fireworks)", (std::string)position));
-			}
-
-			return cast_away(*iter);
-		}
-
-		constexpr cref<T> at(offset_t position) const noexcept {
-			cauto iter{ values.find(position) };
-
-			if (iter == values.end()) {
-				error_log.add(std::format("cannot get value at {}; it is not within the sparse set! (get ready for fireworks)", (std::string)position));
-			}
-
-			return *iter;
-		}
-
-		constexpr bool move(offset_t from, offset_t to) noexcept {
-			if (cauto to_iter{ values.find(to) }; to_iter != values.end()) {
+		constexpr bool update(offset_t from, offset_t to) noexcept {
+			if (cauto to_iter{ data.find(to) }; to_iter != data.end()) {
 				return false;
 			}
 
-			cauto iter{ values.find(from) };
+			cauto iter{ data.find(from) };
 
-			if (iter == values.end()) {
+			if (iter == data.end()) {
 				return false;
 			}
 
-			rvauto node{ values.extract(iter) };
+			rvauto node{ data.extract(iter) };
 
-			node.value().position = to;
+			const_cast<ref<offset_t>>(node.key()) = to;
 
-			return values.insert(std::move(node)).inserted;
+			return data.insert(std::move(node)).inserted;
 		}
 
-		constexpr bool add(cref<T> value) noexcept {
-			if (cauto iter{ values.find(value.position) }; iter != values.end()) {
+		constexpr bool add(offset_t position) noexcept {
+			if (cauto iter{ data.find(position) }; iter != data.end()) {
 				return false;
 			}
 
-			cauto [_, inserted] = values.insert(value);
+			cauto [_, inserted] = data.emplace(position, T{});
 
 			return inserted;
 		}
 
-		constexpr bool add(rval<T> value) noexcept {
-			if (cauto iter{ values.find(value.position) }; iter != values.end()) {
+		constexpr bool add(offset_t position, cref<T> value) noexcept {
+			if (cauto iter{ data.find(position) }; iter != data.end()) {
 				return false;
 			}
 
-			cauto [_, inserted] = values.emplace(std::move(value));
+			cauto [_, inserted] = data.emplace(position, value);
 
 			return inserted;
 		}
 
-		constexpr bool remove(offset_t position) noexcept {
-			cauto iter{ values.find(position) };
-
-			if (iter == values.end()) {
+		constexpr bool add(offset_t position, rval<T> value) noexcept {
+			if (cauto iter{ data.find(position) }; iter != data.end()) {
 				return false;
 			}
 
-			values.erase(iter);
+			cauto [_, inserted] = data.emplace(position, std::move(value));
 
-			return true;
+			return inserted;
 		}
 
-		constexpr rval<T> extract(offset_t position) {
-			cauto iter{ values.find(position) };
+		constexpr bool remove(offset_t position) noexcept { return data.erase(position); }
 
-			if (iter == values.end()) {
-				error_log.add("ERROR: cannot extract value at {}; it is not within the sparse set!", (std::string)position);
+		constexpr std::optional<node_t> extract(offset_t position) {
+			cauto iter{ data.find(position) };
+
+			if (iter == data.end()) {
+				return std::nullopt;
 			}
 
-			return std::move(values.extract(iter));
+			return data.extract(iter);
 		}
 
-		DEFINE_FWD_ITER(constexpr, backend_t, values);
+		DEFINE_FWD_ITER(constexpr, backend_t, data);
 
 	  private:
-		backend_t values;
+		backend_t data;
 	};
 } // namespace bleak
