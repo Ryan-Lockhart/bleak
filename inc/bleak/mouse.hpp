@@ -10,7 +10,7 @@
 #include <bleak/offset.hpp>
 
 namespace bleak {
-	enum struct button_e {
+	enum struct button_e : usize {
 		Left = SDL_BUTTON_LEFT,
 		Middle = SDL_BUTTON_MIDDLE,
 		Right = SDL_BUTTON_RIGHT,
@@ -118,6 +118,7 @@ namespace bleak {
 
 		static inline input_e at(button_e button) {
 			const usize idx{ static_cast<usize>(button) };
+
 			if (previous_state[idx]) {
 				return current_state[idx] ? input_e::Pressed : input_e::Up;
 			} else {
@@ -125,7 +126,7 @@ namespace bleak {
 			}
 		}
 
-		static inline input_e at(int button) {
+		static inline input_e at(usize button) {
 			if (previous_state[button]) {
 				return current_state[button] ? input_e::Pressed : input_e::Up;
 			} else {
@@ -135,10 +136,10 @@ namespace bleak {
 
 		template<input_e Input> static inline bool is_button(button_e button) noexcept { return at(button) == Input; }
 
-		template<input_e Input> static inline bool is_button(int button) noexcept { return at(button) == Input; }
+		template<input_e Input> static inline bool is_button(usize button) noexcept { return at(button) == Input; }
 
 		template<input_e Input> static inline bool any_button() noexcept {
-			for (int i{ ButtonStart }; i <= ButtonEnd; ++i) {
+			for (usize i{ ButtonStart }; i <= ButtonEnd; ++i) {
 				if (is_button<Input>(i)) {
 					return true;
 				}
