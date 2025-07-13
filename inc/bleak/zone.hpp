@@ -925,11 +925,11 @@ namespace bleak {
 
 					if (cells[position] == value) {
 						index += 1 << 3;
-					} if (edge == cardinal_e::East || cells[position + offset_t::East] == value) {
+					} if (edge.east || cells[position + offset_t::East] == value) {
 						index += 1 << 2;
-					} if (edge == cardinal_e::Southeast || cells[position + offset_t::Southeast] == value) {
+					} if (edge.south || edge.east || cells[position + offset_t::Southeast] == value) {
 						index += 1 << 1;
-					} if (edge == cardinal_e::South || cells[position + offset_t::South] == value) {
+					} if (edge.south || cells[position + offset_t::South] == value) {
 						index += 1 << 0;
 					}
 				}
@@ -1013,11 +1013,99 @@ namespace bleak {
 
 					if (cells[position] == value) {
 						index += 1 << 3;
-					} if (edge == cardinal_e::East || cells[position + offset_t::East] == value) {
+					} if (edge.east || cells[position + offset_t::East] == value) {
 						index += 1 << 2;
-					} if (edge == cardinal_e::Southeast || cells[position + offset_t::Southeast] == value) {
+					} if (edge.south || edge.east || cells[position + offset_t::Southeast] == value) {
 						index += 1 << 1;
-					} if (edge == cardinal_e::South || cells[position + offset_t::South] == value) {
+					} if (edge.south || cells[position + offset_t::South] == value) {
+						index += 1 << 0;
+					}
+				}
+			}
+
+			return index;
+		}
+
+		template<solver_e Solver, bool Safe = false, typename Predicate>
+			requires std::is_invocable<Predicate, T>::value
+		constexpr u8 calculate_index(offset_t position, rval<Predicate> predicate) const noexcept {
+			u8 index{ 0 };
+
+			if constexpr (Solver == solver_e::Melded) {
+				if constexpr (Safe) {
+					const bool nw{ predicate(cells[position + offset_t::Northwest]) };
+					const bool n{ predicate(cells[position + offset_t::North]) };
+					const bool ne{ predicate(cells[position + offset_t::Northeast]) };
+
+					const bool w{ predicate(cells[position + offset_t::West]) };
+					const bool e{ predicate(cells[position + offset_t::East]) };
+
+					const bool sw{ predicate(cells[position + offset_t::Southwest]) };
+					const bool s{ predicate(cells[position + offset_t::South]) };
+					const bool se{ predicate(cells[position + offset_t::Southeast]) };
+
+					if (nw && n && w) {
+						index += 1 << 3;
+					} if (n && ne && e) {
+						index += 1 << 2;
+					} if (e && se && s) {
+						index += 1 << 1;
+					} if (w && sw && s) {
+						index += 1 << 0;
+					}
+				} else {
+					if (!within<region_e::All>(position)) {
+						return (1 << 4) - 1;
+					}
+
+					cardinal_t edge{ edge_state(position) };
+
+					const bool nw{ edge.north || edge.west || predicate(cells[position + offset_t::Northwest]) };
+					const bool n{ edge.north || predicate(cells[position + offset_t::North]) };
+					const bool ne{ edge.north || edge.east || predicate(cells[position + offset_t::Northeast]) };
+
+					const bool w{ edge.west || predicate(cells[position + offset_t::West]) };
+					const bool e{ edge.east || predicate(cells[position + offset_t::East]) };
+
+					const bool sw{ edge.south || edge.west || predicate(cells[position + offset_t::Southwest]) };
+					const bool s{ edge.south || predicate(cells[position + offset_t::South]) };
+					const bool se{ edge.south || edge.east || predicate(cells[position + offset_t::Southeast]) };
+
+					if (nw && n && w) {
+						index += 1 << 3;
+					} if (n && ne && e) {
+						index += 1 << 2;
+					} if (e && se && s) {
+						index += 1 << 1;
+					} if (w && sw && s) {
+						index += 1 << 0;
+					}
+				}
+			} else if constexpr (Solver == solver_e::MarchingSquares) {
+				if constexpr (Safe) {
+					if (predicate(cells[position])) {
+						index += 1 << 3;
+					} if (predicate(cells[position + offset_t::East])) {
+						index += 1 << 2;
+					} if (predicate(cells[position + offset_t::Southeast])) {
+						index += 1 << 1;
+					} if (predicate(cells[position + offset_t::South])) {
+						index += 1 << 0;
+					}
+				} else {
+					if (!within<region_e::All>(position)) {
+						return (1 << 4) - 1;
+					}
+
+					cardinal_t edge{ edge_state(position) };
+
+					if (predicate(cells[position])) {
+						index += 1 << 3;
+					} if (edge.east || predicate(cells[position + offset_t::East])) {
+						index += 1 << 2;
+					} if (edge.south || edge.east || predicate(cells[position + offset_t::Southeast])) {
+						index += 1 << 1;
+					} if (edge.south || predicate(cells[position + offset_t::South])) {
 						index += 1 << 0;
 					}
 				}
