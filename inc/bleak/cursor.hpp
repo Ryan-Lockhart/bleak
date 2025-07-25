@@ -94,7 +94,7 @@ namespace bleak {
 			const offset_t grid_pos{ (mouse_s::get_position() - necrowarp::globals::grid_origin<necrowarp::grid_type_e::Game>()) / size + camera.get_position() };
 
 			if (use_bounds) {
-				current_position = offset_t::clamp(grid_pos, bleak::max(camera.get_position(), static_cast<offset_t>(min)), bleak::min(camera.get_extent() - 1, static_cast<offset_t>(max)));
+				current_position = offset_t::clamp(grid_pos, bleak::max(camera.get_position(), static_cast<offset_t>(min)), bleak::min(camera.get_extent(), static_cast<offset_t>(max)));
 			} else {
 				current_position = grid_pos;
 			}

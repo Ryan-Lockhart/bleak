@@ -7,14 +7,15 @@
 namespace bleak {
 	struct timer_t {
 	  private:
-		const usize interval;
 		usize total;
 		usize last;
 
 	  public:
+		usize interval;
+
 		constexpr timer_t() = delete;
 
-		constexpr timer_t(usize ms) : interval { ms }, total {}, last {} {}
+		constexpr timer_t(usize ms) : total {}, last {}, interval { ms } {}
 
 		constexpr timer_t(cref<timer_t> other) noexcept = delete;
 		constexpr timer_t(rval<timer_t> other) noexcept = delete;

@@ -28,6 +28,8 @@ namespace bleak {
 			if (handle == nullptr) {
 				error_log.add("failed to create renderer: {}", sdl::get_error());
 			}
+			
+			SDL_SetRenderDrawBlendMode(handle, SDL_BLENDMODE_BLEND);
 
 			return handle;
 		}

@@ -47,6 +47,10 @@ namespace bleak {
 
 		constexpr color_t(f64 rgb, f64 a = 1.0) noexcept : r{ wrap_cast(rgb) }, g{ wrap_cast(rgb) }, b{ wrap_cast(rgb) }, a{ wrap_cast(a) } {}
 
+		constexpr color_t(cref<color_t> rgb, f32 a) noexcept : r{ rgb.r }, g{ rgb.g }, b{ rgb.b }, a{ wrap_cast(a) } {}
+
+		constexpr color_t(cref<color_t> rgb, f64 a) noexcept : r{ rgb.r }, g{ rgb.g }, b{ rgb.b }, a{ wrap_cast(a) } {}
+
 		constexpr ref<color_t> operator=(cref<color_t> other) noexcept {
 			if (this == &other) {
 				return *this;
