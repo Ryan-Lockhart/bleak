@@ -1916,6 +1916,120 @@ namespace bleak {
 			return *this;
 		}
 
+		template<region_e Region, distance_function_e Distance> inline bool nearby(offset_t position, cref<T> value) const noexcept {
+			if constexpr (Region == region_e::None) {
+				return false;
+			}
+
+			for (cauto offset : neighbourhood_offsets<Distance>) {
+				cauto current_pos{ position + offset };
+
+				if (!within<Region>(current_pos) || cells[current_pos] != value) {
+					continue;
+				}
+				
+				return true;
+			}
+
+			return false;
+		}
+
+		template<region_e Region, distance_function_e Distance, typename U>
+			requires is_equatable<T, U>::value
+		inline bool nearby(offset_t position, cref<U> value) const noexcept {
+			if constexpr (Region == region_e::None) {
+				return false;
+			}
+
+			for (cauto offset : neighbourhood_offsets<Distance>) {
+				cauto current_pos{ position + offset };
+
+				if (!within<Region>(current_pos) || cells[current_pos] != value) {
+					continue;
+				}
+				
+				return true;
+			}
+
+			return false;
+		}
+
+		template<region_e Region, distance_function_e Distance, SparseBlockage Blockage> inline bool nearby(offset_t position, cref<T> value, cref<Blockage> blockage) const noexcept {
+			if constexpr (Region == region_e::None) {
+				return false;
+			}
+
+			for (cauto offset : neighbourhood_offsets<Distance>) {
+				cauto current_pos{ position + offset };
+
+				if (!within<Region>(current_pos) || cells[current_pos] != value || blockage.contains(current_pos)) {
+					continue;
+				}
+				
+				return true;
+			}
+
+			return false;
+		}
+
+		template<region_e Region, distance_function_e Distance, typename U, SparseBlockage Blockage>
+			requires is_equatable<T, U>::value
+		inline bool nearby(offset_t position, cref<U> value, cref<Blockage> blockage) const noexcept {
+			if constexpr (Region == region_e::None) {
+				return false;
+			}
+
+			for (cauto offset : neighbourhood_offsets<Distance>) {
+				cauto current_pos{ position + offset };
+
+				if (!within<Region>(current_pos) || cells[current_pos] != value || blockage.contains(current_pos)) {
+					continue;
+				}
+				
+				return true;
+			}
+
+			return false;
+		}
+
+		template<region_e Region, distance_function_e Distance, SparseBlockage... Blockages> inline bool nearby(offset_t position, cref<T> value, cref<Blockages>... blockages) const noexcept {
+			if constexpr (Region == region_e::None) {
+				return false;
+			}
+
+			for (cauto offset : neighbourhood_offsets<Distance>) {
+				cauto current_pos{ position + offset };
+
+				if (!within<Region>(current_pos) || cells[current_pos] != value || (blockages.contains(current_pos) || ...)) {
+					continue;
+				}
+				
+				return true;
+			}
+
+			return false;
+		}
+
+		template<region_e Region, distance_function_e Distance, typename U, SparseBlockage... Blockages>
+			requires is_equatable<T, U>::value
+		inline bool nearby(offset_t position, cref<U> value, cref<Blockages>... blockages) const noexcept {
+			if constexpr (Region == region_e::None) {
+				return false;
+			}
+
+			for (cauto offset : neighbourhood_offsets<Distance>) {
+				cauto current_pos{ position + offset };
+
+				if (!within<Region>(current_pos) || cells[current_pos] != value || (blockages.contains(current_pos) || ...)) {
+					continue;
+				}
+				
+				return true;
+			}
+
+			return false;
+		}
+
 		template<region_e Region, RandomEngine Randomizer>
 			requires is_random_engine<Randomizer>::value
 		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value) const noexcept {
@@ -2018,7 +2132,7 @@ namespace bleak {
 
 		template<region_e Region, RandomEngine Randomizer, SparseBlockage Blockage>
 			requires is_random_engine<Randomizer>::value
-		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<Blockage> sparse_blockage) const noexcept {
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<T> value, cref<Blockage> blockage) const noexcept {
 			if constexpr (Region == region_e::None) {
 				return *this;
 			}
@@ -2030,7 +2144,7 @@ namespace bleak {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					const offset_t pos{ x_dis(generator), y_dis(generator) };
 
-					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+					if (cells[pos] != value || blockage.contains(pos)) {
 						continue;
 					}
 
@@ -2043,7 +2157,7 @@ namespace bleak {
 				for (extent_t::product_t i{ 0 }; i < interior_area; ++i) {
 					const offset_t pos{ x_dis(generator), y_dis(generator) };
 
-					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+					if (cells[pos] != value || blockage.contains(pos)) {
 						continue;
 					}
 
@@ -2062,7 +2176,7 @@ namespace bleak {
 
 					const offset_t pos{ x, y };
 
-					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+					if (cells[pos] != value || blockage.contains(pos)) {
 						continue;
 					}
 
@@ -2075,7 +2189,7 @@ namespace bleak {
 
 		template<region_e Region, RandomEngine Randomizer, typename U, SparseBlockage Blockage>
 			requires is_equatable<T, U>::value
-		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<Blockage> sparse_blockage) const noexcept {
+		constexpr std::optional<offset_t> find_random(ref<Randomizer> generator, cref<U> value, cref<Blockage> blockage) const noexcept {
 			if constexpr (Region == region_e::None) {
 				return *this;
 			}
@@ -2087,7 +2201,7 @@ namespace bleak {
 				for (extent_t::product_t i{ 0 }; i < zone_area; ++i) {
 					const offset_t pos{ x_dis(generator), y_dis(generator) };
 
-					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+					if (cells[pos] != value || blockage.contains(pos)) {
 						continue;
 					}
 
@@ -2100,7 +2214,7 @@ namespace bleak {
 				for (extent_t::product_t i{ 0 }; i < interior_area; ++i) {
 					const offset_t pos{ x_dis(generator), y_dis(generator) };
 
-					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+					if (cells[pos] != value || blockage.contains(pos)) {
 						continue;
 					}
 
@@ -2119,7 +2233,7 @@ namespace bleak {
 
 					const offset_t pos{ x, y };
 
-					if (cells[pos] != value || sparse_blockage.contains(pos)) {
+					if (cells[pos] != value || blockage.contains(pos)) {
 						continue;
 					}
 
