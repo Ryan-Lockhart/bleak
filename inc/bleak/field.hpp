@@ -2,6 +2,7 @@
 
 #include <bleak/typedef.hpp>
 
+#include <expected>
 #include <optional>
 #include <queue>
 
@@ -14,16 +15,33 @@
 #include <bleak/zone.hpp>
 
 namespace bleak {
+	enum struct marker_e : u8 {
+		Obstacle,
+		Goal
+	};
+
 	template<Numeric D, distance_function_e DistanceFunction, extent_t ZoneSize, extent_t ZoneBorder> struct field_t {
 	  private:
 		zone_t<D, ZoneSize, ZoneBorder> distances;
 		sparse_t<D> goals;
 
+		using return_t = std::expected<D, marker_e>;
+		using error_t = return_t::unexpected_type;
+
 	  public:
 		static constexpr D goal_value{ 0 };
 		static constexpr D obstacle_value{ ZoneSize.area() };
 
+		static constexpr D close_to_goal_value{ goal_value + 1 };
 		static constexpr D close_to_obstacle_value{ obstacle_value - 1 };
+
+		constexpr bool is_goal(D distance) const noexcept { return distance == goal_value; }
+		
+		constexpr bool is_obstacle(D distance) const noexcept { return distance == obstacle_value; }
+
+		constexpr bool is_close_to_goal(D distance) const noexcept { return distance == close_to_goal_value; };
+
+		constexpr bool is_close_to_obstacle(D distance) const noexcept { return distance == close_to_obstacle_value; };
 
 		constexpr bool goal_reached(offset_t position) const noexcept { return distances[position] == goal_value; }
 
@@ -72,7 +90,75 @@ namespace bleak {
 			return *this;
 		}
 
-		constexpr D at(offset_t position) const noexcept { return distances[position]; }
+		constexpr D operator[](offset_t position) const noexcept {
+			if (!distances.dependent within<region_e::All>(position)) {
+				return obstacle_value;
+			}
+
+			return distances[position];
+		}
+
+		template<region_e Region> constexpr return_t at(offset_t position) const noexcept {
+			if (!distances.dependent within<Region>(position)) {
+				return error_t{ marker_e::Obstacle };
+			}
+
+			const D distance{ distances[position] };
+
+			if (is_goal(distance)) {
+				return error_t{ marker_e::Goal };
+			} else if (is_obstacle(distance)) {
+				return error_t{ marker_e::Obstacle };
+			} else {
+				return return_t{ distance };
+			}
+		}
+
+		constexpr return_t at(offset_t position) const noexcept { return at<region_e::All>(position); }
+
+		template<region_e Region, distance_function_e Distance> constexpr D average(offset_t position) const noexcept {
+			if (!distances.dependent within<Region>(position)) {
+				return obstacle_value;
+			}
+
+			const D source_distance{ distances[position] };
+
+			usize count{ source_distance != obstacle_value };
+			D distance{ source_distance != obstacle_value ? source_distance : D{ 0 } };
+
+			bool all_obstacles{ true };
+
+			for (cauto offset : neighbourhood_offsets<Distance>) {
+				cauto current_position{ position + offset };
+				
+				if (!distances.dependent within<Region>(current_position)) {
+					continue;
+				}
+
+				cauto current_distance{ distances[current_position] };
+
+				if (current_distance == obstacle_value) {
+					continue;
+				}
+
+				all_obstacles = false;
+
+				distance += current_distance;
+				++count;
+			}
+
+			if (all_obstacles) {
+				return obstacle_value;
+			} else if (count > D{ 0 }) {
+				distance /= count;
+			}
+
+			return distance;
+		}
+
+		template<region_e Region> constexpr D average(offset_t position) const noexcept { return average<Region, DistanceFunction>(position); }
+
+		constexpr D average(offset_t position) const noexcept { return average<region_e::All>(position); }
 
 		constexpr void homogenize() noexcept {
 			for (usize i{ 0 }; i < ZoneSize.area(); ++i) {
@@ -936,4 +1022,6 @@ namespace bleak {
 			return goals.update(from, to);
 		}
 	};
+
+	template struct field_t<f32, distance_function_e::Octile, extent_t{ 32, 32 }, extent_t{ 4, 4 }>;
 } // namespace bleak

@@ -202,7 +202,7 @@ namespace bleak {
 
 		template<region_e Region> constexpr bool within(offset_t position) const noexcept {
 			if constexpr (Region == region_e::All) {
-				return cells.valid(position);
+				return cells.is_valid(position);
 			} else if constexpr (Region == region_e::Interior) {
 				return position.x >= interior_origin.x && position.x <= interior_extent.x && position.y >= interior_origin.y && position.y <= interior_extent.y;
 			} else if constexpr (Region == region_e::Border) {

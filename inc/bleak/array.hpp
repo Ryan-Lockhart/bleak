@@ -164,14 +164,14 @@ namespace bleak {
 
 		inline constexpr cref<T> operator[](offset_t::scalar_t i, offset_t::scalar_t j) const noexcept { return data[first + flatten(i, j)]; }
 
-		inline constexpr bool valid(offset_t offset) const noexcept { return flatten(offset) < area; }
+		inline constexpr bool is_valid(offset_t offset) const noexcept { return between<offset_t::product_t>(flatten(offset), 0, area); }
 
-		inline constexpr bool valid(offset_t::product_t index) const noexcept { return index < area; }
+		inline constexpr bool is_valid(offset_t::product_t index) const noexcept { return between<offset_t::product_t>(index, 0, area); }
 
-		inline constexpr bool valid(offset_t::scalar_t i, offset_t::scalar_t j) const noexcept { return flatten(i, j) < area; }
+		inline constexpr bool is_valid(offset_t::scalar_t i, offset_t::scalar_t j) const noexcept { return between<offset_t::product_t>(flatten(i, j), 0, area); }
 
 		inline constexpr ref<T> at(offset_t offset) {
-			if (!valid(offset)) {
+			if (!is_valid(offset)) {
 				error_log.add("ERROR: offset out of range!");
 			}
 
@@ -179,7 +179,7 @@ namespace bleak {
 		}
 
 		inline constexpr cref<T> at(offset_t offset) const {
-			if (!valid(offset)) {
+			if (!is_valid(offset)) {
 				error_log.add("ERROR: offset out of range!");
 			}
 
@@ -187,7 +187,7 @@ namespace bleak {
 		}
 
 		inline constexpr ref<T> at(offset_t::product_t index) {
-			if (!valid(index)) {
+			if (!is_valid(index)) {
 				error_log.add("ERROR: offset out of range!");
 			}
 
@@ -195,7 +195,7 @@ namespace bleak {
 		}
 
 		inline constexpr cref<T> at(offset_t::product_t index) const {
-			if (!valid(index)) {
+			if (!is_valid(index)) {
 				error_log.add("ERROR: offset out of range!");
 			}
 
@@ -203,7 +203,7 @@ namespace bleak {
 		}
 
 		inline constexpr ref<T> at(offset_t::scalar_t i, offset_t::scalar_t j) {
-			if (!valid(i, j)) {
+			if (!is_valid(i, j)) {
 				error_log.add("ERROR: indices out of range!");
 			}
 
@@ -211,7 +211,7 @@ namespace bleak {
 		}
 
 		inline constexpr cref<T> at(offset_t::scalar_t i, offset_t::scalar_t j) const {
-			if (!valid(i, j)) {
+			if (!is_valid(i, j)) {
 				error_log.add("ERROR: indices out of range!");
 			}
 
