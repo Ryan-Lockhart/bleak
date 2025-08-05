@@ -2,6 +2,7 @@
 
 #include <bleak/primitive.hpp> // IWYU pragma: export
 
+#include <algorithm>
 #include <cmath>
 #include <format>
 #include <limits>
@@ -15,6 +16,7 @@
 #include <bleak/concepts.hpp>
 #include <bleak/hash.hpp>
 #include <bleak/leaf.hpp>
+#include <bleak/random.hpp>
 
 extern "C" {
 	typedef struct c_offset_t {
@@ -427,4 +429,14 @@ namespace bleak {
 			}
 		}()
 	};
+
+	template<distance_function_e Distance, RandomEngine Generator> static inline auto shuffled_offsets(ref<Generator> engine) {
+		return [&]() {
+			auto offsets{ neighbourhood_offsets<Distance> };
+
+			std::shuffle(offsets.begin(), offsets.end(), engine);
+
+			return offsets;
+		}();
+	}
 } // namespace bleak
