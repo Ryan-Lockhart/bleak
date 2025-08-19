@@ -41,7 +41,7 @@ namespace bleak {
 
 	  public:
 		static constexpr extent_t zone_size{ Size };
-		static constexpr extent_t border_size{ BorderSize };		
+		static constexpr extent_t border_size{ BorderSize };
 		static constexpr extent_t interior_size{ Size - BorderSize };
 
 		static constexpr offset_t zone_origin{ 0 };
@@ -54,7 +54,64 @@ namespace bleak {
 
 		static constexpr extent_t::product_t zone_area{ zone_size.area() };
 		static constexpr extent_t::product_t interior_area{ interior_size.area() };
-		static constexpr extent_t::product_t border_area{ zone_area - interior_area };
+		static constexpr extent_t::product_t border_area{
+			(zone_size.w * border_size.w * 2) + ((zone_size.h - border_size.h) * 4)
+		};
+
+	  private:
+		static constexpr auto generate_zone_offsets() noexcept {
+			std::array<offset_t, zone_area> offsets{};
+
+			for (extent_t::scalar_t y = 0; y < zone_size.h; ++y) {
+				for (extent_t::scalar_t x = 0; x < zone_size.w; ++x) {
+					offsets[array_t<T, Size>::flatten(x, y)] = offset_t{ x, y };
+				}
+			}
+
+			return offsets;
+		}
+
+		static constexpr auto generate_interior_offsets() noexcept {
+			std::array<offset_t, interior_area> offsets{};
+
+			extent_t::scalar_t index{ 0 };
+
+			for (extent_t::scalar_t y = interior_origin.y; y < interior_extent.y; ++y) {
+				for (extent_t::scalar_t x = interior_origin.x; x < interior_extent.x; ++x) {
+					offsets[index++] = offset_t{ x, y };
+				}
+			}
+
+			return offsets;
+		}
+
+		static constexpr auto generate_border_offsets() noexcept {
+			std::array<offset_t, border_area> offsets{};
+
+			extent_t::scalar_t index{ 0 };
+
+			for (extent_t::scalar_t y = 0; y < zone_size.h; ++y) {
+				if (y < interior_origin.y || y > interior_extent.y) {
+					for (extent_t::scalar_t x = 0; x < zone_size.w; ++x) {
+						offsets[index++] = offset_t{ x, y };
+					}
+				} else {
+					for (extent_t::scalar_t i = 0; i < border_size.w; ++i) {
+						offsets[index++] = offset_t{ i, y };
+						if (zone_extent.x - i != i) {
+							offsets[index++] = offset_t{ zone_extent.x - i, y };
+						}
+					}
+				}
+			}
+
+			return offsets;
+		}
+
+	  public:
+		static constexpr std::array<offset_t, zone_area> zone_offsets{ generate_zone_offsets() };
+		static constexpr std::array<offset_t, interior_area> interior_offsets{ generate_interior_offsets() };
+		static constexpr std::array<offset_t, border_area> border_offsets{ generate_border_offsets() };
 
 		static constexpr usize byte_size{ zone_area * sizeof(T) };
 
