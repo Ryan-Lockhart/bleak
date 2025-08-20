@@ -34,9 +34,9 @@ namespace bleak::steam::user_stats {
 		} else {
 			T value{}; bool success{};
 
-			if constexpr (std::is_same<T, i32>::value) {
+			if constexpr (is_same<T, i32>::value) {
 				success = SteamAPI_ISteamUserStats_GetStatInt32(get_interface(), api_name, &value);
-			} else if constexpr (std::is_same<T, f32>::value) {
+			} else if constexpr (is_same<T, f32>::value) {
 				success = SteamAPI_ISteamUserStats_GetStatFloat(get_interface(), api_name, &value);
 			}
 
@@ -58,9 +58,9 @@ namespace bleak::steam::user_stats {
 		} else {
 			T value{}; bool success{};
 
-			if constexpr (std::is_same<T, i32>::value) {
+			if constexpr (is_same<T, i32>::value) {
 				success = SteamAPI_ISteamUserStats_GetUserStatInt32(get_interface(), user_id, api_name, &value);
-			} else if constexpr (std::is_same<T, f32>::value) {
+			} else if constexpr (is_same<T, f32>::value) {
 				success = SteamAPI_ISteamUserStats_GetUserStatFloat(get_interface(), user_id, api_name, &value);
 			}
 
@@ -82,9 +82,9 @@ namespace bleak::steam::user_stats {
 		} else {
 			bool success{};
 
-			if constexpr (std::is_same<T, i32>::value) {
+			if constexpr (is_same<T, i32>::value) {
 				success = SteamAPI_ISteamUserStats_SetStatInt32(get_interface(), api_name, value);
-			} else if constexpr (std::is_same<T, f32>::value) {
+			} else if constexpr (is_same<T, f32>::value) {
 				success = SteamAPI_ISteamUserStats_SetStatFloat(get_interface(), api_name, value);
 			}
 

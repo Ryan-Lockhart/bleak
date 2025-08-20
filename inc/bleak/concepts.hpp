@@ -200,14 +200,26 @@ namespace bleak {
 
 	template<typename T, typename U, comparator_e Comparator> constexpr bool is_comparable_v = is_comparable<T, U, Comparator>::value;
 
+	template<typename T, typename U> struct is_same {
+		static bool constexpr value = std::is_same<T, U>::value;
+	};
+
+	template<typename T, typename U> constexpr bool is_same_v = is_same<T, U>::value;
+
+	template<typename T, typename U> struct is_different {
+		static bool constexpr value = !is_same<T, U>::value;
+	};
+
+	template<typename T, typename U> constexpr bool is_different_v = is_different<T, U>::value;
+
 	template<typename T, typename... Params> struct is_homogeneous {
-		static bool constexpr value = (std::is_same<T, Params>::value && ...);
+		static bool constexpr value = (is_same<T, Params>::value && ...);
 	};
 
 	template<typename T, typename... Params> constexpr bool is_homogeneous_v = is_homogeneous<T, Params...>::value;
 
 	template<typename T, typename... Params> struct is_heterogeneous {
-		static bool constexpr value = (!std::is_same<T, Params>::value || ...);
+		static bool constexpr value = (is_different<T, Params>::value || ...);
 	};
 
 	template<typename T, typename... Params> constexpr bool is_heterogeneous_v = is_heterogeneous<T, Params...>::value;
@@ -231,16 +243,84 @@ namespace bleak {
 	template<typename... Params> constexpr bool is_plurary_v = is_plurary<Params...>::value;
 
 	template<typename T, typename... Params> struct is_none_of {
-		static bool constexpr value = (!std::is_same<T, Params>::value && ...);
+		static bool constexpr value = (is_different<T, Params>::value && ...);
 	};
 
 	template<typename... Params> constexpr bool is_none_of_v = is_none_of<Params...>::value;
 
 	template<typename T, typename... Params> struct is_one_of {
-		static bool constexpr value = (std::is_same<T, Params>::value || ...);
+		static bool constexpr value = (is_same<T, Params>::value || ...);
 	};
 
 	template<typename... Params> constexpr bool is_one_of_v = is_one_of<Params...>::value;
+
+	template<typename T> struct is_pointer {
+		static bool constexpr value = std::is_pointer<T>::value;
+	};
+
+	template<typename T> constexpr bool is_pointer_v = is_pointer<T>::value;
+
+	template<typename T> concept Pointer = is_pointer<T>::value;
+
+	template<typename T> struct is_reference {
+		static bool constexpr value = std::is_reference<T>::value;
+	};
+
+	template<typename T> constexpr bool is_reference_v = is_reference<T>::value;
+
+	template<typename T> concept Reference = is_reference<T>::value;
+
+	template<typename T> struct is_void {
+		static bool constexpr value = std::is_void<T>::value;
+	};
+
+	template<typename T> constexpr bool is_void_v = is_void<T>::value;
+
+	template<typename T> struct is_enum {
+		static bool constexpr value = std::is_enum<T>::value;
+	};
+
+	template<typename T> constexpr bool is_enum_v = is_enum<T>::value;
+
+	template<typename T> concept Enum = is_enum<T>::value;
+
+	template<typename T> struct is_class {
+		static bool constexpr value = std::is_class<T>::value;
+	};
+
+	template<typename T> constexpr bool is_class_v = is_class<T>::value;
+
+	template<typename T> concept Class = is_class<T>::value;
+
+	template<typename T> struct is_union {
+		static bool constexpr value = std::is_union<T>::value;
+	};
+
+	template<typename T> constexpr bool is_union_v = is_union<T>::value;
+
+	template<typename T> concept Union = is_union<T>::value;
+
+	template<typename T> struct is_function {
+		static bool constexpr value = std::is_function<T>::value;
+	};
+
+	template<typename T> constexpr bool is_function_v = is_function<T>::value;
+
+	template<typename T> concept Function = is_function<T>::value;
+
+	template<typename T> struct is_array {
+		static bool constexpr value = std::is_array<T>::value;
+	};
+
+	template<typename T> constexpr bool is_array_v = is_array<T>::value;
+
+	template<typename T> concept Array = is_array<T>::value;
+
+	template<typename T> struct is_nullptr {
+		static bool constexpr value = std::is_null_pointer<T>::value;
+	};
+
+	template<typename T> constexpr bool is_nullptr_v = is_nullptr<T>::value;
 
 	template<typename T> concept Hashable = requires(T t) {
 		{ T::hasher::operator()(t) } -> std::convertible_to<usize>;
