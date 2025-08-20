@@ -48,6 +48,12 @@ namespace bleak {
 		static inline void set_render_draw_color(ptr<renderer> renderer, u8 r, u8 g, u8 b, u8 a) noexcept { SDL_SetRenderDrawColor(renderer, r, g, b, a); }
 
 		static inline void set_render_draw_color(ptr<renderer> renderer, color_t color) noexcept { SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a); }
+
+		static inline void set_render_logical_size(ptr<renderer> renderer, extent_t size) noexcept {
+			if (SDL_RenderSetLogicalSize(renderer, static_cast<i32>(size.w), static_cast<i32>(size.h)) != 0) {
+				error_log.add("failed to set logical size: {}", sdl::get_error());
+			}
+		}
 	} // namespace sdl
 
 	struct target_texture_t;
@@ -72,6 +78,8 @@ namespace bleak {
 		inline void set_draw_color(u8 r, u8 g, u8 b, u8 a) noexcept { sdl::set_render_draw_color(renderer, r, g, b, a); }
 
 		inline void set_draw_color(color_t color) noexcept { sdl::set_render_draw_color(renderer, color); }
+
+		inline void set_logical_size(extent_t size) noexcept { sdl::set_render_logical_size(renderer, size); }
 
 		inline void clear() noexcept { SDL_RenderClear(renderer); }
 
