@@ -169,7 +169,7 @@ namespace bleak {
 		}
 
 		static inline bool is_inside(offset_t position, extent_t size) {
-			return current_position.x >= position.x && current_position.y >= position.y && current_position.x <= position.x + size.w && current_position.y <= position.y + size.h;
+			return current_position.x >= position.x && current_position.y >= position.y && current_position.x < position.x + size.w && current_position.y < position.y + size.h;
 		}
 
 		static inline offset_t get_position() { return current_position; }
