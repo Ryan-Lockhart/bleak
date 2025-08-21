@@ -80,12 +80,15 @@ namespace bleak {
 		template<region_e Region> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> clear() noexcept {
 			distances.dependent set<Region>(obstacle_value);
 
-			return *this;
-		}
-
-		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> reset() noexcept {
-			clear<region_e::All>();
-			goals.clear();
+			if constexpr (Region == region_e::All) {
+				goals.clear();
+			} else {
+				for (cauto [g_pos, _] : goals) {
+					if (distances.dependent within<Region>(g_pos)) {
+						goals.remove(g_pos);
+					}
+				}
+			}
 
 			return *this;
 		}
@@ -173,7 +176,7 @@ namespace bleak {
 		}
 
 		template<region_e Region, typename T> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value) noexcept {
-			clear();
+			distances.dependent set<Region>(obstacle_value);
 
 			if (goals.empty()) {
 				return *this;
@@ -233,7 +236,7 @@ namespace bleak {
 		template<region_e Region, typename T, typename U>
 			requires is_equatable<T, U>::value
 		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value) noexcept {
-			clear<Region>();
+			distances.dependent set<Region>(obstacle_value);
 
 			if (goals.empty()) {
 				return *this;
@@ -287,7 +290,7 @@ namespace bleak {
 		}
 
 		template<region_e Region, typename T, SparseBlockage Blockage> constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Blockage> blockage) noexcept {
-			clear();
+			distances.dependent set<Region>(obstacle_value);
 
 			if (goals.empty()) {
 				return *this;
@@ -343,7 +346,7 @@ namespace bleak {
 		template<region_e Region, typename T, typename U, SparseBlockage Blockage>
 			requires is_equatable<T, U>::value
 		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value, cref<Blockage> sparse_blockage) noexcept {
-			clear<Region>();
+			distances.dependent set<Region>(obstacle_value);
 
 			if (goals.empty()) {
 				return *this;
@@ -399,7 +402,7 @@ namespace bleak {
 		template<region_e Region, typename T, SparseBlockage... Blockages>
 			requires is_plurary<Blockages...>::value
 		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<T> value, cref<Blockages>... blockages) noexcept {
-			clear();
+			distances.dependent set<Region>(obstacle_value);
 
 			if (goals.empty()) {
 				return *this;
@@ -455,7 +458,7 @@ namespace bleak {
 		template<region_e Region, typename T, typename U, SparseBlockage... Blockages>
 			requires is_plurary<Blockages...>::value && is_equatable<T, U>::value
 		constexpr ref<field_t<D, DistanceFunction, ZoneSize, ZoneBorder>> recalculate(cref<zone_t<T, ZoneSize, ZoneBorder>> zone, cref<U> value, cref<Blockages>... blockages) noexcept {
-			clear<Region>();
+			distances.dependent set<Region>(obstacle_value);
 
 			if (goals.empty()) {
 				return *this;
