@@ -212,7 +212,7 @@ namespace bleak {
 				distances[current.position] = current.distance;
 
 				for (cauto creeper : neighbourhood_creepers<DistanceFunction, D>) {
-					const offset_t offset_position{ current.position + creeper.posititon };
+					const offset_t offset_position{ current.position + creeper.position };
 
 					if (visited.contains(offset_position) || !zone.dependent within<Region>(offset_position) || zone[offset_position] != value) {
 						if (!visited.contains(offset_position)) {
