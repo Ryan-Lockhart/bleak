@@ -113,6 +113,12 @@ namespace bleak {
 		static constexpr std::array<offset_t, interior_area> interior_offsets{ generate_interior_offsets() };
 		static constexpr std::array<offset_t, border_area> border_offsets{ generate_border_offsets() };
 
+		template<region_e Region> std::array<offset_t, 0> static constexpr offsets{};
+
+		template<> inline constexpr auto offsets<region_e::All>{ zone_offsets };
+		template<> inline constexpr auto offsets<region_e::Interior>{ interior_offsets };
+		// template<> inline constexpr auto offsets<region_e::Border>{ border_offsets };
+
 		static constexpr usize byte_size{ zone_area * sizeof(T) };
 
 		static constexpr bool interior_safe{ border_size.w > 0 && border_size.h > 0 };
@@ -127,7 +133,7 @@ namespace bleak {
 			file.seekg(0, std::ios::end);
 
 			if (file.tellg() != byte_size) {
-				error_log.add("byte size mismatch between file and map!");
+				error_log.add("[ERROR]: byte size mismatch between file and map!");
 			}
 
 			file.seekg(0, std::ios::beg);

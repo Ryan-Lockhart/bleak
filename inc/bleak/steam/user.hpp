@@ -13,7 +13,7 @@ namespace bleak::steam::user {
 			ptr<ISteamUser> interface = SteamUser();
 
 			if (interface == nullptr) {
-				error_log.add("[ERROR]: unable to access steam user api!");
+				error_log.add("[WARNING]: unable to access steam user api!");
 			}
 
 			return interface;

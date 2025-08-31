@@ -54,7 +54,7 @@ namespace bleak {
 			str buffer = static_cast<str>(std::malloc( zone_type::byte_size));
 
 			if (buffer == nullptr) {
-				error_log.add("failed to allocate buffer for reading region file.", __TIME_FILE_LINE__);
+				error_log.add("[ERROR]: failed to allocate buffer for reading region file.", __TIME_FILE_LINE__);
 				return;
 			}
 

@@ -26,7 +26,7 @@ namespace bleak {
 			ptr<renderer> handle{ SDL_CreateRenderer(window, driver_index, flags) };
 
 			if (handle == nullptr) {
-				error_log.add("failed to create renderer: {}", sdl::get_error());
+				error_log.add("[ERROR]: failed to create renderer: {}", sdl::get_error());
 			}
 			
 			SDL_SetRenderDrawBlendMode(handle, SDL_BLENDMODE_BLEND);
@@ -39,7 +39,7 @@ namespace bleak {
 				SDL_DestroyRenderer(handle);
 				handle = nullptr;
 			} else {
-				error_log.add("cannot destroy renderer: renderer handle is null!");
+				error_log.add("[WARNING]: cannot destroy renderer: renderer handle is null!");
 			}
 		}
 
@@ -51,7 +51,7 @@ namespace bleak {
 
 		static inline void set_render_logical_size(ptr<renderer> renderer, extent_t size) noexcept {
 			if (SDL_RenderSetLogicalSize(renderer, static_cast<i32>(size.w), static_cast<i32>(size.h)) != 0) {
-				error_log.add("failed to set logical size: {}", sdl::get_error());
+				error_log.add("[WARNING]: failed to set logical size: {}", sdl::get_error());
 			}
 		}
 	} // namespace sdl
@@ -91,7 +91,8 @@ namespace bleak {
 		inline void present() noexcept { SDL_RenderPresent(renderer); }
 
 		template<primitive_e Primitive, fill_e Fill> inline void draw(cref<primitive_t<Primitive, Fill>> primitive) noexcept {
-			error_log.add("draw not implemented for primitive: {} {}", (std::string)Primitive, (std::string)Fill);
+			error_log.add("[WARNING]: draw not implemented for primitive: {} {}", (std::string)Primitive, (std::string)Fill);
+
 			return;
 
 			if constexpr (Primitive == primitive_e::Point) {
@@ -256,7 +257,7 @@ namespace bleak {
 			draw_fill_rect(rect, fill_color);
 		}
 
-		inline void draw_circle(offset_t position, extent_t::scalar_t radius) { error_log.add("draw_circle not implemented!"); }
+		inline void draw_circle(offset_t position, extent_t::scalar_t radius) { error_log.add("[WARNING]: draw_circle not implemented!"); }
 
 		inline void draw_circle(offset_t position, extent_t::scalar_t radius, color_t color) {
 			set_draw_color(color);

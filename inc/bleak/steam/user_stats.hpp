@@ -19,7 +19,7 @@ namespace bleak::steam::user_stats {
 			ptr<ISteamUserStats> interface = SteamUserStats();
 
 			if (interface == nullptr) {
-				error_log.add("[ERROR]: unable to access steam user stats api!");
+				error_log.add("[WARNING]: unable to access steam user stats api!");
 			}
 
 			return interface;
@@ -41,7 +41,7 @@ namespace bleak::steam::user_stats {
 			}
 
 			if (!success) {
-				error_log.add("failed to get value of stat \"{}\"", api_name);
+				error_log.add("[WARNING]: failed to get value of stat \"{}\"", api_name);
 
 				return std::nullopt;
 			}
@@ -65,7 +65,7 @@ namespace bleak::steam::user_stats {
 			}
 
 			if (!success) {
-				error_log.add("failed to get value of stat \"{}\" for steam user \"{}\"", api_name, user_id);
+				error_log.add("[WARNING]: failed to get value of stat \"{}\" for steam user \"{}\"", api_name, user_id);
 
 				return std::nullopt;
 			}
@@ -89,7 +89,7 @@ namespace bleak::steam::user_stats {
 			}
 
 			if (!success) {
-				error_log.add("failed to set value of stat \"{}\" to \"{}\"", api_name, value);
+				error_log.add("[WARNING]: failed to set value of stat \"{}\" to \"{}\"", api_name, value);
 			}
 
 			return success;

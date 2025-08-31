@@ -114,14 +114,14 @@ namespace bleak {
 			mixer_s::initialized = sdl::mixer::init_stereo(default_frequency, default_format, default_chunk_size);
 			
 			if (!mixer_s::initialized) {
-				error_log.add("failed to initialize SDL mixer: {}", Mix_GetError());
+				error_log.add("[ERROR]: failed to initialize SDL mixer: {}", Mix_GetError());
 				error_log.flush_to_console();
 			}
 
 			assert(mixer_s::is_initialized());
 
 			if (!sdl::mixer::allocate_channels(num_channels)) {
-				error_log.add("failed to allocate channels: {}", Mix_GetError());
+				error_log.add("[ERROR]: failed to allocate channels: {}", Mix_GetError());
 			}
 		}
 
@@ -131,14 +131,14 @@ namespace bleak {
 			mixer_s::initialized = sdl::mixer::init(frequency, format, (u8)channels, chunk_size);			
 			
 			if (!mixer_s::initialized) {
-				error_log.add("failed to initialize SDL mixer: {}", Mix_GetError());
+				error_log.add("[ERROR]: failed to initialize SDL mixer: {}", Mix_GetError());
 				error_log.flush_to_console();
 			}
 
 			assert(mixer_s::is_initialized());
 
 			if (!sdl::mixer::allocate_channels(num_channels)) {
-				error_log.add("failed to allocate channels: {}", Mix_GetError());
+				error_log.add("[ERROR]: failed to allocate channels: {}", Mix_GetError());
 			}
 		}
 

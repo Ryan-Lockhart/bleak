@@ -13,7 +13,7 @@ namespace bleak::steam::input {
 			ptr<ISteamInput> interface = SteamInput();
 
 			if (interface == nullptr) {
-				error_log.add("[ERROR]: unable to access steam input api!");
+				error_log.add("[WARNING]: unable to access steam input api!");
 			}
 
 			return interface;

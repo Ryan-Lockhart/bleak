@@ -35,7 +35,7 @@ namespace bleak {
 			ptr<window> handle = SDL_CreateWindow(title, WINDOW_POSITION_CENTERED, WINDOW_POSITION_CENTERED, static_cast<i32>(size.w), static_cast<i32>(size.h), WINDOW_FLAGS_NONE);
 
 			if (handle == nullptr) {
-				error_log.add("failed to create window: {}", get_error());
+				error_log.add("[ERROR]: failed to create window: {}", get_error());
 			}
 
 			return handle;
@@ -45,7 +45,7 @@ namespace bleak {
 			ptr<window> handle = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, static_cast<i32>(size.w), static_cast<i32>(size.h), flags);
 
 			if (handle == nullptr) {
-				error_log.add("failed to create window: {}", get_error());
+				error_log.add("[ERROR]: failed to create window: {}", get_error());
 			}
 
 			return handle;
@@ -55,7 +55,7 @@ namespace bleak {
 			ptr<window> handle = SDL_CreateWindow(title, static_cast<i32>(position.x), static_cast<i32>(position.y), static_cast<i32>(size.w), static_cast<i32>(size.h), flags);
 
 			if (handle == nullptr) {
-				error_log.add("failed to create window: {}", get_error());
+				error_log.add("[ERROR]: failed to create window: {}", get_error());
 			}
 
 			return handle;
@@ -66,7 +66,7 @@ namespace bleak {
 				SDL_DestroyWindow(handle);
 				handle = nullptr;
 			} else {
-				error_log.add("cannot destroy window: window handle is null!");
+				error_log.add("[WARNING]: cannot destroy window: window handle is null!");
 			}
 		}
 	} // namespace sdl

@@ -136,7 +136,7 @@ namespace bleak {
 
 		template<bool UseOverride = true> inline void draw(glyph_t glyph, offset_t position) const noexcept {
 			if (glyph.index < 0 || glyph.index >= rects.area) {
-				error_log.add("glyph index {} is out of range!", glyph.index);
+				error_log.add("[WARNING]: glyph index {} is out of range!", glyph.index);
 				return;
 			}
 
@@ -149,7 +149,7 @@ namespace bleak {
 
 		template<bool UseOverride = true> inline void draw(glyph_t glyph, offset_t position, offset_t offset) const noexcept {
 			if (glyph.index < 0 || glyph.index >= rects.area) {
-				error_log.add("glyph index {} is out of range!", glyph.index);
+				error_log.add("[WARNING]: glyph index {} is out of range!", glyph.index);
 				return;
 			}
 
@@ -164,7 +164,7 @@ namespace bleak {
 			const usize index{ keyframe.index * keyframe_t::length + keyframe.current_frame() };
 
 			if (index < 0 || index >= rects.area) {
-				error_log.add("keyframe index {} is out of range!", index);
+				error_log.add("[WARNING]: keyframe index {} is out of range!", index);
 				return;
 			}
 
@@ -179,7 +179,7 @@ namespace bleak {
 			const usize index{ keyframe.index * keyframe_t::length + keyframe.current_frame() };
 
 			if (index < 0 || index >= rects.area) {
-				error_log.add("glyph index {} is out of range!", index);
+				error_log.add("[WARNING]: glyph index {} is out of range!", index);
 				return;
 			}
 
