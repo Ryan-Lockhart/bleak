@@ -430,7 +430,7 @@ namespace bleak {
 		}()
 	};
 
-	template<distance_function_e Distance, RandomEngine Generator> static inline auto shuffled_offsets(ref<Generator> engine) {
+	template<distance_function_e Distance, RandomEngine Generator> static inline auto shuffled_offsets(ref<Generator> engine) noexcept {
 		return [&]() {
 			auto offsets{ neighbourhood_offsets<Distance> };
 

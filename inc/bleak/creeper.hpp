@@ -6,6 +6,7 @@
 #include <bleak/hash.hpp>
 #include <bleak/memory.hpp>
 #include <bleak/offset.hpp>
+#include <bleak/random.hpp>
 
 namespace bleak {
 	template<Numeric N> struct creeper_t {
@@ -80,4 +81,14 @@ namespace bleak {
 			}
 		}()
 	};
+
+	template<distance_function_e Distance, Numeric D, RandomEngine Generator> static inline auto shuffled_creepers(ref<Generator> engine) noexcept {
+		return [&]() {
+			auto creepers{ neighbourhood_creepers<Distance, D> };
+
+			std::shuffle(creepers.begin(), creepers.end(), engine);
+
+			return creepers;
+		}();
+	}
 } // namespace bleak
