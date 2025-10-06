@@ -29,8 +29,9 @@ namespace bleak {
 		std::condition_variable cv{};
 		std::mutex access{};
 
-		bool locked{};
 		std::thread::id priority_tid{};
+
+		bool locked{};
 
 	  public:
 		inline priority_mutex() noexcept : locked{ false } {}
@@ -55,13 +56,15 @@ namespace bleak {
 		template<bool Prioritize = false> inline void lock() noexcept {
 			cauto current_tid{ std::this_thread::get_id() };
 
-			std::unique_lock<std::mutex> lock{ access };
+			std::unique_lock lock{ access };
 
 			if constexpr (Prioritize) {
 				set_priority_tid(current_tid);
 			}
 
-			cv.wait(lock, [&]() -> bool { return !is_locked() && (!has_priority_tid() || is_priority_tid(current_tid)); });
+			cv.wait(lock, [&]() -> bool {
+				return !is_locked() && (!has_priority_tid() || is_priority_tid(current_tid));
+			});
 
 			locked = true;
 		}
@@ -73,9 +76,11 @@ namespace bleak {
 
 			cauto current_tid{ std::this_thread::get_id() };
 
-			std::unique_lock<std::mutex> lock{ access };
+			std::unique_lock lock{ access };
 
-			cv.wait(lock, [&]() -> bool { return !is_locked() && (!has_priority_tid() || is_priority_tid(current_tid)); });
+			cv.wait(lock, [&]() -> bool {
+				return !is_locked() && (!has_priority_tid() || is_priority_tid(current_tid));
+			});
 
 			locked = true;
 
@@ -92,6 +97,7 @@ namespace bleak {
 					return false;
 				} default: {
 					locked = true;
+
 					return true;
 				}
 			}
@@ -100,7 +106,7 @@ namespace bleak {
 		inline void unlock() noexcept {
 			cauto current_tid{ std::this_thread::get_id() };
 
-			std::lock_guard<std::mutex> lock{ access };
+			std::lock_guard lock{ access };
 
 			if (is_priority_tid(current_tid)) {
 				reset_priority_tid();
