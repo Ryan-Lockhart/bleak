@@ -10,7 +10,7 @@
 namespace bleak {
 	template<typename T, typename... Values> constexpr void hash_combine(ref<usize> seed, cref<T> v, cref<Values>... values) {
 		static constexpr auto digits = std::numeric_limits<std::size_t>::digits;
-		static_assert(digits == 64 || digits == 32);
+		static_assert(digits == 64 || digits == 32, "size of digits must be 4 or 8 bytes!");
 
 		if constexpr (digits == 64) {
 			if constexpr (is_hashable<T>::value) {
